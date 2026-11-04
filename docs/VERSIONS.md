@@ -1,5 +1,16 @@
 # Versions
 
+## 2026-11-04
+
+### The code is SLAED CMS 8.0.0
+
+- **One number.** `SL_VERSION` of `core/version.php` is `8.0.0`, and the marks of the data update in
+  `config/update.php` (`fields`, `points`, `ratings`, `modules`) are `8.0.0` too: `setup.php` and `update.php` write them,
+  the core opens extra fields, points and ratings only behind them. The texts of the product name 8.0; the early 6.3
+  builds and `table_update6_3.sql` keep their names as history.
+- **A site moves by itself.** A site whose code is newer than its last step answers 503 until the light mode of the panel
+  applies "Применить шаги базы"; a site of the development tree also needs its data marks at `8.0.0`.
+
 ## 2026-11-03
 
 ### No guard pages in the document root

@@ -1934,38 +1934,18 @@
         }
     }
 
-    // Voting widgets: ease one numeric label from a start value to a target over 800ms
-    function setVoteNumber(el, from, to, unit) {
-        var start = performance.now();
-        function tick(now) {
-            var p = Math.min((now - start) / 800, 1);
-            var val = from + (to - from) * (1 - Math.pow(1 - p, 3));
-            el.textContent = unit ? val.toFixed(2) + unit : String(Math.round(val));
-            if (p < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-    }
-
-    // Voting widgets: apply data-sl-percent/votes targets to bars and counters; first run counts up from zero
-    function setVoteValues(vote, first) {
+    // Voting widgets: bars take data-sl-percent and the figures run to it and to data-sl-votes, ending on the text voting-view.html writes
+    function setVoteValues(vote) {
         var rows = vote.querySelectorAll('li[data-sl-percent]');
-        var reduce = isMotionStill();
         for (var i = 0; i < rows.length; i++) {
-            (function (row) {
-                var pct = parseFloat(row.getAttribute('data-sl-percent')) || 0;
-                var num = parseInt(row.getAttribute('data-sl-votes'), 10) || 0;
-                var pel = row.querySelector('.sl-vote-pct');
-                var vel = row.querySelector('.sl-vote-num');
-                var bar = row.querySelector('.sl-progress-line div');
-                if (bar) bar.style.width = pct.toFixed(2) + '%';
-                if (reduce) {
-                    if (pel) pel.textContent = pct.toFixed(2) + '%';
-                    if (vel) vel.textContent = String(num);
-                    return;
-                }
-                if (pel) setVoteNumber(pel, first ? 0 : parseFloat(pel.textContent) || 0, pct, '%');
-                if (vel) setVoteNumber(vel, first ? 0 : parseInt(vel.textContent, 10) || 0, num, '');
-            })(rows[i]);
+            var pct = rows[i].getAttribute('data-sl-percent') || '0';
+            var num = rows[i].getAttribute('data-sl-votes') || '0';
+            var pel = rows[i].querySelector('.sl-vote-pct');
+            var vel = rows[i].querySelector('.sl-vote-num');
+            var bar = rows[i].querySelector('.sl-progress-line div');
+            if (bar) bar.style.width = (parseFloat(pct) || 0).toFixed(2) + '%';
+            if (pel) setFigureRun(pel, pct, pct + '%');
+            if (vel) setFigureRun(vel, num, num);
         }
     }
 
@@ -1977,9 +1957,10 @@
         for (var i = 0; i < rows.length; i++) {
             var bar = rows[i].querySelector('.sl-progress-line div');
             if (bar) bar.style.width = '0%';
+            rows[i].querySelectorAll('.sl-vote-pct, .sl-vote-num').forEach(function (node) { node.slFigure = 0; });
         }
         requestAnimationFrame(function () {
-            requestAnimationFrame(function () { setVoteValues(vote, true); });
+            requestAnimationFrame(function () { setVoteValues(vote); });
         });
     }
 
@@ -2014,7 +1995,7 @@
                     rows[i].setAttribute('data-sl-votes', frows[i].getAttribute('data-sl-votes'));
                     rows[i].classList.toggle('sl-lead', frows[i].classList.contains('sl-lead'));
                 }
-                setVoteValues(vote, false);
+                setVoteValues(vote);
                 vote.setAttribute('data-sl-live-stamp', Date.now());
                 var votes = vote.querySelector('.sl-votes');
                 var fvotes = fresh.querySelector('.sl-votes');
@@ -3159,6 +3140,90 @@
         return document.documentElement.hasAttribute('data-sl-still') || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
     window.isMotionStill = isMotionStill;
+
+    // A number in the language of the page, grouped as filterDecimal() groups it; the browser knows the mark of the language the server names
+    function getFigureText(value, digits) {
+        var text = Number(value).toLocaleString(document.documentElement.lang || 'en', { useGrouping: false, minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return text.replace(/^\D?\d+/, function (whole) { return whole.replace(/\B(?=(\d{3})+$)/g, '\u00a0'); });
+    }
+    window.getFigureText = getFigureText;
+
+    // The number inside the text of a figure with what stands before and after it; one running on into a hex word of four and more, as a commit, is no figure
+    function getFigureParts(text) {
+        var hit = /^(\D*?)(\d{1,3}(?:[\u00a0\u202f ]\d{3})+|\d+)(?:([.,])(\d+))?(?![.,:]?\d)(?!(?=[0-9a-f]{4,}(?!\w))\d*[a-f])([\s\S]*)$/.exec(String(text));
+        if (!hit) return null;
+        return { head: hit[1], tail: hit[5], mark: hit[3] || '', digits: (hit[4] || '').length, value: Number(hit[2].replace(/\D/g, '') + (hit[4] ? '.' + hit[4] : '')) };
+    }
+    window.getFigureParts = getFigureParts;
+
+    // The text node of a figure that holds its number, else its first text, else a new one
+    function getFigureSlot(node) {
+        var one;
+        for (one = node.firstChild; one; one = one.nextSibling) if (one.nodeType === 3 && /\d/.test(one.nodeValue)) return one;
+        for (one = node.firstChild; one; one = one.nextSibling) if (one.nodeType === 3) return one;
+        return node.appendChild(document.createTextNode(''));
+    }
+
+    // The value a figure stands for: the goal of a run under way, else the value the server wrote apart from its text, else the number of its text
+    function getFigureValue(node) {
+        var parts;
+        if (node.slFigure !== undefined) return node.slFigure;
+        if (node.hasAttribute('data-sl-figure')) return Number(node.getAttribute('data-sl-figure'));
+        parts = getFigureParts(getFigureSlot(node).nodeValue);
+        return parts ? parts.value : NaN;
+    }
+    window.getFigureValue = getFigureValue;
+
+    // The one run of a figure in both themes: it climbs to its goal for as long as the theme flares it (--sl-figure-dur), and ends on the text the server wrote
+    function setFigureRun(node, value, text) {
+        var said = String(text === undefined ? value : text);
+        var raw = String(value).trim();
+        var parts = getFigureParts(said);
+        var goal = raw === '' ? NaN : Number(raw);
+        var was = getFigureValue(node);
+        var slot = getFigureSlot(node);
+        var run = (node.slFigureRun || 0) + 1;
+        var from = isNaN(was) ? 0 : was;
+        var start = 0;
+        var time = 0;
+        var step;
+        node.slFigure = goal;
+        node.slFigureRun = run;
+        node.classList.remove('sl-is-counting');
+        if (!parts || isNaN(goal) || goal === was || isMotionStill() || document.hidden) {
+            slot.nodeValue = said;
+            return;
+        }
+        void node.offsetWidth;
+        node.classList.add('sl-is-counting');
+        time = (parseFloat(window.getComputedStyle(node).animationDuration) || 0) * 1000;
+        if (!time) {
+            node.classList.remove('sl-is-counting');
+            slot.nodeValue = said;
+            return;
+        }
+        step = function (now) {
+            var part;
+            var figure;
+            if (node.slFigureRun !== run) return;
+            if (!start) start = now;
+            part = Math.min(1, (now - start) / time);
+            figure = getFigureText(from + (goal - from) * (1 - Math.pow(1 - part, 3)), parts.digits);
+            if (parts.mark) figure = figure.replace(/[.,](?=\d+$)/, parts.mark);
+            slot.nodeValue = part < 1 ? parts.head + figure + parts.tail : said;
+            if (part < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+    window.setFigureRun = setFigureRun;
+
+    // A figure leaves its flare when the last of its animations ends, so the next run starts it again
+    document.addEventListener('animationend', function (event) {
+        var names;
+        if (!event.target.classList || !event.target.classList.contains('sl-is-counting')) return;
+        names = window.getComputedStyle(event.target).animationName.split(',');
+        if (event.animationName === names[names.length - 1].trim()) event.target.classList.remove('sl-is-counting');
+    });
 
     // The pointer light, once a frame where motion is welcome, on body and data-sl-pointer-at, as the two do not inherit; the theme decides whether body[data-sl-pointer] shows it
     var pointer = { left: 0, top: 0, frame: 0 };

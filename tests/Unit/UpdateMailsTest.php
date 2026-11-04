@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The newsletter step of the 6.3 update keeps the pending recipients before the schema drops the mails column and queues them once per campaign and address
+# The newsletter step of the 8.0 update keeps the pending recipients before the schema drops the mails column and queues them once per campaign and address
 #[Group('release')]
 final class UpdateMailsTest extends TestCase
 {

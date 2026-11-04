@@ -1264,64 +1264,6 @@
             head.style.setProperty('--sl-d-turn', i);
         });
     }
-    var arrival = { seen: null, drawn: {} };
-    // A grid that rose drops its marks, so a tile the menu find shows again or the drag moves does not rise a second time
-    function setArriveDone(grid) {
-        var left = Array.prototype.filter.call(grid.children, function (tile) { return tile.matches('.sl-mcard') && tile.getClientRects().length > 0; }).length;
-        var end = function () {
-            grid.removeEventListener('animationend', done);
-            grid.removeEventListener('animationcancel', done);
-            grid.removeAttribute('data-sl-arrive');
-            grid.classList.remove('sl-is-in');
-        };
-        var done = function (event) {
-            if (event.animationName === 'sl-tile-rise' && event.target.parentNode === grid && --left <= 0) end();
-        };
-        if (!left) return end();
-        grid.addEventListener('animationend', done);
-        grid.addEventListener('animationcancel', done);
-    }
-    // Home tiles, the parts of a ground and charts wait for the view; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched
-    function setArriveMarks(root) {
-        if (window.isMotionStill() || !window.IntersectionObserver) return;
-        if (!arrival.seen) {
-            arrival.seen = new IntersectionObserver(function (rows) {
-                rows.forEach(function (row) {
-                    var node = row.target.slArrive || row.target;
-                    var place;
-                    if (!row.isIntersecting) return;
-                    arrival.seen.unobserve(row.target);
-                    node.classList.add('sl-is-in');
-                    if (node.matches('.sl-menu-grid')) return setArriveDone(node);
-                    if (node.matches('.sl-ground > *')) return setFigureRise(node);
-                    place = node.closest('[id]');
-                    arrival.drawn[place ? place.id : ''] = true;
-                });
-            }, { threshold: 0.06 });
-        }
-        root.querySelectorAll('.sl-menu-grid:not([data-sl-arrive])').forEach(function (grid) {
-            var tiles = grid.querySelectorAll(':scope > .sl-mcard');
-            if (!tiles.length) return;
-            tiles.forEach(function (tile, i) { tile.style.setProperty('--sl-d-turn', i); });
-            grid.setAttribute('data-sl-arrive', '');
-            arrival.seen.observe(grid);
-        });
-        root.querySelectorAll('.sl-ground > :not(.sl-ground-lines, [data-sl-arrive])').forEach(function (part, i) {
-            part.style.setProperty('--sl-d-turn', i);
-            part.setAttribute('data-sl-arrive', '');
-            arrival.seen.observe(part);
-        });
-        root.querySelectorAll('.sl-chart-svg:not([data-sl-arrive])').forEach(function (chart) {
-            var place = chart.closest('[id]');
-            if (arrival.drawn[place ? place.id : '']) return;
-            chart.setAttribute('data-sl-arrive', '');
-            chart.parentNode.slArrive = chart;
-            arrival.seen.observe(chart.parentNode);
-        });
-    }
-    document.addEventListener('htmx:load', function (event) {
-        if (event.target.querySelectorAll) setArriveMarks(event.target);
-    });
     var tilt = { last: null, frame: 0, tile: null };
     // A home tile or a tile of figures under the hand leans to it and lays its glare where the hand is, once a frame; the theme holds level a home tile whose dial is in use
     function setTileTilt() {
@@ -1602,61 +1544,14 @@
     phone.addEventListener('change', function () {
         if (!phone.matches && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     });
-    // A figure or a bar that a poll changed flares once; the theme decides how by what the node is
+    // A bar or a word that a poll changed flares once; the theme decides how by what the node is, and a running figure flares by setFigureRun() of slaed.js
     function setFigureFresh(node) {
         node.classList.remove('sl-is-fresh');
         void node.offsetWidth;
         node.classList.add('sl-is-fresh');
     }
-    // A number in the language of the page, grouped as filterDecimal() groups it; the browser knows the mark of the language the server names
-    function getFigureText(value, digits) {
-        var text = Number(value).toLocaleString(document.documentElement.lang || 'en', { useGrouping: false, minimumFractionDigits: digits, maximumFractionDigits: digits });
-        return text.replace(/^\D?\d+/, function (whole) { return whole.replace(/\B(?=(\d{3})+$)/g, '\u00a0'); });
-    }
-    // The run of a figure: it climbs to its goal in 900 ms, each step in the language of the page, and ends on the text the server wrote
-    function setFigureRoll(node, from, goal, text, digits) {
-        var run = (node.slFigureRun || 0) + 1;
-        var start = 0;
-        var step = function (now) {
-            var part;
-            if (node.slFigureRun !== run) return;
-            if (!start) start = now;
-            part = Math.min(1, (now - start) / 900);
-            node.textContent = part < 1 ? getFigureText(from + (goal - from) * (1 - Math.pow(1 - part, 3)), digits) : text;
-            if (part < 1) window.requestAnimationFrame(step);
-        };
-        node.slFigureRun = run;
-        window.requestAnimationFrame(step);
-    }
-    // A figure runs from its value to the new one and flares; the value is apart from the text, whose comma Number() cannot read, and slFigure keeps the goal during the run
-    function setFigureRun(node, value, text) {
-        var raw = String(value);
-        var said = String(text === undefined ? value : text);
-        var goal = raw.trim() === '' ? NaN : Number(raw);
-        var was = getFigureValue(node);
-        node.slFigure = goal;
-        node.slFigureText = said;
-        node.slFigureRun = (node.slFigureRun || 0) + 1;
-        if (isNaN(goal) || goal === was || window.isMotionStill() || document.hidden) {
-            node.textContent = said;
-            return;
-        }
-        if (!isNaN(was)) setFigureFresh(node);
-        setFigureRoll(node, isNaN(was) ? 0 : was, goal, said, (raw.split('.')[1] || '').length);
-    }
-    // The figures of a part of a ground that rose run up from zero to what they show; a poll that came first left its own goal and text
-    function setFigureRise(part) {
-        part.querySelectorAll('[data-sl-figure]').forEach(function (node) {
-            var raw = String(getFigureValue(node));
-            if (!isNaN(raw)) setFigureRoll(node, 0, Number(raw), node.slFigureText || node.textContent, (raw.split('.')[1] || '').length);
-        });
-    }
-    // The value a figure stands for, the goal of its run when one runs
-    function getFigureValue(node) {
-        return node.slFigure === undefined ? Number(node.getAttribute('data-sl-figure') || node.textContent) : node.slFigure;
-    }
     document.addEventListener('animationend', function (event) {
-        if (['sl-cockpit-fresh', 'sl-figure-flash', 'sl-bar-flash'].indexOf(event.animationName) !== -1) event.target.classList.remove('sl-is-fresh');
+        if (['sl-cockpit-fresh', 'sl-bar-flash'].indexOf(event.animationName) !== -1) event.target.classList.remove('sl-is-fresh');
     });
     var chartnum = 0;
     var dayat = -1;
@@ -1741,7 +1636,7 @@
     // The figures of a scale from its top down to zero, with the fraction its steps need
     function getChartScale(top) {
         var digits = Number.isInteger(top / 4) ? 0 : (Number.isInteger(top / 2) ? 1 : 2);
-        return [1, 0.75, 0.5, 0.25, 0].map(function (part) { return getFigureText(top * part, digits); });
+        return [1, 0.75, 0.5, 0.25, 0].map(function (part) { return window.getFigureText(top * part, digits); });
     }
     // The frame of a chart: the grid, the zones of the hand and the axis; the drawing or the columns go in under the zones
     function getChartFrame(label, role) {
@@ -1810,7 +1705,6 @@
             box.replaceChildren();
             for (var i = 0; i < count; i++) {
                 var col = box.appendChild(getSeriesNode('div', 'sl-chart-col'));
-                col.style.setProperty('--sl-d-turn', i);
                 sets.forEach(function (set) { col.appendChild(getSeriesNode('i', 'sl-chart-bar' + getSeriesTone(set.tone))); });
             }
             tick = false;
@@ -1871,7 +1765,7 @@
     }
     // A value of a series with its unit; a percent stands close to its figure, as the facts of the panel write it
     function getSeriesText(row, value) {
-        return getFigureText(value, row.digits || 0) + (!row.unit ? '' : (row.unit === '%' ? '%' : ' ' + row.unit));
+        return window.getFigureText(value, row.digits || 0) + (!row.unit ? '' : (row.unit === '%' ? '%' : ' ' + row.unit));
     }
     // How long ago a moment was, in the words of the server
     function getLiveAgo(words, secs) {
@@ -1930,7 +1824,6 @@
         }));
         host.slLive = { at: list, series: data.series };
         if (made) setSeriesSwap(host);
-        if (isnew) setArriveMarks(host);
     }
     // The chart of the rhythm: its period and its view are the reader's; a tick of the same period moves the lines and the bars in place, and a new choice builds it again
     function setRhythmChart(host, data, tick) {
@@ -1965,10 +1858,7 @@
         box.querySelector('.sl-rhythm-figure > b').textContent = per.figure;
         box.querySelector('.sl-rhythm-figure > span').textContent = per.note;
         box.querySelector('.sl-rhythm-figure > em').textContent = per.delta || '';
-        if (fresh) {
-            setSeriesSwap(host);
-            setArriveMarks(host);
-        }
+        if (fresh) setSeriesSwap(host);
     }
     // The rhythm of a site, on the engine of the live chart: a figure and its period over the chart, the legend and the view under it
     function setSeriesRhythm(host, data, tick) {
@@ -2019,7 +1909,6 @@
             if (one.is_pick) month.setAttribute('aria-current', 'true');
             month.setAttribute('aria-label', one.name);
             month.style.setProperty('--sl-d-v', one.is_gap ? 0.3 : (one.value / top).toFixed(4));
-            month.style.setProperty('--sl-d-turn', i);
             if (one.year) month.appendChild(getSeriesNode('span', 'sl-archive-year', one.year));
             month.append(getSeriesNode('i'), getSeriesTip(one.name, one.rows));
             box.appendChild(month);
@@ -2039,8 +1928,7 @@
             row.forEach(function (value, h) {
                 var cell = box.appendChild(getSeriesNode('span', 'sl-week-cell sl-float'));
                 cell.setAttribute('data-sl-level', Math.min(5, Math.round(value / top * 5)));
-                cell.style.setProperty('--sl-d-turn', w + h);
-                cell.appendChild(getSeriesTip(data.days[w].cap + ', ' + data.spans[h], [[data.name, getFigureText(value, 0), data.tone]]));
+                cell.appendChild(getSeriesTip(data.days[w].cap + ', ' + data.spans[h], [[data.name, window.getFigureText(value, 0), data.tone]]));
             });
         });
         var keys = [0, 1, 2, 3, 4, 5].map(function (step) { return { mark: 'step' + step }; });
@@ -2059,7 +1947,6 @@
             var part = bar.appendChild(getSeriesNode('span', 'sl-stack-part sl-float' + getSeriesTone(tone)));
             var key = keys.appendChild(getSeriesNode('span', 'sl-stack-key' + getSeriesTone(tone)));
             part.style.setProperty('--sl-d-part', one.pct + '%');
-            part.style.setProperty('--sl-d-turn', i);
             part.appendChild(getSeriesTip(data.label, [[one.name, one.pct + '%', tone], [data.count, one.text]]));
             key.append(getSeriesNode('i'), getSeriesNode('span', '', one.name), getSeriesNode('b', '', one.pct + '%'));
         });
@@ -2084,7 +1971,6 @@
             name.append(one.name);
             name.title = one.name;
             track.style.setProperty('--sl-d-part', (one.pct / top * 100).toFixed(1) + '%');
-            row.style.setProperty('--sl-d-turn', i);
             row.append(getSeriesNode('b', '', one.text), getSeriesNode('span', 'sl-share-pct', one.pct + '%'));
         });
         host.replaceChildren(box);
@@ -2143,7 +2029,6 @@
             var from = getClockPoint(i + 0.5, 48);
             var spot = getClockPoint(i + 0.5, 89);
             var spoke = svg.appendChild(getSeriesSvg('line', { 'class': 'sl-clock-spoke', 'data-sl-hour': i, 'x1': from[0], 'y1': from[1] }));
-            spoke.style.setProperty('--sl-d-turn', i);
             svg.appendChild(getSeriesSvg('circle', { 'class': 'sl-clock-gen', 'cx': spot[0], 'cy': spot[1] }));
             if (i % 3) continue;
             var name = getClockPoint(i, 99);
@@ -2187,8 +2072,8 @@
         say.hidden = !spoke;
         if (!spoke) return;
         say.children[0].textContent = String(num).padStart(2, '0') + ':00';
-        say.children[1].textContent = getFigureText(data.hours[num], 0);
-        say.children[2].textContent = data.gen[num] ? getFigureText(data.gen[num], 0) + ' ms' : data.hits_word;
+        say.children[1].textContent = window.getFigureText(data.hours[num], 0);
+        say.children[2].textContent = data.gen[num] ? window.getFigureText(data.gen[num], 0) + ' ms' : data.hits_word;
     }
     document.addEventListener('pointerover', function (event) {
         var host = event.target.closest ? event.target.closest('.sl-clock') : null;
@@ -2200,12 +2085,11 @@
     });
     var drawers = { live: setSeriesLive, rhythm: setSeriesRhythm, days: setSeriesDays, archive: setSeriesArchive,
         week: setSeriesWeek, stack: setSeriesStack, rows: setSeriesRows, table: setSeriesTable, clock: setSeriesClock };
-    // Draw a part of the series from its data; a tick moves what stands and never replays the entry, which only data-sl-play lets the theme run
+    // Draw a part of the series from its data; a tick moves what stands
     function setSeriesData(host, data, tick) {
         var draw = drawers[host.getAttribute('data-sl-series')];
         if (!draw) return;
         host.slSeries = data;
-        host.toggleAttribute('data-sl-play', !tick);
         draw(host, data, !!tick);
     }
     window.setSeriesData = setSeriesData;
@@ -2253,7 +2137,6 @@
             cell.classList.toggle('sl-is-active', cell === hit);
             cell.setAttribute('aria-pressed', cell === hit ? 'true' : 'false');
         });
-        host.toggleAttribute('data-sl-play', false);
         setRhythmChart(host, host.slSeries, false);
     });
     document.addEventListener('keydown', function (event) {
@@ -2281,7 +2164,7 @@
         var after = rows[rows.length - 1].nextSibling;
         rows.forEach(function (row, i) { if (!row.hasAttribute('data-sl-queue-at')) row.setAttribute('data-sl-queue-at', i); });
         rows.sort(function (one, two) {
-            var diff = getFigureValue(two.querySelector('[data-sl-queue-n]')) - getFigureValue(one.querySelector('[data-sl-queue-n]'));
+            var diff = window.getFigureValue(two.querySelector('[data-sl-queue-n]')) - window.getFigureValue(one.querySelector('[data-sl-queue-n]'));
             return diff || one.getAttribute('data-sl-queue-at') - two.getAttribute('data-sl-queue-at');
         });
         rows.forEach(function (row) { box.insertBefore(row, after); });
@@ -2307,7 +2190,7 @@
             mods[row.mod] = (mods[row.mod] || 0) + row.num;
             document.querySelectorAll('[data-sl-queue-row="' + CSS.escape(row.key) + '"]').forEach(function (node) {
                 var num = node.querySelector('[data-sl-queue-n]');
-                setFigureRun(num, row.num);
+                window.setFigureRun(num, row.num);
                 if (num.classList.contains('sl-chip')) {
                     num.classList.toggle('sl-chip-warn', row.num > 0);
                     num.classList.toggle('sl-chip-success', row.num === 0);
@@ -2317,7 +2200,7 @@
         });
         document.querySelectorAll('[data-sl-queue]').forEach(function (chip) {
             var num = mods[chip.getAttribute('data-sl-queue')] || 0;
-            setFigureRun(chip.querySelector('[data-sl-queue-n]'), num);
+            window.setFigureRun(chip.querySelector('[data-sl-queue-n]'), num);
             chip.hidden = num === 0;
         });
         var boxes = [];
@@ -2422,7 +2305,7 @@
             rows = ring.parentNode.querySelector('[data-sl-gauge-rows]');
             ring.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
             ring.classList.add('sl-knob-' + gauge.tone);
-            setFigureRun(ring.querySelector('[data-sl-gauge-val]'), num);
+            window.setFigureRun(ring.querySelector('[data-sl-gauge-val]'), num);
             ring.querySelector('.sl-knob-val').setAttribute('stroke-dasharray', gauge.value + ' 100');
             ring.setAttribute('aria-valuenow', num);
             ring.setAttribute('aria-valuetext', num + '%');
@@ -2437,7 +2320,7 @@
         });
         Object.keys(data.strip).forEach(function (key) {
             var item = box.querySelector('[data-sl-strip="' + CSS.escape(key) + '"] [data-sl-strip-val]');
-            if (item) setFigureRun(item, data.strip[key].value, data.strip[key].text);
+            if (item) window.setFigureRun(item, data.strip[key].value, data.strip[key].text);
         });
         box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
     }
@@ -2469,7 +2352,7 @@
             if (event.target.closest('[data-sl-live-toggle]')) window.setTimeout(ask);
         });
     }
-    var stat = { seq: 0, now: true, way: '', back: null };
+    var stat = { seq: 0, now: true, back: null };
     // The head of the statistic: the pace while the dial shows the running hour, else the run of the month, the words beside the months and the day the dial reads
     function setStatState(top, state) {
         var rows = top.querySelector('[data-sl-stat-pace-rows]');
@@ -2499,7 +2382,7 @@
     function setMetricTile(tile, one) {
         var num = tile.querySelector('[data-sl-figure]');
         var delta = tile.querySelector('[data-sl-metric-delta]');
-        if (num) setFigureRun(num, one.num, one.value);
+        if (num) window.setFigureRun(num, one.num, one.value);
         else tile.querySelector('.sl-metric-value').firstChild.nodeValue = one.value + (one.unit ? ' ' : '');
         tile.querySelector('[data-sl-metric-note]').textContent = one.note;
         if (!delta) return;
@@ -2550,7 +2433,6 @@
         }
         stat.seq += 1;
         stat.now = true;
-        stat.way = (next && next < key) ? 'prev' : 'next';
         stat.back = (back === undefined) ? null : back;
         dayat = -1;
         history.pushState(null, '', url);
@@ -2565,14 +2447,11 @@
         if (node && stat.back === -1) node.scrollIntoView({ block: 'nearest', inline: 'center' });
         stat.back = null;
     }
-    // Draw the page from the reading it carries; after a step of the months the ground keeps the way it went for the theme, and the list above names the month
+    // Draw the page from the reading it carries, and the list above names the month
     function setStatStart(page) {
-        var ground = page.querySelector('.sl-ground');
         var list = document.querySelector('select[name="month"]');
         setStatView(page, JSON.parse(page.getAttribute('data-sl-stat-view')));
         if (list) list.value = page.hasAttribute('data-sl-stat-live') ? '' : page.getAttribute('data-sl-stat-key');
-        if (stat.way) ground.setAttribute('data-sl-way', stat.way);
-        stat.way = '';
         setBeamTurns();
         if (stat.back !== null) setStatFocus(page);
     }
@@ -2607,7 +2486,7 @@
             if (one.base) lamp.style.setProperty('--sl-d-sweep', (list.length * 60 / one.base).toFixed(3) + 's');
         }
         if (one.bpm) lamp.style.setProperty('--sl-d-beat', (60 / one.bpm).toFixed(3) + 's');
-        setFigureRun(lamp.querySelector('[data-sl-pulse-num]'), one.num, one.text);
+        window.setFigureRun(lamp.querySelector('[data-sl-pulse-num]'), one.num, one.text);
         lamp.querySelector('[data-sl-pulse-mood]').textContent = one.mood;
         lamp.setAttribute('aria-label', one.label);
     }
@@ -2754,18 +2633,10 @@
             if (row) row.focus();
             return;
         }
-        if (event.detail && event.detail.requestConfig) setRowsEnter(box);
         if (!said) return;
         said.textContent = '';
         window.setTimeout(function () { said.textContent = line.getAttribute('data-sl-list-said') || ''; }, 100);
     });
-    // В07.1 The rows a filter, a tab or a page brings enter one after another; a list Back restores only stands
-    function setRowsEnter(box) {
-        box.querySelectorAll('table[data-sl-density] > tbody > tr').forEach(function (row, i) {
-            row.style.setProperty('--sl-d-order', String(i));
-            row.setAttribute('data-sl-enter', '');
-        });
-    }
     // В02.1 The view of a canon list changes the table at once and is stored through op option; a refusal puts the view back
     function setListDensity(btn) {
         var seg = btn.closest('[data-sl-knob="density"]');
@@ -2980,25 +2851,29 @@
         if (btn) btn.title = getLaterWord('turn', off ? 'on' : 'off');
         link.title = off ? name + ' - ' + getLaterWord('led', 'off') : name;
     }
-    // Э22 A lamp in a row that stays turns at once: its mark, its pressed state, its title and the value its form sends next ("lamp act")
+    // Э22 Whether the lamp of the row that holds a lamp form is lit; the lamp is only a mark, its switch is an item of the dial of the row
+    function isLampOn(form) {
+        return form.closest('tr').querySelector('[data-sl-lamp]').classList.contains('sl-status-active');
+    }
+    // Э22 A lamp in a row that stays turns at once: its mark and its words, the title of its dial item and the value its form sends next ("lamp act")
     function setLampFlip(form) {
         var btn = document.querySelector('[form="' + form.getAttribute('id') + '"]');
         var field = form.elements[form.getAttribute('data-sl-later').split(' ')[1]];
-        var on = btn.getAttribute('aria-pressed') !== 'true';
-        var mark = btn.querySelector('span');
-        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-        btn.title = getLaterWord('turn', on ? 'off' : 'on');
+        var mark = form.closest('tr').querySelector('[data-sl-lamp]');
+        var on = !isLampOn(form);
+        var word = getLaterWord('led', on ? 'on' : 'off');
         mark.classList.toggle('sl-status-active', on);
         mark.classList.toggle('sl-status-inactive', !on);
+        mark.title = word;
+        mark.setAttribute('aria-label', word);
+        if (btn) btn.title = getLaterWord('turn', on ? 'off' : 'on');
         field.value = field.value === '1' ? '0' : '1';
     }
     // Э22 The status the foot picked for rows whose lamp stays: the lamp forms of those rows still standing the other way, or null when a row has no lamp
     function getLampForms(rows, key) {
         var forms = rows.map(function (row) { return row.querySelector('form[data-sl-later^="lamp "]'); });
         if ((key !== 'on' && key !== 'off') || !rows.length || forms.indexOf(null) > -1) return null;
-        return forms.filter(function (form) {
-            return (document.querySelector('[form="' + form.getAttribute('id') + '"]').getAttribute('aria-pressed') === 'true') !== (key === 'on');
-        });
+        return forms.filter(function (form) { return isLampOn(form) !== (key === 'on'); });
     }
     // Send one deferred action now: by fetch while the page stays, by a beacon when it goes; a refusal brings its rows back and says so
     function setLaterSend(job, beacon) {
@@ -3060,7 +2935,7 @@
             setItemFlip(form);
             job.back = function () { setItemFlip(form); };
         } else if (kind === 'lamp') {
-            key = document.querySelector('[form="' + form.getAttribute('id') + '"]').getAttribute('aria-pressed') === 'true' ? 'off' : 'on';
+            key = isLampOn(form) ? 'off' : 'on';
             job.name = form.closest('tr').getAttribute('data-sl-row') || '';
             setLampFlip(form);
             job.back = function () { setLampFlip(form); };
@@ -3410,7 +3285,6 @@
             addFileStep();
             setBeamTurns();
             setSeriesDraw(document);
-            setArriveMarks(document);
             setSetupRun();
             addRankForm();
             addFormCanon();
@@ -3427,7 +3301,6 @@
         addFileStep();
         setBeamTurns();
         setSeriesDraw(document);
-        setArriveMarks(document);
         setSetupRun();
         addRankForm();
         addFormCanon();

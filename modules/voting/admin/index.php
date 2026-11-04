@@ -234,7 +234,7 @@ function add(): void {
         'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting', true)]);
     $rows = [
         [

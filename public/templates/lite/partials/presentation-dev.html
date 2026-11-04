@@ -16,7 +16,7 @@
       </div>
       <div class="sl-pres-dev-side">
         <div class="sl-pres-focus">
-          <div class="sl-pres-panel-head"><span>{{ focus }}</span><b>{{ focus_state }}</b></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-git" aria-hidden="true"></i>{{ focus }}</span><b>{{ focus_state }}</b></div>
           <div class="sl-pres-focus-body">
             {% if has_commits %}
             <span class="sl-pres-mono">{{ first.short }} · {{ first.date }}</span>
@@ -29,7 +29,7 @@
           </div>
         </div>
         <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span>{{ pipe }}</span><b>{{ pipe_note }}</b></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-box-seam" aria-hidden="true"></i>{{ pipe }}</span><b>{{ pipe_note }}</b></div>
           <div class="sl-pres-pipe">
             <i class="sl-pres-pipe-packet" aria-hidden="true"></i>
             {% for item in steps %}

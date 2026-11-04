@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The fields unit of the 6.3 data update in update.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
+# The fields unit of the 8.0 data update in update.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
 #[Group('release')]
 final class UpdateFieldsTest extends TestCase
 {
@@ -63,7 +63,7 @@ final class UpdateFieldsTest extends TestCase
         $run = $this->getRun('clean')['first'];
         $this->checkFinished($run, 'first run');
         $this->assertSame(self::USERS, $run['users'], 'A value row was not carried into its canonical JSON');
-        $this->assertEquals(['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0'], $run['mark'], 'The mark of the unit is missing or an earlier mark was lost');
+        $this->assertEquals(['points' => '8.0.0', 'ratings' => '8.0.0', 'fields' => '8.0.0'], $run['mark'], 'The mark of the unit is missing or an earlier mark was lost');
         $rules = $run['rules'];
         $this->assertSame(['field1', 'field2', 'field4', 'field5', 'field6'], array_keys($rules['account']), 'A switched off position got a key or a gap was closed');
         $this->assertSame(['select', 'text', 'date', 'datetime', 'textarea'], array_column($rules['account'], 'type'));
@@ -92,7 +92,7 @@ final class UpdateFieldsTest extends TestCase
         $this->checkFinished($runs['again'], 'repeat');
         $this->assertSame('{"field2":"later"}', $runs['again']['users'][4], 'The repeat rewrote a value saved by the running system');
         $this->checkFinished($runs['nomark'], 'verified without a mark');
-        $this->assertSame(['fields' => '6.3.0'], $runs['nomark']['mark']);
+        $this->assertSame(['fields' => '8.0.0'], $runs['nomark']['mark']);
         $this->assertTrue($runs['same'], 'A repeat rewrote the manifest or a snapshot');
     }
 
@@ -104,7 +104,7 @@ final class UpdateFieldsTest extends TestCase
         $this->assertTrue($run['done'], $run['text']);
         $this->assertSame(['verified', ['account' => 0, 'forum' => 0]], [$run['state'], $run['count']]);
         $this->assertSame($this->getRun('clean')['first']['rules'], $run['rules'], 'The named definitions were rewritten');
-        $this->assertSame('6.3.0', $run['mark']['fields'] ?? null);
+        $this->assertSame('8.0.0', $run['mark']['fields'] ?? null);
     }
 
     # The unit continues from the cursor after none, one and two committed batches; rows before it are already targets and rows behind it still sources
@@ -128,7 +128,7 @@ final class UpdateFieldsTest extends TestCase
         $this->assertStringContainsString('the mark is set and no manifest exists, the unit ran on this site before', $stop['mark']['text']);
         $this->assertSame([null, false], [$stop['mark']['state'], $stop['mark']['dir']], 'A unit that ran before left a backup behind');
         foreach ([
-            'named' => 'already in the 6.3 format',
+            'named' => 'already in the 8.0 format',
             'forged' => 'forum.json does not match its manifest',
             'foreign' => 'neither its source nor its target',
         ] as $name => $text) {

@@ -8,12 +8,9 @@
 
 | Version | Supported | PHP Version | Status |
 | ------- | --------- | ----------- | ------ |
-| 6.3.x   | Yes       | 8.4+        | Active development |
+| 8.0.x   | Yes       | 8.4+        | Active development |
 
-Only version 6.3.x is currently supported for security fixes.
-
-> [!IMPORTANT]
-> The current repository documents the `6.3` code line. The next supported project line is expected to become `8.0`, but until that line is released and documented, `6.3.x` remains the only supported line in this policy.
+Only version 8.0.x is currently supported for security fixes.
 
 ---
 

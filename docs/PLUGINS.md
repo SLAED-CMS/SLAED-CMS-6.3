@@ -96,7 +96,7 @@ PHP». Для CMS со множеством инсталляций это осн
   "entry": "driver.php",
   "enabled": true,
   "priority": 50,
-  "requires": { "core": ">=6.3" },
+  "requires": { "core": ">=8.0" },
   "provides": ["captcha"],
   "config": { "active": "bool", "provider": "string" }
 }

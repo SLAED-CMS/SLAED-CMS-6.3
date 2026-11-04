@@ -283,7 +283,7 @@ function save(): void {
 function points(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $mark = ($conf['update']['points'] ?? '') === '6.3.0';
+    $mark = ($conf['update']['points'] ?? '') === '8.0.0';
     $phead = [
         ['content' => _NAME],
         ['content' => _POINTS, 'nosort' => 1],

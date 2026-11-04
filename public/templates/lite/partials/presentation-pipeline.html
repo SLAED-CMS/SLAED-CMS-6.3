@@ -28,7 +28,7 @@
       </div>
       <div class="sl-pres-arch-side">
         <div class="sl-pres-tree">
-          <div class="sl-pres-panel-head"><span>{{ tree }}</span><b>{{ tree_mode }}</b></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-diagram-2" aria-hidden="true"></i>{{ tree }}</span><b>{{ tree_mode }}</b></div>
           {% for item in cases %}
           <div class="sl-pres-case{% if item.is_on %} sl-is-on{% endif %}" data-sl-tone="{{ item.tone }}"><strong>{{ item.name }}</strong><span>{{ item.text }}</span></div>
           {% endfor %}

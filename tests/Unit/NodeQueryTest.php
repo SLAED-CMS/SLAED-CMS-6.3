@@ -67,6 +67,7 @@ final class NodeQueryTest extends TestCase
             'getNodeCategoryCount' => ['NodeType type', 'array'],
             'getNodeContent' => ['int id', 'NodeType type', '?Node'],
             'getNodeCount' => ['int'],
+            'getNodeCountList' => ['array'],
             'getNodeLegacy' => ['string mod', 'int id = 0', '?array'],
             'getNodeLetters' => ['array'],
             'getNodeScope' => ['array'],
@@ -460,6 +461,12 @@ final class NodeQueryTest extends TestCase
         $this->assertSame([114, 303, 302, 301, 121, 120, 119, 116, 113, 112], array_column($run['mixedrows'], 0));
         $this->assertSame([114, 120, 121, 303, 112, 119, 116, 101, 102, 113], $run['mixedtitle']);
         $this->assertRefused($run['mixeddocs'], 'order', 'a sort one type of the mix does not allow');
+        foreach (['guest' => 2, 'root' => 1, 'rootwait' => 1] as $key => $cost) {
+            $one = $run['countlist-'.$key];
+            $this->assertSame($one['single'], $one['list'], $key.': the count per type differs from the count of each type alone');
+            $this->assertSame($cost, $one['cost'], $key.': the count per type took another number of statements than one pre-read of categories and one count');
+        }
+        $this->assertSame([1 => 1, 3 => 0, 2 => 0], $run['countlist-rootwait']['list'], 'The waiting count per type lost a type or counted a published one');
         foreach (['empty', 'twice', 'string', 'offguest'] as $key) $this->assertRefused($run[$key], 'types', $key);
         $this->assertRefused($run['offtype'], 'type', 'a disabled type for a guest');
         $this->assertSame([401], $run['offroot']['value']);

@@ -81,7 +81,7 @@ An ordinary action never accepts `points`; its amount comes from the configurati
 `_users.points` (`INT UNSIGNED NOT NULL DEFAULT 0`, indexed) is the balance every reader uses: profiles, lists,
 point groups (`_groups.points` thresholds for groups with `extra != 1`), module access checks. Ordinary reads never
 touch `_points`. A non-zero event moves the balance and writes its journal row in one unit under a lock of the
-account row, so the starting balance (see the 6.3 carry-over) plus the sum of the journal always equals the
+account row, so the starting balance (see the 8.0 carry-over) plus the sum of the journal always equals the
 aggregate.
 
 - The journal stores the amount really applied. A debit never takes the balance below zero; the row carries the
@@ -213,13 +213,13 @@ Validation (`Point::filterConfig()`), applied once in the constructor to the who
 The core builds the class in `core/system.php` before `Comment`:
 
 ```php
-$pnt = new Point($db, ($conf['update']['points'] ?? '') === '6.3.0' ? ($conf['points'] ?? []) : []);
+$pnt = new Point($db, ($conf['update']['points'] ?? '') === '8.0.0' ? ($conf['points'] ?? []) : []);
 ```
 
-Without the data-update mark `update.points = '6.3.0'` in `config/update.php` the class gets an empty scope. An
+Without the data-update mark `update.points = '8.0.0'` in `config/update.php` the class gets an empty scope. An
 exactly empty scope is a subsystem closed on purpose: switched off, no log line. A non-empty invalid scope switches
 the class off and writes one error to the site log when the object is built. A clean installation writes the mark
-directly; an updated site gets it from the 6.3 points unit. `tools/node-profile.php` builds its own instance from
+directly; an updated site gets it from the 8.0 points unit. `tools/node-profile.php` builds its own instance from
 `$conf['points']` without the mark check.
 
 ## Public API
@@ -393,7 +393,7 @@ Rules behind the map:
 Tab `_POINTS` of the groups screen, ops `points` and `pointssave`.
 
 - `points()` shows the write permission of `config/points.php` (`checkPerms()`), the warning `_POINTS_NOMARK` when
-  `update.points` is not `6.3.0`, a radio `active` and a table of the fourteen rules without `adjust` (inputs
+  `update.points` is not `8.0.0`, a radio `active` and a table of the fourteen rules without `adjust` (inputs
   `rule[<action>][points|period|limit]`). Labels are `constant('_POINTS_'.strtoupper($name))`.
 - `pointssave()` checks the admin token, reads every value with `getVar(..., 'raw')` (the `text` filter would turn
   `'0'` into an empty string), trims it and checks it against the canonical regex and the same bounds as `Point`
@@ -439,9 +439,9 @@ Tab `_NULLPOINTS` (op `pointreset`), submitted to `resave()` with `points = 1`, 
 
 `_users.points` is never written directly by any of these screens.
 
-## 6.3 carry-over
+## 8.0 carry-over
 
-The points unit of the 6.3 data update is `setUpdatePoints()` in `update.php`; it runs after
+The points unit of the 8.0 data update is `setUpdatePoints()` in `update.php`; it runs after
 `storage/update/sql/table_update6_3.sql` succeeded. It concerns only balances and the switch:
 
 - Balances are kept as they are, including earlier rating rewards; nothing is zeroed or recalculated, and no
@@ -458,10 +458,10 @@ The points unit of the 6.3 data update is `setUpdatePoints()` in `update.php`; i
   the value differs, and `config/users.php` only when it still carries `point` or `points`, which are removed. The
   shipped `points.php` is otherwise not rewritten. A points scope without fourteen actions or with a bad `active`
   stops the unit.
-- Last, the unit writes `update.points = '6.3.0'` into `config/update.php`, which opens the class (see
+- Last, the unit writes `update.points = '8.0.0'` into `config/update.php`, which opens the class (see
   Configuration). If that write fails the subsystem stays closed.
 
-The operator procedure of the update is described in `docs/NODE.md`, "The 6.3 update".
+The operator procedure of the update is described in `docs/NODE.md`, "The 8.0 update".
 
 ## Tests
 

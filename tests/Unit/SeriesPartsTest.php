@@ -141,8 +141,6 @@ final class SeriesPartsTest extends TestCase
         $this->assertSame($json, $host->getAttribute('data-sl-series-data'));
         $this->assertSame('', $host->innerHTML);
         $this->assertFalse(self::getPart('series', ['kind' => 'week', 'json' => '{}'])->querySelector('[data-sl-series]')->hasAttribute('id'));
-        $wait = self::getPart('series', ['kind' => 'live', 'json' => '{}', 'wait_text' => 'W<'])->querySelector('[data-sl-series] > .sl-loading[role="status"]');
-        $this->assertSame('W<', $wait->getAttribute('aria-label'));
     }
 
     #[Test]

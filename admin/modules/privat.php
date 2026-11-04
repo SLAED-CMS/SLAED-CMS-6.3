@@ -55,15 +55,14 @@ function privat(): void {
     foreach ($data['rows'] as $one) {
         $id = $one['id'];
         $title = $one['title'];
-        $tone = match ($one['state']) {'delin', 'delout' => 'danger', 'saved' => 'accent', 'read' => 'success', default => 'warn'};
-        $note = match ($one['state']) {
-            'delin' => (string)_PRIVAT_DELIN,
-            'delout' => (string)_PRIVAT_DELOUT,
-            'saved' => (string)_PRMOVE,
-            'read' => (string)_PROLD,
-            default => (string)_PROUTNEW,
+        [$icon, $tone, $note] = match ($one['state']) {
+            'delin' => ['envelope-x-fill', 'danger', (string)_PRIVAT_DELIN],
+            'delout' => ['send-x-fill', 'danger', (string)_PRIVAT_DELOUT],
+            'saved' => ['bookmark-fill', 'accent', (string)_PRMOVE],
+            'read' => ['envelope-open-fill', 'success', (string)_PROLD],
+            default => ['envelope-fill', 'warning', (string)_PROUTNEW],
         };
-        $tip = [['value' => $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $id])]];
+        $tip = [['value' => $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $id])], ['label' => _STATUS, 'value' => $note]];
         if ($one['ip'] !== '') $tip[] = ['label' => _IP, 'value' => $mark(Geoip::getIpHtml($one['ip']), 5)];
         $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id, 'details' => $tip,
             'drop' => getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE), 'cells' => [
@@ -72,7 +71,7 @@ function privat(): void {
             ['is_col_author' => true, 'content_html' => ($one['nameout'] !== '') ? $mark(user_info($one['nameout'], null), 3) : _ANONYM],
             ['is_col_author' => true, 'content_html' => ($one['namein'] !== '') ? $mark(user_info($one['namein'], null), 4) : _ANONYM],
             ['is_col_date' => true, 'moment' => $one['time']],
-            ['is_col_status' => true, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tone, 'label' => $note, 'title_text' => $note])],
+            ['is_col_status' => true, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $icon, 'title_text' => $note, 'color_attr' => 'var(--sl-'.$tone.')'])],
             ['is_col_actions' => true, 'dial' => []],
         ]];
     }

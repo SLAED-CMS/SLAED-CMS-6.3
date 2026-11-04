@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of update.php, beside the preflight and the order of checks of setup.php
+# The 8.0 update: the module registry, the removal of unregistered Node types and the preflight of update.php, beside the preflight and the order of checks of setup.php
 final class UpdateSetupTest extends TestCase
 {
     # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
@@ -233,7 +233,7 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame('applying', $run['first']['state']);
         $this->assertArrayNotHasKey('ratings', $run['first']['mark'] ?? []);
         $this->assertTrue($run['again']['done'], $run['again']['text']);
-        $this->assertSame(['verified', true, '6.3.0'], [$run['again']['state'], $run['again']['sealed'], $run['again']['mark']['ratings'] ?? null]);
+        $this->assertSame(['verified', true, '8.0.0'], [$run['again']['state'], $run['again']['sealed'], $run['again']['mark']['ratings'] ?? null]);
         $this->assertNotSame($run['first']['rules'], $run['again']['rules'], 'The repeat did not publish the rules');
     }
 
@@ -254,7 +254,7 @@ final class UpdateSetupTest extends TestCase
         $conn = strpos($code, 'new Database(', $save);
         $head = substr($code, $save, $conn - $save);
         foreach (['checkUpdateWrite($name)', "is_file(BACKUP_DIR.'/config/marker.json')"] as $one) $this->assertStringContainsString($one, $head);
-        $this->assertStringContainsString("\$done = !\$first || checkUpdateFail(\$rows) || setUpdateFile('update.php', ['modules' => '6.3.0'] + \$mark);", $code);
+        $this->assertStringContainsString("\$done = !\$first || checkUpdateFail(\$rows) || setUpdateFile('update.php', ['modules' => '8.0.0'] + \$mark);", $code);
         $step = strpos($code, "['steps' => [SL_VERSION => ", $save);
         $this->assertGreaterThan(strpos($code, 'if ($ddl === [] || checkUpdateFail($ddl))', $save), $step, 'The step mark of the code comes before the schema file');
         $ddl = strpos($code, "\$ddl = setUpdateSql(\$db, 'table_update6_3.sql', \$pref);");

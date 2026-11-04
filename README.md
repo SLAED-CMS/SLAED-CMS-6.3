@@ -1,4 +1,4 @@
-# SLAED CMS 6.3
+# SLAED CMS 8.0
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-slateblue.svg)](https://www.php.net/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.5.2%2B-1F305F.svg)](https://mariadb.org/)

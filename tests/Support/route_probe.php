@@ -1401,7 +1401,7 @@ function getRouteIntegData(): array {
 function addRouteGuardRows(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
     $steps = (is_file($work.'/config/update.php') ? require $work.'/config/update.php' : [])['update']['steps'] ?? [];
-    setRouteFile($work.'/config/update.php', ['update' => ['fields' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0', 'steps' => $steps]]);
+    setRouteFile($work.'/config/update.php', ['update' => ['fields' => '8.0.0', 'points' => '8.0.0', 'ratings' => '8.0.0', 'steps' => $steps]]);
     $item = fn(string $title, int $sort): array => ['title' => $title, 'active' => true, 'sort' => $sort];
     $data = require $work.'/config/fields.php';
     $data['fields']['account'] = ['city' => ['title' => 'City', 'intro' => '', 'type' => 'select', 'default' => '',
@@ -1555,7 +1555,7 @@ function getRouteIntact(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $out = [];
     $data = require $work.'/config/update.php';
-    setRouteFile($work.'/config/update.php', ['update' => array_replace($data['update'] ?? [], ['points' => '6.3.0'])]);
+    setRouteFile($work.'/config/update.php', ['update' => array_replace($data['update'] ?? [], ['points' => '8.0.0'])]);
     $data = require $work.'/config/points.php';
     $data['points']['active'] = '1';
     setRouteFile($work.'/config/points.php', $data);

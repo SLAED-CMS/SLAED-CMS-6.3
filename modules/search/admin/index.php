@@ -616,6 +616,7 @@ function delete(): void {
         'rows' => $rows,
         'submit_label' => _DELETE,
         'is_danger' => true,
+        'button_attr' => 'data-sl-confirm="'.htmlspecialchars(_SEARCHCLEAR.'?', ENT_QUOTES, 'UTF-8').'"',
     ])]);
     echo $cont;
     setFoot();

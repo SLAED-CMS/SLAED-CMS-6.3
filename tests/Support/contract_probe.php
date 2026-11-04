@@ -189,7 +189,7 @@ function getProbeCommentRead(): array {
 function getProbeCommentWrite(bool $guest): array {
     global $db, $com, $conf, $user;
     $map = ['account' => '_users', 'voting' => '_voting'];
-    $gain = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
+    $gain = (($conf['update']['points'] ?? '') === '8.0.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $out = ['guest' => $guest, 'user' => true, 'rows' => [], 'refuse' => [], 'clean' => false];
     $uid = 0;
     if (!$guest) {
@@ -347,7 +347,7 @@ function getProbeCommentStage2(): array {
     $uid = $one ? intval($one['id']) : 0;
     if ($one) $user = [(string)$one['id'], (string)$one['name'], getUserToken((string)$one['password'])];
     $out['user'] = [$uid, is_user() ? $uid : 0];
-    $gain = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
+    $gain = (($conf['update']['points'] ?? '') === '8.0.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $long = intval($conf['comments']['letter']);
     $word = str_repeat('a', $long + 1);
     $out['rules'] = [
@@ -463,7 +463,7 @@ function getProbeCommentSweep(): array {
     $one = $db->getSqlRow($db->getSqlQuery($sql));
     $uid = $one ? intval($one['id']) : 0;
     if ($one) $user = [(string)$one['id'], (string)$one['name'], getUserToken((string)$one['password'])];
-    $out['gain'] = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
+    $out['gain'] = (($conf['update']['points'] ?? '') === '8.0.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $all = getProbeCommentCount();
     $db->setSqlBegin();
     $addr = getIp();
@@ -1022,7 +1022,7 @@ function getProbeCommentTarget(): array {
 function getProbeFieldPost(): array {
     global $conf, $fld, $prs, $tpl;
     $rule = ['title' => 'Probe', 'intro' => '', 'type' => 'text', 'default' => '', 'options' => [], 'req' => false, 'multi' => false, 'active' => true, 'sort' => 10];
-    $conf['update']['fields'] = '6.3.0';
+    $conf['update']['fields'] = '8.0.0';
     $conf['fields']['probea'] = ['note' => $rule, 'area' => ['type' => 'textarea', 'sort' => 20] + $rule, 'off' => ['active' => false, 'sort' => 30] + $rule];
     $conf['fields']['probeb'] = ['note' => ['options' => ['max' => 3]] + $rule];
     $conf['fields']['probec'] = ['Broken-Name' => $rule];

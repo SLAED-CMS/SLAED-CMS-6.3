@@ -283,6 +283,13 @@
   /* The overshoot of an alert: a success tick lands from its turn */
   --sl-alert-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   --sl-pulse-dur: calc(2s * var(--sl-time-scale));
+  /* The motion of the presentation cockpit, as the panel moves its own: a light round a frame under the hand and an arc filling */
+  --sl-aurora-dur: calc(5.4s * var(--sl-time-scale));
+  --sl-knob-dur: calc(1.4s * var(--sl-time-scale));
+  /* A running figure, one series in both themes: how long it runs, which setFigureRun() of slaed.js reads off its flare, the colour it runs in and its glow */
+  --sl-figure-dur: calc(0.9s * var(--sl-time-scale));
+  --sl-figure-text: var(--sl-success);
+  --sl-figure-shadow: 0 0 var(--sl-space-5) var(--sl-success);
   --sl-skel-dur: calc(1.2s * var(--sl-time-scale));
   --sl-spin-dur: calc(6s * var(--sl-time-scale));
 
@@ -495,12 +502,17 @@
   --sl-pres-photo-bg: light-dark(transparent, rgba(4, 12, 22, 0.32));
   /* The rain of code behind the guard scene: the faint tint by day, the stronger one by night, where the faint one vanishes */
   --sl-pres-rain-bg: light-dark(var(--sl-tint), var(--sl-tint-strong));
-  /* The presentation gauge rings: the cockpit and vitals size, the small statistics size and the glow share */
+  /* The presentation gauge rings: the cockpit and vitals size, the small statistics size; the share is the one share of its tone every glow of the site carries, a ring of focus or a tint is not a glow */
   --sl-gauge-width: 128px;
   --sl-gauge-height: 128px;
   --sl-gauge-min-width: 56px;
   --sl-gauge-min-height: 56px;
   --sl-gauge-mix: 50%;
+  /* The light that runs round the frame of a block under the hand: the line it burns on, the share of the frame it covers, the colour it starts in and the one of its head; --sl-aurora-dur at 0s turns it off */
+  --sl-aurora-width: var(--sl-space-1);
+  --sl-aurora-mix: 20%;
+  --sl-aurora-border: var(--sl-primary);
+  --sl-aurora-ring: var(--sl-accent);
   /* The glass of the cockpit lamp: gloss and a shaded rim on a disc of the light steps, so its muted words hold 4.5:1; dark on the presentation panel */
   --sl-gauge-bg:
     radial-gradient(ellipse 62% 34% at 50% 12%, var(--sl-beam-bg), transparent 72%),

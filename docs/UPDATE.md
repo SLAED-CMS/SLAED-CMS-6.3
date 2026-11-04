@@ -621,7 +621,9 @@ to `core/rescue.php`: one page with the field "Код отката". The right c
 the database from the backup; the code is single use, and `rescue.now` is deleted after the rollback. The rescuer reads
 `config/db.php` directly and restores the database in portions, one request per portion. The code also continues a
 broken installation under a new token, so a closed browser window never leaves the site closed. The pages of the
-executor and the rescuer are English, without the core, in the shell of `public/error.html`.
+executor and the rescuer are English, without the core, in the shell of `public/error.html`. That file itself, the
+static 503 of the gate and the 502/504 of the web server, is English too and carries one text: it is served before the
+core or without PHP, where neither the language of the site nor its files can be read.
 
 **"Вернуть предыдущую версию"** is offered while the backup of the last installation lies (`keepbak` = 0 deletes it
 right after a successful installation): the same rollback of the whole plan returns files, `config/` and the database,
@@ -683,7 +685,7 @@ writes the settings of the site into `config/`, whose files the stand tracks.
 1. A local `git clone` of the committed tree: `git archive` drops `public/update.php` and `table_update6_3.sql` by
    `export-ignore`. `modules/master/` and `modules/changelog/` are taken out, as the release archive leaves them.
 2. The shipped settings in `storage/backup/release/config/` in the form of the release archive, `config/modules.php`
-   without `master` and `changelog`: the settings step of a 6.3 site merges from that folder.
+   without `master` and `changelog`: the settings step of an 8.0 site merges from that folder.
 3. The production `config/` laid over `config/` without `local.php` and without the code files `system.php` of the old
    releases, `header.php` and `chmod.php`; its `db.php` names the host, user, password and database of the disposable base;
    `storage/logs/` exists, or the run logs nothing.

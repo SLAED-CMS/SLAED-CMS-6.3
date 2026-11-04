@@ -35,7 +35,7 @@ class AltchaCaptchaProvider implements CaptchaProvider {
     private const ALGO = 'SHA-256';
     private const FIELD = 'altcha';
 
-    # Render the ALTCHA v3 widget (3.0.11): external build with the self-hosted same-origin worker plugins/altcha/altcha-sha.js, so a strict CSP works without blob:
+    # Render the ALTCHA v3 widget (3.5.0): external build with the self-hosted same-origin worker plugins/altcha/altcha-sha.js, so a strict CSP works without blob:
     public function html(string $act): string {
         global $tpl, $conf, $locale;
         $url = HOME_PATH.'index.php?go=captcha&act='.rawurlencode($act);

@@ -3,12 +3,12 @@
   <div class="sl-pres-body">
     <div class="sl-pres-speed">
       <div class="sl-pres-card">
-        <div class="sl-pres-panel-head"><span>{{ resp.title }}</span></div>
+        <div class="sl-pres-panel-head"><span><i class="bi bi-stopwatch" aria-hidden="true"></i>{{ resp.title }}</span></div>
         <div class="sl-pres-big">{{ resp.value }}<small> {{ resp.unit }}</small></div>
         <div class="sl-pres-spark" data-sl-pres="spark" data-sl-pres-series="{{ resp.series }}"><canvas role="img" aria-label="{{ resp.chart }}"></canvas></div>
       </div>
       <div class="sl-pres-card">
-        <div class="sl-pres-panel-head"><span>{{ db.title }}</span></div>
+        <div class="sl-pres-panel-head"><span><i class="bi bi-database" aria-hidden="true"></i>{{ db.title }}</span></div>
         <div class="sl-pres-rows">
           {% for item in db.rows %}
           <div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>
@@ -19,7 +19,7 @@
         </div>
       </div>
       <div class="sl-pres-card">
-        <div class="sl-pres-panel-head"><span>{{ online.title }}</span></div>
+        <div class="sl-pres-panel-head"><span><i class="bi bi-people" aria-hidden="true"></i>{{ online.title }}</span></div>
         <div class="sl-pres-online">
           <div class="sl-pres-dials">{% for item in online.dials %}{% include 'fragments/presentation-ring.html' with item %}{% endfor %}</div>
           <div class="sl-pres-rows">

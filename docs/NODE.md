@@ -28,8 +28,8 @@ remaining modules alike.
 
 `modules/node/profiles/` holds ten type profiles in the `slaed.node` export format. A clean installation
 creates ten active types from them; an updated site gets none and creates types in the admin panel, from a
-profile or from scratch. The 6.3 update imports no content of the removed modules
-(see [The 6.3 update](#the-63-update)); the separate script `update.php` carries it, see
+profile or from scratch. The 8.0 update imports no content of the removed modules
+(see [The 8.0 update](#the-80-update)); the separate script `update.php` carries it, see
 [Migration of the removed modules](#migration-of-the-removed-modules).
 Settings of each profile are in [Shipped profiles](#shipped-profiles).
 
@@ -217,7 +217,7 @@ target kind `node.<name>`), `Feed` (safe RSS/Atom loading, limits `rss.bytes`, `
 Composer is not a runtime dependency. `core/system.php` requires `field.php`, `point.php`, `rating.php` and
 `comment.php`, then `core/classes/node/load.php`, whose closed class map loads a Node class only when a
 request uses it. It creates `$fld = new Field()` and `$pnt = new Point(...)`; `Point` gets `$conf['points']`
-only once `$conf['update']['points']` is `'6.3.0'`, otherwise an empty scope that switches it off. `NodeView`
+only once `$conf['update']['points']` is `'8.0.0'`, otherwise an empty scope that switches it off. `NodeView`
 is created on demand from `Parser` and `Field`; `Feed` is loaded only by its consumers.
 
 The glue in `core/system.php` builds the request objects once: `getNodeContext()`, `getNodeTypeMap()`
@@ -361,7 +361,7 @@ session and restores it; `Backup` puts its session into an export state of its o
 `+00:00`) and hands back the saved mode, zone and collation.
 
 **Collation.** `{collate}` of `config/db.php` is the only source: `setup.php` writes `utf8mb4_unicode_520_ci`,
-`update.php` gives a 6.2 configuration the same and keeps the one of a 6.3 configuration; `table.sql` and
+`update.php` gives a 6.2 configuration the same and keeps the one of an 8.0 configuration; `table.sql` and
 `insert.sql` carry it as `{collate}`, and `setUpdateSql()`, `tools/node-profile.php` and the probes read it. No
 column spells a `utf8mb4` collation but `_maildead.email`, `utf8mb4_bin`, the case-sensitive list of dead addresses.
 
@@ -720,7 +720,7 @@ Keys: `PRIMARY (modul, oid)`, `node (nid)`. Foreign key `{prefix}_fk_node_legacy
   physically deleted material takes its old address with it, so that address answers 404.
 - `NodeQuery::getNodeLegacy()` reads it, and only on the way to a 404: see [Response codes](#response-codes).
 - A material with a row here earns no Point award `publish`, neither at once nor from a publication job: its removed
-  module rewarded the publication and the 6.3 update carried that balance. `NodeService` asks the table only on the way
+  module rewarded the publication and the 8.0 update carried that balance. `NodeService` asks the table only on the way
   to that award.
 
 ### `_node_publish`
@@ -1067,7 +1067,8 @@ Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (ki
 - "Published in window": `status = Published`, `published <= NOW()`, `expires` empty or later, database clock. A
   disabled type yields nothing to a non-moderator. The extension scope always applies; a moderator always passes
   category rights.
-- Category rights come from one pre-read per type per instance. A right string `<level>|<group ids>`: empty grants
+- Category rights come from one pre-read per instance, which reads the categories of every selected type not yet known in
+  one statement. A right string `<level>|<group ids>`: empty grants
   nobody, a group list grants by intersection with `groups`, else level `0` grants everyone and `1` users only.
   `cid = 0` is open; a type without `features.categories` reads only `cid = 0`; a main category of another module
   or a deleted one closes the material to non-moderators.
@@ -1119,6 +1120,7 @@ public function setNodeSearch(string $text): self
 public function setNodeHome(bool $home = true): self
 public function getNodeList(): array
 public function getNodeCount(): int
+public function getNodeCountList(): array
 public function getNodeLetters(): array
 public function getNodeOwnCount(string $since, int $uid): array
 ```
@@ -1146,7 +1148,8 @@ column name or SQL.
 - `getNodeList()` returns `Node[]` with `body = null`. Fields are read when a selected type has an active field and
   sets are on; `cids` for `features.categories`, `rels` for `features.related` or `features.tree`, `assets` for an
   active role, each with at most one batch statement per page. `getNodeCount()` applies the same conditions without
-  order and paging.
+  order and paging; `getNodeCountList()` does the same in one statement per type of the selection, as `type id =>
+  count` with every selected type present, the source of the waiting queues of the admin menu.
 - `getNodeLetters()` counts the same selection per first sign of the title, upper case, as `letter => count`; the list
   asks it inside a category, where the stored counts of the type do not apply. `getNodeOwnCount()` counts in one
   statement what the selection published since `$since` holds and what of it the favorites of `$uid` hold, as `['new',
@@ -1203,9 +1206,9 @@ Counted by `$db->qnum` around the Node handler; `getNodeContext()`, Point and gl
 | Method | Statements |
 |---|---|
 | `getNodeType()` / `getNodeTypeList()` | 1 per new name / 1 for all, 0 from memory (a version mismatch adds a re-read) |
-| category pre-read | 1 per type per instance |
+| category pre-read | 1 per instance, for every selected type not yet known |
 | `getNodeList()` | 1 page + at most one batch each for `cids`, `rels`, `assets` |
-| `getNodeCount()`, `getNodeLetters()`, `getNodeOwnCount()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
+| `getNodeCount()`, `getNodeCountList()`, `getNodeLetters()`, `getNodeOwnCount()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
 | `getNodeTally()` | 2, 3 with categories |
 | `getNode()` | 4 |
 | `getNodeTargetList()` | type rows not yet known + 1 |
@@ -1633,7 +1636,7 @@ Definitions live in `config/fields.php` under `fields.<area>`: `account`, `forum
 `fields.node.<type>`. Definition CRUD and the file write stay outside `Field`.
 
 - `getFieldRules(string $mod)` (`core/helpers.php`) answers the checked set of an area once per request; every area
-  is empty until the 6.3 data update leaves `$conf['update']['fields'] === '6.3.0'`, and a refused set is logged and
+  is empty until the 8.0 data update leaves `$conf['update']['fields'] === '8.0.0'`, and a refused set is logged and
   counts as empty.
 - `getFieldsPost(string $mod, string $old = '')` reads `field[]` for the fixed areas (trusted tags stripped unless
   the main administrator posts) and answers `json`, `errors` and `stop`; without the mark or with a broken set the
@@ -2055,7 +2058,7 @@ and calls `updateNodeType()` with the version the form carries.
 `addNodeTypeImport()`; nothing reads it at runtime. Every profile carries full `settings` and `fields` and empty
 `uploads` and `rating`, so a type made from it takes the site's `uploads.all` and the default rating rule. A clean
 installation (`addNodeProfiles()` in `core/admin.php`, opened by the mark `node => new` of `config/update.php`)
-imports and activates all ten and adds a starter material to `news`; the 6.3 update creates no type.
+imports and activates all ten and adds a starter material to `news`; the 8.0 update creates no type.
 
 All ten profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off).
 
@@ -2936,6 +2939,7 @@ a map with other names, non-integers, values other than `0..n-1` or priorities n
 
 ```php
 public function updateNodeSupport(int $id, int $aid, int $state, int $prio, int $version): void;
+public function getNodeSupportCount(NodeType $type, ?int $state = null, ?int $aid = null, ?int $prio = null): int;
 public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array;
 ```
 
@@ -2946,7 +2950,8 @@ public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $
   repeating stored values writes nothing; card changes send no mail.
 - `getNodeSupportList()` is the administrative queue, moderators only: published requests, `null` filter lifted,
   `aid = 0` for unassigned, `limit` up to `limits.maxlist`, in the panel up to `LIST_MAX`, order `s.prio DESC, s.activity ASC, s.id ASC`;
-  returns `['nodes' => NodeTarget[], 'ext' => [id => card], 'count' => int]`.
+  returns `['nodes' => NodeTarget[], 'ext' => [id => card], 'count' => int]`. `getNodeSupportCount()` is that
+  `count` alone in one statement, with the same rights and filters: the bell of the admin menu and the pager of the panel.
 - Routes: public `POST op=support` (owner, CSRF, card version, state `staff` or `closed`; `aid`/`prio` come from
   the stored card); administrative `GET|POST op=support` for the full card, whose discussion is read whole in one
   pass by `Comment::getThread()`. The ordinary administrative list of the type is the queue.
@@ -3272,7 +3277,7 @@ marked `release` below belong to the group `composer test:fast` leaves out and `
 | `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
 | `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the ten profiles; panel and public walk |
-| `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | 6.2 -> 6.3 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
+| `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | 6.2 -> 8.0 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
 | `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup`; Config and Mails `release` | settings carry-over, newsletter, registry, both preflights |
 | `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields`, `release` | data update units |
 | `PointTest`, `RatingTest` | 20, 18 | `point_probe.php`, `rating_probe.php` | the classes |
@@ -3363,9 +3368,9 @@ table over 1000 rows is fully scanned, a list page reads more than `2 x page end
 largest page (`media` at `limit = 100`) costs other statements than a page of one. Results with Xdebug loaded are
 not acceptance results.
 
-## The 6.3 update
+## The 8.0 update
 
-`update.php` in the root brings a 6.2 site to 6.3 and then carries the content of the removed modules into Node
+`update.php` in the root brings a 6.2 site to 8.0 and then carries the content of the removed modules into Node
 (see the next section); the same run brings a site of an early 6.3 build forward (see
 [A site of an early 6.3 build](#a-site-of-an-early-63-build)). It is an internal tool of the maintainer: the release
 does not ship it, `setup.php` installs a new site only, and the public `UPGRADING.md` says that a 6.2 site is not
@@ -3374,7 +3379,7 @@ updated by the release. This section is the maintainer view of its first stage a
 
 The first stage is the only entry of the data update. There is no CLI script, no conversion at runtime and no
 detection of a 6.2 format by the running system: a subsystem whose mark is missing stays closed for writing and
-says so, it never reads the old format. The conversion version string is `6.3.0`.
+says so, it never reads the old format. The conversion version string is `8.0.0`.
 
 ### Two stages in one file
 
@@ -3391,9 +3396,9 @@ arrays, so `getConfig()` finds no database. `update.php` therefore decides befor
 - **Second stage**, once the three marks stand: the core boots and `isAdmin(true)` guards the migration of the
   removed modules.
 
-The connection comes from `config/db.php` in either shape (area `db` of 6.3, `$confdb` of 6.2), so the first stage
+The connection comes from `config/db.php` in either shape (area `db` of 8.0, `$confdb` of 6.2), so the first stage
 has no form. Both shapes connect and are written in the collation of the release, `utf8mb4_unicode_520_ci`, whatever
-`collate` they name, so the schema file converts a 6.3 site of another collation too; a 6.2 source is written without
+`collate` they name, so the schema file converts an 8.0 site of another collation too; a 6.2 source is written without
 the `mode`, `sync` and `type` of 6.2, which nothing reads; `setUpdateSql()` fills `{collate}` with the same value. The panel file keeps the
 name of the site: the `afile` of `config/config_security.php` while a 6.2 site still has it, otherwise the one of
 `security.php`; a name outside `[a-zA-Z0-9_-]` or one of `index`, `setup`, `update` falls back to `admin`.
@@ -3425,7 +3430,7 @@ function setUpdateFile(string $fp, array $arr, array $act = [], bool $raw = fals
 - Scalars are stored as strings; `$raw = true` keeps native `bool`, `int` and `null`, which the Field definitions
   need. A file published with `$raw` equals byte for byte what the runtime `setConfigFile()` writes.
 - `getUpdateSource(string $file): array` includes a source in an isolated scope without output and answers the
-  array a 6.3 file returns or the first array a 6.2 file assigns. `getUpdateCred(): array` reads the gitignored
+  array an 8.0 file returns or the first array a 6.2 file assigns. `getUpdateCred(): array` reads the gitignored
   `config/db.php` in both shapes.
 
 A unit answers its report rows as data, `[['text' => …, 'done' => bool]]`, built by `getUpdateRow()`;
@@ -3470,9 +3475,9 @@ runs and reports, then neither the schema file nor any data unit runs.
 
 1. The checks above; a refusal returns at once.
 2. Close the site (`global.php`, `close = 1`). The shipped `global.php` carries `close = 0` and lands before a
-   6.3 panel exists, so the run closes the site itself. It stays closed after the update until the maintainer
+   8.0 panel exists, so the run closes the site itself. It stays closed after the update until the maintainer
    opens it in the settings.
-3. `setUpdateConfig()` carries the 6.2 settings (see "6.2 configuration" below). A 6.3 site (no `config_*.php` and
+3. `setUpdateConfig()` carries the 6.2 settings (see "6.2 configuration" below). An 8.0 site (no `config_*.php` and
    no `storage/backup/update/config/`) runs `setUpdateMerge()` instead: the global keys `rewrite`, `sep`, `tsep`,
    `title`, `ctitle`, `clickable`, `dbsync`, `version`, `cache_*` and every `css_*` and `script_*` but `css_f` and
    `script_f`, the users keys `anonym`, `network`, `network_c`, `point`, `points`, the newsletter keys `active`,
@@ -3481,7 +3486,7 @@ runs and reports, then neither the schema file nor any data unit runs.
    a type section staying the site's; without that folder the step is a failed row.
 4. The panel file: the rename source is the shipped `admin.php` when it exists, otherwise the panel file of the site
    (a repeat after the rename); the rename replaces a 6.2 loader under the name of the site, and a panel file of
-   the site under another name is removed. Then `security.php` (`afile`) and `db.php` in the 6.3 format. The
+   the site under another name is removed. Then `security.php` (`afile`) and `db.php` in the 8.0 format. The
    language and the address of 6.2 stay; nothing is taken from the request host.
 5. `setUpdateModules($db, $prefix, $first)` reconciles `config/modules.php`.
 6. `deleteUpdateTypes($keep)` removes every type of the shipped `config/node.php` that has no row in
@@ -3515,7 +3520,7 @@ runs and reports, then neither the schema file nor any data unit runs.
     the cursors over, and a verified unit is skipped. Last `setUpdateTexts()`: every stored text the parser renders
     (Node texts, comments, forum posts, private and admin messages, newsletters, own blocks, signatures, blocks without
     a feed, textarea fields, the contact text) turns from BB into Markdown once. A text of the BB era is escaped, one
-    rendered trusted takes `getMigrateHtml()`, and a text Markdown by origin (Node; on a 6.3 site the help replies and
+    rendered trusted takes `getMigrateHtml()`, and a text Markdown by origin (Node; on an 8.0 site the help replies and
     the forum posts, comments and private messages from 2026-07-13 on) converts its tags alone. Each batch of 200 rows
     is named in the manifest with the hashes of its new texts before its transaction, so a stopped run neither
     converts a committed batch again nor loses one that rolled back; a text too long for its column stays BB and the
@@ -3556,10 +3561,10 @@ The file holds the area `update`; it is gitignored and travels with the site. Ma
 
 | Key | Value | Written by | Read by |
 |---|---|---|---|
-| `points` | `6.3.0` | `setUpdatePoints()`; `setup.php` | `core/system.php` builds `Point` with the rules only when set; `admin/modules/groups.php` warns `_POINTS_NOMARK` |
-| `ratings` | `6.3.0` | `setUpdateRatings()`; `setup.php` | `Rating` construction in `core/system.php`, `getRatingAsync()` in `core/helpers.php`, `admin/modules/ratings.php` (`_RATINGS_NOMARK`, no form) |
-| `fields` | `6.3.0` | `setUpdateFields()`; `setup.php` | `getFieldRules()` (empty set without it), `getFieldsPost()` (keeps the stored text, logs), `admin/modules/fields.php` (`_FIELDS_NOMARK`) |
-| `modules` | `6.3.0` | step 9 of the run | the run only: set means "not the first run" |
+| `points` | `8.0.0` | `setUpdatePoints()`; `setup.php` | `core/system.php` builds `Point` with the rules only when set; `admin/modules/groups.php` warns `_POINTS_NOMARK` |
+| `ratings` | `8.0.0` | `setUpdateRatings()`; `setup.php` | `Rating` construction in `core/system.php`, `getRatingAsync()` in `core/helpers.php`, `admin/modules/ratings.php` (`_RATINGS_NOMARK`, no form) |
+| `fields` | `8.0.0` | `setUpdateFields()`; `setup.php` | `getFieldRules()` (empty set without it), `getFieldsPost()` (keeps the stored text, logs), `admin/modules/fields.php` (`_FIELDS_NOMARK`) |
+| `modules` | `8.0.0` | step 9 of the run | the run only: set means "not the first run" |
 | `node` | `new` | `setup.php` only | `addNodeProfiles()` in `core/admin.php`: imports the shipped profiles for the first administrator, then removes the key |
 
 `setup.php` writes `points`, `ratings`, `fields` and `node` together, after the last statement of `insert.sql`, so a
@@ -3851,7 +3856,7 @@ laid, since the release ships its own `uploads/presentation/`. How `slaed.net` i
 | `tests/Unit/UpdateSiteTest.php` | `tests/Support/install_probe.php` mode `update` over HTTP | the whole first stage on a real 6.2 schema |
 | `UpdateSetupTest` | `tests/Support/update_probe.php … setup` | the update preflight, registry, `deleteUpdateTypes()`; the installer preflight `getSetupProbe()` and the order of `checkSetupRun()` in `setup.php` |
 | `UpdatePointsTest`, `UpdateRatingsTest`, `UpdateFieldsTest`, `UpdateConfigTest`, `UpdateMailsTest` | `update_probe.php` with unit `points` (default), `ratings`, `fields`, `config`, `mails` | one unit each: resume from cursors, stops, marks |
-| `UpdateArchiveTest` | `update_probe.php … archive` | the archive unit (dry run, rewrite, repeat, resume), the settings step of a 6.3 site and the drop of the tables by `setUpdateTables()` |
+| `UpdateArchiveTest` | `update_probe.php … archive` | the archive unit (dry run, rewrite, repeat, resume), the settings step of an 8.0 site and the drop of the tables by `setUpdateTables()` |
 | `UpdateTextTest` | functions lifted alone; `update_probe.php … texts` | `getMigrateMarkdown()` and `getMigrateHtml()` on BB, Markdown and 6.2 HTML; the text unit `setUpdateTexts()` (dry run, write, repeat, a batch stopped before and after its commit) |
 
 `update_probe.php` lifts the functions out of `update.php` and `setup.php` by name (both act on load), with a
@@ -3889,12 +3894,12 @@ the schema file is done only when this test passes.
 ## Migration of the removed modules
 
 `update.php` in the root carries the content of `news`, `pages`, `faq`, `help`, `links`, `files`, `content`, `jokes`
-and `media` into Node on a site that ran the 6.3 update. Only the main administrator opens it; the page shows the plan
+and `media` into Node on a site that ran the 8.0 update. Only the main administrator opens it; the page shows the plan
 per module and a POST with the token scope `update` runs every step that is not done yet. The table of a module is
 dropped once its data step is done, and the page then shows the module from its manifest. It reads the module tables
-in the 6.3 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net` carry; for a clean
+in the 8.0 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net` carry; for a clean
 6.2 site, whose tables still say `sid`, `catid`, `hometext` and `bodytext`, the first stage renames the columns of the
-nine tables in `table_update6_3.sql` ("Batch X"), and a table already in the 6.3 shape stays as it is. A table the
+nine tables in `table_update6_3.sql` ("Batch X"), and a table already in the 8.0 shape stays as it is. A table the
 first stage dropped, empty or with every row in Node already, is not in the plan. `UpdateSiteTest` runs this second
 stage on its 6.2 fixture and reads the materials it made.
 

@@ -13,7 +13,7 @@
 # The second argument keep leaves the copy served on the first port after the checks until the file stop appears in the scratch root, for a browser to walk it
 # The argument fail leaves a user file in uploads/node/jokes of the copy before the first administrator is created and checks only that installation
 # The arguments update <dump> <revision> <prefix> [<snapshot>] upgrade a real 6.2 site instead, with its dump and its configuration as the revision tracked it
-# That upgrade adds the field definitions and corrected sources from the snapshot directory of its own field update, and runs the checks of the 6.3 update
+# That upgrade adds the field definitions and corrected sources from the snapshot directory of its own field update, and runs the checks of the 8.0 update
 # The directory tests/Fixtures/update62 is such a site: the schema of a real 6.2 site with a small seed as the dump and its 6.2 configuration directory as the revision
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);

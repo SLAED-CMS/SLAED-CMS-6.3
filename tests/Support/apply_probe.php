@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe of the installation from the panel over real HTTP (docs/UPDATE.md, "Installation"); nothing touches the site tree or the site database
-# It copies the code of the tree into a disposable site with its own database, writes the files.json of 6.3.0 and unpacks a package of 6.3.1 into its stage/
+# It copies the code of the tree into a disposable site with its own database, writes the files.json of 8.0.0 and unpacks a package of 8.0.1 into its stage/
 # The package is signed with a fresh key the copy trusts; the built-in server serves the copy's public/, and every exchange is a real request with its own cookies
 # Each run starts from the same pristine copy: a full installation and its way back, a failed database step, a failed dump, a cut batch continued or rolled back by the code
 # The last run breaks the run copy and rolls back by rescue.now; the argument unit answers the pure parts of Update in a child process instead
@@ -19,7 +19,7 @@ define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
 
 # The table prefix of the disposable database, the version of the package and the password of its super-administrator
 const APREF = 'probe';
-const AVER = '6.3.1';
+const AVER = '8.0.1';
 const APASS = 'root-pass-1';
 
 # The folders of the tree a site copy needs; the editors are left out of public/plugins/, no page of the run loads one
@@ -134,7 +134,7 @@ function setProbeLine(string $file, string $line): void {
     file_put_contents($file, preg_replace('#^<\?php\n#', "<?php\n".$line."\n", (string)file_get_contents($file), 1));
 }
 
-# The pristine site of 6.3.0 and its package of 6.3.1, built once per run of the probe
+# The pristine site of 8.0.0 and its package of 8.0.1, built once per run of the probe
 # The installed core/system.php notes each boot of it in a log, so is the one of the package; the installed core/apply.php is broken, so only the copy of the package can install
 function setProbePristine(string $work, string $base): void {
     $site = $work.'/pristine';
@@ -151,30 +151,30 @@ function setProbePristine(string $work, string $base): void {
     $data['security']['captcha']['active'] = '0';
     setProbeConf($site.'/config/security.php', $data);
     $data = require $site.'/config/update.php';
-    $data['update'] = array_replace($data['update'], ['steps' => ['6.3.0' => '2026-10-01 00:00:00'], 'check' => ['upcheck' => '0', 'channel' => 'stable', 'keepbak' => '1',
+    $data['update'] = array_replace($data['update'], ['steps' => ['8.0.0' => '2026-10-01 00:00:00'], 'check' => ['upcheck' => '0', 'channel' => 'stable', 'keepbak' => '1',
         'upsite' => '0']]);
     setProbeConf($site.'/config/update.php', $data);
     $data = require $site.'/config/scheduler.php';
     $data['scheduler']['active'] = '0';
     setProbeConf($site.'/config/scheduler.php', $data);
-    file_put_contents($site.'/core/probegone.php', "<?php\n# a file of 6.3.0 that 6.3.1 deletes\n");
+    file_put_contents($site.'/core/probegone.php', "<?php\n# a file of 8.0.0 that 8.0.1 deletes\n");
     foreach (['uploads/presentation/sites/thumb', 'uploads/presentation/brand/thumb', 'uploads/presentation/dna', 'storage/cache', 'storage/logs', 'storage/backup'] as $dir) {
         mkdir($site.'/'.$dir, 0755, true);
     }
-    setProbeList($site, '6.3.0');
+    setProbeList($site, '8.0.0');
     $pack = $work.'/package';
     addProbeCopy($site, $pack, ['uploads', 'cache', 'logs', 'backup']);
     unlink($pack.'/core/probegone.php');
-    file_put_contents($pack.'/core/version.php', str_replace("'6.3.0'", "'".AVER."'", (string)file_get_contents($pack.'/core/version.php')));
+    file_put_contents($pack.'/core/version.php', str_replace("'8.0.0'", "'".AVER."'", (string)file_get_contents($pack.'/core/version.php')));
     setProbeLine($pack.'/core/system.php', "file_put_contents(dirname(__DIR__).'/storage/probe-core.log', \"new\\n\", FILE_APPEND);");
     file_put_contents($pack.'/core/rescue.php', "\n# the rescuer of ".AVER."\n", FILE_APPEND);
     file_put_contents($pack.'/lang/en.php', "\n# the language of ".AVER."\n", FILE_APPEND);
     file_put_contents($pack.'/public/templates/lite/assets/css/theme.css', "\n/* the theme of ".AVER." */\n", FILE_APPEND);
-    file_put_contents($pack.'/core/probenew.php', "<?php\n# a file 6.3.1 adds\n");
+    file_put_contents($pack.'/core/probenew.php', "<?php\n# a file 8.0.1 adds\n");
     mkdir($pack.'/tools/probe', 0755, true);
-    file_put_contents($pack.'/tools/probe/new.txt', "a folder 6.3.1 adds\n");
+    file_put_contents($pack.'/tools/probe/new.txt', "a folder 8.0.1 adds\n");
     $data = require $pack.'/config/global.php';
-    setProbeConf($pack.'/config/global.php', $data + ['probeopt' => 'added by 6.3.1']);
+    setProbeConf($pack.'/config/global.php', $data + ['probeopt' => 'added by 8.0.1']);
     mkdir($pack.'/storage/update/step', 0755, true);
     setProbeList($pack, AVER);
     setProbeLine($site.'/core/system.php', "file_put_contents(dirname(__DIR__).'/storage/probe-core.log', \"old\\n\", FILE_APPEND);");
@@ -183,21 +183,21 @@ function setProbePristine(string $work, string $base): void {
     file_put_contents($site.'/public/templates/probe3/index.html', "<!-- a theme of a third party, in no release -->\n");
 }
 
-# The keys and state of a site that found 6.3.1 and unpacked it: a manifest signed with a fresh key the copy trusts, the stage of the package and its changed files
+# The keys and state of a site that found 8.0.1 and unpacked it: a manifest signed with a fresh key the copy trusts, the stage of the package and its changed files
 function setProbeFound(string $site, string $home): void {
     $pair = sodium_crypto_sign_keypair();
     $pub = sodium_crypto_sign_publickey($pair);
     $list = json_decode((string)file_get_contents($site.'/storage/update/client/stage/'.AVER.'/storage/update/files.json'), true);
     $hash = hash('sha256', json_encode($list));
     $man = ['channel' => 'stable', 'commit' => str_repeat('a', 40), 'delta' => null, 'expires' => time() + 86400 * 45, 'full' => ['sha256' => $hash, 'size' => 1000,
-        'usize' => 2000], 'kid' => substr(hash('sha256', $pub), 0, 16), 'min' => '6.3.0', 'php' => '8.0', 'security' => false, 'time' => time(), 'type' => 'release',
+        'usize' => 2000], 'kid' => substr(hash('sha256', $pub), 0, 16), 'min' => '8.0.0', 'php' => '8.0', 'security' => false, 'time' => time(), 'type' => 'release',
         'version' => AVER];
     $body = json_encode($man, JSON_UNESCAPED_SLASHES);
     $sig = base64_encode(sodium_crypto_sign_detached(Update::MANIFEST.$body, sodium_crypto_sign_secretkey($pair)));
     $dir = $site.'/storage/update/client';
     file_put_contents($dir.'/keys.json', json_encode(['kseq' => 0, 'primary' => base64_encode($pub), 'recovery' => base64_encode($pub), 'revoked' => []]));
     $state = ['sid' => str_repeat('b', 32), 'home' => hash('sha256', rtrim($home, '/')), 'found' => ['version' => AVER, 'channel' => 'stable', 'security' => false,
-        'php' => '8.0', 'min' => '6.3.0', 'expires' => $man['expires'], 'body' => base64_encode($body), 'sig' => $sig], 'stage' => ['version' => AVER, 'kind' => 'full',
+        'php' => '8.0', 'min' => '8.0.0', 'expires' => $man['expires'], 'body' => base64_encode($body), 'sig' => $sig], 'stage' => ['version' => AVER, 'kind' => 'full',
         'from' => '', 'sha256' => $hash, 'time' => time(), 'files' => count($list['files']), 'changed' => ['core/system.php'], 'nolist' => false]];
     file_put_contents($dir.'/state.json', json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }

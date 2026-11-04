@@ -422,7 +422,7 @@ function setSetupTables(array &$state, array $item): array {
         $task = $name.' — '.$note;
     }
     if ($file === 'table.sql') $state['made'] += count($item['keys']);
-    $marks = ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new', 'check' => ['upcheck' => '1', 'channel' => 'stable', 'keepbak' => '1',
+    $marks = ['points' => '8.0.0', 'ratings' => '8.0.0', 'fields' => '8.0.0', 'node' => 'new', 'check' => ['upcheck' => '1', 'channel' => 'stable', 'keepbak' => '1',
         'upsite' => '1'], 'steps' => [SL_VERSION => date('Y-m-d H:i:s')]];
     if ($state['part'] !== $state['count'] - 2) return ['task' => $task, 'fail' => ''];
     if (!setSetupFile('update.php', $marks)) return ['task' => '', 'fail' => _FILE.' config/update.php — '._SETUP_NOWRITE];

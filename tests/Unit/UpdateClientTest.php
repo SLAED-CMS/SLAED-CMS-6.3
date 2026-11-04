@@ -52,7 +52,7 @@ final class UpdateClientTest extends TestCase
     private static function getOffer(array $over = []): array
     {
         $now = time();
-        return self::getSigned(Update::MANIFEST, array_merge(['type' => 'release', 'version' => '9.0.1', 'channel' => 'stable', 'min' => '6.3.0', 'php' => '8.4',
+        return self::getSigned(Update::MANIFEST, array_merge(['type' => 'release', 'version' => '9.0.1', 'channel' => 'stable', 'min' => '8.0.0', 'php' => '8.4',
             'security' => true, 'full' => ['size' => 100, 'usize' => 300, 'sha256' => str_repeat('a', 64)], 'delta' => null, 'commit' => str_repeat('c', 40),
             'time' => $now, 'expires' => $now + 86400, 'kid' => substr(Update::getKeyPrint(self::$pri['pub']), 0, 16)], $over));
     }
@@ -223,7 +223,7 @@ final class UpdateClientTest extends TestCase
     public function theStepsWaitAfterTheMark(): void
     {
         mkdir(UPDATE_DIR.'/step', 0777, true);
-        foreach (['6.2.0.sql', '6.2.5.sql', '6.2.10.php', '6.2.10.sql', '6.3.1.sql', 'note.sql'] as $name) file_put_contents(UPDATE_DIR.'/step/'.$name, "SELECT 1;\n");
+        foreach (['6.2.0.sql', '6.2.5.sql', '6.2.10.php', '6.2.10.sql', '8.0.1.sql', 'note.sql'] as $name) file_put_contents(UPDATE_DIR.'/step/'.$name, "SELECT 1;\n");
         $this->assertSame(['6.2.5' => ['sql' => true, 'php' => false], '6.2.10' => ['sql' => true, 'php' => true], SL_VERSION => ['sql' => false, 'php' => false]],
             Update::getStepList('6.2.0'));
         $this->assertSame(['6.2.0', '6.2.5', '6.2.10', SL_VERSION], array_keys(Update::getStepList('')));
@@ -237,7 +237,7 @@ final class UpdateClientTest extends TestCase
         $dir = dirname(UPDATE_DIR).'/gate';
         if (!is_dir($dir)) mkdir($dir, 0777, true);
         $this->assertNull(getStepMark($dir));
-        file_put_contents($dir.'/update.php', "<?php\nreturn ['update' => ['points' => '6.3.0']];\n");
+        file_put_contents($dir.'/update.php', "<?php\nreturn ['update' => ['points' => '8.0.0']];\n");
         $this->assertSame('', getStepMark($dir));
         file_put_contents($dir.'/update.php', "<?php\nreturn ['update' => ['steps' => ['6.9.0' => 'x', '6.10.0' => 'y', 'bad' => 'z']]];\n");
         $this->assertSame('6.10.0', getStepMark($dir));

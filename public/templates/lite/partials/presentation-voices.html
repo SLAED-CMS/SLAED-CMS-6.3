@@ -2,7 +2,7 @@
   {% include 'fragments/presentation-head.html' with head %}
   <div class="sl-pres-body">
     <div class="sl-pres-voices">
-      <div class="sl-pres-panel-head"><span>{{ over }}</span><b class="sl-pres-pill" data-sl-tone="success">{{ pill }}</b></div>
+      <div class="sl-pres-panel-head"><span><i class="bi bi-chat-quote" aria-hidden="true"></i>{{ over }}</span><b class="sl-pres-pill" data-sl-tone="success">{{ pill }}</b></div>
       <div class="sl-pres-voices-track">
         {% for item in items %}
         {% include 'fragments/presentation-voice.html' with item %}

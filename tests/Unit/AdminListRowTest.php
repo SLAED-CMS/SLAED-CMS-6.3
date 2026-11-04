@@ -35,7 +35,7 @@ namespace Tests\Unit {
                 '_BACK' => 'Back', '_NEXT' => 'Next', '_OVERALL' => 'In total', '_PAGE' => 'Page', '_NUMOF' => '%1$s of %2$s', '_PAGERANGE' => 'Showing %1$s–%2$s',
                 '_NO_INFO' => 'No info', '_ADM_STD' => 'Standard', '_ADM_FULL' => 'Full', '_ADM_DENSE' => 'Dense', '_ADM_CARDS' => 'Cards', '_ADM_PICKED' => 'Picked: %s',
                 '_ADM_ALLN' => 'Pick all %s', '_CHECKALL' => 'Check all', '_DETAILS' => 'Details', '_TIMESTRING' => 'd.m.Y H:i', '_ACTIVATE' => 'Activate',
-                '_DEACTIVATE' => 'Deactivate', '_DELETE' => 'Delete',
+                '_DEACTIVATE' => 'Deactivate', '_DELETE' => 'Delete', '_ACT' => 'Active', '_DEACT' => 'Inactive',
             ];
             foreach ($text as $name => $val) {
                 if (!defined($name)) define($name, $val);
@@ -214,7 +214,7 @@ namespace Tests\Unit {
         {
             $head = [['content' => 'Status', 'is_col_status' => true]];
             $stat = static fn(int $id, bool $on, string $later): array => getTplPostAction(['name' => 'probe', 'op' => 'approve', 'id[]' => $id, 'typ' => $on ? 0 : 1],
-                'power', 'Turn') + ['is_on' => $on, 'label' => 'Status', 'later' => $later];
+                'power', 'Turn') + ['is_on' => $on, 'later' => $later];
             $drop = static fn(int $id): array => getTplPostAction(['name' => 'probe', 'op' => 'delete', 'id[]' => $id], 'trash', 'Delete');
             $doc = self::getList($head, [
                 ['name' => 'On', 'drop' => $drop(1), 'cells' => [['is_col_status' => true, 'stat' => $stat(1, true, 'gone off')]]],
@@ -236,6 +236,16 @@ namespace Tests\Unit {
             $this->assertSame(['name' => 'probe', 'op' => 'approve', 'typ' => '0', 'token' => $tok], self::getFields($lamp->querySelector('fieldset[data-sl-pick="off"]')));
             $bare = self::getList($head, [['name' => 'On', 'cells' => [['is_col_status' => true, 'stat' => $stat(1, true, 'gone off')]]]]);
             $this->assertNull($bare->getElementById('sl-list-pick'), 'A status without drop grew a foot');
+            $both = [...$head, ['content' => 'Functions', 'is_col_actions' => true]];
+            $dial = self::getList($both, [['name' => 'On', 'drop' => $drop(1), 'cells' => [['is_col_status' => true, 'stat' => $stat(1, true, 'lamp typ')],
+                ['is_col_actions' => true, 'dial' => [['href' => 'admin.php?op=edit', 'icon_name' => 'pencil', 'title' => 'Edit']]]]]]);
+            $mark = $dial->querySelector('tbody .sl-col-status [data-sl-lamp]');
+            $this->assertNotNull($mark, 'The status cell lost its mark');
+            $this->assertNull($dial->querySelector('tbody .sl-col-status :is(button, form)'), 'The status cell is still a switch');
+            $this->assertSame(['sl-status-active', 'img', 'Active'], [$mark->getAttribute('class'), $mark->getAttribute('role'), $mark->getAttribute('title')]);
+            $items = iterator_to_array($dial->querySelectorAll('tbody .sl-dial-item'));
+            $this->assertSame(['Edit', 'Turn', 'Delete'], array_map(static fn($one): string => $one->getAttribute('title'), $items), 'The switch is not the dial item before the drop');
+            $this->assertSame('lamp typ', $dial->getElementById($items[1]->getAttribute('form'))->getAttribute('data-sl-later'), 'The dial switch lost its deferred kind');
         }
 
         # A drop that moves its row elsewhere stays deferred as a move, and the foot names its action by the title of the drop
@@ -283,7 +293,7 @@ namespace Tests\Unit {
             $tips = [['label' => 'Module', 'value' => 'News - news'], ['label' => 'IP', 'value' => '10.0.0.1']];
             $view = ['href' => 'index.php?name=news', 'icon_name' => 'eye', 'title' => 'View'];
             $stat = getTplPostAction($keep + ['op' => 'approve', 'id[]' => 5, 'typ' => 0], 'power', 'Deactivate')
-                + ['is_on' => true, 'label' => 'Status: Comment 5', 'later' => 'gone off'];
+                + ['is_on' => true, 'later' => 'gone off'];
             $drop = getTplPostAction($keep + ['op' => 'delete', 'id[]' => 5], 'trash', 'Delete');
             $glued = ['name' => 'Comment 5', 'cells' => [
                 ['is_col_id' => true, 'content_html' => '5'],
@@ -294,7 +304,7 @@ namespace Tests\Unit {
                 ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => 'Functions', 'dial' => [$view,
                     ['href' => 'admin.php?op=edit', 'icon_name' => 'pencil', 'title' => 'Edit', 'link_attr' => 'data-sl-edit'],
                     ['href' => 'admin.php?search=5', 'icon_name' => 'hdd-network', 'title' => 'IP', 'link_attr' => 'hx-boost="true"'],
-                    $drop + ['later' => 'gone del']]])],
+                    $stat, $drop + ['later' => 'gone del']]])],
                 ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => '5', 'is_check' => true, 'aria_label' => 'Pick 5',
                     'input_attr' => 'form="combulk"'])],
             ]];

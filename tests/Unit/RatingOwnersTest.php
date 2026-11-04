@@ -73,7 +73,7 @@ final class RatingOwnersTest extends TestCase
     }
 
     # The shipped rules are exactly four string keys per fixed scope, the readers ask for the keys, and the subsystem opens only behind the mark
-    # The mark is the one of the 6.3 data update, and the rule node.<name> of a registered Node type belongs to that type and is held by NodeConfigTest
+    # The mark is the one of the 8.0 data update, and the rule node.<name> of a registered Node type belongs to that type and is held by NodeConfigTest
     #[Test]
     public function theRulesAreFourKeysBehindTheMark(): void
     {
@@ -88,7 +88,7 @@ final class RatingOwnersTest extends TestCase
         foreach (['core/system.php', 'core/helpers.php', 'core/user.php', 'modules/account/index.php', 'admin/modules/ratings.php'] as $path) {
             $this->assertDoesNotMatchRegularExpression('/explode\(\'\|\',[^;]*conf\[\'ratings\'\]/', $this->getCode($path), $path.' still reads the positional rule');
         }
-        $mark = "(\$conf['update']['ratings'] ?? '') === '6.3.0'";
+        $mark = "(\$conf['update']['ratings'] ?? '') === '8.0.0'";
         $this->assertStringContainsString($mark, $this->getBody('getRatingService'));
         $help = $this->getCode('core/helpers.php');
         $from = (int)strpos($help, 'function getRatingAsync(');

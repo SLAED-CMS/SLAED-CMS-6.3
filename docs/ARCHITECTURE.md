@@ -174,7 +174,7 @@ Files:
 Role:
 - `setup.php` installs a new site and nothing else. It updates no existing site;
   a 6.2 site is brought over by `update.php`, an internal tool of the maintainer
-  that the release does not ship (`docs/NODE.md`, "The 6.3 update").
+  that the release does not ship (`docs/NODE.md`, "The 8.0 update").
 - When the run is over, the closing stop deletes `setup.php`. This is the only
   place it deletes itself. A file the server would not let go, or one that stays on
   an installed site, leaves the `_DELSETUP` warning on the closing stop and turns the

@@ -419,16 +419,6 @@
         wake();
     }
 
-    // A figure that breathes: the value the module wrote is the centre, and every few seconds it moves within an eighth of itself
-    function setLive(node) {
-        var base = parseInt(node.textContent, 10);
-        if (isNaN(base) || window.isMotionStill()) return;
-        window.setInterval(function () {
-            if (document.hidden) return;
-            node.textContent = getFigure(base + Math.round((Math.random() - 0.5) * base / 4));
-        }, 2700);
-    }
-
     // The control window walks its sections by itself until somebody presses one
     function setCore(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
@@ -470,8 +460,6 @@
         setAutoplay(root, function () {
             if (!held) show((at + 1) % keys.length);
         });
-        var live = root.querySelectorAll('[data-sl-pres-live]');
-        for (var l = 0; l < live.length; l++) setLive(live[l]);
     }
 
     // The build presets: a preset reads as pressed while the map shows exactly its set; the nodes stay links and nothing is saved
@@ -1055,43 +1043,33 @@
         bind(list);
     }
 
-    // The figures of the facts and of the statistics board count up once from zero as they first come into view; still motion leaves them as written
+    // Figures count up once from zero by setFigureRun() of slaed.js as each first comes into view; a print, still motion, a word, a time or a commit keep the server text
     function setCount() {
         if (window.isMotionStill() || !window.IntersectionObserver) return;
-        var list = document.querySelectorAll('.sl-pres-facts .sl-pres-stat > b, .sl-pres-stats-grid .sl-pres-stat > b');
-        // A figure is written back in its own shape: the same decimals, and the thousands grouped by a space where the module grouped them
-        var write = function (text, share) {
-            var raw = text.trim();
-            var clean = raw.replace(/\s/g, '');
-            var dot = clean.indexOf('.');
-            var value = (parseFloat(clean) * share).toFixed(dot < 0 ? 0 : clean.length - dot - 1);
-            if (/\s/.test(raw)) value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            return text.replace(raw, value);
-        };
-        var run = function (el) {
-            var node = el.firstChild;
-            var text = el.getAttribute('data-sl-pres-goal');
-            var start = window.performance.now();
-            var step = function (now) {
-                var t = Math.min(1, (now - start) / 900);
-                node.nodeValue = t < 1 ? write(text, 1 - Math.pow(1 - t, 3)) : text;
-                if (t < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        };
+        var list = document.querySelectorAll('.sl-pres-ring > div > b, .sl-pres-stat > b, .sl-pres-strip b, .sl-pres-metric > b, .sl-pres-vitals-list > span > b, .sl-pres-big, .sl-pres-row > b');
         var seen = new IntersectionObserver(function (rows) {
             for (var r = 0; r < rows.length; r++) {
                 if (!rows[r].isIntersecting) continue;
                 seen.unobserve(rows[r].target);
-                run(rows[r].target);
+                window.setFigureRun(rows[r].target, String(rows[r].target.slCount.goal), rows[r].target.slCount.said);
             }
         }, { threshold: 0.6 });
+        window.addEventListener('beforeprint', function () {
+            seen.disconnect();
+            for (var p = 0; p < list.length; p++) if (list[p].slCount) list[p].slCount.text.nodeValue = list[p].slCount.said;
+        });
         for (var i = 0; i < list.length; i++) {
-            var node = list[i].firstChild;
-            if (list[i].hasAttribute('data-sl-pres-goal') || !node || node.nodeType !== 3 || !/^\s*\d[\d\s]*(\.\d+)?\s*$/.test(node.nodeValue)) continue;
-            list[i].setAttribute('data-sl-pres-goal', node.nodeValue);
-            node.nodeValue = write(node.nodeValue, 0);
-            seen.observe(list[i]);
+            if (list[i].slCount) continue;
+            for (var node = list[i].firstChild; node; node = node.nextSibling) {
+                if (node.nodeType !== 3 || !/\d/.test(node.nodeValue)) continue;
+                var hit = window.getFigureParts(node.nodeValue);
+                if (hit && hit.value > 0) {
+                    list[i].slCount = { text: node, said: node.nodeValue, goal: hit.value };
+                    node.nodeValue = hit.head + window.getFigureText(0, hit.digits).replace(/[.,](?=\d+$)/, hit.mark || '$&') + hit.tail;
+                    seen.observe(list[i]);
+                }
+                break;
+            }
         }
     }
 
@@ -1128,11 +1106,29 @@
         var setAll = function () {
             for (var i = 0; i < list.length; i++) setPaths(list[i]);
         };
+        // The arcs of a part first seen off screen ran before this script marked it, so they fill again from zero when it first comes into view
+        var setArcs = function (box) {
+            var arcs = box.querySelectorAll('.sl-knob-val');
+            for (var i = 0; i < arcs.length; i++) {
+                var runs = arcs[i].getAnimations();
+                for (var k = 0; k < runs.length; k++) {
+                    if (runs[k].animationName !== 'sl-pres-arc') continue;
+                    runs[k].currentTime = 0;
+                    runs[k].play();
+                }
+            }
+        };
         if (window.IntersectionObserver) {
             var seen = new IntersectionObserver(function (rows) {
                 for (var r = 0; r < rows.length; r++) {
-                    rows[r].target.toggleAttribute('data-sl-pres-off', !rows[r].isIntersecting);
-                    setPaths(rows[r].target);
+                    var box = rows[r].target;
+                    box.toggleAttribute('data-sl-pres-off', !rows[r].isIntersecting);
+                    if (!rows[r].isIntersecting && box.slArcSeen === undefined) box.slArcSeen = false;
+                    if (rows[r].isIntersecting && box.slArcSeen !== true) {
+                        if (box.slArcSeen === false) setArcs(box);
+                        box.slArcSeen = true;
+                    }
+                    setPaths(box);
                 }
             });
             for (var s = 0; s < list.length; s++) seen.observe(list[s]);

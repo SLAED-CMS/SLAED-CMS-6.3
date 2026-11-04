@@ -14,6 +14,7 @@ return [
     # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with the main module and were struck from the roster
     # A second was decided on 2026-10-11: the five --sl-pnum-* names and the panel's --sl-card-shadow lost their one reader, the drawn arrow of the old panel pager
     # A third was decided on 2026-10-09 with the ranks plan: the site's --sl-rank-height lost its one reader, the rank picture of the profile, when ranks became icons
+    # A fourth was decided on 2026-11-04: the panel's six --sl-drift-* names left with the four-dot loader of the live chart, gone 0.2 s into a load
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -214,7 +215,7 @@ return [
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
         'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut', 'drift', 'drift-dot',
         'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'entry', 'f-title', 'fav', 'feedback',
-        'field', 'flash', 'flash-bar', 'fm-as',
+        'field', 'figure', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'form-side', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
@@ -279,7 +280,6 @@ return [
         '--sl-d-view-height' => 'height of what the editor preview shows, measured in its sandboxed frame, plugins/system/editor.js',
         '--sl-d-members' => 'session donut end of the member share, templates/*/partials/session-summary.html',
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
-        '--sl-d-order' => 'place of a row of a canon list in the cascade it enters by, templates/admin/assets/js/admin-ui.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
         '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'

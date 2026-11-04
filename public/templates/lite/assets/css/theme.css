@@ -1029,7 +1029,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   }
 
   50% {
-    filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-alert-c));
+    filter: drop-shadow(0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-alert-c) var(--sl-gauge-mix), transparent));
   }
 }
 
@@ -4563,31 +4563,37 @@ dialog.sl-editor-emoji-panel {
   border-radius: calc(var(--sl-progress-radius) - 1px);
   overflow: hidden;
   text-indent: -9999px;
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent);
   transition: width var(--sl-time-slow) var(--sl-ease-out);
 }
 
 .sl-progress-1 div {
   border: 1px solid var(--sl-progress-1);
+  color: var(--sl-progress-1);
   background: var(--sl-grad-progress-1);
 }
 
 .sl-progress-2 div {
   border: 1px solid var(--sl-progress-2);
+  color: var(--sl-progress-2);
   background: var(--sl-grad-progress-2);
 }
 
 .sl-progress-3 div {
   border: 1px solid var(--sl-progress-3);
+  color: var(--sl-progress-3);
   background: var(--sl-grad-progress-3);
 }
 
 .sl-progress-4 div {
   border: 1px solid var(--sl-progress-4);
+  color: var(--sl-progress-4);
   background: var(--sl-grad-progress-4);
 }
 
 .sl-progress-5 div {
   border: 1px solid var(--sl-progress-5);
+  color: var(--sl-progress-5);
   background: var(--sl-grad-progress-5);
 }
 
@@ -5943,6 +5949,44 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
+/* A running figure, as in the panel: setFigureRun() of slaed.js runs it as long as its glow holds; a transform needs a box, so an inline figure is one while it runs */
+@media (prefers-reduced-motion: no-preference) {
+  .sl-is-counting {
+    animation:
+      sl-figure-lit var(--sl-figure-dur) var(--sl-ease-out),
+      sl-figure-fade var(--sl-time-slow) var(--sl-ease-out) var(--sl-figure-dur),
+      sl-figure-swell calc(var(--sl-figure-dur) + var(--sl-time-slow)) var(--sl-ease-out);
+  }
+
+  :where(span, b, strong, em, small).sl-is-counting {
+    display: inline-block;
+  }
+}
+
+/* A running figure starts swollen, as the pulse of the monitor flares, and settles over its run and its fade */
+@keyframes sl-figure-swell {
+  from {
+    transform: scale(1.4);
+  }
+}
+
+/* The glow of a running figure holds for the whole run, the first of its animations, whose length setFigureRun() reads */
+@keyframes sl-figure-lit {
+  from,
+  to {
+    color: var(--sl-figure-text);
+    text-shadow: var(--sl-figure-shadow);
+  }
+}
+
+/* The glow fades from the figure once it stops */
+@keyframes sl-figure-fade {
+  from {
+    color: var(--sl-figure-text);
+    text-shadow: var(--sl-figure-shadow);
+  }
+}
+
 /* The place of the pointer light does not inherit, so a move restyles no descendant of what slaed.js writes on; a rule that reads it says inherit */
 @property --sl-d-pointer-x {
   syntax: "<length>";
@@ -5967,6 +6011,171 @@ dialog.sl-editor-emoji-panel {
     z-index: var(--sl-z-popover);
     background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-tint), transparent 70%);
     pointer-events: none;
+  }
+}
+
+/* The light that runs round the frame of every block under the hand, as in the panel: a turning cone cut to the line of the frame, drawn by the --sl-aurora-* tokens; the layer exists only under the hand */
+@media (prefers-reduced-motion: no-preference) {
+  .sl-cab-deck,
+  .sl-changelog-commits,
+  .sl-changelog-filter,
+  .sl-changelog-results,
+  .sl-opt-lamp,
+  .sl-profile-panel,
+  .sl-search-panel,
+  .sl-card-aside,
+  .sl-card-image,
+  .sl-cat-tile,
+  .sl-icat,
+  .sl-node-head-win,
+  .sl-oauth-card,
+  .sl-pmf-focus,
+  .sl-pmf-mate,
+  .sl-pmf-slot,
+  .sl-profile-card,
+  .sl-profile-empty,
+  .sl-profile-proof,
+  .sl-preview,
+  .sl-moder-mass,
+  .sl-msg-card {
+    position: relative;
+  }
+
+  .sl-block::before,
+  .sl-cab-act::before,
+  .sl-cab-deck::before,
+  .sl-changelog-commits::before,
+  .sl-changelog-filter::before,
+  .sl-changelog-results::before,
+  .sl-opt-lamp::before,
+  .sl-profile-panel::before,
+  .sl-search-panel::before,
+  .sl-card-aside::before,
+  .sl-card-image::before,
+  .sl-cat-tile::before,
+  .sl-icat::before,
+  .sl-node-head-win::before,
+  .sl-node-tile-cover::before,
+  .sl-oauth-card::before,
+  .sl-pmf-focus::before,
+  .sl-pmf-mate::before,
+  .sl-pmf-slot::before,
+  .sl-profile-card::before,
+  .sl-profile-empty::before,
+  .sl-profile-proof::before,
+  .sl-preview::before,
+  .sl-moder-mass::before,
+  .sl-msg-card::before,
+  .sl-pres-cockpit::before,
+  .sl-pres-card::before,
+  .sl-pres-stat::before,
+  .sl-pres-metric::before,
+  .sl-pres-chart::before,
+  .sl-pres-vitals::before,
+  .sl-pres-core::before,
+  .sl-pres-mod::before,
+  .sl-pres-node::before,
+  .sl-pres-bcard::before,
+  .sl-pres-blocks-panel::before,
+  .sl-pres-pane::before,
+  .sl-pres-console::before,
+  .sl-pres-tree::before,
+  .sl-pres-hours::before,
+  .sl-pres-claim::before,
+  .sl-pres-rings::before,
+  .sl-pres-tile::before,
+  .sl-pres-focus::before,
+  .sl-pres-query::before,
+  .sl-pres-scene:not(.sl-pres-stats-board, .sl-pres-dev-board)::after,
+  .sl-pres-tech-card::after,
+  .sl-pres-pulse-card::after {
+    position: absolute;
+    inset: -1px;
+    z-index: var(--sl-z-overlay);
+    border: var(--sl-aurora-width) solid transparent;
+    border-radius: inherit;
+    background: conic-gradient(from var(--sl-aurora-turn), transparent 0 calc(100% - var(--sl-aurora-mix)), var(--sl-aurora-border) calc(100% - var(--sl-aurora-mix) / 2), var(--sl-aurora-ring) calc(100% - var(--sl-aurora-mix) * 0.15), transparent) border-box;
+    mask: linear-gradient(var(--sl-text) 0 0) padding-box, linear-gradient(var(--sl-text) 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The lamp of a setting carries a wider stripe on its left, so the light stands that much further out there */
+  .sl-opt-lamp::before {
+    left: calc(var(--sl-opt-lamp-border) * -1);
+  }
+
+  .sl-block:hover::before,
+  .sl-cab-act:hover::before,
+  .sl-cab-deck:hover::before,
+  .sl-changelog-commits:hover::before,
+  .sl-changelog-filter:hover::before,
+  .sl-changelog-results:hover::before,
+  .sl-opt-lamp:hover::before,
+  .sl-profile-panel:hover::before,
+  .sl-search-panel:hover::before,
+  .sl-card-aside:hover::before,
+  .sl-card-image:hover::before,
+  .sl-cat-tile:hover::before,
+  .sl-icat:hover::before,
+  .sl-node-head-win:hover::before,
+  .sl-node-tile-cover:hover::before,
+  .sl-oauth-card:hover::before,
+  .sl-pmf-focus:hover::before,
+  .sl-pmf-mate:hover::before,
+  .sl-pmf-slot:hover::before,
+  .sl-profile-card:hover::before,
+  .sl-profile-empty:hover::before,
+  .sl-profile-proof:hover::before,
+  .sl-preview:hover::before,
+  .sl-moder-mass:hover::before,
+  .sl-msg-card:hover::before,
+  .sl-pres-cockpit:hover::before,
+  .sl-pres-card:hover::before,
+  .sl-pres-stat:hover::before,
+  .sl-pres-metric:hover::before,
+  .sl-pres-chart:hover::before,
+  .sl-pres-vitals:hover::before,
+  .sl-pres-core:hover::before,
+  .sl-pres-mod:hover::before,
+  .sl-pres-node:hover::before,
+  .sl-pres-bcard:hover::before,
+  .sl-pres-blocks-panel:hover::before,
+  .sl-pres-pane:hover::before,
+  .sl-pres-console:hover::before,
+  .sl-pres-tree:hover::before,
+  .sl-pres-hours:hover::before,
+  .sl-pres-claim:hover::before,
+  .sl-pres-rings:hover::before,
+  .sl-pres-tile:hover::before,
+  .sl-pres-focus:hover::before,
+  .sl-pres-query:hover::before,
+  .sl-pres-scene:not(.sl-pres-stats-board, .sl-pres-dev-board):hover::after,
+  .sl-pres-tech-card:hover::after,
+  .sl-pres-pulse-card:hover::after {
+    content: "";
+    animation: sl-aurora var(--sl-aurora-dur) linear infinite;
+  }
+}
+
+/* The turn of the light round a frame, registered without inheritance so a turn restyles the frame alone */
+@property --sl-aurora-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* The light of a frame is on only while it runs */
+@keyframes sl-aurora {
+  from {
+    --sl-aurora-turn: 0deg;
+    opacity: 1;
+  }
+
+  to {
+    --sl-aurora-turn: 360deg;
+    opacity: 1;
   }
 }
 

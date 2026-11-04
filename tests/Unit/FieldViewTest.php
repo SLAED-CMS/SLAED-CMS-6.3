@@ -199,7 +199,7 @@ final class FieldViewTest extends TestCase
         $forum = (string)file_get_contents(dirname(__DIR__, 2).'/modules/forum/index.php');
         $this->assertSame(0, preg_match('/filterContent\([^;]*\$fields/', $forum), 'The forum hands the rendered field rows to the parser again');
     }
-    # No writer of an owner skips the mark of the 6.3 data update
+    # No writer of an owner skips the mark of the 8.0 data update
     # The three owners reach their fields through the shared helpers alone: no positional split, no positional input name, no second reader of the definitions
     #[Test]
     public function theOwnersUseTheSharedHelpersAlone(): void
@@ -228,7 +228,7 @@ final class FieldViewTest extends TestCase
         $this->assertSame(1, preg_match_all('/new Field\(/', (string)file_get_contents($root.'/core/system.php')), 'The shared instance is built in more than one place');
         $this->assertSame(
             2,
-            substr_count($help, "(\$conf['update']['fields'] ?? '') === '6.3.0'") + substr_count($help, "(\$conf['update']['fields'] ?? '') !== '6.3.0'"),
+            substr_count($help, "(\$conf['update']['fields'] ?? '') === '8.0.0'") + substr_count($help, "(\$conf['update']['fields'] ?? '') !== '8.0.0'"),
             'A helper reads or writes fields past the mark of the data update'
         );
         foreach ([

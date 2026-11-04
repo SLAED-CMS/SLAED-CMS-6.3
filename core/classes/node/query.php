@@ -530,15 +530,21 @@ final class NodeQuery {
         return !$apply || $this->ctx->lang === '' || $lang === '' || $lang === $this->ctx->lang;
     }
 
-    # The categories of a type as id => read, view and post rights and language, read with one statement per type and instance
+    # The categories of a type as id => read, view and post rights and language, read once per instance with those of every other selected type in the same statement
     private function getCatMap(NodeType $type): array {
         if (!isset($this->cats[$type->id])) {
-            $map = [];
-            foreach ($this->getQueryRows('SELECT id, pread, pview, ppost, lang FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $type->name]) as $row) {
-                $map[intval($row['id'])] = ['read' => $this->checkCatRight($row['pread']), 'view' => $this->checkCatRight($row['pview']),
+            $want = [$type->id => $type->name];
+            foreach ($this->list as $one) if (!isset($this->cats[$one->id])) $want[$one->id] = $one->name;
+            $ids = array_flip($want);
+            $pars = [];
+            $sql = 'SELECT id, modul, pread, pview, ppost, lang FROM '.PREFIX_DB.'_categories WHERE modul IN ('.$this->getInList($want, 'm', $pars).')';
+            foreach ($want as $tid => $name) $this->cats[$tid] = [];
+            foreach ($this->getQueryRows($sql, $pars) as $row) {
+                $tid = $ids[strtolower((string)$row['modul'])] ?? null;
+                if ($tid === null) continue;
+                $this->cats[$tid][intval($row['id'])] = ['read' => $this->checkCatRight($row['pread']), 'view' => $this->checkCatRight($row['pview']),
                     'post' => $this->checkCatRight($row['ppost']), 'lang' => $row['lang']];
             }
-            $this->cats[$type->id] = $map;
         }
         return $this->cats[$type->id];
     }
@@ -982,6 +988,23 @@ final class NodeQuery {
         }
         $query = count($sql) === 1 ? $sql[0] : 'SELECT SUM(q.num) AS num FROM ('.implode(' UNION ALL ', $sql).') AS q';
         return intval($this->getQueryRows($query, $pars)[0]['num'] ?? 0);
+    }
+
+    # Count the selection per type with exactly the conditions of the list in one statement, as type id => number with every selected type present
+    public function getNodeCountList(): array {
+        $out = [];
+        foreach ($this->list as $type) $out[$type->id] = 0;
+        $pars = [];
+        $sql = [];
+        foreach ($this->getListParts('list') as $part) {
+            $sql[] = 'SELECT n.tid, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'].' GROUP BY n.tid';
+            $pars += $part['pars'];
+        }
+        foreach ($this->getQueryRows(implode(' UNION ALL ', $sql), $pars) as $row) {
+            $tid = intval($row['tid']);
+            if (isset($out[$tid])) $out[$tid] += intval($row['num']);
+        }
+        return $out;
     }
 
     # The ids of the selection as one derived table q, its values and its newest id, over the same disjoint parts the count adds up, for a sweep of the panel list

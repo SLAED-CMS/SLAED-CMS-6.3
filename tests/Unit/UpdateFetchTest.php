@@ -122,7 +122,7 @@ final class UpdateFetchTest extends TestCase
     # A decoded manifest of 9.0.1 whose full archive is $file, its unpacked size $usize or 16 MB
     private static function getMan(string $file, int $usize = 0): array
     {
-        return ['type' => 'release', 'version' => self::VER, 'channel' => 'stable', 'min' => '6.3.0', 'php' => '8.4', 'security' => false,
+        return ['type' => 'release', 'version' => self::VER, 'channel' => 'stable', 'min' => '8.0.0', 'php' => '8.4', 'security' => false,
             'full' => ['size' => (int)filesize($file), 'usize' => ($usize > 0) ? $usize : 1 << 24, 'sha256' => hash_file('sha256', $file)], 'delta' => null,
             'commit' => str_repeat('c', 40), 'time' => time(), 'expires' => time() + 86400, 'kid' => substr(Update::getKeyPrint(self::$pri['pub']), 0, 16)];
     }

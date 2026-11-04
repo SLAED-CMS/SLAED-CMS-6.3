@@ -184,7 +184,6 @@ function getMonitorGround(array $snap): string {
     $part = $tpl->getHtmlFrag('series', [
         'id' => 'sl-monitor-live',
         'kind' => 'live',
-        'wait_text' => _MONITOR_WAIT,
         'json' => (string)json_encode($view['live'], JSON_UNESCAPED_UNICODE),
     ]);
     $cockpit = $tpl->getHtmlPart('cockpit', [

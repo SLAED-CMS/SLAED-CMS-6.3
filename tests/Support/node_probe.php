@@ -1032,6 +1032,15 @@ function getProbeMixed(): array {
     );
     $out['mixedtitle'] = getProbeIds(getProbeQuery('guest')->setNodeTypes([$news, $files])->setNodeOrder('title', 'asc')->setNodePage(1, 10)->getNodeList());
     $out['mixeddocs'] = getProbeCall(fn(): array => getProbeQuery('guest')->setNodeTypes([$news, $query->getNodeType('docs')])->setNodeOrder('rating')->getNodeList());
+    $three = [$news, $files, $query->getNodeType('docs')];
+    foreach (['guest' => null, 'root' => NodeStatus::Published, 'rootwait' => NodeStatus::Pending] as $key => $stat) {
+        $who = ($key === 'guest') ? 'guest' : 'root';
+        $pick = static fn(NodeQuery $q): NodeQuery => $stat ? $q->setNodeStatus($stat) : $q;
+        $single = [];
+        foreach ($three as $type) $single[$type->id] = $pick(getProbeQuery($who)->setNodeType($type))->getNodeCount();
+        [$list, $cost] = getProbeCost(fn(): array => $pick(getProbeQuery($who)->setNodeTypes($three))->getNodeCountList());
+        $out['countlist-'.$key] = ['single' => $single, 'list' => $list, 'cost' => $cost];
+    }
     $out['empty'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([]));
     $out['twice'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([$news, $news]));
     $out['string'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([$news, 'files']));

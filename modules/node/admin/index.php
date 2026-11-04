@@ -231,7 +231,7 @@ function setNodeSupportQueue(NodeType $type): void {
     $num = max(1, getVar('get', 'num', 'num', 1));
     $base = $type->settings['list']['limit'];
     try {
-        $lim = getListLimit($base, fn(): int => $hand->getNodeSupportList($type, 1, 1, $state, $aid, $prio)['count']);
+        $lim = getListLimit($base, fn(): int => $hand->getNodeSupportCount($type, $state, $aid, $prio));
         $data = $hand->getNodeSupportList($type, $num, $lim, $state, $aid, $prio);
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeFault($err));
@@ -638,6 +638,9 @@ function types(): void {
         $dial[] = ['href' => $afile.'.php?name=fields', 'icon_name' => 'plus-square-dotted', 'title' => _NODE_FIELDS];
         $dial[] = ['href' => $afile.'.php?name=node&op=clone&type='.$name, 'icon_name' => 'files', 'title' => _NODE_CLONE];
         $dial[] = ['href' => $afile.'.php?name=node&op=export&type='.$name, 'icon_name' => 'download', 'title' => _NODE_EXPORT];
+        $turn = getTplPostAction($base + ['op' => 'typestatus', 'active' => $type->active ? 0 : 1], 'power', $type->active ? _DEACTIVATE : _ACTIVATE)
+            + ['is_on' => $type->active, 'later' => 'lamp active'];
+        $dial[] = $turn;
         $dial[] = getTplPostAction($base + ['op' => 'typedelete'], 'x-octagon', _DELETE, _DELETE.' "'.$name.'"?');
         $rows[] = ['name' => getModuleName($name), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $type->id],
@@ -645,9 +648,7 @@ function types(): void {
             ['is_col_title' => true, 'is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($name)],
             ['has_content_text' => true, 'content_text' => $type->settings['view']['mode']],
             ['has_content_text' => true, 'content_text' => $type->version],
-            ['is_col_status' => true, 'stat' => getTplPostAction($base + ['op' => 'typestatus', 'active' => $type->active ? 0 : 1], 'power',
-                $type->active ? _DEACTIVATE : _ACTIVATE)
-                + ['is_on' => $type->active, 'label' => _STATUS.': '.getModuleName($name), 'later' => 'lamp active']],
+            ['is_col_status' => true, 'stat' => $turn],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]];
     }

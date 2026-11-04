@@ -46,7 +46,7 @@ The installer never changes file permissions. It does not install while `config/
 
 ## Breaking and Important Changes
 
-The current codebase confirms these project-level changes in 6.3:
+The current codebase confirms these project-level changes in 8.0:
 
 ### Node Replaces Nine Content Modules
 

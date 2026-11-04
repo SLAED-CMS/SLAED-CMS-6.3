@@ -260,6 +260,7 @@ function dump(): void {
             }
         }
     } else {
+        if ($type === 'dump' && empty($string)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR1]);
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
@@ -303,16 +304,10 @@ function delete(): void {
     $id = getVar('post', 'id', 'num');
     $warn = !checkAdminPost('database');
     $tb = preg_match('#^[a-zA-Z0-9_]+$#', (string)$tb) ? $tb : '';
-    if (!$warn && $tb && $id == 1) {
-        $db->getSqlQuery('TRUNCATE TABLE `'.$tb.'`');
-        $mess = _SUCCCLEAR;
-    } elseif (!$warn && $tb && $id == 2) {
-        $db->getSqlQuery('DROP TABLE `'.$tb.'`');
-        $mess = _SUCCDELETE;
-    } else {
-        $mess = $warn ? _TOKENMISS : _SUCCDELETE;
-    }
-    setRedirect($afile.'.php?name=database', false, 302, $mess, $warn);
+    $done = !$warn && in_array($id, [1, 2], true) && checkSqlTable($tb)
+        && $db->getSqlQuery((($id === 1) ? 'TRUNCATE' : 'DROP').' TABLE `'.$tb.'`') !== false;
+    $mess = $warn ? _TOKENMISS : ($done ? (($id === 1) ? _SUCCCLEAR : _SUCCDELETE) : _ERROR);
+    setRedirect($afile.'.php?name=database', false, 302, $mess, !$done);
 }
 
 switch ($op) {

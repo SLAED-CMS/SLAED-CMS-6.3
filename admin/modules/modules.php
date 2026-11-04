@@ -144,14 +144,16 @@ function modules(): void {
             $items[] = getTplPostAction(['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => '3', 'type' => $mtype], 'database-up', _DB_UPDATE,
                 _DB_UPDATE.' "'.$title.'"?');
         }
+        $turn = getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $title, 'act' => $active ? '0' : '1', 'type' => $mtype], 'power',
+            $active ? _DEACTIVATE : _ACTIVATE) + ['is_on' => (bool)$active, 'later' => 'lamp act'];
+        $items[] = $turn;
         $rows[] = ['name' => $lang, 'details' => ($menu == 0) ? [['label' => _STATUS, 'value' => _NO_SICHT]] : [], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $a],
             ['is_truncate' => true, 'title_text' => $lang, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$lang],
             ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
             ['has_content_text' => true, 'content_text' => $who_view],
             ['has_content_text' => true, 'content_text' => $group_name],
-            ['is_col_status' => true, 'stat' => getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $title, 'act' => $active ? '0' : '1', 'type' => $mtype],
-                'power', $active ? _DEACTIVATE : _ACTIVATE) + ['is_on' => (bool)$active, 'label' => _STATUS.': '.$lang, 'later' => 'lamp act']],
+            ['is_col_status' => true, 'stat' => $turn],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
         ]];
         $a++;

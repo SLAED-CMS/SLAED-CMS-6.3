@@ -217,13 +217,14 @@ final class NodeSupportTest extends TestCase
         $this->assertSame(0, preg_match('/(?:STATE|PRIO)_[A-Z]+/', $code), 'The class declares state or priority constants');
         $this->assertStringNotContainsString("PREFIX_DB.'_comment", $code, 'The extension reaches the comment table');
         foreach (['public function updateNodeSupport(int $id, int $aid, int $state, int $prio, int $version): void',
+            'public function getNodeSupportCount(NodeType $type, ?int $state = null, ?int $aid = null, ?int $prio = null): int',
             'public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array'] as $one) {
             $this->assertStringContainsString($one, $code);
         }
         $this->assertSame(
-            12,
+            13,
             preg_match_all('/^    public function /m', $code),
-            'The class has other public methods than its constructor, the nine of the contract and its two commands'
+            'The class has other public methods than its constructor, the nine of the contract, its two commands and the total of its queue'
         );
         $conf = (require $root.'/config/node.php')['node']['support'];
         $this->assertSame(['state' => ['staff' => 0, 'author' => 1, 'closed' => 2], 'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3]], $conf);

@@ -12,7 +12,7 @@ function ratings(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _MANUAL]]);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
-    if (($conf['update']['ratings'] ?? '') !== '6.3.0') {
+    if (($conf['update']['ratings'] ?? '') !== '8.0.0') {
         echo $cont.$tpl->getHtmlFrag('alert', ['text' => _RATINGS_NOMARK, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         setFoot();
         return;
@@ -74,7 +74,7 @@ function ratings(): void {
 
 function save(): void {
     global $afile, $conf;
-    $warn = !checkAdminPost('ratings') || ($conf['update']['ratings'] ?? '') !== '6.3.0';
+    $warn = !checkAdminPost('ratings') || ($conf['update']['ratings'] ?? '') !== '8.0.0';
     $text = _TOKENMISS;
     $content = [];
     $types = getNodeTypeMap();

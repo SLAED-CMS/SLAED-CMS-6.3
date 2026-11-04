@@ -154,7 +154,7 @@ function xslsave(): void {
     $iswarn = !checkAdminPost('sitemap');
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
-    if ($iswarn || $template === '') setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    if ($iswarn || $template === '') setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $iswarn ? _TOKENMISS : _CERROR1, true);
     $dir = dirname($file);
     if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, _NO_INFO, true);
     $man = getAdminFileManager('system');

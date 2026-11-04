@@ -77,12 +77,12 @@ final class UpdateGateTest extends TestCase
         $this->assertFalse($run['fail']['ran'], 'The PHP step of a failed version ran');
         $this->assertSame(503, $run['fail']['site'], 'A failed step opened the site');
         $this->assertSame([303, '/admin.php'], [$run['done']['code'], $run['done']['move']]);
-        $this->assertSame(['6.2.0', '6.2.5', '6.2.7', '6.3.0'], $run['done']['marks'], 'The code without a step file got no mark');
+        $this->assertSame(['6.2.0', '6.2.5', '6.2.7', '8.0.0'], $run['done']['marks'], 'The code without a step file got no mark');
         $this->assertTrue($run['done']['ran'], 'The PHP step did not run');
         $this->assertSame(1, $run['done']['rows'], 'The repaired SQL step did not run');
         $this->assertGreaterThan(0, $run['done']['backup'], 'No backup of the database was made before the steps');
         $this->assertCount(1, $run['done']['dump'], 'The click after the failed step took a second backup of a half-changed database');
-        $this->assertMatchesRegularExpression('#^6\.3\.0-\d{8}-\d{6}$#', $run['done']['kept'][0] ?? '', 'The used backup was not set aside under its time');
+        $this->assertMatchesRegularExpression('#^8\.0\.0-\d{8}-\d{6}$#', $run['done']['kept'][0] ?? '', 'The used backup was not set aside under its time');
         $tabs = $run['done']['dump'][0] ?? [];
         $this->assertContains('probe_admins', $tabs, 'The portion dump left out a table of the site');
         $this->assertSame([], array_values(array_filter($tabs, static fn(string $v): bool => !str_starts_with($v, 'probe_'))), 'The dump took a table of another program');
@@ -118,8 +118,8 @@ final class UpdateGateTest extends TestCase
         $this->assertTrue($run['sid'], 'The page shows no id of the installation');
         $this->assertSame(303, $run['save']);
         $this->assertSame(['upcheck' => '0', 'channel' => 'beta', 'keepbak' => '1', 'upsite' => '0'], $run['check']);
-        $this->assertSame(['fields' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0'], $run['kept'], 'Saving the settings changed a mark of a data update');
-        $this->assertSame(['6.2.0', '6.2.5', '6.2.7', '6.3.0'], $run['steps'], 'Saving the settings lost the step marks');
+        $this->assertSame(['fields' => '8.0.0', 'points' => '8.0.0', 'ratings' => '8.0.0'], $run['kept'], 'Saving the settings changed a mark of a data update');
+        $this->assertSame(['6.2.0', '6.2.5', '6.2.7', '8.0.0'], $run['steps'], 'Saving the settings lost the step marks');
         $this->assertSame('disabled', $run['job'], 'The daily job ran with the check switched off');
     }
 }

@@ -405,7 +405,9 @@ function setshare(): void {
         return;
     }
     setAdminLog(['ver' => $ver, 'share' => $share]);
-    $res = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_master_release SET share = :share, changed = NOW() WHERE ver = :ver', ['share' => $share, 'ver' => $ver]);
+    $has = $db->getSqlQuery('SELECT ver FROM '.PREFIX_DB.'_master_release WHERE ver = :ver', ['ver' => $ver]);
+    $res = ($has && $db->getSqlRow($has))
+        && $db->getSqlQuery('UPDATE '.PREFIX_DB.'_master_release SET share = :share, changed = NOW() WHERE ver = :ver', ['share' => $share, 'ver' => $ver]) !== false;
     setRedirect($afile.'.php?name=master', false, 302, $res ? _SUCCSAVE : _ERROR, !$res);
 }
 

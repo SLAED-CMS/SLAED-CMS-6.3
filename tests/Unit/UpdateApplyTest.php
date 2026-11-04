@@ -34,27 +34,27 @@ final class UpdateApplyTest extends TestCase
         return self::$probe[$key];
     }
 
-    # The look of a site back on 6.3.0 with nothing of the package and nothing of the run left over
+    # The look of a site back on 8.0.0 with nothing of the package and nothing of the run left over
     private function assertOldSite(array $look, string $what): void
     {
-        $this->assertSame('6.3.0', $look['ver'], $what.': the version did not return');
+        $this->assertSame('8.0.0', $look['ver'], $what.': the version did not return');
         foreach (['new', 'folder', 'lang', 'theme', 'rescue', 'executor', 'option', 'lock', 'run', 'stage', 'now'] as $key) $this->assertFalse($look[$key], $what.': '.$key);
         $this->assertFalse($look['gone'], $what.': the deleted file did not return');
         $this->assertTrue($look['third'], $what.': the theme of a third party was touched');
-        $this->assertSame(['6.3.0'], $look['marks'], $what.': the step mark of 6.3.1 survived');
-        $this->assertSame('6.3.0', $look['list'], $what.': files.json did not return');
+        $this->assertSame(['8.0.0'], $look['marks'], $what.': the step mark of 8.0.1 survived');
+        $this->assertSame('8.0.0', $look['list'], $what.': files.json did not return');
         $this->assertSame([], $look['backups'], $what.': the backup of the installation was left');
     }
 
-    # The look of a site on 6.3.1: the package in place, its settings merged, its step marked, the rescuer swapped on step 8, the run cleaned up
+    # The look of a site on 8.0.1: the package in place, its settings merged, its step marked, the rescuer swapped on step 8, the run cleaned up
     private function assertNewSite(array $look, string $what): void
     {
-        $this->assertSame('6.3.1', $look['ver'], $what);
+        $this->assertSame('8.0.1', $look['ver'], $what);
         foreach (['new', 'folder', 'gone', 'lang', 'theme', 'third', 'rescue', 'executor', 'option'] as $key) $this->assertTrue($look[$key], $what.': '.$key);
         foreach (['local', 'lock', 'run', 'stage', 'now'] as $key) $this->assertFalse($look[$key], $what.': '.$key.' left over');
-        $this->assertSame(['6.3.0', '6.3.1'], $look['marks'], $what.': the step of 6.3.1 is not marked');
-        $this->assertSame('6.3.1', $look['list'], $what.': files.json is not the new one');
-        $this->assertSame(['6.3.0-6.3.1'], $look['backups'], $what.': the backup for going back is missing');
+        $this->assertSame(['8.0.0', '8.0.1'], $look['marks'], $what.': the step of 8.0.1 is not marked');
+        $this->assertSame('8.0.1', $look['list'], $what.': files.json is not the new one');
+        $this->assertSame(['8.0.0-8.0.1'], $look['backups'], $what.': the backup for going back is missing');
     }
 
     # The opcache rule, the steps a package brings and the order of the plan: the entries and the run copy last, the panel entry under its name, site files and the rescuer kept
@@ -111,7 +111,7 @@ final class UpdateApplyTest extends TestCase
         $this->assertSame('text/html; charset=utf-8', $run['closed']['site']['type']);
     }
 
-    # The executor of the package runs the phases, no core while the files move, the new core only for the database steps, and opens the site on 6.3.1
+    # The executor of the package runs the phases, no core while the files move, the new core only for the database steps, and opens the site on 8.0.1
     #[Test]
     public function theExecutorOfThePackageInstalls(): void
     {
@@ -119,11 +119,11 @@ final class UpdateApplyTest extends TestCase
         $this->assertSame([['files', 200, ''], ['core', 200, 'new'], ['open', 200, '']], array_map(static fn(array $one): array => array_values($one), $run['walk']),
             'A phase loaded a core it must not');
         $this->assertNewSite($run['done']['look'], 'install');
-        $this->assertTrue($run['done']['table'], 'The step of 6.3.1 created no table');
-        $this->assertTrue($run['done']['column'], 'The step of 6.3.1 added no column');
+        $this->assertTrue($run['done']['table'], 'The step of 8.0.1 created no table');
+        $this->assertTrue($run['done']['column'], 'The step of 8.0.1 added no column');
         $this->assertTrue($run['done']['kept'], 'The installation changed rows of the site or of the foreign installation');
         $this->assertTrue($run['done']['oldrescue'], 'The old rescuer is not in the backup');
-        $this->assertSame(['6.3.0', '6.3.1', 'storage/backup/update/6.3.0-6.3.1', 'wait'], [$run['done']['state']['from'], $run['done']['state']['to'],
+        $this->assertSame(['8.0.0', '8.0.1', 'storage/backup/update/8.0.0-8.0.1', 'wait'], [$run['done']['state']['from'], $run['done']['state']['to'],
             $run['done']['state']['back'], $run['done']['state']['check']]);
         $this->assertSame(200, $run['view']['code']);
         $this->assertContains($run['view']['check'], ['ok', 'none'], 'The self-check did not run on the overview');
@@ -132,7 +132,7 @@ final class UpdateApplyTest extends TestCase
         $this->assertSame([], $run['logs'], 'The installation or going back wrote a PHP or SQL error');
     }
 
-    # Going back returns the files, the settings and the database of 6.3.0 exactly, clears the caches and spends the backup
+    # Going back returns the files, the settings and the database of 8.0.0 exactly, clears the caches and spends the backup
     #[Test]
     public function goingBackRestoresThePreviousVersion(): void
     {
@@ -141,10 +141,10 @@ final class UpdateApplyTest extends TestCase
         $this->assertMatchesRegularExpression('#^[0-9a-f]{4}(-[0-9a-f]{4}){4}$#', $run['code']['rescue']);
         $this->assertSame(200, $run['first']);
         $this->assertOldSite($run['look'], 'revert');
-        $this->assertSame([], $run['tree'], 'Going back left files of 6.3.1 or lost files of 6.3.0');
+        $this->assertSame([], $run['tree'], 'Going back left files of 8.0.1 or lost files of 8.0.0');
         $this->assertTrue($run['data'], 'Going back did not restore the database');
         $this->assertSame([[], []], [$run['state']['done'], $run['state']['fail']], 'Going back counts as a failed installation or keeps the installation');
-        $this->assertSame(['6.3.1', '6.3.0', 'revert', 0], [$run['state']['undo']['from'], $run['state']['undo']['to'], $run['state']['undo']['why'],
+        $this->assertSame(['8.0.1', '8.0.0', 'revert', 0], [$run['state']['undo']['from'], $run['state']['undo']['to'], $run['state']['undo']['why'],
             $run['state']['undo']['step']]);
         $this->assertSame(0, $run['look']['cache'], 'Going back left cached pages or assets');
         $this->assertFalse($run['look']['local'], 'Going back left the cached configuration');
@@ -159,9 +159,9 @@ final class UpdateApplyTest extends TestCase
         $this->assertSame(['files', 'core', 'roll'], array_column($run['walk'], 'phase'));
         $this->assertSame('new', $run['walk'][1]['boot']);
         $this->assertOldSite($run['look'], 'step');
-        $this->assertSame([], $run['tree'], 'The rollback left files of 6.3.1');
+        $this->assertSame([], $run['tree'], 'The rollback left files of 8.0.1');
         $this->assertTrue($run['data'], 'The rollback did not drop the table and the column of the failed step');
-        $this->assertSame(['ver' => '6.3.1', 'step' => 6], $run['state']['fail'], 'The failure is not kept for the master');
+        $this->assertSame(['ver' => '8.0.1', 'step' => 6], $run['state']['fail'], 'The failure is not kept for the master');
         $this->assertSame(['steps', 6], [$run['state']['undo']['why'], $run['state']['undo']['step']]);
         $this->assertStringContainsString('probe_nosuch', $run['state']['undo']['error']);
         $this->assertCount(1, $run['logs'], 'The failed step wrote more than its SQL error');
@@ -179,12 +179,12 @@ final class UpdateApplyTest extends TestCase
         $run = $this->getRun('dump');
         $this->assertSame(200, $run['code']);
         $this->assertTrue($run['stopped'], 'The failed dump did not stop the installation');
-        $this->assertSame(['6.3.0', false, false, [], true, ['6.3.0']], [$run['look']['ver'], $run['look']['lock'], $run['look']['run'], $run['look']['backups'],
+        $this->assertSame(['8.0.0', false, false, [], true, ['8.0.0']], [$run['look']['ver'], $run['look']['lock'], $run['look']['run'], $run['look']['backups'],
             $run['look']['stage'], $run['look']['marks']]);
         $this->assertStringContainsString('beyond the integer range', $run['state']['undo']['error']);
         $this->assertSame([], $run['tree']);
         $this->assertTrue($run['data']);
-        $this->assertSame(['ver' => '6.3.1', 'step' => 4], $run['state']['fail']);
+        $this->assertSame(['ver' => '8.0.1', 'step' => 4], $run['state']['fail']);
         $this->assertSame(['dump', 4], [$run['state']['undo']['why'], $run['state']['undo']['step']]);
         $this->assertSame(200, $run['site']);
     }
@@ -215,7 +215,7 @@ final class UpdateApplyTest extends TestCase
         $this->assertOldSite($run['look'], 'code');
         $this->assertSame([], $run['tree'], 'The rollback of a cut batch lost or left files');
         $this->assertTrue($run['data']);
-        $this->assertSame(['ver' => '6.3.1', 'step' => 5], $run['state']['fail']);
+        $this->assertSame(['ver' => '8.0.1', 'step' => 5], $run['state']['fail']);
         $this->assertSame(['code', 5], [$run['state']['undo']['why'], $run['state']['undo']['step']]);
         $this->assertSame(200, $run['site']);
     }
@@ -231,7 +231,7 @@ final class UpdateApplyTest extends TestCase
         $this->assertTrue($run['box'], 'The overview offers no mark to overwrite');
         $this->assertSame(200, $run['start'], 'A package without its executor could not start');
         $this->assertSame(['files', 'core', 'open'], $run['walk']);
-        $this->assertSame('6.3.1', $run['look']['ver']);
+        $this->assertSame('8.0.1', $run['look']['ver']);
         $this->assertTrue($run['table']);
         $this->assertFalse($run['look']['lock']);
     }
@@ -246,7 +246,7 @@ final class UpdateApplyTest extends TestCase
         $this->assertOldSite($run['look'], 'now');
         $this->assertSame([], $run['tree']);
         $this->assertFalse($run['look']['local']);
-        $this->assertSame(['ver' => '6.3.1', 'step' => 5], $run['state']['fail']);
+        $this->assertSame(['ver' => '8.0.1', 'step' => 5], $run['state']['fail']);
         $this->assertSame(['now', 5], [$run['state']['undo']['why'], $run['state']['undo']['step']]);
         $this->assertSame(200, $run['site']);
     }

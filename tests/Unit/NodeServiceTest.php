@@ -414,7 +414,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # The job is registered in all four places of the scheduler and returns its statuses: the map and the dispatch of core/system.php, the shipped configuration
-    # The 6.3 update in update.php adds the job too, and the adapter builds the one trusted background context
+    # The 8.0 update in update.php adds the job too, and the adapter builds the one trusted background context
     #[Test]
     public function theJobIsRegisteredInTheFourPlacesOfTheScheduler(): void
     {

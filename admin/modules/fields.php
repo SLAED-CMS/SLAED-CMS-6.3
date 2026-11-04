@@ -134,7 +134,7 @@ function fields(array $sent = [], string $fail = ''): void {
     global $afile, $conf, $tpl;
     setHead();
     $areas = getFieldAreas();
-    $mark = ($conf['update']['fields'] ?? '') === '6.3.0';
+    $mark = ($conf['update']['fields'] ?? '') === '8.0.0';
     $ctab = getVar('req', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab >= count($areas)) $ctab = 0;
     $links = [];
@@ -190,7 +190,7 @@ function save(): void {
     global $afile, $conf, $fld;
     $ctab = getVar('post', 'tab', 'num', 0);
     $good = checkAdminPost('fields');
-    if (!$good || ($conf['update']['fields'] ?? '') !== '6.3.0') setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $good ? _FIELDS_NOMARK : _TOKENMISS, true);
+    if (!$good || ($conf['update']['fields'] ?? '') !== '8.0.0') setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $good ? _FIELDS_NOMARK : _TOKENMISS, true);
     $post = getVar('post', 'def[]', '', []);
     $ends = getVar('post', 'done[]', '', []);
     $vers = getVar('post', 'ver[]', '', []);

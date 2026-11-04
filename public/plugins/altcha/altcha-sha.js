@@ -1,5 +1,12 @@
 (function() {
   "use strict";
+  function assertAlgorithm(algorithm, allowed) {
+    if (!allowed.includes(algorithm)) {
+      throw new Error(
+        `Unsupported algorithm: ${String(algorithm)}. Expected one of: ${allowed.join(", ")}.`
+      );
+    }
+  }
   function bufferStartsWith(buffer, prefix) {
     if (prefix.length > buffer.length) {
       return false;
@@ -24,20 +31,34 @@
     if (hex.length % 2 !== 0) {
       throw new Error(`Hex string must have an even length. Got: ${hex}`);
     }
-    const buffer = new ArrayBuffer(hex.length / 2);
-    const view = new DataView(buffer);
-    for (let i = 0; i < hex.length; i += 2) {
-      const byteString = hex.substring(i, i + 2);
-      const byteValue = parseInt(byteString, 16);
-      view.setUint8(i / 2, byteValue);
+    if (!/^[0-9a-fA-F]*$/.test(hex)) {
+      throw new Error("Hex string contains non-hex characters.");
     }
-    return new Uint8Array(buffer);
+    const buffer = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < buffer.length; i++) {
+      buffer[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+    }
+    return buffer;
   }
   async function delay(ms) {
     await new Promise((resolve) => setTimeout(resolve, ms));
   }
   function timeDuration(start) {
     return Math.floor((performance.now() - start) * 10) / 10;
+  }
+  var HmacAlgorithm = /* @__PURE__ */ ((HmacAlgorithm2) => {
+    HmacAlgorithm2["SHA_256"] = "SHA-256";
+    HmacAlgorithm2["SHA_384"] = "SHA-384";
+    HmacAlgorithm2["SHA_512"] = "SHA-512";
+    return HmacAlgorithm2;
+  })(HmacAlgorithm || {});
+  Object.values(HmacAlgorithm);
+  const MAX_COUNTER = {
+    string: Number.MAX_SAFE_INTEGER,
+    uint32: 4294967295
+  };
+  function isValidCounter(n, mode) {
+    return Number.isInteger(n) && n >= 0 && n <= MAX_COUNTER[mode];
   }
   class PasswordBuffer {
     constructor(nonce, mode = "uint32") {
@@ -47,6 +68,8 @@
       this.buffer.set(this.nonce, 0);
       this.dataView = new DataView(this.buffer.buffer);
     }
+    nonce;
+    mode;
     COUNTER_BYTES = 4;
     buffer;
     dataView;
@@ -55,13 +78,29 @@
      * Appends the counter to the nonce buffer.
      * In 'string' mode, encodes the counter as a UTF-8 string.
      * In 'uint32' mode, writes the counter as a big-endian 32-bit integer.
+     * Throws a RangeError unless the counter is an integer the mode encodes exactly.
      */
     setCounter(n) {
+      if (!isValidCounter(n, this.mode)) {
+        throw new RangeError(
+          `counter must be an integer from 0 to ${MAX_COUNTER[this.mode]}. Got: ${n}`
+        );
+      }
       if (this.mode === "string") {
         return concatBuffers(this.nonce, this.encoder.encode(n.toString()));
       }
       this.dataView.setUint32(this.nonce.length, n, false);
       return this.buffer;
+    }
+  }
+  function assertKeyPrefix(keyPrefix, keyLength) {
+    if (typeof keyPrefix !== "string" || !/^[0-9a-fA-F]+$/.test(keyPrefix)) {
+      throw new Error("keyPrefix must be a non-empty hex string.");
+    }
+    if (keyPrefix.length > keyLength * 2) {
+      throw new Error(
+        `keyPrefix (${keyPrefix.length} hex characters) must not be longer than the key (keyLength: ${keyLength} bytes).`
+      );
     }
   }
   async function solveChallenge(options) {
@@ -74,9 +113,11 @@
       deriveKey: deriveKey2,
       timeout = 9e4
     } = options;
-    const { nonce, keyPrefix, salt } = challenge.parameters;
+    const { nonce, keyLength = 32, keyPrefix, salt } = challenge.parameters;
+    assertKeyPrefix(keyPrefix, keyLength);
     const nonceBuf = hexToBuffer(nonce);
     const saltBuf = hexToBuffer(salt);
+    const keyPrefixHex = keyPrefix.toLowerCase();
     const keyPrefixBuf = keyPrefix.length % 2 === 0 ? hexToBuffer(keyPrefix) : null;
     const password = new PasswordBuffer(nonceBuf, counterMode);
     const start = performance.now();
@@ -97,7 +138,7 @@
         await delay(0);
         lastYield = performance.now();
       }
-      if (keyPrefixBuf ? bufferStartsWith(derivedKey, keyPrefixBuf) : bufferToHex(derivedKey).startsWith(keyPrefix)) {
+      if (keyPrefixBuf ? bufferStartsWith(derivedKey, keyPrefixBuf) : bufferToHex(derivedKey).startsWith(keyPrefixHex)) {
         derivedKeyHex = bufferToHex(derivedKey);
         break;
       }
@@ -139,22 +180,15 @@
   }
   async function deriveKey(parameters, salt, password) {
     const { algorithm, keyLength = 32 } = parameters;
+    assertAlgorithm(algorithm, ["SHA-256", "SHA-384", "SHA-512"]);
     const iterations = Math.max(1, parameters.cost);
-    let data = void 0;
-    let derivedKey = void 0;
+    let derivedKey = concatBuffers(salt, password);
     for (let i = 0; i < iterations; i++) {
-      if (i === 0) {
-        data = concatBuffers(salt, password);
-      } else {
-        data = derivedKey;
-      }
-      derivedKey = new Uint8Array(
-        (await crypto.subtle.digest(algorithm, data)).slice(0, keyLength)
-      );
+      derivedKey = new Uint8Array(await crypto.subtle.digest(algorithm, derivedKey));
     }
     return {
       parameters: {},
-      derivedKey
+      derivedKey: derivedKey.slice(0, keyLength)
     };
   }
   handler({

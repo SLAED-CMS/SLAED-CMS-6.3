@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The configuration step of the 6.3 update in update.php carries the settings of a 6.2 site over the sources the release ships
+# The configuration step of the 8.0 update in update.php carries the settings of a 6.2 site over the sources the release ships
 #[Group('release')]
 final class UpdateConfigTest extends TestCase
 {

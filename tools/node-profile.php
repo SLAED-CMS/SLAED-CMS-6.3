@@ -98,7 +98,7 @@ function setProfileConfig(string $dir, int $port): void {
     }
     if (!is_file($dir.'/global.php') || !is_file($dir.'/node.php')) throw new RuntimeException('The release configuration could not be read from git');
     setProfileFile($dir.'/db.php', ['db' => ['name' => $pname, 'prefix' => PPREF] + $pcred]);
-    setProfileFile($dir.'/update.php', ['update' => ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']]);
+    setProfileFile($dir.'/update.php', ['update' => ['points' => '8.0.0', 'ratings' => '8.0.0', 'fields' => '8.0.0']]);
     $glob = require $dir.'/global.php';
     setProfileFile($dir.'/global.php', array_replace($glob, ['homeurl' => 'http://127.0.0.1:'.$port, 'close' => '0', 'cache' => '0']));
 }

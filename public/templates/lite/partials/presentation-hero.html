@@ -2,7 +2,6 @@
   <div class="sl-pres-hero-grid">
     <div class="sl-pres-copy">
       <div class="sl-pres-cockpit">
-        <span class="sl-pres-scan"></span>
         <div class="sl-pres-cockpit-top">
           <span><i class="bi bi-hexagon-half" aria-hidden="true"></i>SLAED CMS · {{ cockpit }}</span>
           <span><i class="sl-pres-dot sl-is-live" data-sl-tone="success"></i>{{ nominal }}</span>
@@ -15,13 +14,16 @@
           {% include 'fragments/presentation-ring.html' with qnum_ring %}
           {% include 'fragments/presentation-ring.html' with online_ring %}
         </div>
+        <ul class="sl-pres-strip">
+          {% for item in strip %}<li><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.value }}</b>{% if item.unit %} {{ item.unit }}{% endif %} <span>{{ item.label }}</span></li>{% endfor %}
+        </ul>
       </div>
       <div class="sl-pres-eyebrow">{{ eyebrow }}</div>
       <h1>{{ head_a }}{% if head_b %}<span>{{ head_b }}</span>{{ head_c }}{% endif %}</h1>
       <p class="sl-pres-lead">{{ lead }}</p>
     </div>
     <div class="sl-pres-core" data-sl-pres="core">
-      <div class="sl-pres-panel-head"><span>{{ core.title }}</span><b>{{ core.route }}</b></div>
+      <div class="sl-pres-panel-head"><span><i class="bi bi-window-sidebar" aria-hidden="true"></i>{{ core.title }}</span><b>{{ core.route }}</b></div>
       <div class="sl-pres-core-body">
         <div class="sl-pres-core-menu">
           {% for item in core.menu %}<button type="button" data-sl-pres-trace="{{ item.trace }}" data-sl-pres-path="{{ item.path }}"{% if item.is_on %} aria-pressed="true"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</button>{% endfor %}
@@ -30,7 +32,7 @@
           <div class="sl-pres-core-title"><b>{{ core.view }}</b><span data-sl-tone="success">● {{ core.online }}</span></div>
           <div class="sl-pres-metrics">
             {% for item in core.metrics %}
-            <div class="sl-pres-metric"><b{% if item.is_live %} data-sl-pres-live=""{% endif %}>{{ item.value }}</b><small>{{ item.label }}</small></div>
+            <div class="sl-pres-metric"><b>{{ item.value }}</b><small>{{ item.label }}</small></div>
             {% endfor %}
           </div>
           <div class="sl-pres-core-pulse" data-sl-pres="pulse"><span class="sl-pres-scan"></span><canvas role="img" aria-label="{{ core.chart }}"></canvas></div>

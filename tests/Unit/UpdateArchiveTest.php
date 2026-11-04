@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The catch-up of a 6.3 site of early October: archive and old folder addresses, the merge of the shipped config/ and the drop of the tables of the gone modules
+# The catch-up of an 8.0 site of early October: archive and old folder addresses, the merge of the shipped config/ and the drop of the tables of the gone modules
 #[Group('release')]
 final class UpdateArchiveTest extends TestCase
 {

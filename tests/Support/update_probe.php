@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the units of the 6.3 data update in update.php, whose contracts are docs/NODE.md (The 6.3 update) and docs/RATINGS.md
+# CLI probe for the units of the 8.0 data update in update.php, whose contracts are docs/NODE.md (The 8.0 update) and docs/RATINGS.md
 # The second argument names the unit, points when it is left out; every unit shares the schema, the lifted update code and the scratch site
 # The update cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the source by name
 # BASE_DIR and CONFIG_DIR point into scratch, so the manifest, the snapshot, the mark and every configuration file the unit writes stay away from the site
@@ -230,7 +230,7 @@ function getProbeStop(): array {
     getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_points` (uid, action, scope, source, points) VALUES (2, \'login\', \'account\', \'day:20260921\', 1)');
     $out['rows'] = getProbeRun();
     setProbeSite('0');
-    setUpdateFile('update.php', ['points' => '6.3.0']);
+    setUpdateFile('update.php', ['points' => '8.0.0']);
     $out['mark'] = getProbeRun();
     setProbeSite('0');
     getProbeRun();
@@ -272,7 +272,7 @@ function getProbeFlight(): array {
 
 # Put the scratch site and the disposable schema back to a 6.2 installation with ratings: the old rules, the points mark of the prior unit, the aggregates and the old rows
 # The twelve hundred extra accounts make the unit write its targets in more than one batch; every third of them carries an aggregate
-function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'], array $rows = PROBEROWS): void {
+function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '8.0.0'], array $rows = PROBEROWS): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
     setUpdateFile('ratings.php', $rules);
@@ -381,7 +381,7 @@ function getRateStop(): array {
     setRateSite();
     getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_targets` (scope, mid, base, votes, created) VALUES (\'account\', 2, 42, 11, NOW())');
     $out['rows'] = getRateRun();
-    setRateSite(PROBEOLD, ['points' => '6.3.0', 'ratings' => '6.3.0']);
+    setRateSite(PROBEOLD, ['points' => '8.0.0', 'ratings' => '8.0.0']);
     $out['mark'] = getRateRun();
     setRateSite();
     getRateRun();
@@ -402,7 +402,7 @@ function getRateStop(): array {
         [20, 2, 'account', '0', 9, '5.5.5.5'], [21, 2, 'account', '9999999999', 9, '6.6.6.6'],
         [22, 2, 'account', '1700000000', 0, '0.0.0.0'], [23, 2, 'account', '1700000000', 0, 'x'],
     ];
-    setRateSite(['account' => '100|1|0', 'forum' => '0|2|1'], ['points' => '6.3.0'], array_merge(PROBEROWS, $rows));
+    setRateSite(['account' => '100|1|0', 'forum' => '0|2|1'], ['points' => '8.0.0'], array_merge(PROBEROWS, $rows));
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 0, tvotes = 4 WHERE id = 3');
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET ratings = 3, score = 2 WHERE id = 5');
     $out['broken'] = getRateRun();
@@ -434,7 +434,7 @@ const PROBEVALS = [
 
 # Put the scratch site and the disposable schema back to a 6.2 installation with extra fields: positional definitions, the marks of the two units before, and positional value rows
 # The twelve hundred extra accounts make the unit write its rows in three batches; $bulk = false leaves them without a value
-function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0', 'ratings' => '6.3.0'], array $rows = PROBEVALS, bool $bulk = true): void {
+function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '8.0.0', 'ratings' => '8.0.0'], array $rows = PROBEVALS, bool $bulk = true): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
     setUpdateFile('fields.php', $defs);
@@ -498,12 +498,12 @@ function getFieldClean(): array {
     $out['nomark'] = getFieldRun();
     $out['same'] = $kept === array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     $named = $out['first']['rules'];
-    setFieldSite(PROBEDEFS, ['points' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => []], false);
+    setFieldSite(PROBEDEFS, ['points' => '8.0.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => []], false);
     setUpdateFile('fields.php', $named, [], true);
     $out['named'] = getFieldRun();
     $defs = ['account' => 'Version | A , B |3|1||0|0|1|1||Note|0|1|2', 'forum' => PROBEDEFS['forum'], 'order' => PROBEDEFS['order']];
     $rows = ['users' => [2 => 'C|hidden|n', 3 => ' B ', 4 => 'C|0|m'], 'forum' => [5 => 'X|L|R', 7 => 'Y|L']];
-    setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows, false);
+    setFieldSite($defs, ['points' => '8.0.0', 'ratings' => '8.0.0'], $rows, false);
     $out['grow'] = getFieldRun();
     return $out;
 }
@@ -532,7 +532,7 @@ function getFieldResume(): array {
 # Every broken row and every broken definition is one the preflight has to name together without writing anything
 function getFieldStop(): array {
     $out = [];
-    setFieldSite(PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']);
+    setFieldSite(PROBEDEFS, ['points' => '8.0.0', 'ratings' => '8.0.0', 'fields' => '8.0.0']);
     $out['mark'] = getFieldRun();
     setFieldSite();
     $named = getFieldRun()['rules'];
@@ -555,10 +555,10 @@ function getFieldStop(): array {
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET field = \'{"field1":"foreign"}\' WHERE id = 7');
     $out['foreign'] = getFieldRun();
     $rows = ['users' => [2 => 'D|x', 3 => 'A|n||03.02.2001', 4 => 'A|n||||t|extra'], 'forum' => [5 => 'X|L|R', 7 => 'Y', 8 => 'a|0', 9 => "two\nlines"]];
-    setFieldSite(['forum' => 'Wallet|0|1|1||0|0|1|1||First|0|1|2'] + PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows);
+    setFieldSite(['forum' => 'Wallet|0|1|1||0|0|1|1||First|0|1|2'] + PROBEDEFS, ['points' => '8.0.0', 'ratings' => '8.0.0'], $rows);
     $out['rows'] = getFieldRun();
     $defs = ['account' => 'Kind|A,B,A|3|1||Wide|x|7|1||Five|a|b|1|2', 'forum' => 'Born|31.12.2000|5|2', 'order' => PROBEDEFS['order']];
-    setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [5 => 'a||b']], false);
+    setFieldSite($defs, ['points' => '8.0.0', 'ratings' => '8.0.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [5 => 'a||b']], false);
     $out['defs'] = getFieldRun();
     return $out;
 }
@@ -659,7 +659,7 @@ function getConfClean(): array {
     return $out;
 }
 
-# Put the disposable schema back to a 6.2 newsletter: the 6.3 tables with the mails column 6.2 still has, three campaigns, and the mail queue empty
+# Put the disposable schema back to a 6.2 newsletter: the 8.0 tables with the mails column 6.2 still has, three campaigns, and the mail queue empty
 # The first campaign repeats an address and carries one that is none, the third has nobody pending
 function setMailSite(): void {
     deleteProbeTree(BASE_DIR);
@@ -895,7 +895,7 @@ const ARCHTEXT = [
     ['newsletter', 1, 'body', '[img]./uploads/archive/news/e.gif[/img]'],
 ];
 
-# Put the scratch site back to a 6.3 site of early October: the files of ARCHFILE, the two types, the texts of ARCHTEXT and no manifest of the unit
+# Put the scratch site back to an 8.0 site of early October: the files of ARCHFILE, the two types, the texts of ARCHTEXT and no manifest of the unit
 # The tables of blocks and polls are left out, so the unit meets a site without them
 function setArchSite(): void {
     deleteProbeTree(BASE_DIR);
@@ -964,7 +964,7 @@ function getArchClean(): array {
     return $out;
 }
 
-# Put the scratch site back to a 6.3 site with keys no code reads and a shipped config/ in storage/backup/release that has options the site lacks
+# Put the scratch site back to an 8.0 site with keys no code reads and a shipped config/ in storage/backup/release that has options the site lacks
 function setMergeSite(bool $pack): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
@@ -985,7 +985,7 @@ function setMergeSite(bool $pack): void {
     $put('header', ['header' => ['skip' => '1']]);
 }
 
-# The settings step without the shipped folder, the merge of a 6.3 site and a repeat that adds nothing
+# The settings step without the shipped folder, the merge of an 8.0 site and a repeat that adds nothing
 function getMergeClean(): array {
     setMergeSite(false);
     $out = ['none' => getProbeText(setUpdateMerge()), 'nonered' => checkUpdateFail(setUpdateMerge())];
@@ -998,7 +998,7 @@ function getMergeClean(): array {
     return $out;
 }
 
-# Put the schema back to a 6.3 site of early October with its source tables: news carried, its pending row in a cp1251 table matched by title and time
+# Put the schema back to an 8.0 site of early October with its source tables: news carried, its pending row in a cp1251 table matched by title and time
 # Help has a reply, faq a row no address names, files a pending row whose material has another title, pages is empty, and two tables of gone modules follow
 function setTableSite(): void {
     $side = getProbeSide();
@@ -1064,7 +1064,7 @@ const WORDROWS = [
     ['users', 2, 'sig', '[i]sig[/i]'],
 ];
 
-# Put the schema back to a 6.3 site whose stored texts are BB: the rows of WORDROWS, a textarea field of the forum, a BB contact text and no manifest of the unit
+# Put the schema back to an 8.0 site whose stored texts are BB: the rows of WORDROWS, a textarea field of the forum, a BB contact text and no manifest of the unit
 function setWordSite(): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
@@ -1106,7 +1106,7 @@ function getWordState(array $rows): array {
         'contact' => (string)(getUpdateSource(CONFIG_DIR.'/contact.php')['contact']['info'] ?? '')];
 }
 
-# One pass of the text unit as the first stage of a 6.3 site runs it, a dry run or a write run
+# One pass of the text unit as the first stage of an 8.0 site runs it, a dry run or a write run
 function getWordRun(bool $dry): array {
     return getWordState(setUpdateTexts($GLOBALS['pdb'], PROBEPREF, $dry, false));
 }

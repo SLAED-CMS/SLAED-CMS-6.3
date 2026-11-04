@@ -1242,7 +1242,7 @@ function setUpdateFile(string $fp, array $arr, array $act = [], bool $raw = fals
 }
 
 # Include one configuration source in a scope of its own with its output swallowed and answer its values
-# The answer is the array a 6.3 source returns, the first array a 6.2 source assigns to a variable, or an empty array for a missing file or a source without settings
+# The answer is the array an 8.0 source returns, the first array a 6.2 source assigns to a variable, or an empty array for a missing file or a source without settings
 function getUpdateSource(string $file): array {
     if (!is_file($file)) return [];
     ob_start();
@@ -1257,14 +1257,14 @@ function getUpdateSource(string $file): array {
     return $data;
 }
 
-# The connection settings of config/db.php, the db area of 6.3 or the $confdb of 6.2, both with the collation of the release the schema file converts into
+# The connection settings of config/db.php, the db area of 8.0 or the $confdb of 6.2, both with the collation of the release the schema file converts into
 function getUpdateCred(): array {
     $data = getUpdateSource(CONFIG_DIR.'/db.php');
     $data = is_array($data['db'] ?? null) ? $data['db'] : $data;
     return $data ? array_replace($data, ['collate' => 'utf8mb4_unicode_520_ci']) : [];
 }
 
-# Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the run may start
+# Check what the 8.0 data update needs before anything is changed and answer the refusal, or an empty string when the run may start
 # The server has to enforce CHECK constraints and to know RENAME COLUMN and RENAME INDEX of the schema file, which MariaDB has from 10.5.2 on
 # The update needs the users and admins tables of the prefix config/db.php names
 # Every table of a points, ratings, fields, Node, private message or newsletter transaction has to be InnoDB; nothing is converted, and the run closes the site itself
@@ -1293,7 +1293,7 @@ function setUpdateBackup(string $path, string $text): bool {
     return file_put_contents($temp, $text, LOCK_EX) === strlen($text) && rename($temp, $path);
 }
 
-# The points unit of the 6.3 data update: keep the starting balances as a hashed snapshot, carry users.point into points.active and leave the mark that opens the subsystem
+# The points unit of the 8.0 data update: keep the starting balances as a hashed snapshot, carry users.point into points.active and leave the mark that opens the subsystem
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue
 # Journal rows without a manifest stop it, because a current balance is never taken for a starting one; a mark without a manifest is a unit that ran on the site before
 function setUpdatePoints(Database $db, string $prefix): array {
@@ -1313,7 +1313,7 @@ function setUpdatePoints(Database $db, string $prefix): array {
         if ($done) $db->setSqlCommit();
         $text = (string)json_encode($list);
         if (!$res || !setUpdateBackup($dir.'/balances.json', $text)) return getUpdateRow('points: the snapshot of the balances could not be written', false);
-        $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => 0, 'count' => count($list), 'source' => ['balances.json' => hash('sha256', $text)], 'target' => []];
+        $info = ['version' => '8.0.0', 'state' => 'prepared', 'cursor' => 0, 'count' => count($list), 'source' => ['balances.json' => hash('sha256', $text)], 'target' => []];
         if (!setUpdateBackup($file, (string)json_encode($info))) return getUpdateRow('points: the manifest could not be written', false);
     }
     if ($info['state'] !== 'verified') {
@@ -1336,11 +1336,11 @@ function setUpdatePoints(Database $db, string $prefix): array {
         $info['state'] = 'verified';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getUpdateRow('points: the manifest could not be written', false);
     }
-    if (!setUpdateFile('update.php', ['points' => '6.3.0'] + $mark)) return getUpdateRow('points: config/update.php could not be written, the subsystem stays closed', false);
+    if (!setUpdateFile('update.php', ['points' => '8.0.0'] + $mark)) return getUpdateRow('points: config/update.php could not be written, the subsystem stays closed', false);
     return getUpdateRow('points: starting balances kept ('.intval($info['count']).' accounts), the subsystem is open', true);
 }
 
-# The ratings unit of the 6.3 data update: keep the aggregate of every remaining target as its starting balance, carry the last participation over and publish the four-key rules
+# The ratings unit of the 8.0 data update: keep the aggregate of every remaining target as its starting balance, carry the last participation over and publish the four-key rules
 # Nothing is written before the whole preflight passed: a broken aggregate, a broken time or address of a kept row and a broken rule stop the unit with the table and the id
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a row that is already stored has to equal its snapshot
 # Rows of the new tables without a manifest stop it, because a current aggregate is never taken for a starting one; rows of polls and of other events are counted and left alone
@@ -1431,7 +1431,7 @@ function setUpdateRatings(Database $db, string $prefix): array {
         }
         $text = ['targets.json' => (string)json_encode($list), 'terms.json' => (string)json_encode($terms)];
         $text['rules.json'] = (string)json_encode(['source' => $old, 'rules' => $rules]);
-        $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => ['targets' => 0, 'terms' => 0], 'moment' => $now, 'source' => [], 'target' => []];
+        $info = ['version' => '8.0.0', 'state' => 'prepared', 'cursor' => ['targets' => 0, 'terms' => 0], 'moment' => $now, 'source' => [], 'target' => []];
         $info['count'] = ['targets' => count($list), 'terms' => count($terms)] + $stat;
         foreach ($text as $name => $body) {
             if (!setUpdateBackup($dir.'/'.$name, $body)) return getUpdateRow('ratings: the snapshot '.$name.' could not be written', false);
@@ -1494,7 +1494,7 @@ function setUpdateRatings(Database $db, string $prefix): array {
         $info['state'] = 'verified';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getUpdateRow('ratings: the manifest could not be written', false);
     }
-    if (!setUpdateFile('update.php', ['ratings' => '6.3.0'] + $mark)) return getUpdateRow('ratings: config/update.php could not be written, the subsystem stays closed', false);
+    if (!setUpdateFile('update.php', ['ratings' => '8.0.0'] + $mark)) return getUpdateRow('ratings: config/update.php could not be written, the subsystem stays closed', false);
     $stat = $info['count'];
     $text = 'ratings: starting aggregates kept ('.intval($stat['targets']).' targets, '.intval($stat['terms']).' terms), left alone in the old table: '
         .intval($stat['voting']).' poll rows, '
@@ -1617,7 +1617,7 @@ function getUpdateValue(array $rules, array $slots, int $size, string $text, Fie
     return ['why' => $list ? 'the full and the short layout both fit and differ' : $why];
 }
 
-# The fields unit of the 6.3 data update: name the positional definitions of account and forum and turn every stored value row into one canonical JSON object
+# The fields unit of the 8.0 data update: name the positional definitions of account and forum and turn every stored value row into one canonical JSON object
 # Nothing is written before the whole preflight passed: a definition or a row that cannot be mapped without guessing stops the unit with the table, the id and the reason
 # A caption without an option and data at a switched off position grow the definitions by a disabled option or an inactive field in row order, and the report counts them
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a stored row has to equal its source or its target
@@ -1658,7 +1658,7 @@ function setUpdateFields(Database $db, string $prefix): array {
             $rows = $read[$area];
             if ($rows === false) return getUpdateRow('fields: the values of '.$prefix.'_'.$tab.' could not be read, the unit is stopped', false);
             if ($named && ($rows || !is_array($rules[$area]))) {
-                $text = 'fields: config/fields.php is already in the 6.3 format while '.$prefix.'_'.$tab.' still holds positional rows and no manifest exists';
+                $text = 'fields: config/fields.php is already in the 8.0 format while '.$prefix.'_'.$tab.' still holds positional rows and no manifest exists';
                 return getUpdateRow($text.' - put the 6.2 config/fields.php back and start the update again', false);
             }
             $memo = [];
@@ -1700,7 +1700,7 @@ function setUpdateFields(Database $db, string $prefix): array {
         if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getUpdateRow('fields: '.$dir.' could not be created', false);
         $text = ['definitions.json' => json_encode(['source' => $old, 'rules' => $rules], $flag)];
         foreach ($snaps as $area => $list) $text[$area.'.json'] = json_encode($list, $flag);
-        $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => array_fill_keys(array_keys($maps), 0), 'source' => [], 'target' => []];
+        $info = ['version' => '8.0.0', 'state' => 'prepared', 'cursor' => array_fill_keys(array_keys($maps), 0), 'source' => [], 'target' => []];
         $info['count'] = array_map('count', $snaps);
         $info['grown'] = $grown;
         foreach ($text as $name => $body) {
@@ -1756,14 +1756,14 @@ function setUpdateFields(Database $db, string $prefix): array {
         $info['state'] = 'verified';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getUpdateRow('fields: the manifest could not be written', false);
     }
-    if (!setUpdateFile('update.php', ['fields' => '6.3.0'] + $mark)) return getUpdateRow('fields: config/update.php could not be written, the subsystem stays closed', false);
+    if (!setUpdateFile('update.php', ['fields' => '8.0.0'] + $mark)) return getUpdateRow('fields: config/update.php could not be written, the subsystem stays closed', false);
     $stat = $info['count'];
     $text = 'fields: named definitions published, value rows carried over: '.intval($stat['account']).' accounts, '.intval($stat['forum']).' forum posts; kept as switched off: ';
     $text .= intval($info['grown']['options'] ?? 0).' options, '.intval($info['grown']['fields'] ?? 0).' fields';
     return getUpdateRow($text.'; the subsystem is open', true);
 }
 
-# The attachment unit of the 6.3 data update for one table of texts: a direct address of a file its folder holds becomes an attachment of its name
+# The attachment unit of the 8.0 data update for one table of texts: a direct address of a file its folder holds becomes an attachment of its name
 # The forum posts address uploads/forum and the private messages uploads/account; both folders are closed, so a direct address would answer 410; a stopped run is run again
 function setUpdateAttach(Database $db, string $prefix, string $tab, string $dir): array {
     $res = $db->getSqlQuery('SELECT id, body FROM `'.$prefix.'_'.$tab.'` WHERE body LIKE :addr', ['addr' => '%uploads/'.$dir.'/%']);
@@ -1781,7 +1781,7 @@ function setUpdateAttach(Database $db, string $prefix, string $tab, string $dir)
     return getUpdateRow($tab.': direct addresses of uploads/'.$dir.' turned into attachments (texts: '.$done.')', $good);
 }
 
-# The catch-up of a 6.3 site: archive and old folder addresses of Node texts and their comments become attachments, an archive address elsewhere reaches its material
+# The catch-up of an 8.0 site: archive and old folder addresses of Node texts and their comments become attachments, an archive address elsewhere reaches its material
 function setUpdateArchive(Database $db, string $prefix, bool $dry): array {
     global $conf;
     require_once BASE_DIR.'/core/classes/upload.php';
@@ -1900,7 +1900,7 @@ function setUpdateArchive(Database $db, string $prefix, bool $dry): array {
     if (!is_array($info)) {
         $sum = $walk(false);
         if ($sum === null) return getUpdateRow('archive: the texts could not be read, no address was rewritten', false);
-        $info = ['version' => '6.3.0', 'state' => 'prepared', 'count' => $sum['change'], 'left' => $sum['left'], 'cursor' => [], 'done' => []];
+        $info = ['version' => '8.0.0', 'state' => 'prepared', 'count' => $sum['change'], 'left' => $sum['left'], 'cursor' => [], 'done' => []];
     }
     $raw = false;
     $memo = [];
@@ -2051,7 +2051,7 @@ function setUpdateTexts(Database $db, string $prefix, bool $dry, bool $six): arr
     if (!is_array($info)) {
         $sum = $walk(false);
         if ($sum === null) return getUpdateRow('texts: the texts could not be read, no text was converted', false);
-        $info = ['version' => '6.3.0', 'state' => 'prepared', 'count' => $sum['change'], 'long' => $sum['long'], 'cursor' => [], 'done' => []];
+        $info = ['version' => '8.0.0', 'state' => 'prepared', 'count' => $sum['change'], 'long' => $sum['long'], 'cursor' => [], 'done' => []];
     }
     $info['state'] = 'applying';
     if (!$save() || $walk(true) === null) return getUpdateRow('texts: the conversion stopped, run the update again to continue after the last written batch', false);
@@ -2116,7 +2116,7 @@ function getUpdateLangs(): array {
     return ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
 }
 
-# The language unit of the 6.3 data update: a 6.2 name in a language column becomes its code, and an account keeping a language no lang/ file serves takes the site one
+# The language unit of the 8.0 data update: a 6.2 name in a language column becomes its code, and an account keeping a language no lang/ file serves takes the site one
 function setUpdateLangs(Database $db, string $prefix): array {
     $good = true;
     $done = 0;
@@ -2156,7 +2156,7 @@ function checkUpdateEmails(Database $db, string $prefix): array {
     return $rows;
 }
 
-# The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
+# The configuration step of the 8.0 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
 # The site values go over the shipped source of the same name, stat into statistic and seo over global; an unshipped key stays for the data units and the next form save
 # The version, the asset lists and the closed site belong to the release and the update, and a language name becomes its code
 # A start module, a theme or a site logo that is not in the tree falls back to the shipped value; a global key naming a configuration area would shadow it and is dropped
@@ -2249,7 +2249,7 @@ function setUpdateConfig(): array {
     return $out;
 }
 
-# The settings step of a 6.3 site: the keys no code reads leave, then every option of the shipped config/ the copy keeps in storage/backup/release the site lacks is added
+# The settings step of an 8.0 site: the keys no code reads leave, then every option of the shipped config/ the copy keeps in storage/backup/release the site lacks is added
 function setUpdateMerge(): array {
     require_once BASE_DIR.'/core/classes/update.php';
     $pack = BACKUP_DIR.'/release/config';
@@ -2371,7 +2371,7 @@ function deleteUpdateTypes(array $keep): array|false {
     return $ntypes;
 }
 
-# The newsletter step of the 6.3 update: before the schema file drops the mails column the pending recipients of every campaign are kept in storage/backup/update/newsletter
+# The newsletter step of the 8.0 update: before the schema file drops the mails column the pending recipients of every campaign are kept in storage/backup/update/newsletter
 # After the drop they move into the mail queue; an address already queued for its campaign is not written twice, so a break and a repeat neither lose nor double a recipient
 # The unit resumes from its manifest like the data units: without the column and without a manifest there is nothing pending, verified is skipped
 function setUpdateMails(Database $db, string $prefix, string $from, bool $move): array {
@@ -2394,7 +2394,7 @@ function setUpdateMails(Database $db, string $prefix, string $from, bool $move):
         if (!$res) return getUpdateRow('newsletter: the pending recipients could not be read, the update stops before the schema', false);
         if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getUpdateRow('newsletter: '.$dir.' could not be created, the update stops before the schema', false);
         $text = (string)json_encode($list, JSON_UNESCAPED_UNICODE);
-        $info = ['version' => '6.3.0', 'state' => 'prepared',
+        $info = ['version' => '8.0.0', 'state' => 'prepared',
             'count' => ['campaigns' => count($list), 'recipients' => array_sum(array_map(fn(array $v): int => count($v[2]), $list))]];
         $info['source'] = ['recipients.json' => hash('sha256', $text)];
         if (!setUpdateBackup($dir.'/recipients.json', $text) || !setUpdateBackup($file, (string)json_encode($info))) {
@@ -2468,7 +2468,7 @@ function setUpdateSql(Database $db, string $file, string $prefix): array {
     return $rows;
 }
 
-# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, a dry run only counts addresses and texts
+# Run the 8.0 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, a dry run only counts addresses and texts
 function setUpdateRun(bool $dry = false): array {
     global $conf, $spanel;
     foreach (['db.php', 'global.php', 'security.php'] as $name) {
@@ -2626,7 +2626,7 @@ function setUpdateRun(bool $dry = false): array {
     }
     $text = ' could not be written, the update stops before the schema';
     if ($sdone && !setUpdateFile('scheduler.php', $sched)) $rows = array_merge($rows, getUpdateRow('config/scheduler.php'.$text, false));
-    $done = !$first || checkUpdateFail($rows) || setUpdateFile('update.php', ['modules' => '6.3.0'] + $mark);
+    $done = !$first || checkUpdateFail($rows) || setUpdateFile('update.php', ['modules' => '8.0.0'] + $mark);
     if (!$done) $rows = array_merge($rows, getUpdateRow('config/update.php'.$text, false));
     $ndata = getUpdateSource(CONFIG_DIR.'/newsletter.php')['newsletter'] ?? [];
     $nset = $ndata + ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500'];
@@ -2715,7 +2715,7 @@ function getUpdateLinks(Template $tpl): string {
 function setUpdatePage(array $rows, bool $dry = false): void {
     global $conf;
     $tpl = new Template('admin');
-    $text = 'This page brings a SLAED CMS 6.2 site to 6.3 and runs without a login at the risk of the owner. It closes the site, carries the configuration over,'
+    $text = 'This page brings a SLAED CMS 6.2 site to 8.0 and runs without a login at the risk of the owner. It closes the site, carries the configuration over,'
         .' runs the schema file and the data units. Then update.php carries the content of the removed modules into Node behind the panel login.';
     $cont = $tpl->getHtmlFrag('alert', ['text' => $text]);
     if ($rows) {
@@ -2737,7 +2737,7 @@ function setUpdatePage(array $rows, bool $dry = false): void {
     $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'dry', 'value_attr' => '1', 'input_attr' => '']);
     $text = 'Count the changes';
     $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'search', 'title' => $text, 'label' => $text]);
-    $meta = $tpl->getHtmlFrag('head-title', ['title' => 'SLAED CMS 6.3 update'])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
+    $meta = $tpl->getHtmlFrag('head-title', ['title' => 'SLAED CMS 8.0 update'])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
     $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));
     if (!is_file(PUBLIC_DIR.'/'.$logo)) $logo = 'templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg';
     $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.net', 'title' => 'SLAED CMS', 'label' => 'SLAED CMS', 'is_blank' => true]);

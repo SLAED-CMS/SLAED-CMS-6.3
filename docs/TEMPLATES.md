@@ -371,7 +371,7 @@ Example already present — the icon stylesheet and its WOFF2 font, nothing else
 - `templates/admin/assets/vendor/bootstrap-icons/`
 
 ### Versioned Addresses And Order
-Every `<link>` and `<script src>` a theme prints carries the version of the file's content, `?v=` with the first ten hex characters of its SHA-1, from `Template::getAssetUrl()`; the browser keeps such a file a year and a changed file arrives under a new address. A template never writes an asset address by hand: it receives `href` or `src` already versioned from PHP and prints it through `fragments/head-link.html` or `fragments/head-script-src.html`; the one own tag is the module loader of `fragments/captcha-altcha.html`, whose `script_src` comes versioned from `Captcha` as well. A CSS or JS file added to a theme or a plugin gets its version with the next rebuild of `config/local.php`; a file the derived map does not know is printed plain and kept a week. A font or an image reached by a relative `url()` of a stylesheet carries no version and is kept a week as well. Every head script is `defer` and runs in the order of `getAssetList()`, so an inline script that calls one of them waits for `DOMContentLoaded`. The lifetimes, the server rules and the measurement are in `docs/PERFORMANCE.md`, section "Static Assets".
+Every `<link>` and `<script src>` a theme prints carries the version of the file's content, `?v=` with the first ten hex characters of its SHA-1, from `Template::getAssetUrl()`; the browser keeps such a file a year and a changed file arrives under a new address. A template never writes an asset address by hand: it receives `href` or `src` already versioned from PHP and prints it through `fragments/head-link.html` or `fragments/head-script-src.html`; the one own tag is the module loader of `fragments/captcha-altcha.html`, whose `script_src` comes versioned from `Captcha` as well. A CSS or JS file added to a theme or a plugin gets its version with the next rebuild of `config/local.php`; a file the derived map does not know is printed plain and kept a week. A font or an image reached by a relative `url()` of a stylesheet carries no version and is kept a week as well; the one exception is the icon font, which `setHead()` preloads before the stylesheets of `doCss()` at the very address of its `@font-face`, query included, read by `getIconFont()` into `$conf['derived']['assets'][<theme>]['font']`, so no icon is drawn before its glyph. Every head script is `defer` and runs in the order of `getAssetList()`, so an inline script that calls one of them waits for `DOMContentLoaded`. The lifetimes, the server rules and the measurement are in `docs/PERFORMANCE.md`, section "Static Assets".
 
 ### Automatic Asset Loading
 The current runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists — `partials/<name>.css` or `partials/<name>.js` beside `partials/<name>.html` — the engine detects it at compile time and adds the asset to the page. No shipped partial uses this today; the mechanism is available, not idiomatic.
@@ -533,11 +533,11 @@ components of their own and stand outside this contract.
 | `name` | the row | the name of the row as a reader says it | `data-sl-row`, the label of its box, the label of its "i", the name in the toast |
 | `moment` | a cell | a `DATETIME` string or a Unix time | `<time datetime data-sl-ago>` with the text in `_TIMESTRING` and the sort key; an empty or zero moment keeps the `content_text` of its module, else the cell is empty |
 | `details` | the row | the items of `fragments/popover.html` | the "i" in the first cell past `is_col_id`, `tip_id` `sl-tip-<row number>`, labelled `_DETAILS: <name>` |
-| `dial` | the actions cell | the items of `fragments/dial.html` | the dial titled by its column, with the item of `drop` appended last |
+| `dial` | the actions cell | the items of `fragments/dial.html` | the dial titled by its column, with the action of `stat` and then the item of `drop` appended last |
 | `is_edit` | a dial item | the pencil of the row | `data-sl-edit`, which the key E clicks |
 | `is_find` | a dial item | the address of a filter by the value of the row | `hx-boost="true"`, the list swaps in place |
 | `drop` | the row | `getTplPostAction()` of the delete, `id[]` holding the key of the row | the dial item with `later` `gone del`, the box `id[]` of the row and the action `del` of the foot; `later` `gone move` makes it the action `move` titled by the item |
-| `stat` | a cell | the status action with `later` `gone …` or `lamp …` and `is_on` | the lamp; beside a `drop`, the actions `on` and `off` of the foot from the fields of a row turned off and on |
+| `stat` | a cell | the status action with `later` `gone …` or `lamp …` and `is_on` | the lamp, a mark that is no control (`data-sl-lamp`, titled `_ACT` or `_DEACT`); its action is an item of the dial of the row, which a list that draws its dial itself ("Модули", "Типы материалов", "Категории", "Блоки") appends there; beside a `drop`, the actions `on` and `off` of the foot from the fields of a row turned off and on |
 | `upto` | the list | the greatest key of the list under its condition | the offer "Отметить все N" when the list has more than one page |
 | `none_text`, `is_calm` | the list | the text of the empty list, and whether empty is the calm state of a queue | `sl-list-none`, with `sl-list-calm` |
 
@@ -609,7 +609,7 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
   `standard` (no cookie), `full`, `compact`, `cards`; `getTplAdminList()` writes `data-sl-density` on the table from the
   first byte and the script changes the attribute at once. The sort is kept per `key` by `getToggleState()` and said on
   the line `data-sl-said` of `layouts/admin.html`, which also says the range after every swap; the rows that a filter, a
-  tab or a page brings enter one after another by `--sl-d-order`.
+  tab or a page brings stand at once, with no entry of their own.
 - **A failed swap says so.** The alert `data-sl-list-error` with "Повторить" (`_ADM_LISTERR`, `_RETRY`) replaces a list
   that did not come, and the list carries `aria-busy` while it is asked; "Повторить" repeats the same request.
 - **A deferred action names its kind.** `data-sl-later` on a form of the row, the dial or the foot: `gone <what>` takes
@@ -724,24 +724,22 @@ switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движе�
 
 | Effect | Where | How |
 |---|---|---|
-| A light round the frame under the hand, blue into violet | `.sl-cockpit`, `.sl-mcard`, `.sl-pane` | `::before`, a stroke of `--sl-aurora-width` along `offset-path`; `sl-aurora` over `--sl-aurora-dur` carries its opacity, so a still panel shows none |
+| A light round the frame under the hand, blue into violet | every framed block of both themes: in the panel the cockpit, the tiles, the windows, the sidebar blocks (not on the rail), the metrics, the tiles of the file manager, the ratings and the messages; on the site the blocks, the cabinet, the profile, the messages, the catalogue tiles, the node heads and covers, the changelog, the search and the framed blocks of the presentation. Not on controls, popovers and dialogs, nor where a block draws both of its own pseudo-elements (the voices, the principles and the commits of the presentation), holds a non-modal window (`.sl-duo`, `.sl-opt-tile`), or loses the subpixel smoothing of its text once positioned (the changelog, the debug sections, the file manager shell, the list tables and the form blocks of the panel, the events of the presentation: 36 to 113 of 255) | `::before` (`::after` where the block draws its own), made only under the hand, a turning cone cut by a mask to the line of the frame, so it bends round every corner; one family of tokens draws it in each theme: `--sl-aurora-dur` one turn (0s turns it off), `--sl-aurora-width` the line, `--sl-aurora-mix` the share of the frame lit, `--sl-aurora-border` and `--sl-aurora-ring` the colour it starts in and the one of its head. `sl-aurora` turns `--sl-aurora-turn`, registered without inheritance, and carries the opacity, so a still page shows none |
 | The scan, a line of light going down the panel now and then | `.sl-cockpit` | `::after`, 1 px under the glow of `--sl-tint-strong` and `--sl-tint`, `sl-cockpit-scan`, at most `--sl-fade-disabled` |
 | The comet round the lamp, in every state and the one beam there | `.sl-cockpit-plate` | `::before`, `sl-cockpit-spin`; the rules of the cockpit set its pace by the state, a multiple of `--sl-alert-dur` |
 | The glow of a circle, at the share of the gauges of the presentation | `.sl-cockpit-ring .sl-knob-val`, `.sl-cockpit-plate` | `--sl-knob-mix`, not the shared `--sl-ring-mix`; it does not move, so it stands with the rules of the cockpit, outside the block |
 | An arc fills to its share | `.sl-cockpit-ring .sl-knob-val` | `stroke-dasharray` over `--sl-knob-dur` on `--sl-alert-ease`; `partials/cockpit.html` starts it at `0 100`, so the first poll fills it from zero |
-| A figure runs from its value to the new one and lights | `[data-sl-gauge-val]`, `[data-sl-strip-val]`, `[data-sl-queue-n]` | `setFigureRun()` in 900 ms, called by `setCockpitView()` and `setQueueView()`; `slFigure` keeps the goal, which `getFigureValue()` answers; `setFigureFresh()` is the one flare, `sl-figure-flash` over `--sl-knob-dur`; a still panel or a hidden tab writes the value at once |
-| The tiles rise in their turn when the grid enters the view | `.sl-menu-grid` | `setArriveMarks()` at start and on `htmx:load` sets `data-sl-arrive` and `--sl-d-turn`; `sl-is-in` starts `sl-tile-rise` over `--sl-tile-dur`, and `setArriveDone()` drops the marks once every shown tile rose |
-| The parts of a ground rise in their turn, each when it enters the view | `.sl-ground > *` | the same marks of `setArriveMarks()`, part by part; a part that rose starts its figures, `setFigureRise()` running each `[data-sl-figure]` from zero by `setFigureRoll()`, the run behind `setFigureRun()` |
+| A figure runs from its value to the new one, swollen and green until it stops, one series in both themes | the rings, the strip, the tiles and the queues of the panel, the figures of the presentation, the shares and votes of a poll | `setFigureRun()` of `plugins/system/slaed.js`, the one run, with `getFigureText()`, `getFigureParts()` and `getFigureValue()` beside it; the first fill from a dash runs and flares too. It sets `sl-is-counting` and runs for the length of the first animation the theme gives it: `sl-figure-lit` over `--sl-figure-dur` holds `--sl-figure-text` and `--sl-figure-shadow`, `sl-figure-fade` takes them off after it, `sl-figure-swell` settles from 1.4 over both; an inline figure is an inline block while it runs. The pulse of the monitor keeps `sl-cockpit-fresh` of its own tone. `slFigure` keeps the goal; a still page, a hidden tab or a theme with no flare writes the value at once |
 | A tile leans to the hand under a glare | `.sl-menu-grid > .sl-mcard`, `.sl-metric` | one `pointermove`, not of a touch, written once a frame by `setTileTilt()`: `--sl-d-tilt-x`, `--sl-d-tilt-y`, `--sl-d-x`, `--sl-d-y`; a home tile whose dial is hovered or open takes `transform: none` |
 | A beam crosses the solid heads in their turn | `.sl-dashboard-panel-head`, `.sl-block-sidebar h3`, `.sl-pane-cap` | `setBeamTurns()` writes the place of each head in `--sl-d-turn` |
 | A press spreads from the pointer | `.sl-mcard-link` of the home grid, `.sl-menu-list-item` of `.sl-admin-sidebar`, `.sl-block-sidebar-count-row`, `.sl-cockpit button` | one `pointerdown` appends `span[data-sl-ripple]` with `--sl-d-x`, `--sl-d-y`, removed when `sl-ripple` over `--sl-ripple-dur` ends; not from the dial or the drag handle |
-| A chart is drawn left to right once | `.sl-chart-svg` | `data-sl-arrive`, then `sl-is-in` starts `sl-chart-draw` over `--sl-graph-dur`; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched; a chart whose place (the nearest `id`) was drawn is a tick of the poll and gets no mark |
 
 The laws of a move:
 
 - **Duration.** A duration in the CSS of these effects is a component token `-dur` or a multiple of `--sl-alert-dur`,
-  each carrying `--sl-time-scale`. The run of a figure, 900 ms, is the script's; the scripts ask `isMotionStill()`, so a
-  still panel gets no arrival, tilt, ripple or run.
+  each carrying `--sl-time-scale`. The run of a figure is `--sl-figure-dur` of the theme, read off its flare; the scripts ask `isMotionStill()`, so a
+  still panel gets no tilt, ripple or run.
+- **No entry.** A page stands as it is drawn: no tile, part, chart or row of the panel is hidden to come in after the load or after a swap.
 - **The block.** A new effect goes into "Motion over the page" and carries no reduced-motion block of its own. The block
   does not hold every animation of the theme: the knob of the segmented switch and the installer keep blocks of their
   own, and the other animations stand outside any block and stop by `--sl-time-scale` alone. That holds only where the
@@ -751,9 +749,7 @@ The laws of a move:
   `tools/ui-contract.php`, the component under `components`, the prop under `props`.
 - **No transform over a float.** `slaed.js` places a panel of `.sl-float` as `position: fixed` and `refitFloating()`
   follows the scroll; a `transform` on an ancestor becomes the frame of `fixed`, and the panel opens off its place. So
-  the arrival moves by the offset `top`, a part animates its pseudo-element, and the tilt holds only a tile, whose
-  dial is a fan inside it, no float.
-- **A tick never replays.** A chart is drawn once; a later poll updates it without drawing it again.
+  a part animates its pseudo-element, and the tilt holds only a tile, whose dial is a fan inside it, no float.
 - **The ripple stays on the home and the menu.** The forms and the lists of the panel take none, nor do the tiles, the
   segments and the days of the parts below.
 
@@ -792,7 +788,7 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
   `--sl-d-pointer-x`, `--sl-d-pointer-y` of the pointer light, `--sl-d-gate-y`. A rule that reads such a value from its
   parent says `inherit`.
 - **What stays by decision.** `sl-cockpit-alarm` on `box-shadow` and `sl-cockpit-throb` on `filter` run only in the state
-  danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it;
+  danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it; the lamp of the presentation cockpit glows by the `drop-shadow` of the panel lamp, rastered again under its turning comet, about 12 points of GPU on the top of the presentation (owner, 2026-11-04);
   the moving acts of Phoenix draw on the canvas, not through `ImageData`. The quiet ground of Phoenix asks for a frame
   every frame while the screensaver is on, so the home then restyles about 120 times a second whatever the CSS does.
 
@@ -806,8 +802,7 @@ the day in the lamp of "Статистика", the pulse in the lamp of "Мон�
 `public/demo/st-02-cockpit.html` and `public/demo/mon-01-cockpit.html`, whose classes `st-*` and `mn-*` stay in
 `public/demo/assets/`; the frozen tokens `--sl-statx-*` stay with the dial, the bars of rows and the log of days. `SeriesPartsTest`
 holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter()`, `getTplLongCell()` and the key `pane`.
-`fragments/window.html` and `data-sl-window` are a dialog, `--sl-tile-dur` and `sl-tile-rise` the tile of the home; neither
-is one of these parts.
+`fragments/window.html` and `data-sl-window` are a dialog and not one of these parts.
 
 | Part | Fragment, class | Keys and notes |
 |---|---|---|
@@ -819,7 +814,7 @@ is one of these parts.
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
 | A meter | `meter.html`, `.sl-meter`, drawn by `getTplMeter()` | a share of a real limit with the role `meter` and `--sl-d-part`; `is_row` is the form inside a table row |
 | The extensions | `ext.html`, `.sl-ext` | `groups`: `label`, `have_text`, `is_short`, `chips` (`name`, `is_ok`, `is_lost`, `is_off`, `state_text`), `notes` |
-| A chart | `series.html` | `id`, `kind`, `json`, `wait_text`, drawn by the engine below |
+| A chart | `series.html` | `id`, `kind`, `json`, drawn by the engine below; the host stays empty until the engine draws it |
 | A cockpit | `partials/cockpit.html`, with `monitor-cockpit.html` and `statistic-cockpit.html` | `cap_icon`, `cap_text`, `rings`, `strip`, and the parts of the page `state_html`, `nav_html`, `lamp_html`. The lamp holds its face: the checks of the home, the pulse of "Мониторинг", the dial of "Статистика" |
 
 The rules of the parts:
@@ -855,7 +850,7 @@ list, the tiles of rows, size and free space), "Поиск" and "Карта са
 ### The Engine Of The Parts
 
 A chart is `fragments/series.html`. `setSeriesDraw()` draws it on load and on `htmx:load`, and a poll calls
-`window.setSeriesData(host, data, true)`: a tick moves what stands and plays no arrival. Every text comes from the server. A
+`window.setSeriesData(host, data, true)`: a tick moves what stands. Every text comes from the server. A
 tone is `up`, `down`, `cpu`, `ram`, `primary`, `accent`, `success`, `warning`, `danger` or `muted`. A pick of a day
 leaves as the event `sl-series-pick` on `document`, with `detail.index`, `-1` for taking it off.
 
@@ -871,7 +866,7 @@ leaves as the event `sl-series-pick` on `document`, with `detail.index`, `-1` fo
 | `clock` | `label`, `hours` (24 numbers), `gen` (24 numbers, ms), `peak` (the hour or `-1`), `peak_label`, `peak_text`, `total`, `hits_word`, `now` (the running hour or `-1`) |
 | `table` | `can_pick`, `pick`, `cols`, `total`: `label`, `cells`; `rows`: `label`, `week`, `is_end`, `run_text`, `cells`, `tops` |
 
-- **The live chart is calm.** The curtain of its arrival plays once; a tick slides the lines left by a step. Under the
+- **The live chart is calm.** It stands as drawn; a tick slides the lines left by a step. Under the
   hand a dashed guide and the points of every series, with a panel of the system float. The distances and the axis come
   from the times of the points, not their numbers: 30 points, so a window of 5 to 30 minutes.
 - **The strip of the archive is one line of the whole history.** A column is the unique visitors of an average day, not the

@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The 6.3 update of update.php carries a real 6.2 site over (docs/NODE.md, The 6.3 update)
+# The 8.0 update of update.php carries a real 6.2 site over (docs/NODE.md, The 8.0 update)
 #[Group('release')]
 final class UpdateSiteTest extends TestCase
 {
@@ -86,7 +86,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertStringContainsString('module registry: old_modules could not be read', $run['nomods'][0]);
         $this->assertSame([[], true, 0], array_slice($run['nomods'], 1), 'A registry that could not be read left the mark modules or wrote the file');
         $this->checkBrokenRun($run);
-        $this->assertSame(['modules' => '6.3.0'], $run['broken']['marks'], 'A run stopped at the schema file left a step mark of the code');
+        $this->assertSame(['modules' => '8.0.0'], $run['broken']['marks'], 'A run stopped at the schema file left a step mark of the code');
         $this->assertSame(['points' => 'missing', 'ratings' => 'missing', 'fields' => 'missing'], $run['broken']['manifest']);
         $this->assertSame(503, $run['broken']['guest']);
         $this->assertSame(1, $run['broken']['dupes'], 'The schema file did not remove the later poll vote of one address');
@@ -100,7 +100,7 @@ final class UpdateSiteTest extends TestCase
     public function aRealSiteFinishesOnTheFirstRun(): void
     {
         $run = $this->getRun();
-        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0', 'steps' => [SL_VERSION]];
+        $marks = ['fields' => '8.0.0', 'modules' => '8.0.0', 'points' => '8.0.0', 'ratings' => '8.0.0', 'steps' => [SL_VERSION]];
         foreach (['first', 'second', 'third'] as $name) {
             $this->assertSame([], $run[$name]['failed'], $name);
             $this->assertSame($marks, $this->getMarks($run[$name]['marks']), $name);
@@ -168,7 +168,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame($last['before'], $last['after']);
     }
 
-    # The second stage carries the 6.2 tables of the removed modules into Node: the schema file gave them the 6.3 names the migration reads
+    # The second stage carries the 6.2 tables of the removed modules into Node: the schema file gave them the 8.0 names the migration reads
     # The news, the file, the joke and the film of the fixture and the rows the probe adds - three news and a help request - become materials of their types
     # The film keeps its own columns in the extra fields of the media profile and its two web links as downloads, the ed2k link stays behind with a note
     # The joke and the film keep their ratings, and every carried table is dropped after its data step; a table with a row its manifest lacks stays with a note
@@ -269,7 +269,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame([[0, ''], [4, 30]], [$run['dump'], $run['before']]);
         $this->assertSame([[], true, 1], array_slice($run['nomods'], 1), 'The negative balance was not set to 0 and counted before the schema file');
         $this->checkBrokenRun($run);
-        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0', 'steps' => [SL_VERSION]];
+        $marks = ['fields' => '8.0.0', 'modules' => '8.0.0', 'points' => '8.0.0', 'ratings' => '8.0.0', 'steps' => [SL_VERSION]];
         foreach (['first', 'second', 'third'] as $name) {
             $this->assertSame([], $run[$name]['failed'], $name);
             $this->assertSame($marks, $this->getMarks($run[$name]['marks']), $name);

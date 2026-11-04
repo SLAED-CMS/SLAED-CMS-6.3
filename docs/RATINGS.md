@@ -101,7 +101,7 @@ are no foreign keys to the polymorphic targets. The timer `last` is Unix seconds
 | `_rating_votes` | `id` BIGINT UNSIGNED AUTO_INCREMENT, `scope`, `mid`, `actor`, `uid` INT UNSIGNED (0 for a guest), `value` TINYINT UNSIGNED, `request` CHAR(32), `created` DATETIME, `annulled` DATETIME (NULL while the vote stands), `aid` INT UNSIGNED (default 0), `reason` VARCHAR(255) (default `''`) | PRIMARY (`id`); UNIQUE `request` (`scope`, `mid`, `actor`, `request`); KEY `target` (`scope`, `mid`, `id`); KEY `scope` (`scope`, `id`); CHECK `value` BETWEEN 1 AND 5 |
 
 A target gets its `_rating_targets` row at its first vote, with a zero balance. A target whose owner row carries a
-non-zero aggregate but has no such row was never carried over by the 6.3 update: it takes no vote (`storage`,
+non-zero aggregate but has no such row was never carried over by the 8.0 update: it takes no vote (`storage`,
 logged). A voter has no `_rating_actors` row until the first accepted vote. `KEY target` serves the journal of one
 target, `KEY scope` the journal of one scope by cursor.
 
@@ -160,7 +160,7 @@ The constructor converts each rule once. Truthy casts are not used: anything but
 invalid. A missing fixed scope, a key outside the grammar and an invalid rule each block their own scope, are
 logged, and never fall back to a default. Explicit refusals (`'0'`) are kept.
 
-The rules take effect only behind the mark `update.ratings = '6.3.0'` in `config/update.php`. Without it
+The rules take effect only behind the mark `update.ratings = '8.0.0'` in `config/update.php`. Without it
 `getRatingService()` passes an empty rule set, so no scope has a rule and a vote is `unavailable`, nothing is logged,
 `getRatingAsync()` draws no live widget and the settings screen shows a warning instead of the form. A clean installation writes the mark directly.
 
@@ -345,7 +345,7 @@ goes through the one endpoint.
 The Node list also sorts by `rating`. The fragments are `templates/lite/fragments/rating-bar.html`,
 `rating-like.html` and `rating-box.html`; the wrapper is the `div` partial with `is_rate`.
 
-## 6.3 carry-over
+## 8.0 carry-over
 
 The ratings unit is `setUpdateRatings()` in `update.php`, run after the points unit and before the fields
 unit. It carries the accumulated aggregates of the fixed scopes as starting balances and the real last
@@ -387,7 +387,7 @@ verified, the target hashes. Writes go in transactions of 500 rows; a row alread
 otherwise the unit stops. Before the rules are published the unit re-reads both tables and compares their hashes
 with the snapshots, re-reads the owner aggregates against `targets.json`, and checks that `_rating_votes` is empty
 and the number of poll rows is unchanged. Only then does it write `config/ratings.php`, set the state `verified` and
-write `update.ratings = '6.3.0'`.
+write `update.ratings = '8.0.0'`.
 
 **Repeats.** A unit that finds rows in the new tables, or a mark, without a manifest stops before writing: a
 current aggregate is never taken for a starting one. A `prepared` or `applying` manifest continues by its cursor

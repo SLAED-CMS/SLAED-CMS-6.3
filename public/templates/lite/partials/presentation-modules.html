@@ -26,13 +26,13 @@
       <div class="sl-pres-detail">
         {% for item in groups %}
         <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span>{{ item.title }}</span><b data-sl-tone="success">● {{ item.state }}</b></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.title }}</span><b data-sl-tone="success">● {{ item.state }}</b></div>
           <div class="sl-pres-tags">{% for tag in item.tags %}<span>{{ tag }}</span>{% endfor %}</div>
         </div>
         {% endfor %}
       </div>
       <div class="sl-pres-blocks">
-        <div class="sl-pres-panel-head"><span>{{ blocks.over }}</span><b><i class="sl-pres-dot" data-sl-tone="success"></i>{{ blocks.active }}</b></div>
+        <div class="sl-pres-panel-head"><span><i class="bi bi-grid-1x2" aria-hidden="true"></i>{{ blocks.over }}</span><b><i class="sl-pres-dot" data-sl-tone="success"></i>{{ blocks.active }}</b></div>
         <div class="sl-pres-blocks-layout">
           <div class="sl-pres-blocks-stage sl-pres-scene">
             <svg class="sl-pres-wires" viewBox="0 0 760 340" preserveAspectRatio="none" aria-hidden="true">
@@ -47,7 +47,7 @@
                 <div>
                   <div class="sl-pres-slot{% if blocks.fill.top %} sl-is-on{% endif %}" data-sl-pres-slot="c">{{ blocks.slots.top }}</div>
                   <div class="sl-pres-page-content">
-                    <div class="sl-pres-router"><i class="bi bi-arrows-move" aria-hidden="true"></i><b>{{ blocks.router }}</b><span>{{ blocks.router_note }}</span></div>
+                    <div class="sl-pres-router"><img src="{{ root }}templates/{{ theme }}/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED" width="96" height="32"><b>{{ blocks.router }}</b><span>{{ blocks.router_note }}</span></div>
                   </div>
                   <div class="sl-pres-slot{% if blocks.fill.bottom %} sl-is-on{% endif %}" data-sl-pres-slot="d">{{ blocks.slots.bottom }}</div>
                 </div>
@@ -60,7 +60,7 @@
             {% endfor %}
           </div>
           <aside class="sl-pres-blocks-panel">
-            <div class="sl-pres-panel-head"><span>{{ blocks.layout }}</span><b>{{ blocks.current }}</b></div>
+            <div class="sl-pres-panel-head"><span><i class="bi bi-layout-three-columns" aria-hidden="true"></i>{{ blocks.layout }}</span><b>{{ blocks.current }}</b></div>
             <div class="sl-pres-blocks-list">
               {% for item in blocks.nodes %}
               <div class="sl-pres-bcard" title="{{ item.title }}" data-sl-pres-slot="{{ item.slot }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>

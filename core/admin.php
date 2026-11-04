@@ -302,12 +302,15 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                 'title_text' => $cat['title'],
             ]);
             $keep = ['name' => 'categories', 'id' => $cid] + ($modul !== '' ? ['modul' => $modul] : []);
+            $turn = getTplPostAction(['op' => 'change', 'act' => $cat['status']] + $keep, 'power', $cat['status'] ? _DEACTIVATE : _ACTIVATE)
+                + ['is_on' => (bool)$cat['status'], 'later' => 'lamp act'];
             $dial = [
                 [
                     'href' => $afile.'.php?name=categories&op=edit&cid='.$cid.$modlink,
                     'icon_name' => 'pencil',
                     'title' => _FULLEDIT,
                 ],
+                $turn,
             ];
             if (!$pnum && !$subs && !$held) {
                 $dial[] = getTplPostAction(['op' => 'delete'] + $keep, 'trash', _ONDELETE) + ['later' => 'gone del'];
@@ -323,8 +326,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                         ['content_html' => (string)$pnum],
                         ['content_html' => $img],
                         ['content_html' => $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$num],
-                        ['is_col_status' => true, 'stat' => getTplPostAction(['op' => 'change', 'act' => $cat['status']] + $keep, 'power',
-                            $cat['status'] ? _DEACTIVATE : _ACTIVATE) + ['is_on' => (bool)$cat['status'], 'label' => _STATUS.': '.$cat['title'], 'later' => 'lamp act']],
+                        ['is_col_status' => true, 'stat' => $turn],
                         ['content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]), 'is_col_actions' => true],
                     ],
                 ]),
@@ -496,6 +498,8 @@ function getAdminBlockList(): string {
         } else {
             $order = $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$weight;
         }
+        $turn = getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $live ? 1 : 0], 'power', $live ? _DEACTIVATE : _ACTIVATE)
+            + ['is_on' => $live, 'later' => 'lamp act'];
         $row = $tpl->getHtmlFrag('table-row', [
             'name' => getConst($title),
             'attr' => $isfly ? '' : 'data-sl-drag-id="'.$bid.'" data-sl-drag-group="'.$bpos.'" data-sl-drag-scope="'.$bpos.'"',
@@ -510,8 +514,7 @@ function getAdminBlockList(): string {
                     ['content_html' => $type],
                     ['content_html' => $who],
                     ['content_html' => $order],
-                    ['is_col_status' => true, 'stat' => getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $live ? 1 : 0], 'power',
-                        $live ? _DEACTIVATE : _ACTIVATE) + ['is_on' => $live, 'label' => _STATUS.': '.getConst($title), 'later' => 'lamp act']],
+                    ['is_col_status' => true, 'stat' => $turn],
                     ['content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _EDITOR,
                         'dial' => [
@@ -520,6 +523,7 @@ function getAdminBlockList(): string {
                                 'icon_name' => 'pencil',
                                 'title' => _FULLEDIT,
                             ],
+                            $turn,
                             getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE) + ['later' => 'gone del'],
                         ],
                     ]), 'is_col_actions' => true],

@@ -135,7 +135,7 @@ class DatabaseBatchTest extends TestCase
         $this->assertSame([PREFIX_DB.'_one'], getSqlFileTables($sql, 'CREATE'), 'An uninstall would touch a table the script never created');
     }
 
-    # Every caller splits with the same code: the Inquiry tab, the module installer and the 6.3 update
+    # Every caller splits with the same code: the Inquiry tab, the module installer and the 8.0 update
     # The file core/admin.php defines functions only, so update.php borrows it before the rest of the system exists and its guard admits SETUP_FILE by name
     # A splitter of its own is what this guards against: the one the old installer carried cut on line endings and would have cut a literal spanning two lines in half
     #[Test]

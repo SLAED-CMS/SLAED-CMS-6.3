@@ -139,33 +139,32 @@ function getPresentationData(): array {
             ];
         }
     }
-    $load = getLoadStats();
     $max = getLoadLimits();
     $share = static fn(float $val, float $top): int => ($top > 0) ? (int)min(100, max(0, round($val * 100 / $top))) : 0;
-    $ring = static function (string $val, string $unit, string $label, int $part, string $size = '', bool $good = false, string $icon = '', string $tone = ''): array {
-        $tone = ($tone !== '') ? $tone : getPercentTone($good ? 100 - $part : $part);
+    $ring = static function (string $val, string $unit, string $label, int|string $part, string $size = '', bool $good = false, string $icon = '', string $tone = ''): array {
+        $tone = ($tone !== '') ? $tone : getPercentTone($good ? 100 - (int)$part : (int)$part);
         return [
             'value' => $val, 'unit' => $unit, 'label' => $label, 'part' => $part, 'icon' => $icon, 'is_sm' => $size === 'sm',
             'is_ok' => $tone === 'ok', 'is_info' => $tone === 'info', 'is_warn' => $tone === 'warn', 'is_danger' => $tone === 'danger',
         ];
     };
-    $stat = static fn(string $label, string $val, string $unit = '', string $note = '', int $part = -1, string $tone = ''): array => [
-        'label' => $label, 'value' => $val, 'unit' => $unit, 'note' => $note, 'part' => $part, 'has_part' => $part >= 0, 'tone' => $tone,
+    $stat = static fn(string $label, string $val, string $unit = '', string $note = '', int|string $part = -1, string $tone = ''): array => [
+        'label' => $label, 'value' => $val, 'unit' => $unit, 'note' => $note, 'part' => $part, 'has_part' => $part !== -1, 'tone' => $tone,
     ];
-    $num = static fn(int|float $val): string => number_format($val, 0, '.', ' ');
+    $num = static fn(int|float $val): string => filterDecimal($val, 0);
     $head = static fn(int $num, string $icon, string $title, string $lead, string $state = '', string $tone = ''): array => [
         'num' => sprintf('%02d', $num), 'icon' => $icon, 'title' => $title, 'lead' => $lead, 'state' => $state, 'tone' => $tone,
     ];
     $toggle = static fn(string $name, string $label, bool $on): array => ['toggle' => ['name' => $name, 'label' => $label, 'is_on' => $on, 'yes' => _YES, 'no' => _NO]];
-    $gen = (int)round($load['gen'] * 1000);
-    $gsec = number_format($load['gen'], 3, '.', '');
-    $sql = number_format($load['sql'], 4, '.', '');
-    $avg = number_format($load['avg'], 4, '.', '');
-    $gpart = $share($load['gen'], $max['gen']);
-    $qpart = $share($load['qnum'], $max['qnum']);
-    $mpart = $share($load['mem'], $max['mem']);
-    $spart = $share($load['avg'], $max['qtime']);
-    $memmb = number_format($load['mem'] / 1048576, 2, '.', '');
+    $gen = getLoadMark('gen_ms');
+    $qnum = getLoadMark('qnum');
+    $sql = getLoadMark('sql');
+    $avg = getLoadMark('avg');
+    $gpart = getLoadMark('gen_part');
+    $qpart = getLoadMark('qnum_part');
+    $mpart = getLoadMark('mem_part');
+    $spart = getLoadMark('avg_part');
+    $memmb = getLoadMark('mem');
     $memmax = ($max['mem'] > 0) ? '/ '.$num($max['mem'] / 1048576).' MB' : '';
     $mins = max(1, (int)((time() - strtotime('today')) / 60));
     $rate = (int)round($today['visits'] / $mins);
@@ -213,33 +212,40 @@ function getPresentationData(): array {
     $years = (int)date('Y') - 2005;
     $yidx = ($years % 10 === 1 && $years % 100 !== 11) ? 0 : (($years % 10 >= 2 && $years % 10 <= 4 && ($years % 100 < 12 || $years % 100 > 14)) ? 1 : 2);
     $yunit = explode('|', _PRES_UNIT_YEAR)[$yidx] ?? '';
-    $when = static fn(int $i): string => date('H:i', time() - 60 * (5 - $i));
+    $when = static fn(int $i): string => date('H:i', time() - 60 * (7 - $i));
     $ops = [
-        'config' => [['kernel.boot', 'ok'], ['config.load', 'ok'], ['lang.load', getLang()], ['route.match', 'ok'], ['module.resolve', $gen.' ms'], ['response.send', '200']],
+        'config' => [['kernel.boot', 'ok'], ['config.load', 'ok'], ['session.start', 'ok'], ['lang.load', getLang()], ['route.match', 'ok'], ['access.check', 'ok'],
+            ['module.resolve', $gen.' ms'], ['response.send', '200']],
         'fields' => [['fields.load', 'ok'], ['types.bind', (string)count($conf['node']['types'] ?? [])], ['input.validate', 'ok'], ['value.cast', 'ok'],
-            ['form.render', 'ok'], ['value.save', 'ok']],
-        'lang' => [['locales.scan', (string)$langs], ['lang.load', getLang()], ['constants.check', 'ok'], ['plural.rule', 'ok'], ['hreflang.map', (string)$langs],
-            ['file.write', 'ok']],
+            ['form.render', 'ok'], ['csrf.verify', 'ok'], ['value.save', 'ok'], ['cache.clear', 'ok']],
+        'lang' => [['locales.scan', (string)$langs], ['lang.load', getLang()], ['constants.check', 'ok'], ['plural.rule', 'ok'], ['date.format', 'ok'],
+            ['hreflang.map', (string)$langs], ['csrf.verify', 'ok'], ['file.write', 'ok']],
         'layout' => [['layout.load', 'ok'], ['template.load', $theme], ['blocks.render', (string)$bcount], ['partials.merge', 'ok'], ['escape.auto', 'ok'],
-            ['render.total', $gen.' ms']],
+            ['assets.version', 'ok'], ['cache.store', 'ok'], ['render.total', $gen.' ms']],
         'modules' => [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon], ['access.check', 'ok'],
-            ['registry.save', 'ok'], ['cache.clear', 'ok']],
-        'monitor' => [['load.sample', 'ok'], ['page.gen', $gsec.' s'], ['sql.count', (string)$load['qnum']], ['memory.peak', $memmb.' MB'], ['signals.check', 'ok'],
-            ['history.write', 'ok']],
-        'security' => [['request.filter', 'allow'], ['injection.scan', 'block'], ['csrf.verify', 'ok'], ['login.failed', (string)$failed], ['log.append', (string)$events],
-            ['session.guard', 'ok']],
-        'statistic' => [['visits.today', (string)$today['visits']], ['bots.split', 'ok'], ['session.track', 'ok'], ['depth.measure', 'ok'], ['hours.chart', 'ok'],
-            ['day.store', 'ok']],
-        'update' => [['version.check', $ver[0]], ['package.verify', 'ok'], ['backup.create', 'ok'], ['files.replace', 'ok'], ['db.migrate', 'ok'], ['cache.clear', 'ok']],
-        'account' => [['session.verify', 'ok'], ['group.rights', 'admin'], ['users.total', (string)$users], ['users.online', (string)$live], ['login.attempt', 'ok'],
-            ['password.verify', 'bcrypt']],
+            ['csrf.verify', 'ok'], ['registry.save', 'ok'], ['cache.clear', 'ok'], ['log.append', 'ok']],
+        'monitor' => [['load.sample', 'ok'], ['page.gen', $gen.' ms'], ['sql.count', $qnum], ['memory.peak', $memmb.' MB'], ['opcache.hit', $hitval.($hit ? '%' : '')],
+            ['signals.check', 'ok'], ['logs.scan', 'ok'], ['history.write', 'ok']],
+        'security' => [['request.filter', 'allow'], ['injection.scan', 'block'], ['csrf.verify', 'ok'], ['rate.limit', 'ok'], ['login.failed', (string)$failed],
+            ['log.append', (string)$events], ['session.guard', 'ok'], ['headers.send', 'ok']],
+        'statistic' => [['visits.today', (string)$today['visits']], ['hits.total', (string)$today['total']], ['bots.split', 'ok'], ['session.track', 'ok'],
+            ['depth.measure', 'ok'], ['hours.chart', 'ok'], ['counter.rotate', 'ok'], ['day.store', 'ok']],
+        'update' => [['version.check', $ver[0]], ['manifest.load', 'ok'], ['package.verify', 'ok'], ['backup.create', 'ok'], ['files.replace', 'ok'], ['db.migrate', 'ok'],
+            ['config.merge', 'ok'], ['cache.clear', 'ok']],
+        'database' => [['pdo.connect', 'ok'], ['driver.check', $driver], ['tables.scan', 'ok'], ['status.read', 'ok'], ['access.check', 'ok'], ['optimize.queue', 'ok'],
+            ['backup.check', 'ok'], ['log.append', 'ok']],
+        'scheduler' => [['jobs.load', 'ok'], ['lock.acquire', 'ok'], ['due.select', 'ok'], ['job.run', 'ok'], ['mail.drain', 'ok'], ['next.plan', 'ok'],
+            ['lock.release', 'ok'], ['log.append', 'ok']],
+        'account' =>[['session.verify', 'ok'], ['group.rights', 'admin'], ['users.total', (string)$users], ['users.online', (string)$live], ['login.attempt', 'ok'],
+            ['password.verify', 'bcrypt'], ['session.regenerate', 'ok'], ['cookie.set', 'ok']],
         'forum' => [['forum.index', 'ok'], ['posts.count', (string)getTableCount('forum')], ['topic.last', $tid ? '#'.$tid : '0'], ['access.check', 'ok'],
-            ['unread.mark', 'ok'], ['page.render', 'ok']],
+            ['pager.build', 'ok'], ['unread.mark', 'ok'], ['moder.check', 'ok'], ['page.render', 'ok']],
         'node' => [['types.load', (string)count($conf['node']['types'] ?? [])], ['news.count', (string)$news['num']], ['files.count', (string)$files['num']],
-            ['categories.load', (string)$cats], ['pager.build', 'ok'], ['page.render', 'ok']],
-        'search' => [['form.load', 'ok'], ['query.escape', 'ok'], ['access.check', 'ok'], ['rows.match', 'ok'], ['snippet.build', 'ok'], ['stat.write', 'ok']],
-        'sitemap' => [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['jsonld.build', 'ok'], ['hreflang.map', (string)$langs], ['sitemap.queue', 'ready'],
-            ['robots.check', 'ok']],
+            ['categories.load', (string)$cats], ['access.check', 'ok'], ['pager.build', 'ok'], ['rating.load', 'ok'], ['page.render', 'ok']],
+        'search' => [['form.load', 'ok'], ['query.escape', 'ok'], ['access.check', 'ok'], ['rows.match', 'ok'], ['rank.sort', 'ok'], ['snippet.build', 'ok'],
+            ['pager.build', 'ok'], ['stat.write', 'ok']],
+        'sitemap' => [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['jsonld.build', 'ok'], ['hreflang.map', (string)$langs], ['urls.collect', 'ok'],
+            ['sitemap.queue', 'ready'], ['xml.write', 'ok'], ['robots.check', 'ok']],
     ];
     $seat = array_flip(array_keys($conf['modules']));
     $site = static fn(string $mod): bool => ($conf['modules'][$mod]['type'] ?? 1) != 0;
@@ -277,17 +283,22 @@ function getPresentationData(): array {
     if (count($motto) !== 3) $motto = [str_replace('*', '', _PRES_HEAD), '', ''];
     $hero = [
         'cockpit' => _PRES_COCKPIT, 'nominal' => _ADM_CALM, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
-        'gen_ring' => $ring((string)$gen, 'ms', _PRES_GEN, $gpart, '', false, '', 'info'),
+        'gen_ring' => $ring($gen, 'ms', _PRES_GEN, $gpart, '', false, '', 'info'),
         'cache_ring' => $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'ok'),
-        'qnum_ring' => $ring((string)$load['qnum'], 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),
+        'qnum_ring' => $ring($qnum, 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),
         'online_ring' => $onring,
+        'strip' => [
+            ['icon' => 'database', 'value' => $sql, 'unit' => 's', 'label' => _PRES_SQL_TIME], ['icon' => 'memory', 'value' => $memmb, 'unit' => 'MB', 'label' => _PRES_DT_MEMORY],
+            ['icon' => 'person-check', 'value' => $num($users), 'unit' => '', 'label' => _USERS],
+            ['icon' => 'infinity', 'value' => $num($today['total']), 'unit' => _PRES_ST_TOTAL_T, 'label' => _PRES_ST_TOTAL],
+        ],
         'plate' => ['pass' => 14, 'total' => 14, 'bars' => array_map(static fn(int $i): array => ['num' => $i], range(0, 13))],
         'eyebrow' => _PRES_EYEBROW, 'head_a' => $motto[0], 'head_b' => $motto[1], 'head_c' => $motto[2], 'lead' => _PRES_LEAD,
         'core' => [
             'title' => _PRES_CONTROL, 'route' => $menu[0]['path'], 'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,
             'metrics' => [
-                ['value' => $gsec.' s', 'label' => _PRES_GEN, 'is_live' => false], ['value' => $load['qnum'].' sql', 'label' => _PRES_QUERY, 'is_live' => false],
-                ['value' => (string)$live, 'label' => _ONLINE, 'is_live' => true],
+                ['value' => $gen.' ms', 'label' => _PRES_GEN], ['value' => $qnum.' sql', 'label' => _PRES_QUERY],
+                ['value' => (string)$live, 'label' => _ONLINE],
             ],
             'chart' => _PRES_RH_CHART,
             'stack' => [
@@ -304,8 +315,8 @@ function getPresentationData(): array {
             ...($files['type'] ? [$stat(_PRES_FACT_FILES, $num($files['num']))] : []),
             $stat(sprintf(_PRES_FACT_SINCE, '2005'), (string)$years, $yunit),
             $stat(_PRES_FACT_MIT, 'MIT'),
-            $stat(_PRES_FACT_GEN, $gsec, _SEC),
-            $stat(_PRES_FACT_DBQ, (string)$load['qnum']),
+            $stat(_PRES_FACT_GEN, $gen, 'ms'),
+            $stat(_PRES_FACT_DBQ, $qnum),
         ],
         'ticks' => [
             ['name' => _NEWS, 'text' => _PRES_TICK_NEWS], ['name' => _FILES, 'text' => _PRES_TICK_FILES], ['name' => _USERS, 'text' => _PRES_TICK_USERS],
@@ -338,7 +349,7 @@ function getPresentationData(): array {
             'over' => _PRES_RH_VITALS, 'title' => _PRES_RH_FAST, 'text' => _PRES_RH_FAST_T,
             'rows' => [
                 ['label' => _PRES_RH_RESP, 'value' => $gen.' ms', 'icon' => '', 'tone' => ''],
-                ['label' => _PRES_QUERIES, 'value' => (string)$load['qnum'], 'icon' => '', 'tone' => ''],
+                ['label' => _PRES_QUERIES, 'value' => $qnum, 'icon' => '', 'tone' => ''],
                 ['label' => _PRES_RH_GUARD, 'value' => _PRES_GD_STATE, 'icon' => 'shield-check', 'tone' => 'success'],
             ],
             'note' => _PRES_RH_NOTE,
@@ -349,17 +360,17 @@ function getPresentationData(): array {
         'theme' => $theme, 'logo' => $logo, 'mods' => $mods, 'lit' => $lit,
         'presets' => ['label' => _PRES_MD_BUILD, 'note' => _PRES_MD_DEMO, 'items' => $presets],
         'groups' => [
-            ['title' => _PRES_MD_CORE, 'state' => _PRES_MD_READY, 'tags' => [
+            ['icon' => 'cpu', 'title' => _PRES_MD_CORE, 'state' => _PRES_MD_READY, 'tags' => [
                 _PRES_NAV_MODULES.' '.$mon.' / '.$mtot, _LANGUAGE.' '.$langs, _PRES_CACHE.' '.$state, _VERSION.' '.$ver[0],
             ]],
-            ['title' => _PRES_MD_CONTENT, 'state' => _PRES_MD_LIVE, 'tags' => [
+            ['icon' => 'file-earmark-text', 'title' => _PRES_MD_CONTENT, 'state' => _PRES_MD_LIVE, 'tags' => [
                 ...($news['type'] ? [_NEWS.' '.$num($news['num'])] : []), ...($docs['type'] ? [_PAGES.' '.$num($docs['num'])] : []),
                 ...($files['type'] ? [_FILES.' '.$num($files['num'])] : []), _CATEGORIES.' '.$num($cats),
             ]],
-            ['title' => _PRES_MD_CONTROL, 'state' => _PRES_MD_SECURED, 'tags' => [
+            ['icon' => 'shield-lock', 'title' => _PRES_MD_CONTROL, 'state' => _PRES_MD_SECURED, 'tags' => [
                 _USERS.' '.$num($users), _ONLINE.' '.$cnt['all'], _BOTS.' '.$bots, _PRES_GD_EVENTS.' '.$events,
             ]],
-            ['title' => _PRESENTATION, 'state' => _PRES_MD_SEPARATE, 'tags' => [
+            ['icon' => 'easel', 'title' => _PRESENTATION, 'state' => _PRES_MD_SEPARATE, 'tags' => [
                 _THEME.' '.$theme, sprintf(_PRES_BL_ACTIVE, $bcount), _LANGUAGE.' '.$conf['language'],
             ]],
         ],
@@ -437,8 +448,8 @@ function getPresentationData(): array {
         ],
         'note' => _PRES_GD_NOTE,
     ];
-    $spark = [];
-    foreach (range(0, 39) as $i) $spark[] = (int)round($gen * (0.78 + sin($i * 0.55) * 0.14 + cos($i * 1.3 + 1) * 0.08));
+    $span = ($today['date'] === date('d.m.Y')) ? array_keys(array_filter($today['gen'], static fn(int $sum): bool => $sum > 0)) : [];
+    $spark = array_map(static fn(int $hour): int => (int)round($today['gen'][$hour] / max(1, $today['hours'][$hour])), $span);
     $case = static fn(string $verb, string $query, array $params, bool $prepared, bool $write, string $result, string $elapsed): array => [
         'verb' => $verb, 'query' => $query, 'plist' => $params, 'params' => implode('|', $params), 'is_prepared' => $prepared, 'is_write' => $write,
         'result' => $result, 'elapsed' => $elapsed, 'mode' => $prepared ? _PRES_SP_PREPARED : _PRES_SP_DIRECT, 'state' => $write ? _PRES_SP_WRITE : _PRES_SP_READY,
@@ -452,13 +463,13 @@ function getPresentationData(): array {
     $runtime = [
         'head' => $head(4, getIconName('focus'), _PRES_H_SPEED, _PRES_L_SPEED),
         'resp' => [
-            'title' => _PRES_SP_RESP, 'value' => $gsec, 'unit' => 's', 'chart' => _PRES_RH_CHART,
-            'series' => json_encode(['day' => ['labels' => range(0, 39), 'visits' => $spark]]),
+            'title' => _PRES_SP_RESP, 'value' => $gen, 'unit' => 'ms', 'chart' => _PRES_RH_CHART,
+            'series' => json_encode(['day' => ['labels' => $span, 'visits' => $spark]]),
         ],
         'db' => [
             'title' => _PRES_DB,
             'rows' => [
-                ['label' => _PRES_QUERIES, 'value' => (string)$load['qnum'], 'part' => $qpart, 'has_part' => true],
+                ['label' => _PRES_QUERIES, 'value' => $qnum, 'part' => $qpart, 'has_part' => true],
                 ['label' => _PRES_SQL_TIME, 'value' => $sql.' s', 'part' => $spart, 'has_part' => true],
                 ['label' => _PRES_CACHE, 'value' => mb_ucfirst($state), 'part' => $cache ? 100 : 0, 'has_part' => true],
             ],
@@ -482,7 +493,7 @@ function getPresentationData(): array {
             'result' => _PRES_SP_RESULT, 'rows' => _PRES_SP_ROWS, 'mode' => _PRES_SP_PREPARED, 'comment' => _PRES_SP_COMMENT,
             'nocomment' => _PRES_SP_NOPARAM, 'cases' => $cases, 'first' => $cases[0],
             'stats' => [
-                $stat(_PRES_QUERIES, (string)$load['qnum']), $stat(_PRES_SQL_TIME, $sql, 's'),
+                $stat(_PRES_QUERIES, $qnum), $stat(_PRES_SQL_TIME, $sql, 's'),
                 $stat(_PRES_SP_PREPARES, _PRES_SP_NATIVE, '', '', -1, 'success'), $stat(_PRES_SP_ERRMODE, 'EXCEPTION', '', '', -1, 'success'),
             ],
             'trace' => [['state' => _PRES_SP_PREPARED], ['state' => _PRES_EV_COMPLETE], ['state' => _PRES_SP_ROWS]],
@@ -494,8 +505,8 @@ function getPresentationData(): array {
                 ['label' => _PRES_DT_REQUEST, 'is_on' => false], ['label' => _PRES_DT_SQL, 'is_on' => false],
             ],
             'perf' => [
-                $stat(_PRES_DT_MEMORY, $memmb, 'MB', $memmax, $mpart), $stat(_PRES_FACT_GEN, $gsec, 's', _PRES_STK_RUNTIME, $gpart),
-                $stat(_PRES_FACT_DBQ, (string)$load['qnum'], '', 'PDO', $qpart), $stat(_PRES_SQL_TIME, $sql, 's', _PRES_DT_AVG.' '.$avg, $spart),
+                $stat(_PRES_DT_MEMORY, $memmb, 'MB', $memmax, $mpart), $stat(_PRES_FACT_GEN, $gen, 'ms', _PRES_STK_RUNTIME, $gpart),
+                $stat(_PRES_FACT_DBQ, $qnum, '', 'PDO', $qpart), $stat(_PRES_SQL_TIME, $sql, 's', _PRES_DT_AVG.' '.$avg, $spart),
             ],
             'note' => _PRES_DT_NOTE, 'profile' => _PRES_DT_PROFILE, 'errhead' => _PRES_DT_ERRHEAD, 'captured' => _PRES_DT_CAPTURED,
             'demo' => _PRES_DT_DEMO, 'masked' => _PRES_DT_MASKED, 'route' => $conf['name'],
@@ -530,7 +541,7 @@ function getPresentationData(): array {
             $stat(_PRES_ST_TOTAL, $num($today['total']), '', _PRES_ST_TOTAL_T),
         ],
         'hours_title' => _PRES_ST_HOURS, 'hours_note' => _PRES_ST_MODULE, 'hours' => $hours,
-        'note' => _PRES_RH_NOTE,
+        'note' => _PRES_ST_NOTE,
         'claim' => _PRES_ST_CLAIM, 'claim_title' => _PRES_ST_CLAIM_T, 'claim_text' => _PRES_ST_CLAIM_P, 'claim_tags' => [_PRES_NAV_STATS, _PRES_STK_RUNTIME, _BOTS, 'HTMX'],
         'rings' => [
             $ring((string)$rpart, '%', _PRES_ST_RETURN, $rpart, '', false, '', 'ok'), $ring((string)$npart, '%', _PRES_ST_NEW, $npart, '', false, '', 'info'),

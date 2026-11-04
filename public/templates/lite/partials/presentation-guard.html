@@ -66,7 +66,7 @@
       </div>
       <div class="sl-pres-guard-console">
         <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span>{{ classifier.title }}</span><b data-sl-tone="success">{{ classifier.state }}</b></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-funnel" aria-hidden="true"></i>{{ classifier.title }}</span><b data-sl-tone="success">{{ classifier.state }}</b></div>
           <p class="sl-pres-guard-text">{{ classifier.text }}</p>
           <div class="sl-pres-guard-stats">
             {% for item in classifier.stats %}
@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span>{{ types_title }}</span></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-diagram-3" aria-hidden="true"></i>{{ types_title }}</span></div>
           <div class="sl-pres-rows">
             {% for item in types %}
             <div class="sl-pres-row" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span><b>{{ item.verdict }}</b></div>
@@ -83,7 +83,7 @@
           </div>
         </div>
         <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span>{{ log_title }}</span></div>
+          <div class="sl-pres-panel-head"><span><i class="bi bi-list-check" aria-hidden="true"></i>{{ log_title }}</span></div>
           <div class="sl-pres-log">
             {% for item in log %}
             <div><span>{{ item.label }}</span><em data-sl-tone="{{ item.tone }}">{{ item.result }}</em></div>

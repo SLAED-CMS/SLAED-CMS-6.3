@@ -109,7 +109,7 @@ function comments(): void {
             ['is_col_author' => true, 'content_html' => $post],
             ['is_col_date' => true, 'moment' => $time],
             ['is_col_status' => true, 'stat' => getTplPostAction($keep + ['op' => 'approve', 'id[]' => $id, 'typ' => $act], 'power', $stat ? _DEACTIVATE : _ACTIVATE)
-                + ['is_on' => (bool)$stat, 'label' => _STATUS.': '._COMMENT.' '.$id, 'later' => 'gone '.($act ? 'on' : 'off')]],
+                + ['is_on' => (bool)$stat, 'later' => 'gone '.($act ? 'on' : 'off')]],
             ['is_col_actions' => true, 'dial' => $items],
         ]];
     }

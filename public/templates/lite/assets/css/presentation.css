@@ -46,6 +46,7 @@
 
 /* The glyph standing before a caption, in the brand tone, and the two sizes it comes in */
 .sl-pres-cockpit-top .bi,
+.sl-pres-panel-head > span > .bi,
 .sl-pres-presets > span > .bi,
 .sl-pres-note > .bi,
 .sl-pres-vars header > .bi {
@@ -60,7 +61,6 @@
   font-size: var(--sl-font-micro);
 }
 
-.sl-pres-router > .bi,
 .sl-pres-result > .bi {
   color: var(--sl-pres-link-text);
   font-size: var(--sl-font-small);
@@ -302,7 +302,7 @@
 .sl-pres-shield > small,
 .sl-pres-slot,
 .sl-pres-track > span,
-.sl-pres-vitals-list > span > b,
+.sl-pres-vitals-list > span > b[data-sl-tone],
 .sl-pres-zone {
   text-transform: uppercase;
 }
@@ -392,11 +392,11 @@
   bottom: var(--sl-space-3);
   left: var(--sl-space-3);
   height: var(--sl-space-2);
-  overflow: hidden;
   border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-inset-bg);
 }
 
+/* Nothing clips the track, so the fill glows in the tone it starts with, as every bar does */
 .sl-pres-stat > i::after {
   content: "";
   display: block;
@@ -404,6 +404,7 @@
   height: 100%;
   border-radius: var(--sl-radius-pill);
   background: linear-gradient(90deg, var(--sl-pres-link-text), var(--sl-pres-good-text));
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-pres-link-text) var(--sl-gauge-mix), transparent);
   transition: width var(--sl-time-slow) var(--sl-ease-out);
 }
 
@@ -617,9 +618,16 @@
   color: var(--sl-pres-link-text);
 }
 
+/* A filter inside the svg measures in units of its viewBox, which a ring draws three to four times larger: the step two lower blurs about as wide as the arc is thick, as a bar's glow does */
 .sl-pres .sl-pres-ring .sl-knob-val {
   stroke: currentColor;
-  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
+  filter: drop-shadow(0 0 var(--sl-space-2) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
+  animation: sl-pres-arc var(--sl-knob-dur) var(--sl-alert-ease) both;
+}
+
+/* An arc fills to its share from zero on the spring of the panel, once, when its part first stands on screen: off screen it waits paused */
+@keyframes sl-pres-arc {
+  from { stroke-dasharray: 0 100; }
 }
 
 .sl-pres .sl-pres-ring path.sl-knob-bg {
@@ -684,6 +692,58 @@
   padding: var(--sl-space-6);
 }
 
+/* The scan of the cockpit, the panel's own: a line of light goes down it now and then; a thin line keeps its offset */
+.sl-pres-cockpit::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: var(--sl-space-6);
+  left: var(--sl-space-6);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+  box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
+  opacity: 0;
+  animation: sl-cockpit-scan calc(var(--sl-alert-dur) * 5) var(--sl-ease-in-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes sl-cockpit-scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+
+  12% {
+    opacity: var(--sl-fade-disabled);
+  }
+
+  52% {
+    top: 100%;
+    opacity: var(--sl-fade-disabled);
+  }
+
+  62%,
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/* A block that stands still gets the box the light round its frame is drawn in */
+.sl-pres-metric,
+.sl-pres-chart,
+.sl-pres-vitals,
+.sl-pres-core,
+.sl-pres-bcard,
+.sl-pres-blocks-panel,
+.sl-pres-pane,
+.sl-pres-console,
+.sl-pres-tree,
+.sl-pres-rings,
+.sl-pres-focus {
+  position: relative;
+}
+
 .sl-pres-scan {
   position: absolute;
   top: 0;
@@ -727,7 +787,44 @@
   margin: var(--sl-space-7) 0 var(--sl-space-3);
 }
 
-/* The lamp of the cockpit, the twin of the panel's: a disc of glass a step larger than a ring with a comet round it and three rows, every check passed */
+/* The strip under the rings, the twin of the panel's: the figures of this request the rings do not show, each a plain number */
+.sl-pres-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sl-space-3) var(--sl-space-8);
+  margin: var(--sl-space-6) 0 0;
+  border-top: 1px solid var(--sl-pres-border);
+  padding: var(--sl-space-5) 0 0;
+  list-style: none;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-small);
+  color: var(--sl-pres-muted-text);
+}
+
+.sl-pres-strip > li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sl-space-2);
+}
+
+.sl-pres-strip .bi {
+  align-self: center;
+  margin-right: var(--sl-space-1);
+  color: var(--sl-pres-link-text);
+}
+
+.sl-pres-strip b {
+  font-size: var(--sl-font-h3);
+  color: var(--sl-pres-text);
+}
+
+.sl-pres-strip span {
+  font-size: var(--sl-font-micro);
+  text-transform: uppercase;
+}
+
+/* The lamp of the cockpit, the twin of the panel's: a disc of glass a step larger than a ring with a comet round it, a halo in its tone and three rows, every check passed */
 .sl-cockpit-plate {
   position: relative;
   display: grid;
@@ -741,7 +838,7 @@
   border-radius: var(--sl-radius-circle);
   padding: var(--sl-space-7);
   color: var(--sl-knob-tone);
-  filter: var(--sl-gauge-shadow);
+  filter: var(--sl-gauge-shadow) drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
 }
 
 /* The comet: one conic ring outside the disc turning whole, its tail from the track into the tone; a ring draws no circle line, which Firefox seams */
@@ -1563,9 +1660,13 @@
 }
 
 .sl-pres-vitals > .sl-pres-ring {
-  width: calc(var(--sl-gauge-width) + var(--sl-space-9));
-  height: calc(var(--sl-gauge-height) + var(--sl-space-9));
+  width: calc(var(--sl-gauge-width) + var(--sl-space-11));
+  height: calc(var(--sl-gauge-height) + var(--sl-space-11));
   margin: var(--sl-space-5) auto;
+}
+
+.sl-pres-vitals > .sl-pres-ring > div > b {
+  font-size: var(--sl-font-display);
 }
 
 .sl-pres-vitals .sl-knob-svg > circle {
@@ -1802,29 +1903,30 @@
   background: var(--sl-pres-panel-bg);
 }
 
-/* High enough for a row of nodes over the page and one under it */
+/* High enough for the tall page between the first and the last row of nodes */
 .sl-pres-blocks-stage {
-  min-height: calc(var(--sl-pres-height) + var(--sl-space-11) * 4);
+  min-height: calc(var(--sl-pres-height) + var(--sl-space-11) * 10);
 }
 
 .sl-pres-blocks-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.55fr);
   gap: var(--sl-space-3);
-  padding: var(--sl-space-3);
+  padding: var(--sl-space-3) 0 0;
 }
 
 .sl-pres-blocks-stage {
   border-radius: var(--sl-radius-2);
 }
 
-/* The page mock: the slots of the layout drawn as dashed boxes, the content in the middle, each slot lit while a block fills it */
+/* The page mock: the slots of the layout drawn as dashed boxes, the content in the middle, each slot lit while a block fills it; tall like a page */
 .sl-pres-page {
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: var(--sl-z-raised);
-  width: calc(var(--sl-pres-width) + var(--sl-space-11) * 2);
+  width: calc(var(--sl-pres-width) * 2 + var(--sl-space-11) * 2);
+  max-width: calc(100% - var(--sl-space-5) * 2);
   border: 1px solid var(--sl-primary-subtle);
   border-radius: var(--sl-radius-3);
   background: var(--sl-pres-inset-bg);
@@ -1836,7 +1938,7 @@
 .sl-pres-slot {
   display: grid;
   place-items: center;
-  min-height: var(--sl-space-8);
+  min-height: var(--sl-space-11);
   border: 1px dashed var(--sl-pres-frame-border);
   border-radius: var(--sl-radius-1);
   background: var(--sl-pres-panel-bg);
@@ -1869,7 +1971,7 @@
 
 .sl-pres-page-grid {
   display: grid;
-  grid-template-columns: var(--sl-space-9) 1fr var(--sl-space-9);
+  grid-template-columns: calc(var(--sl-space-9) * 2) 1fr calc(var(--sl-space-9) * 2);
   gap: var(--sl-space-2);
   margin: var(--sl-space-3) 0;
 }
@@ -1891,7 +1993,7 @@
   place-items: center;
   align-content: center;
   gap: var(--sl-space-1);
-  min-height: calc(var(--sl-pres-width) * 0.75);
+  min-height: calc(var(--sl-pres-width) * 1.75);
   border: 1px solid var(--sl-pres-frame-border);
   border-radius: var(--sl-radius-1);
   background: var(--sl-pres-ground-bg);
@@ -1924,11 +2026,12 @@
 .sl-pres-blocks-stage > [data-sl-pres-at="right2"] { top: 37.5%; right: 3%; }
 .sl-pres-blocks-stage > [data-sl-pres-at="right3"] { top: 62.5%; right: 3%; }
 .sl-pres-blocks-stage > [data-sl-pres-at="right4"] { top: 87.5%; right: 3%; }
-.sl-pres-blocks-stage > [data-sl-pres-at="top1"] { top: calc(25% - var(--sl-pres-height) * 0.165); right: calc(50% + var(--sl-space-4)); }
-.sl-pres-blocks-stage > [data-sl-pres-at="top2"] { top: calc(25% - var(--sl-pres-height) * 0.165); left: calc(50% + var(--sl-space-4)); }
-.sl-pres-blocks-stage > [data-sl-pres-at="bottom1"] { top: calc(75% + var(--sl-pres-height) * 0.165); right: calc(50% + var(--sl-space-4)); }
-.sl-pres-blocks-stage > [data-sl-pres-at="bottom2"] { top: calc(75% + var(--sl-pres-height) * 0.165); left: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="top1"] { top: 12.5%; right: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="top2"] { top: 12.5%; left: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="bottom1"] { top: 87.5%; right: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="bottom2"] { top: 87.5%; left: calc(50% + var(--sl-space-4)); }
 
+/* The router in the content slot: at least a node wide, the wordmark of the request path over the two captions, one inset on every side */
 .sl-pres-router {
   position: absolute;
   top: 50%;
@@ -1936,12 +2039,12 @@
   z-index: var(--sl-z-overlay);
   display: grid;
   place-items: center;
-  align-content: center;
-  gap: var(--sl-space-1);
+  gap: var(--sl-space-2);
+  min-width: var(--sl-pres-width);
   border: 1px solid var(--sl-pres-link-text);
   border-radius: var(--sl-radius-3);
   background: radial-gradient(ellipse at 50% 40%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 75%);
-  padding: var(--sl-space-3) var(--sl-space-5);
+  padding: var(--sl-space-5);
   white-space: nowrap;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -2403,7 +2506,7 @@
 }
 
 .sl-pres-queue li:first-child {
-  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
+  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent);
 }
 
 .sl-pres-queue li.sl-is-out {
@@ -2650,7 +2753,7 @@
   height: var(--sl-space-1);
   border-radius: var(--sl-radius-pill);
   background: linear-gradient(90deg, transparent, currentColor, transparent);
-  box-shadow: 0 0 var(--sl-space-4) currentColor;
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent);
   animation: sl-pres-sweep calc(var(--sl-pres-dur) / 2) var(--sl-ease-in-out) infinite alternate;
   pointer-events: none;
 }
@@ -2701,13 +2804,13 @@
 .sl-pres-gate[data-sl-pres-state="pass"] .sl-pres-shield {
   border-color: var(--sl-pres-good-text);
   color: var(--sl-pres-good-text);
-  box-shadow: 0 0 var(--sl-space-9) color-mix(in srgb, var(--sl-success) var(--sl-chip-tint-mix), transparent);
+  box-shadow: 0 0 var(--sl-space-9) color-mix(in srgb, var(--sl-success) var(--sl-gauge-mix), transparent);
 }
 
 .sl-pres-gate[data-sl-pres-state="block"] .sl-pres-shield {
   border-color: var(--sl-danger);
   color: var(--sl-danger);
-  box-shadow: 0 0 var(--sl-space-10) color-mix(in srgb, var(--sl-danger) var(--sl-tile-mix), transparent);
+  box-shadow: 0 0 var(--sl-space-10) color-mix(in srgb, var(--sl-danger) var(--sl-gauge-mix), transparent);
 }
 
 /* The guard switched off by the switch of the section: the shield goes dark and stops turning */
@@ -2752,7 +2855,7 @@
   border: 1px solid color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-pres-frame-border));
   border-radius: var(--sl-radius-circle);
   background: color-mix(in srgb, currentColor var(--sl-ico-mix), var(--sl-pres-panel-bg));
-  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
+  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent);
   font-size: var(--sl-font-small);
 }
 
@@ -2788,7 +2891,7 @@
 
 @keyframes sl-pres-evil {
   to {
-    box-shadow: 0 0 var(--sl-space-7) color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
+    box-shadow: 0 0 var(--sl-space-7) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent);
     transform: scale(1.06);
   }
 }
@@ -2867,7 +2970,7 @@
 /* A trap holding a caught request, and the count that flashes as it fills */
 .sl-pres-traps > i.sl-is-full {
   opacity: 1;
-  box-shadow: 0 0 var(--sl-space-3) var(--sl-danger);
+  box-shadow: 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-danger) var(--sl-gauge-mix), transparent);
 }
 
 .sl-pres-quarantine.sl-is-hit b {
@@ -3099,7 +3202,7 @@
 .sl-pres-door.sl-is-lit {
   background: var(--sl-primary);
   color: var(--sl-on-solid);
-  box-shadow: 0 0 var(--sl-space-7) var(--sl-primary);
+  box-shadow: 0 0 var(--sl-space-7) color-mix(in srgb, var(--sl-primary) var(--sl-gauge-mix), transparent);
 }
 
 /* A threat that got in while the guard was off */
@@ -3107,7 +3210,7 @@
 .sl-pres-door.sl-is-breach {
   background: var(--sl-danger);
   color: var(--sl-on-solid);
-  box-shadow: 0 0 var(--sl-space-7) var(--sl-danger);
+  box-shadow: 0 0 var(--sl-space-7) color-mix(in srgb, var(--sl-danger) var(--sl-gauge-mix), transparent);
 }
 
 .sl-pres-door.sl-is-lit > span,
@@ -3328,10 +3431,9 @@
   color: var(--sl-pres-text);
 }
 
-/* The bar under a row of the database card, the bar of a debugger stat: one height, one track, one fill */
+/* The bar under a row of the database card, the bar of a debugger stat: one height, one track, one fill; nothing clips it, so the fill glows in the tone it starts with */
 .sl-pres-bar {
   height: var(--sl-space-2);
-  overflow: hidden;
   border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-inset-bg);
 }
@@ -3342,6 +3444,7 @@
   height: 100%;
   border-radius: var(--sl-radius-pill);
   background: linear-gradient(90deg, var(--sl-pres-link-text), var(--sl-pres-good-text));
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-pres-link-text) var(--sl-gauge-mix), transparent);
   transition: width var(--sl-time-slow) var(--sl-ease-out);
 }
 
@@ -4095,7 +4198,7 @@
   border: var(--sl-ring-width) solid var(--sl-pres-panel-bg);
   border-radius: var(--sl-radius-circle);
   background: var(--sl-pres-link-text);
-  box-shadow: 0 0 0 var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-5) var(--sl-pres-link-text);
+  box-shadow: 0 0 0 var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-5) color-mix(in srgb, var(--sl-pres-link-text) var(--sl-gauge-mix), transparent);
   animation: sl-pres-pipe calc(var(--sl-pres-dur) * 1.5) var(--sl-ease-in-out) infinite;
 }
 
@@ -4134,7 +4237,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: var(--sl-space-3);
-  padding: var(--sl-space-4);
+  padding: var(--sl-space-4) 0;
 }
 
 .sl-pres-hours {
@@ -4143,7 +4246,6 @@
   grid-template-rows: auto 1fr auto;
   gap: var(--sl-space-3);
   min-height: calc(var(--sl-plot-height) + var(--sl-space-10));
-  margin: 0 var(--sl-space-4) var(--sl-space-4);
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-2);
   background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-fav-mix), transparent);
@@ -4342,7 +4444,8 @@
   animation: sl-pres-spin calc(var(--sl-pres-dur) * 5) linear infinite;
 }
 
-.sl-pres-flow-core img {
+.sl-pres-flow-core img,
+.sl-pres-router > img {
   width: calc(var(--sl-pres-width) * 0.65);
   height: auto;
   margin: 0 auto var(--sl-space-2);
@@ -4921,7 +5024,6 @@
 .sl-pres-voice {
   position: relative;
   isolation: isolate;
-  min-height: calc(var(--sl-pres-min-height) + var(--sl-space-5));
   overflow: hidden;
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-2);

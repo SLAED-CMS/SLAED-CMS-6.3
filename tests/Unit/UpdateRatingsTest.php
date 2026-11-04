@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The ratings unit of the 6.3 data update in update.php, whose contract is the carry-over of the accumulated ratings in docs/RATINGS.md
+# The ratings unit of the 8.0 data update in update.php, whose contract is the carry-over of the accumulated ratings in docs/RATINGS.md
 #[Group('release')]
 final class UpdateRatingsTest extends TestCase
 {
@@ -71,7 +71,7 @@ final class UpdateRatingsTest extends TestCase
         $stat = ['targets' => 1204, 'terms' => 4, 'voting' => 1, 'foreign' => 3, 'orphan' => 1, 'dropped' => 2];
         $this->assertSame($stat, $run['count'], 'The report does not count the rows it left alone');
         $this->assertSame(self::RULES, $run['rules'], 'The old rules were not carried into four keys with guests allowed and a zero period kept');
-        $this->assertSame(['points' => '6.3.0', 'ratings' => '6.3.0'], $run['mark'], 'The mark of the unit is missing or the points mark was lost');
+        $this->assertSame(['points' => '8.0.0', 'ratings' => '8.0.0'], $run['mark'], 'The mark of the unit is missing or the points mark was lost');
     }
 
     # A vote that arrived after the site opened is never taken for a starting balance, a lost mark is written again, and no file of the backup is rewritten
@@ -82,7 +82,7 @@ final class UpdateRatingsTest extends TestCase
         $this->checkFinished($run['again'], 'repeat', 1);
         $this->assertSame([2, 11, 42], $run['again']['owners'][0], 'The repeat changed the owner that took a new vote');
         $this->checkFinished($run['nomark'], 'verified without a mark', 1);
-        $this->assertSame(['ratings' => '6.3.0'], $run['nomark']['mark']);
+        $this->assertSame(['ratings' => '8.0.0'], $run['nomark']['mark']);
         $this->assertTrue($run['same'], 'A repeat rewrote the manifest or a snapshot');
     }
 
@@ -111,7 +111,7 @@ final class UpdateRatingsTest extends TestCase
     public function targetDataWithoutAManifestStopsTheUnit(): void
     {
         $run = $this->getRun('stop');
-        foreach (['rows' => ['points' => '6.3.0'], 'mark' => ['points' => '6.3.0', 'ratings' => '6.3.0']] as $name => $mark) {
+        foreach (['rows' => ['points' => '8.0.0'], 'mark' => ['points' => '8.0.0', 'ratings' => '8.0.0']] as $name => $mark) {
             $this->assertSame($name === 'mark', $run[$name]['done'], $name);
             $this->assertStringContainsString(($name === 'mark') ? 'ran on this site before' : 'the unit is stopped', $run[$name]['text']);
             $left = [$run[$name]['dir'], $run[$name]['state'], $run[$name]['mark'], $run[$name]['actors'], $run[$name]['rules']['account']];
@@ -144,7 +144,7 @@ final class UpdateRatingsTest extends TestCase
             $this->assertStringContainsString($name, $run['text'], 'The preflight does not name '.$name);
         }
         $left = [$run['dir'], $run['state'], $run['total'], $run['actors'], $run['votes'], $run['mark'], $run['rules']];
-        $this->assertSame([false, null, 0, [], 0, ['points' => '6.3.0'], ['account' => '100|1|0', 'forum' => '0|2|1']], $left, 'The stopped preflight wrote something');
+        $this->assertSame([false, null, 0, [], 0, ['points' => '8.0.0'], ['account' => '100|1|0', 'forum' => '0|2|1']], $left, 'The stopped preflight wrote something');
     }
 
     # The branch runs the ratings unit after the points unit, and its preflight names a table of the ratings transactions on another engine

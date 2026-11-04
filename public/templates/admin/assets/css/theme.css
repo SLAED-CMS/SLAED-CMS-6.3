@@ -1068,66 +1068,6 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Loading: the four-dot drift variant, which lite has no page for */
-.sl-loading.sl-loading-drift {
-  width: var(--sl-drift-width);
-  height: var(--sl-drift-height);
-}
-
-.sl-loading.sl-loading-drift::before {
-  width: var(--sl-drift-dot-width);
-  height: var(--sl-drift-dot-height);
-  border-radius: var(--sl-radius-circle);
-  box-shadow:
-    var(--sl-drift-gap) 0 0 var(--sl-success),
-    calc(var(--sl-drift-gap) * 2) 0 0 var(--sl-success),
-    calc(var(--sl-drift-gap) * 3) 0 0 var(--sl-success);
-  animation: sl-loading-drift var(--sl-drift-dur) infinite var(--sl-ease-in-out);
-}
-
-@keyframes sl-loading-drift {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-    background: var(--sl-success-strong);
-    box-shadow:
-      var(--sl-drift-gap) 0 0 var(--sl-success),
-      calc(var(--sl-drift-gap) * 2) 0 0 var(--sl-success),
-      calc(var(--sl-drift-gap) * 3) 0 0 var(--sl-success);
-  }
-
-  25% {
-    transform: translateY(-2px);
-    opacity: 1;
-    background: var(--sl-success);
-    box-shadow:
-      var(--sl-drift-gap) 0 0 var(--sl-success-strong),
-      calc(var(--sl-drift-gap) * 2) 0 0 var(--sl-success),
-      calc(var(--sl-drift-gap) * 3) 0 0 var(--sl-success);
-  }
-
-  50% {
-    transform: translateY(0);
-    opacity: 1;
-    background: var(--sl-success);
-    box-shadow:
-      var(--sl-drift-gap) 0 0 var(--sl-success),
-      calc(var(--sl-drift-gap) * 2) 0 0 var(--sl-success-strong),
-      calc(var(--sl-drift-gap) * 3) 0 0 var(--sl-success);
-  }
-
-  75% {
-    transform: translateY(-2px);
-    opacity: 1;
-    background: var(--sl-success);
-    box-shadow:
-      var(--sl-drift-gap) 0 0 var(--sl-success),
-      calc(var(--sl-drift-gap) * 2) 0 0 var(--sl-success),
-      calc(var(--sl-drift-gap) * 3) 0 0 var(--sl-success-strong);
-  }
-}
-
 /* Status icons: active and inactive states */
 .sl-status-active,
 .sl-status-inactive {
@@ -3748,22 +3688,6 @@ dialog.sl-editor-emoji-panel {
   color: var(--sl-success-strong);
 }
 
-/* The status in one press: the mark of the theme inside a bare round button */
-.sl-stat {
-  display: inline-grid;
-  place-items: center;
-  padding: var(--sl-space-1);
-  border: 0;
-  border-radius: var(--sl-radius-circle);
-  background: none;
-  cursor: pointer;
-}
-
-.sl-stat:hover,
-.sl-stat:focus-visible {
-  background: var(--sl-tint);
-}
-
 /* The count holds the width of its widest figure, so the row beside it never moves */
 .sl-list-picked {
   display: inline-grid;
@@ -3826,19 +3750,6 @@ dialog.sl-editor-emoji-panel {
 /* On that tint a link of the theme falls to 3.38:1, so a link of a picked row takes the text */
 .sl-table-list-sort[data-sl-density] tbody tr:has(> .sl-col-check input:checked) > td a {
   color: var(--sl-text);
-}
-
-/* Rows a filter, a tab or a page brings enter in turn, backwards only: a held end keeps each row a stacking context over the tip above */
-.sl-table-list-sort[data-sl-density] tbody tr[data-sl-enter] {
-  animation: sl-row-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
-  animation-delay: calc(min(var(--sl-d-order, 0), 12) * var(--sl-time-fast) / 3);
-}
-
-@keyframes sl-row-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--sl-space-5));
-  }
 }
 
 /* The views apply above a phone; a phone draws its own cards */
@@ -5545,29 +5456,31 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     pointer-events: none;
   }
 
-  /* Under the hand a light runs round the frame of the cockpit, a home tile, a monitor card or a window, blue into violet; only its run lights it, so a still panel shows none */
-  :is(.sl-cockpit, .sl-mcard, .sl-pane)::before {
-    content: "";
+  /* A block that stands still gets the box the light round its frame is drawn in */
+  :is(.sl-block-sidebar, .sl-fm-ops, .sl-fm-empty, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card) {
+    position: relative;
+  }
+
+  /* Under the hand a light runs round the frame of every block of the panel, a turning cone cut to the line of the frame; the --sl-aurora-* tokens draw it, the layer exists only under the hand */
+  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-fm-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card)::before,
+  :root:not([data-sl-rail]) .sl-block-sidebar::before,
+  .sl-metric::after {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: -1px;
     z-index: var(--sl-z-raised);
-    width: var(--sl-aurora-width);
-    height: var(--sl-space-1);
-    border-radius: var(--sl-radius-pill);
-    background: linear-gradient(90deg, transparent, var(--sl-primary), var(--sl-accent), transparent);
-    box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
-    offset-path: inset(0 round var(--sl-radius-2));
-    offset-rotate: auto;
+    border: var(--sl-aurora-width) solid transparent;
+    border-radius: inherit;
+    background: conic-gradient(from var(--sl-aurora-turn), transparent 0 calc(100% - var(--sl-aurora-mix)), var(--sl-aurora-border) calc(100% - var(--sl-aurora-mix) / 2), var(--sl-aurora-ring) calc(100% - var(--sl-aurora-mix) * 0.15), transparent) border-box;
+    mask: linear-gradient(var(--sl-text) 0 0) padding-box, linear-gradient(var(--sl-text) 0 0);
+    mask-composite: exclude;
     opacity: 0;
     pointer-events: none;
   }
 
-  :is(.sl-cockpit, .sl-pane)::before {
-    offset-path: inset(0 round var(--sl-radius-3));
-  }
-
-  :is(.sl-cockpit, .sl-mcard, .sl-pane):hover::before {
+  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-fm-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card):hover::before,
+  :root:not([data-sl-rail]) .sl-block-sidebar:hover::before,
+  .sl-metric:hover::after {
+    content: "";
     animation: sl-aurora var(--sl-aurora-dur) linear infinite;
   }
 
@@ -5602,19 +5515,17 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     transition: stroke-dasharray var(--sl-knob-dur) var(--sl-alert-ease);
   }
 
-  /* A figure of a ring, of the strip or of a queue that admin-ui.js runs to a new value lights once while it runs */
-  :is([data-sl-gauge-val], [data-sl-strip-val], [data-sl-queue-n], [data-sl-figure]).sl-is-fresh {
-    animation: sl-figure-flash var(--sl-knob-dur) var(--sl-ease-out);
+  /* A running figure, the series of both themes: setFigureRun() of slaed.js runs it as long as its glow holds, the glow fades once it stops and the swell settles over both */
+  .sl-is-counting {
+    animation:
+      sl-figure-lit var(--sl-figure-dur) var(--sl-ease-out),
+      sl-figure-fade var(--sl-time-slow) var(--sl-ease-out) var(--sl-figure-dur),
+      sl-figure-swell calc(var(--sl-figure-dur) + var(--sl-time-slow)) var(--sl-ease-out);
   }
 
-  /* The home tiles wait under their place until admin-ui.js finds their grid in the view, then rise in their turn; they move by their offset, never by a transform */
-  .sl-menu-grid[data-sl-arrive]:not(.sl-is-in) > .sl-mcard {
-    opacity: 0;
-  }
-
-  .sl-menu-grid[data-sl-arrive].sl-is-in > .sl-mcard {
-    animation: sl-tile-rise var(--sl-tile-dur) var(--sl-alert-ease) backwards;
-    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-tile-dur) / 20);
+  /* A transform needs a box, so an inline figure is one while it runs */
+  :where(span, b, strong, em, small).sl-is-counting {
+    display: inline-block;
   }
 
   /* A home tile or a tile of figures in hand leans to the pointer under a glare; a home tile whose dial is in use stands level, so the fan holds still under the hand */
@@ -5651,39 +5562,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     transform: none;
   }
 
-  /* A chart of the monitor waits hidden until admin-ui.js finds it in the view, then is drawn left to right once; a later tick never draws it again */
-  .sl-chart-svg[data-sl-arrive]:not(.sl-is-in) {
-    clip-path: inset(0 100% 0 0);
-  }
-
-  .sl-chart-svg[data-sl-arrive].sl-is-in {
-    animation: sl-chart-draw var(--sl-graph-dur) var(--sl-ease-in-out);
-  }
-
   /* A tick slides the live chart by the time that passed; only the slide moves, the drawing is never replayed */
   .sl-chart-flow.sl-is-glide {
     transition: transform var(--sl-graph-dur) var(--sl-ease-in-out);
-  }
-
-  /* A part of the series plays once with its ground part: bars grow, strips and tracks unroll, cells and rows enter in their turn; data-sl-play is off on a tick */
-  .sl-ground > .sl-is-in [data-sl-play] :is(.sl-chart-bar, .sl-archive-month > i) {
-    animation: sl-bar-grow calc(var(--sl-knob-dur) * 0.6) var(--sl-alert-ease) backwards;
-    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 8);
-  }
-
-  .sl-ground > .sl-is-in [data-sl-play] .sl-archive-month > i {
-    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 40);
-  }
-
-  .sl-ground > .sl-is-in [data-sl-play] .sl-stack-part::before,
-  .sl-ground > .sl-is-in [data-sl-play] .sl-share-track > i {
-    animation: sl-meter-fill calc(var(--sl-knob-dur) * 0.65) var(--sl-alert-ease) backwards;
-    animation-delay: calc(var(--sl-time-fast) + var(--sl-d-turn, 0) * var(--sl-time-fast) / 2);
-  }
-
-  .sl-ground > .sl-is-in [data-sl-play] .sl-clock-spoke {
-    animation: sl-clock-spoke calc(var(--sl-knob-dur) * 0.5) var(--sl-alert-ease) backwards;
-    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 4);
   }
 
   .sl-clock-spoke.sl-is-now {
@@ -5699,28 +5580,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-cockpit[data-sl-pace="rise"] .sl-cockpit-plate::before { animation-duration: calc(var(--sl-alert-dur) * 1.5); }
   .sl-cockpit[data-sl-pace="rush"] .sl-cockpit-plate::before { animation-duration: calc(var(--sl-alert-dur) * 0.6); }
 
-  /* A step of the months moves the windows the way it went instead of raising them */
-  .sl-ground[data-sl-way="next"] > [data-sl-arrive].sl-is-in {
-    animation: sl-ground-next var(--sl-tile-dur) var(--sl-ease-out) backwards;
-  }
-
-  .sl-ground[data-sl-way="prev"] > [data-sl-arrive].sl-is-in {
-    animation: sl-ground-prev var(--sl-tile-dur) var(--sl-ease-out) backwards;
-  }
-
-  .sl-ground > .sl-is-in [data-sl-play] .sl-week-cell::before {
-    animation: sl-bar-grow var(--sl-tile-dur) var(--sl-alert-ease) backwards;
-    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 8);
-    transform-origin: bottom;
-  }
-
-  .sl-ground > .sl-is-in [data-sl-play] :is(.sl-share-row, .sl-days-table tbody tr) {
-    animation: sl-rows-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
-  }
-
-  /* The day still running breathes while the counter writes it, its window rising or not, and a bar a tick changed lights once */
-  .sl-chart-col.sl-is-run > .sl-chart-bar,
-  .sl-ground > .sl-is-in [data-sl-play] .sl-chart-col.sl-is-run > .sl-chart-bar {
+  /* The day still running breathes while the counter writes it, and a bar a tick changed lights once */
+  .sl-chart-col.sl-is-run > .sl-chart-bar {
     animation: sl-pane-lamp var(--sl-pane-dur) var(--sl-ease-in-out) infinite;
   }
 
@@ -5731,25 +5592,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   /* The grid under the windows drifts on its own layer, one cell a cycle, so a move repaints nothing */
   .sl-ground-lines::before {
     animation: sl-ground-drift var(--sl-ground-dur) linear infinite;
-  }
-
-  /* A part of a ground waits until admin-ui.js finds it in the view, then rises by its offset, its rows after it and its meters filling; the turn is capped for a part far down */
-  .sl-ground > [data-sl-arrive]:not(.sl-is-in) {
-    opacity: 0;
-  }
-
-  .sl-ground > [data-sl-arrive].sl-is-in {
-    animation: sl-tile-rise var(--sl-tile-dur) var(--sl-alert-ease) backwards;
-    animation-delay: calc(min(var(--sl-d-turn, 0), 6) * var(--sl-tile-dur) / 7);
-  }
-
-  .sl-ground > .sl-is-in .sl-kv {
-    animation: sl-rows-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
-  }
-
-  .sl-ground > .sl-is-in .sl-meter-bar > i {
-    animation: sl-meter-fill calc(var(--sl-knob-dur) * 0.65) var(--sl-alert-ease) backwards;
-    animation-delay: var(--sl-time-slow);
   }
 
   /* The beam crosses the light head of a window in its own turn, in the tint a light head can carry */
@@ -5809,15 +5651,22 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
+/* The turn of the light round a frame, registered without inheritance so a turn restyles the frame alone */
+@property --sl-aurora-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 /* The light of a frame is on only while it runs */
 @keyframes sl-aurora {
   from {
-    offset-distance: 0%;
+    --sl-aurora-turn: 0deg;
     opacity: 1;
   }
 
   to {
-    offset-distance: 100%;
+    --sl-aurora-turn: 360deg;
     opacity: 1;
   }
 }
@@ -5844,35 +5693,27 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-@keyframes sl-figure-flash {
+/* A running figure starts swollen, as the pulse of the monitor flares, and settles over its run and its fade */
+@keyframes sl-figure-swell {
   from {
-    color: var(--sl-success-strong);
-    text-shadow: 0 0 var(--sl-space-5) var(--sl-success);
+    transform: scale(1.4);
   }
 }
 
-/* A home tile or a part of a ground rises from under its place by its offset; each is positioned already */
-@keyframes sl-tile-rise {
-  from {
-    top: var(--sl-space-7);
-    opacity: 0;
-  }
-}
-
-@keyframes sl-chart-draw {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-
+/* The glow of a running figure holds for the whole run, the first of its animations, whose length setFigureRun() reads */
+@keyframes sl-figure-lit {
+  from,
   to {
-    clip-path: inset(0);
+    color: var(--sl-figure-text);
+    text-shadow: var(--sl-figure-shadow);
   }
 }
 
-@keyframes sl-clock-spoke {
+/* The glow fades from the figure once it stops */
+@keyframes sl-figure-fade {
   from {
-    opacity: 0;
-    transform: scale(0.5);
+    color: var(--sl-figure-text);
+    text-shadow: var(--sl-figure-shadow);
   }
 }
 
@@ -5883,49 +5724,15 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-@keyframes sl-ground-next {
-  from {
-    opacity: 0;
-    transform: translateX(var(--sl-space-8));
-  }
-}
-
-@keyframes sl-ground-prev {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--sl-space-8) * -1));
-  }
-}
-
 @keyframes sl-ground-drift {
   to {
     transform: translate(var(--sl-ground-width), var(--sl-ground-width));
   }
 }
 
-/* A row may hold a float, so it rises by its offset and never by a transform */
-@keyframes sl-rows-in {
-  from {
-    top: var(--sl-space-3);
-    opacity: 0;
-  }
-}
-
-@keyframes sl-meter-fill {
-  from {
-    transform: scaleX(0);
-  }
-}
-
-@keyframes sl-bar-grow {
-  from {
-    transform: scaleY(0);
-  }
-}
-
 @keyframes sl-bar-flash {
   30% {
-    box-shadow: 0 0 var(--sl-space-6) currentColor;
+    box-shadow: 0 0 var(--sl-space-6) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent);
   }
 }
 
@@ -6527,7 +6334,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 
   50% {
-    filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-alert-c));
+    filter: drop-shadow(0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-alert-c) var(--sl-knob-mix), transparent));
   }
 }
 
@@ -7670,37 +7477,43 @@ button.sl-but-mini {
   border-radius: var(--sl-progress-radius);
 }
 
-/* The fill sits inside the track: the same outer height, so its own hairline comes off each side */
+/* The fill sits inside the track: the same outer height, so its own hairline comes off each side; it glows in the tone of its colour as every bar does */
 .sl-progress-line div {
   box-sizing: content-box;
   height: calc(var(--sl-progress-height) - 1px - 1px);
   border-radius: calc(var(--sl-progress-radius) - 1px);
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent);
   overflow: hidden;
   text-indent: -9999px;
 }
 
 .sl-progress-1 div {
   border: 1px solid var(--sl-progress-1);
+  color: var(--sl-progress-1);
   background: var(--sl-grad-progress-1);
 }
 
 .sl-progress-2 div {
   border: 1px solid var(--sl-progress-2);
+  color: var(--sl-progress-2);
   background: var(--sl-grad-progress-2);
 }
 
 .sl-progress-3 div {
   border: 1px solid var(--sl-progress-3);
+  color: var(--sl-progress-3);
   background: var(--sl-grad-progress-3);
 }
 
 .sl-progress-4 div {
   border: 1px solid var(--sl-progress-4);
+  color: var(--sl-progress-4);
   background: var(--sl-grad-progress-4);
 }
 
 .sl-progress-5 div {
   border: 1px solid var(--sl-progress-5);
+  color: var(--sl-progress-5);
   background: var(--sl-grad-progress-5);
 }
 
@@ -7723,28 +7536,11 @@ button.sl-but-mini {
   flex: 0 0 auto;
 }
 
-/* The icon of the section bounces in with the page */
+/* The icon of the section stands with the page */
 .sl-module-head-icon .bi {
   color: var(--sl-primary);
   font-size: var(--sl-size-icon-lg);
   line-height: 1;
-  animation: sl-icon-pop calc(var(--sl-time-slow) * 2) var(--sl-ease-out) both;
-}
-
-@keyframes sl-icon-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-
-  70% {
-    transform: scale(1.15);
-  }
-
-  100% {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 .sl-module-head-body {
@@ -8573,8 +8369,9 @@ button.sl-but-mini {
   stroke: var(--sl-border);
 }
 
+/* A filter inside the svg measures in units of its viewBox, which the gauge draws about three times larger: the step two lower blurs about as wide as the arc is thick, as a bar's glow does */
 .sl-cockpit-ring .sl-knob-val {
-  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-knob-tone) var(--sl-knob-mix), transparent));
+  filter: drop-shadow(0 0 var(--sl-space-2) color-mix(in srgb, var(--sl-knob-tone) var(--sl-knob-mix), transparent));
 }
 
 .sl-cockpit-ring path:not([class]) {
@@ -8675,7 +8472,7 @@ button.sl-but-mini {
     transparent 100%
   );
   opacity: 0;
-  filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+  filter: drop-shadow(0 0 var(--sl-space-3) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent));
   will-change: filter;
 }
 
@@ -8752,7 +8549,7 @@ button.sl-but-mini {
   width: var(--sl-space-2);
   height: 100%;
   opacity: 1;
-  filter: drop-shadow(0 0 var(--sl-space-1) currentColor);
+  filter: drop-shadow(0 0 var(--sl-space-1) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent));
   animation: none;
 }
 
@@ -8788,7 +8585,7 @@ button.sl-but-mini {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 var(--sl-space-1) currentColor);
+  filter: drop-shadow(0 0 var(--sl-space-1) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent));
 }
 
 [data-sl-pulse="flat"] :is(.sl-cockpit-rate > .bi, .sl-cockpit-trace > svg) {
@@ -8826,8 +8623,9 @@ button.sl-but-mini {
   }
 }
 
-/* A figure or a bar that the poll changed flares once, so the eye finds what moved */
+/* A figure or a bar that the poll changed flares once, so the eye finds what moved; the pulse of the monitor runs in this flare of its own tone */
 .sl-cockpit-head > b.sl-is-fresh,
+.sl-cockpit-head > b.sl-is-counting,
 .sl-cockpit-bars > i.sl-is-fresh {
   animation: sl-cockpit-fresh calc(var(--sl-time-slow) * 3) var(--sl-ease-out);
 }
@@ -8920,7 +8718,7 @@ button.sl-but-mini {
 @keyframes sl-cockpit-fresh {
   from {
     transform: scale(1.4);
-    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+    filter: drop-shadow(0 0 var(--sl-space-3) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent));
   }
 }
 
@@ -8955,7 +8753,7 @@ button.sl-but-mini {
 @keyframes sl-cockpit-throb {
   to {
     opacity: 1;
-    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+    filter: drop-shadow(0 0 var(--sl-space-3) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent));
   }
 }
 
@@ -8964,7 +8762,7 @@ button.sl-but-mini {
   to {
     box-shadow:
       0 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent),
-      0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent);
+      0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-danger) var(--sl-knob-mix), transparent);
   }
 }
 
@@ -13182,7 +12980,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   min-height: 0;
 }
 
-[data-sl-series="stack"] + [data-sl-series="rows"] {
+[data-sl-series="stack"] + :is([data-sl-series="stack"], [data-sl-series="rows"]) {
   margin-top: var(--sl-space-6);
 }
 
@@ -13190,7 +12988,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-top: var(--sl-space-5);
 }
 
-/* Series tile: the name with the dot of its series, the figure, a line under it and the icon of its figure at its right; not the tile of the home, whose motion is --sl-tile-dur */
+/* Series tile: the name with the dot of its series, the figure, a line under it and the icon of its figure at its right; not the tile of the home */
 .sl-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--sl-metric-min-width), 1fr));
@@ -13346,7 +13144,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
 .sl-kv-flag.sl-kv-on::before {
   background: var(--sl-success);
-  box-shadow: 0 0 var(--sl-space-3) var(--sl-success);
+  box-shadow: 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-success) var(--sl-knob-mix), transparent);
 }
 
 /* A value cut short: the info mark before it opens the whole value, which the template escapes once for both */
@@ -13419,7 +13217,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   height: 100%;
   border-radius: inherit;
   background: var(--sl-knob-tone);
-  box-shadow: 0 0 var(--sl-space-4) var(--sl-knob-tone);
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-knob-tone) var(--sl-knob-mix), transparent);
   transform-origin: left;
 }
 
@@ -13954,25 +13752,37 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   background: var(--sl-danger);
 }
 
-/* One bar split into its parts: a part is a float, so its colour is a layer of its own, and its keys under it */
+/* One bar split into its parts: a part is a float, so its colour is a layer of its own, and its keys under it; nothing clips the bar, so each part glows in its tone as a meter does, and the end parts round themselves */
 .sl-stack-bar {
   display: flex;
   height: var(--sl-space-4);
-  overflow: hidden;
   border-radius: var(--sl-radius-pill);
   background: var(--sl-bg-subtle);
 }
 
+/* A part may shrink, so the dividers between the parts never push the last one past the end of the bar */
 .sl-stack-part {
   position: relative;
-  flex: 0 0 var(--sl-d-part);
+  flex: 0 1 var(--sl-d-part);
+}
+
+.sl-stack-part:first-child {
+  border-start-start-radius: var(--sl-radius-pill);
+  border-end-start-radius: var(--sl-radius-pill);
+}
+
+.sl-stack-part:last-child {
+  border-start-end-radius: var(--sl-radius-pill);
+  border-end-end-radius: var(--sl-radius-pill);
 }
 
 .sl-stack-part::before {
   content: "";
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: currentColor;
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent);
   transform-origin: left;
 }
 
@@ -13980,9 +13790,10 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   border-left: var(--sl-space-1) solid var(--sl-bg);
 }
 
+/* The keys stand in two equal columns, so the second key of every row of every bar starts on one line */
 .sl-stack-keys {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sl-space-2) var(--sl-space-6);
   margin-top: var(--sl-space-3);
   font-size: var(--sl-font-small);
@@ -14041,6 +13852,7 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   height: 100%;
   border-radius: inherit;
   background: currentColor;
+  box-shadow: 0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent);
   transform-origin: left;
 }
 

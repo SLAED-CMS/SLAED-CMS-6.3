@@ -17,13 +17,13 @@ function getFieldIds(string $id, string $mint = ''): array {
     return ['input' => $id, 'label' => $id.'-label', 'hint' => $id.'-hint'];
 }
 
-# Answer the checked extra field definitions of one area; empty until the 6.3 data update has left its mark, and a set failing the check counts as empty after one log entry
+# Answer the checked extra field definitions of one area; empty until the 8.0 data update has left its mark, and a set failing the check counts as empty after one log entry
 function getFieldRules(string $mod): array {
     global $conf, $fld;
     static $memo = [];
     $mod = strtolower($mod);
     if (isset($memo[$mod])) return $memo[$mod];
-    $set = (($conf['update']['fields'] ?? '') === '6.3.0') ? ($conf['fields'][$mod] ?? []) : [];
+    $set = (($conf['update']['fields'] ?? '') === '8.0.0') ? ($conf['fields'][$mod] ?? []) : [];
     try {
         return $memo[$mod] = $fld->filterFieldList(is_array($set) ? $set : []);
     } catch (InvalidArgumentException $err) {
@@ -32,11 +32,11 @@ function getFieldRules(string $mod): array {
     }
 }
 
-# Read the posted extra fields of one area; before the 6.3 data update the stored text comes back untouched, and a switched-off field keeps its stored value
+# Read the posted extra fields of one area; before the 8.0 data update the stored text comes back untouched, and a switched-off field keeps its stored value
 function getFieldsPost(string $mod, string $old = ''): array {
     global $conf, $fld;
-    if (($conf['update']['fields'] ?? '') !== '6.3.0') {
-        Logger::addSite('error', 'Field: the 6.3 data update has not run, extra fields are closed for writing', ['area' => $mod]);
+    if (($conf['update']['fields'] ?? '') !== '8.0.0') {
+        Logger::addSite('error', 'Field: the 8.0 data update has not run, extra fields are closed for writing', ['area' => $mod]);
         return ['json' => $old, 'errors' => [], 'stop' => []];
     }
     $rules = getFieldRules($mod);
@@ -362,6 +362,7 @@ function getTplAdminList(array $data): string {
     foreach ($list as $at => $row) {
         $drop = (array)($row['drop'] ?? []);
         $tip = (array)($row['details'] ?? []);
+        $turn = array_values(array_filter(array_column((array)($row['cells'] ?? []), 'stat')));
         $cells = [];
         foreach ((array)($row['cells'] ?? []) as $i => $cell) {
             if (array_key_exists('moment', $cell)) {
@@ -375,7 +376,7 @@ function getTplAdminList(array $data): string {
                 $tip = [];
             }
             if (isset($cell['dial'])) {
-                $items = $drop ? [...$cell['dial'], $drop + ['later' => 'gone del']] : $cell['dial'];
+                $items = [...$cell['dial'], ...$turn, ...($drop ? [$drop + ['later' => 'gone del']] : [])];
                 $cell['content_html'] = $tpl->getHtmlFrag('dial', ['dial_title' => $names[$i] ?? '', 'dial' => $items]);
             }
             $stat = (array)($cell['stat'] ?? []);

@@ -156,7 +156,7 @@ Admin layout assembly still performs live work:
 
 - `getAdminPanelBlocks()` scans configured modules and checks admin entry files
 - `getAdminPanel()` repeats module/menu assembly for dashboard panels
-- `getAdminQueues()` issues one pending-content COUNT query per queue (new users, comments, every Node type) on every panel page, for the bell, and again on its poll once a minute
+- `getAdminQueues()` issues one COUNT for new users, one for comments, one category pre-read and one grouped count for the waiting materials of all Node types (`getNodeCountList()`) and one COUNT for the support queue, on every panel page and every site page under the floating menu, and again on its poll once a minute; the menu adds `getSessionCounts()`, read once a request, and the two last sign-ins, read once a session
 - admin menu rendering resolves icon paths and template fragments repeatedly
 
 Performance risk:
@@ -362,7 +362,8 @@ characters of its SHA-1.
   no asset file and hashes nothing.
 - The head lists are `$conf['derived']['assets']`, plain addresses from
   `getAssetList()`: `css_f` or `script_f`, then the theme package of
-  `getThemeAssets()`. `doCss()` and `doScript()` print them through the map, as
+  `getThemeAssets()`, and the icon font of `getIconFont()`, which `setHead()`
+  preloads before the stylesheets. `doCss()` and `doScript()` print them through the map, as
   do `Editor::getAssetTags()` with the editor skin, `Template::getAssetTag()`
   (the companion files of a partial), the highlight scripts of `Parser`, the
   altcha loader of `Captcha`, the module partials and the error page of
@@ -648,6 +649,11 @@ The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the 
 | The globe serves the gate: it moves only onto the lane of a throw, the ingress queue under it (drifting each frame it was 88 → 110 / 93 → 125) | presentation, guard (5 rounds) | 85 → 94 | 94 → 104 | 102 → 109 | 38 → 39 | 120 |
 | The rain of code and the waves of the globe on transform | presentation, guard / system (5 rounds) / top | 85 → 75 / 51 → 51 / 60 → 61 | 100 → 81 / 130 → 129 / 62 → 72 | 83 → 84 / 38 → 38 / 43 → 40 | 39 → 33 / 2 → 2 / 21 → 19 | 116 → 120 / 84 → 84 / 120 |
 | The lost `sl-pres-spin` back: six rings turn again | presentation, system / guard / top | 42 → 54 / 99 → 104 / 77 → 76 | 114 → 127 / 119 → 123 / 83 → 84 | 29 → 40 / 82 → 91 / 45 → 46 | 1 → 1 / 39 → 39 / 23 → 22 | 111 → 109 / 119 → 118 / 120 |
+| The cockpit of the presentation moves as the panel: the scan down, the aurora under the hand, the arcs filling from zero | presentation, top / pointer | 58 → 58 / 67 → 68 | 47 → 45 / 52 → 53 | 32 → 31 / 65 → 70 | 16 → 16 / 13 → 14 | 120 |
+| The halo of the presentation lamp as the panel draws it, a `drop-shadow` of the lamp under its turning comet (a still disc of light instead read as a second ring) | presentation, top | 54 → 55 | 41 → 53 | 27 → 28 | 14 → 14 | 120 |
+| The aurora a turning cone cut to the frame, its layer made only under the hand (left on every block at rest it cost 66 → 79 renderer on the top); on the presentation every framed block takes it, and every figure counts up from zero | panel, idle / pointer | 59 → 57 / 83 → 83 | 68 → 69 / 83 → 86 | 75 → 80 / 160 → 166 | 5 → 5 / 14 → 15 | 120 |
+| The same, with the halo of the lamp | presentation, top / pointer | 62 → 62 / 71 → 77 | 49 → 59 / 54 → 72 | 33 → 33 / 72 → 83 | 17 → 16 / 15 → 16 | 120 |
+| The aurora on the framed blocks of the panel, drawn by the `--sl-aurora-*` tokens (the pair holds the uncommitted panel CSS of another session too) | panel, idle / pointer | 68 → 63 / 87 → 91 | 81 → 79 / 87 → 98 | 95 → 91 / 165 → 203 | 5 → 5 / 14 → 17 | 120 / 120 → 116 |
 
 More frames drawn raise the GPU share, so a GPU figure that grows beside a frame rate that grows is no loss. The frame
 rate of the guard, 118 → 120, lies within the noise of a pair. Forms measured and not taken, as they change the

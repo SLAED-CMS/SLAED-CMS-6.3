@@ -273,7 +273,6 @@
   /* Components: the animation durations of one element; the modal opens and closes on a transition step instead */
   --sl-dial-dur: calc(0.05s * var(--sl-time-scale));
   --sl-loading-dur: calc(0.8s * var(--sl-time-scale));
-  --sl-drift-dur: calc(1.1s * var(--sl-time-scale));
   --sl-row-dur: calc(0.9s * var(--sl-time-scale));
   --sl-led-dur: calc(2s * var(--sl-time-scale));
   --sl-alert-dur: calc(1.8s * var(--sl-time-scale));
@@ -282,10 +281,13 @@
   --sl-modal-dur: calc(0.22s * var(--sl-time-scale));
   /* Panel motion: a light round a frame under the hand, a home tile or a part of a ground rising, a press spreading, a chart drawn, an arc filling and a changed figure lighting */
   --sl-aurora-dur: calc(5.4s * var(--sl-time-scale));
-  --sl-tile-dur: calc(0.55s * var(--sl-time-scale));
   --sl-ripple-dur: calc(0.65s * var(--sl-time-scale));
   --sl-graph-dur: calc(1.2s * var(--sl-time-scale));
   --sl-knob-dur: calc(1.4s * var(--sl-time-scale));
+  /* A running figure, one series in both themes: how long it runs, which setFigureRun() of slaed.js reads off its flare, the colour it runs in and its glow */
+  --sl-figure-dur: calc(0.9s * var(--sl-time-scale));
+  --sl-figure-text: var(--sl-success-strong);
+  --sl-figure-shadow: 0 0 var(--sl-space-5) var(--sl-success);
   /* The series of the panel: the grid of a ground drifting by one cell and the lamps of a window head fading in turn */
   --sl-ground-dur: calc(6s * var(--sl-time-scale));
   --sl-pane-dur: calc(2.8s * var(--sl-time-scale));
@@ -336,7 +338,7 @@
   --sl-col-actions-width: 72px;
   /* The release badge of the screensaver: a warm pill, the glow of a glint and the light that runs over it, white in both modes */
   --sl-phx-badge-bg: linear-gradient(to right, var(--sl-warning-strong), var(--sl-danger));
-  --sl-phx-badge-shadow: 0 0 18px var(--sl-warning);
+  --sl-phx-badge-shadow: 0 0 18px color-mix(in srgb, var(--sl-warning) var(--sl-knob-mix), transparent);
   --sl-phx-shine-bg: linear-gradient(100deg, transparent 30%, #fff 50%, transparent 70%);
   --sl-col-date-width: 150px;
   --sl-col-count-width: 64px;
@@ -417,10 +419,13 @@
   --sl-builder-pick-width: 170px;
   /* The width a gauge of the home cockpit grows to; the lamp in their row is a step larger */
   --sl-gauge-width: 150px;
-  /* The glow round a circle of the cockpit, its arcs and its lamp, at the share the gauges of the presentation carry */
+  /* The one share of its tone every glow of the panel carries: bars, rings, the lamp, dots, traces and flares; a ring of focus or a tint is not a glow */
   --sl-knob-mix: 50%;
-  /* The stroke of light that runs round a frame under the hand */
-  --sl-aurora-width: calc(var(--sl-space-8) * 6);
+  /* The light that runs round the frame of a block under the hand: the line it burns on, the share of the frame it covers, the colour it starts in and the one of its head; --sl-aurora-dur at 0s turns it off */
+  --sl-aurora-width: var(--sl-space-1);
+  --sl-aurora-mix: 20%;
+  --sl-aurora-border: var(--sl-primary);
+  --sl-aurora-ring: var(--sl-accent);
   /* The glass of the lamp: gloss, a shaded rim and a disc a step off the plate give a light page the volume a dark one has from its gloss */
   --sl-gauge-bg:
     radial-gradient(ellipse 62% 34% at 50% 12%, light-dark(var(--sl-bg), var(--sl-beam-bg)), transparent 72%),
@@ -463,11 +468,6 @@
   --sl-loading-dot-width: 6px;
   --sl-loading-dot-height: 6px;
   --sl-loading-dot-gap: 12px;
-  --sl-drift-width: 86px;
-  --sl-drift-height: 22px;
-  --sl-drift-dot-width: 8px;
-  --sl-drift-dot-height: 8px;
-  --sl-drift-gap: 14px;
   --sl-donut-width: 76px;
   --sl-donut-height: 76px;
   /* The thickness of the session ring, which is the donut less its hole, halved */
@@ -478,7 +478,7 @@
   --sl-login-footer-height: 34px;
   /* The installer widens the login card for its forms, its run leads the progress line with a glowing head, and its last stop carries a seal */
   --sl-setup-width: 480px;
-  --sl-setup-shadow: 0 0 10px 3px var(--sl-primary);
+  --sl-setup-shadow: 0 0 10px 3px color-mix(in srgb, var(--sl-primary) var(--sl-knob-mix), transparent);
   --sl-setup-seal-width: 72px;
   --sl-menu-height: 36px;
   --sl-modal-act-width: var(--sl-size-control);

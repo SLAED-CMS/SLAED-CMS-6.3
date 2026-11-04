@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The points unit of the 6.3 data update in update.php, whose contract is docs/NODE.md (Points unit)
+# The points unit of the 8.0 data update in update.php, whose contract is docs/NODE.md (Points unit)
 #[Group('release')]
 final class UpdatePointsTest extends TestCase
 {
@@ -43,7 +43,7 @@ final class UpdatePointsTest extends TestCase
         $this->assertTrue($run['done'], $text.': '.$run['text']);
         $this->assertSame(['verified', 3, self::SNAP], [$run['state'], $run['count'], $run['snap']], $text.': the snapshot is not the starting balances');
         $this->assertTrue($run['source'] && $run['target'], $text.': the manifest does not carry the hashes of its files');
-        $this->assertSame(['points' => '6.3.0'], $run['mark'], $text.': the mark is missing');
+        $this->assertSame(['points' => '8.0.0'], $run['mark'], $text.': the mark is missing');
         $this->assertSame([false, $active, true], [$run['stale'], $run['active'], $run['rules']], $text.': the scopes were not carried over');
     }
 
@@ -81,7 +81,7 @@ final class UpdatePointsTest extends TestCase
     public function targetDataWithoutAManifestStopsTheUnit(): void
     {
         $run = $this->getRun('stop');
-        foreach (['rows' => null, 'mark' => ['points' => '6.3.0']] as $name => $mark) {
+        foreach (['rows' => null, 'mark' => ['points' => '8.0.0']] as $name => $mark) {
             $this->assertSame($name === 'mark', $run[$name]['done'], $name);
             $this->assertStringContainsString(($name === 'mark') ? 'ran on this site before' : 'the unit is stopped', $run[$name]['text']);
             $left = [$run[$name]['state'], $run[$name]['snap'], $run[$name]['mark'], $run[$name]['stale']];
@@ -97,7 +97,7 @@ final class UpdatePointsTest extends TestCase
         $run = $this->getRun('stop');
         $this->assertSame([false, null], [$run['forged']['done'], $run['forged']['mark']]);
         $this->assertStringContainsString('does not match its manifest', $run['forged']['text']);
-        $this->assertSame([true, 'verified', null, ['points' => '6.3.0']], [$run['pruned']['done'], $run['pruned']['state'], $run['pruned']['snap'], $run['pruned']['mark']]);
+        $this->assertSame([true, 'verified', null, ['points' => '8.0.0']], [$run['pruned']['done'], $run['pruned']['state'], $run['pruned']['snap'], $run['pruned']['mark']]);
         $this->assertSame([false, null, 'applying', true], [$run['scope']['done'], $run['scope']['mark'], $run['scope']['state'], $run['scope']['stale']]);
         $this->assertStringContainsString('not a valid points scope', $run['scope']['text']);
     }

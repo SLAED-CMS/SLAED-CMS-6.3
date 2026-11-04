@@ -13,6 +13,7 @@ require_once BASE_DIR.'/core/version.php';
 # Sentinel baked into cached HTML and replaced with live generation timing right before output
 define('GEN_MARK', "\x02SLGEN\x02");
 define('DBG_MARK', "\x02SLDBG\x02");
+define('LOAD_MARK', "\x02SLLOAD:");
 
 # The most rows one page of a panel list carries: the cap of an own number and of "all", and the ceiling of the reads of the panel
 define('LIST_MAX', 1000);
@@ -85,7 +86,11 @@ function getConfig(bool $fresh = false): array {
         $conf['derived'] = ['version' => Template::getAssetVersions()];
         foreach (glob(PUBLIC_DIR.'/templates/*', GLOB_ONLYDIR) ?: [] as $tdir) {
             $tname = basename($tdir);
-            $conf['derived']['assets'][$tname] = ['css' => getAssetList($tname, 'css', $conf['css_f'] ?? ''), 'js' => getAssetList($tname, 'js', $conf['script_f'] ?? '')];
+            $conf['derived']['assets'][$tname] = [
+                'css' => getAssetList($tname, 'css', $conf['css_f'] ?? ''),
+                'js' => getAssetList($tname, 'js', $conf['script_f'] ?? ''),
+                'font' => getIconFont($tname),
+            ];
             $conf['derived']['logo'][$tname] = getImageBox($tdir.'/images/logos/'.($conf['site_logo'] ?? ''));
         }
         if (!empty($conf['graph'])) $conf['derived']['graph'] = getSeoGraph((string)$conf['graph'], []);
@@ -163,7 +168,7 @@ if (!defined('API_FILE') && !defined('UPDATE_FILE')) {
     $tpl = new Template($theme);
     $prs = new Parser();
     $fld = new Field();
-    $pnt = new Point($db, ($conf['update']['points'] ?? '') === '6.3.0' ? ($conf['points'] ?? []) : []);
+    $pnt = new Point($db, ($conf['update']['points'] ?? '') === '8.0.0' ? ($conf['points'] ?? []) : []);
     $com = new Comment($db, $prs, $pnt, $conf);
     $prv = new Privat($db, $conf);
     if (defined('MODULE_FILE')) {
@@ -1772,7 +1777,7 @@ function getRssFeeds(): array {
     return $out;
 }
 
-# Render the page head and track the visit once, though the page 404 renders a head again; a category title shows only when the visitor may read it, so none leaks
+# Render the page head, the icon font preloaded at its @font-face address, and track the visit once, though a 404 renders a head again; a category title shows only to its readers
 function setHead(array $seo = []): void {
     global $db, $home, $conf, $user, $name, $theme, $tpl, $afile, $adminpage, $adminvars, $sitepage, $sitevars, $locale, $layout, $prs;
     static $kept = false;
@@ -1914,6 +1919,12 @@ function setHead(array $seo = []): void {
     $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {
         $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => HOME_PATH.$favicon, 'type' => 'image/svg+xml', 'title' => '']);
+    }
+    $font = $conf['derived']['assets'][$theme]['font'] ?? getIconFont($theme);
+    if ($font !== '') {
+        $strlink .= $tpl->getHtmlFrag('head-link', [
+            'rel' => 'preload', 'href' => HOME_PATH.$font, 'type' => 'font/woff2', 'title' => '', 'as' => 'font', 'crossorigin' => 'anonymous',
+        ]);
     }
     $strlink .= doCss();
     $script = doScript().$stscript;
@@ -2841,6 +2852,14 @@ function doScript(): string {
     return $cont;
 }
 
+# The icon font of a theme at the address its icon stylesheet asks for, the query kept, so a preload and the stylesheet fetch one file; '' without one
+function getIconFont(string $theme): string {
+    $css = 'templates/'.$theme.'/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css';
+    $text = is_file(PUBLIC_DIR.'/'.$css) ? (string)file_get_contents(PUBLIC_DIR.'/'.$css) : '';
+    if (!preg_match('/url\(\s*["\']?([^"\')]+\.woff2(?:\?[^"\')]*)?)/', $text, $m)) return '';
+    return dirname($css).'/'.$m[1];
+}
+
 # The stylesheet links of the page head: the versioned files of getAssetList() in their order
 function doCss(): string {
     global $theme, $conf, $tpl;
@@ -3689,15 +3708,36 @@ function getTimeLoads(array $stats = []): string {
     return $cont;
 }
 
-# Replace footer and debug markers with one final request metrics snapshot; the debug block arrives after the render, so it takes the indent of its line here
+# Return the marker of one figure of the final request snapshot; getTimedHtml() writes the figure in its place, so a page that prints it agrees with the foot
+function getLoadMark(string $key): string {
+    return LOAD_MARK.$key."\x02";
+}
+
+# Replace footer, debug and load markers, a load marker in JSON too, with one final request snapshot; the debug block takes the indent of its line
 function getTimedHtml(string $html): string {
     global $conf;
     $hgen = str_contains($html, GEN_MARK);
     $hdbg = str_contains($html, DBG_MARK);
-    if (!$hgen && !$hdbg) return $html;
+    $hload = str_contains($html, substr(LOAD_MARK, 1));
+    if (!$hgen && !$hdbg && !$hload) return $html;
     $stats = getLoadStats();
     $maps = [];
     if ($hgen) $maps[GEN_MARK] = ($conf['db_t'] == '1') ? getTimeLoads($stats) : '';
+    if ($hload) {
+        $max = getLoadLimits();
+        $part = static fn(float $val, float $top): string => (string)(($top > 0) ? (int)min(100, max(0, round($val * 100 / $top))) : 0);
+        $figs = [
+            'gen_ms' => (string)(int)round($stats['gen'] * 1000), 'qnum' => (string)$stats['qnum'],
+            'sql' => filterDecimal($stats['sql'], 4), 'avg' => filterDecimal($stats['avg'], 4), 'mem' => filterDecimal($stats['mem'] / 1048576, 1),
+            'gen_part' => $part($stats['gen'], $max['gen']), 'qnum_part' => $part($stats['qnum'], $max['qnum']),
+            'mem_part' => $part($stats['mem'], $max['mem']), 'avg_part' => $part($stats['avg'], $max['qtime']),
+        ];
+        foreach ($figs as $key => $val) {
+            $mark = getLoadMark($key);
+            $maps[$mark] = $val;
+            $maps[substr((string)json_encode($mark), 1, -1)] = $val;
+        }
+    }
     if ($hdbg) {
         $info = checkDebugView() ? getDebugSystemInfo($stats) : '';
         $line = '/^([ \t]*)'.preg_quote(DBG_MARK, '/').'[ \t]*(\r?\n)?/m';
@@ -4059,13 +4099,15 @@ function replace_break(string $text): string {
     return '';
 }
 
-# Counts the live sessions in one query as administrators, members, bots and all rows; the raw bot figure is returned and the caller decides whether bots are shown
+# Counts the live sessions in one query a request as administrators, members, bots and all rows; the raw bot figure is returned and the caller decides whether bots are shown
 function getSessionCounts(): array {
     global $db;
+    static $out = null;
+    if ($out !== null) return $out;
     [$adm, $mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery(
         'SELECT COUNT(CASE WHEN guest = 3 THEN 1 END), COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'
     ));
-    return ['admins' => (int)$adm, 'users' => (int)$mem, 'bots' => (int)$bots, 'all' => (int)$all];
+    return $out = ['admins' => (int)$adm, 'users' => (int)$mem, 'bots' => (int)$bots, 'all' => (int)$all];
 }
 
 # User information for user
@@ -4262,16 +4304,34 @@ function getAdminQueues(): array {
             'href' => $base.'name=comments&status=1', 'num' => $com->getStatusCount(CommentStatus::Pending)];
     }
     $ctx = getNodeContext();
+    $mine = $pend = [];
     foreach (getNodeTypeMap() as $name => $type) {
         if (!$ctx->super && !in_array($name, $ctx->mods, true)) continue;
         try {
-            $hand = getNodeHandler($type);
+            $mine[$name] = [$type, getNodeHandler($type)];
+        } catch (NodeException $err) {
+            Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => $name, 'code' => $err->getCode()]);
+            continue;
+        }
+        if ($type->ext !== 'support') $pend[$name] = $type;
+    }
+    try {
+        $one = (count($pend) === 1) ? $mine[array_key_first($pend)][1] : null;
+        $nums = $pend ? getNodeReader()->setNodeTypes(array_values($pend))->setNodeExtension($one)->setNodeStatus(NodeStatus::Pending)->getNodeCountList() : [];
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => implode(',', array_keys($pend)), 'code' => $err->getCode()]);
+        $nums = [];
+    }
+    foreach ($mine as $name => [$type, $hand]) {
+        try {
             if ($type->ext === 'support') {
-                $num = $hand->getNodeSupportList($type, 1, 1, (int)($conf['node']['support']['state']['staff'] ?? 0))['count'];
+                $num = $hand->getNodeSupportCount($type, (int)($conf['node']['support']['state']['staff'] ?? 0));
                 $href = $base.'name=node&type='.$name;
-            } else {
-                $num = getNodeReader()->setNodeType($type)->setNodeExtension($hand)->setNodeStatus(NodeStatus::Pending)->getNodeCount();
+            } elseif (isset($nums[$type->id])) {
+                $num = $nums[$type->id];
                 $href = $base.'name=node&type='.$name.'&status='.NodeStatus::Pending->value;
+            } else {
+                continue;
             }
         } catch (NodeException $err) {
             Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => $name, 'code' => $err->getCode()]);
@@ -4401,8 +4461,15 @@ function getAdminDock(): string {
     $cnt = ($conf['session'] && isAdmin(true)) ? getSessionCounts() : [];
     $all = $cnt['all'] ?? 0;
     $pct = static fn(int $num): int => ($all > 0) ? intval(round($num / $all * 100)) : 0;
-    $log = getLoginLog(['uid' => intval($admin[0] ?? 0), 'admin' => true, 'result' => ['ok']], 1, 2)['rows'];
-    $stamp = static fn(int $i): array => isset($log[$i]) ? ['stamp' => format_time($log[$i]['time'], 'c'), 'text' => format_time($log[$i]['time'], _TIMESTRING)] : [];
+    $seen = $_SESSION[$conf['admin_c'].'-seen'] ?? [];
+    $sid = hash('sha256', session_id());
+    if (!is_array($seen) || ($seen['sid'] ?? '') !== $sid || !is_array($seen['time'] ?? null)) {
+        $rows = getLoginLog(['uid' => intval($admin[0] ?? 0), 'admin' => true, 'result' => ['ok']], 1, 2)['rows'];
+        $seen = ['sid' => $sid, 'time' => array_map(static fn(array $row): string => (string)$row['time'], $rows)];
+        if (session_status() === PHP_SESSION_ACTIVE) $_SESSION[$conf['admin_c'].'-seen'] = $seen;
+    }
+    $log = $seen['time'];
+    $stamp = static fn(int $i): array => isset($log[$i]) ? ['stamp' => format_time($log[$i], 'c'), 'text' => format_time($log[$i], _TIMESTRING)] : [];
     $idle = max(0, getAdminIdle() - time() + intval($_SESSION[$conf['admin_c'].'-time'] ?? 0));
     $links = $own['links'];
     $mod = $conf['modules'][(string)$name] ?? [];
@@ -6042,7 +6109,7 @@ function getRatingService(): Rating {
         [$tab, $cnt, $sum] = $maps[$scope];
         return $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = :num, '.$sum.' = :score WHERE id = :id', ['num' => $num, 'score' => $score, 'id' => $id]) !== false;
     };
-    $rate = new Rating($db, ($conf['update']['ratings'] ?? '') === '6.3.0' ? ($conf['ratings'] ?? []) : [], $actor, $read, $write);
+    $rate = new Rating($db, ($conf['update']['ratings'] ?? '') === '8.0.0' ? ($conf['ratings'] ?? []) : [], $actor, $read, $write);
     return $rate;
 }
 

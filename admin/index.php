@@ -183,7 +183,7 @@ function addAdminAccount(): void {
         $aemail    = filterCutText(filterText(getVar('post', 'aemail', 'raw', '')), 255);
         $apass = getVar('post', 'apwd', 'raw', '');
         $atwo = getVar('post', 'apwd2', 'raw', '');
-        $auser_new = intval($_POST['auser_new'] ?? 0);
+        $auser_new = getVar('post', 'auser_new', 'num', 0);
         $aeditor   = (string)($conf['editor']['admin'] ?? 'plain');
         if (!Editor::isValidEditor($aeditor, 'admin')) $aeditor = 'plain';
         $alang     = getCookies('language');
@@ -492,7 +492,15 @@ if (isAdmin()) {
                 $path = BASE_DIR.'/modules/'.$name.'/admin';
                 if (file_exists($path.'/index.php')) {
                     getLang($name, true);
-                    require_once $path.'/index.php';
+                    $made = is_file(BASE_DIR.'/modules/'.$name.'/sql/table.sql')
+                        ? getSqlFileTables((string)file_get_contents(BASE_DIR.'/modules/'.$name.'/sql/table.sql'), 'CREATE') : [];
+                    if ($made && !checkSqlTable($made[0])) {
+                        setHead();
+                        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => sprintf(_DB_NOTABLES, _MODULES, _DB_INSTALL)]);
+                        setFoot();
+                    } else {
+                        require_once $path.'/index.php';
+                    }
                     $found = true;
                 }
             }
