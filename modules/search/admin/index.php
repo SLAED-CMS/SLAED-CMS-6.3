@@ -325,12 +325,6 @@ function config(): void {
     $ilist = getSearchinvalid($audit);
     setHead();
     $cont = getSearchnavi('', 2);
-    if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlPart('box', [
-        'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))]),
-    ]);
-    if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlPart('box', [
-        'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]),
-    ]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
     $mods = [];
     $curr = getSearchcurr();
@@ -437,7 +431,7 @@ function save(): void {
             $fail = updateNodeTypePart($name, 'integrations', array_replace($type->settings['integrations'], ['search' => $want]), intval($vers[$name]));
             if ($fail !== '') [$iswarn, $text] = [true, $fail];
         }
-        setConfigFile('search.php', [
+        $kept = setConfigFile('search.php', [
             'asearch' => getVar('post', 'asearch', 'num'),
             'mods' => $mods ? implode(',', $mods) : '0',
             'slet' => getVar('post', 'slet', 'num', 3),
@@ -447,6 +441,7 @@ function save(): void {
             'anum' => getVar('post', 'anum', 'num', 50),
             'anump' => getVar('post', 'anump', 'num', 10),
         ]);
+        if (!$kept) [$iswarn, $text] = [true, getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP];
     }
     setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
 }
@@ -454,31 +449,22 @@ function save(): void {
 function reindex(): void {
     global $afile, $conf;
     $iswarn = !checkAdminPost('search');
-    $count = 0;
+    $text = _TOKENMISS;
     if (!$iswarn) {
         $curr = array_filter(array_map('trim', explode(',', (string)$conf['search']['mods'])));
         $have = count($curr);
         $mods = array_values(array_unique(array_merge($curr, getSearchcompat())));
         sort($mods);
-        setConfigFile('search.php', [
-            'asearch' => $conf['search']['asearch'],
-            'mods' => $mods ? implode(',', $mods) : '0',
-            'slet' => $conf['search']['slet'],
-            'slimit' => $conf['search']['slimit'],
-            'snum' => $conf['search']['snum'],
-            'snump' => $conf['search']['snump'],
-            'anum' => $conf['search']['anum'] ?? 50,
-            'anump' => $conf['search']['anump'] ?? 10,
-        ]);
-        $count = count($mods) - $have;
+        $iswarn = !setConfigFile('search.php', ['mods' => $mods ? implode(',', $mods) : '0'], $conf['search']);
+        $text = $iswarn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : sprintf(_SEARCHAUTODONE, count($mods) - $have);
     }
-    setRedirect($afile.'.php?name=search&op=config'.(!$iswarn ? '&reindex='.$count : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
 }
 
 function modadd(): void {
     global $afile, $conf;
     $iswarn = !checkAdminPost('search');
-    $count = 0;
+    $text = _TOKENMISS;
     if (!$iswarn) {
         $pick = getVar('post', 'mods', 'raw', []);
         if (!$pick) $pick = getVar('post', 'mods[]', 'raw', []);
@@ -490,19 +476,10 @@ function modadd(): void {
         $pick = $all ? $ready : array_values(array_intersect($ready, $pick));
         $mods = array_values(array_unique(array_merge($curr, $pick)));
         sort($mods);
-        setConfigFile('search.php', [
-            'asearch' => $conf['search']['asearch'],
-            'mods' => $mods ? implode(',', $mods) : '0',
-            'slet' => $conf['search']['slet'],
-            'slimit' => $conf['search']['slimit'],
-            'snum' => $conf['search']['snum'],
-            'snump' => $conf['search']['snump'],
-            'anum' => $conf['search']['anum'] ?? 50,
-            'anump' => $conf['search']['anump'] ?? 10,
-        ]);
-        $count = count($pick);
+        $iswarn = !setConfigFile('search.php', ['mods' => $mods ? implode(',', $mods) : '0'], $conf['search']);
+        $text = $iswarn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : sprintf(_SEARCH_ADDED, count($pick));
     }
-    setRedirect($afile.'.php?name=search&op=config'.(!$iswarn ? '&pick='.$count : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
 }
 
 function edit(): void {
@@ -514,47 +491,43 @@ function edit(): void {
     $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
     $result = $db->getSqlQuery('SELECT word, modul, time, score FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
+    [$word, $mod, $time, $score] = $db->getSqlRow($result) ?: setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod), false, 302, _NONE_FOUND, true);
     setHead();
     $cont = getSearchnavi(getSearchbox('search'));
-    if ($db->getSqlRowCount($result) > 0) {
-        [$word, $mod, $time, $score] = $db->getSqlRow($result);
-        $hits = max(intval($score), 1);
-        $rows = [
-            [
-                'label_for' => 'f-word', 'label_html' => _SWORD,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'itype' => 'text', 'name_attr' => 'word', 'input_id' => 'f-word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD,
-                ]),
-            ],
-            [
-                'label_for' => 'f-modul', 'label_html' => _MODUL,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'selectid' => 'f-modul', 'options' => getSearchmodsOpts((string)$mod)]),
-            ],
-            ['label_html' => _DATE, 'field_html' => getTplAddDateTime(['name' => 'time', 'label' => _DATE, 'time' => (string)$time, 'with' => true, 'max' => 16])],
-            [
-                'label_for' => 'f-hits', 'label_html' => _HITS,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'itype' => 'number', 'name_attr' => 'hits', 'input_id' => 'f-hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS,
-                ]),
-            ],
-        ];
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=search&op=editsave',
-            'hidden' => [
-                ['nameattr' => 'id', 'valueattr' => (string)$id],
-                ['nameattr' => 'sort', 'valueattr' => (string)$sort],
-                ['nameattr' => 'order', 'valueattr' => (string)$order],
-                ['nameattr' => 'num', 'valueattr' => (string)$num],
-                ['nameattr' => 'find', 'valueattr' => $find],
-                ['nameattr' => 'fmod', 'valueattr' => $fmod],
-                ['nameattr' => 'token', 'valueattr' => getSiteToken('search')],
-            ],
-            'rows' => $rows,
-            'submit_label' => _SAVECHANGES,
-        ])]);
-    } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
-    }
+    $hits = max(intval($score), 1);
+    $rows = [
+        [
+            'label_for' => 'f-word', 'label_html' => _SWORD,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text', 'name_attr' => 'word', 'input_id' => 'f-word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD,
+            ]),
+        ],
+        [
+            'label_for' => 'f-modul', 'label_html' => _MODUL,
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'selectid' => 'f-modul', 'options' => getSearchmodsOpts((string)$mod)]),
+        ],
+        ['label_html' => _DATE, 'field_html' => getTplAddDateTime(['name' => 'time', 'label' => _DATE, 'time' => (string)$time, 'with' => true, 'max' => 16])],
+        [
+            'label_for' => 'f-hits', 'label_html' => _HITS,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'hits', 'input_id' => 'f-hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS,
+            ]),
+        ],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php?name=search&op=editsave',
+        'hidden' => [
+            ['nameattr' => 'id', 'valueattr' => (string)$id],
+            ['nameattr' => 'sort', 'valueattr' => (string)$sort],
+            ['nameattr' => 'order', 'valueattr' => (string)$order],
+            ['nameattr' => 'num', 'valueattr' => (string)$num],
+            ['nameattr' => 'find', 'valueattr' => $find],
+            ['nameattr' => 'fmod', 'valueattr' => $fmod],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('search')],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }

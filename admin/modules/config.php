@@ -736,6 +736,7 @@ function save(): void {
     $ctab = getVar('post', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab > 4) $ctab = 0;
     $warn = !checkAdminPost('config');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
         $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
@@ -857,9 +858,10 @@ function save(): void {
             'mtemp' => (string)$conf['mtemp'],
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
         ];
-        setConfigFile('global.php', $cont);
+        $warn = !setConfigFile('global.php', $cont);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $text, $warn);
 }
 
 function clearcache(): void {
@@ -975,7 +977,8 @@ function replacesave(): void {
             $body = getVar('post', 'repl['.$i.']', '', '0');
             if ($word !== '0' || $body !== '0') $rules[] = $word.'|'.$body;
         }
-        setConfigFile('replace.php', [$type => implode('||', $rules)] + ($conf['replace'] ?? []));
+        $warn = !setConfigFile('replace.php', [$type => implode('||', $rules)], $conf['replace'] ?? []);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
     setRedirect($afile.'.php?name=config&op=replace'.($type !== '' ? '&type='.$type : ''), false, 302, $text, $warn);
 }

@@ -585,7 +585,9 @@ function getSecret(string $purpose): string {
         $sec = is_array($conf['security'] ?? null) ? $conf['security'] : [];
         $sec['secret'] = $master;
         $conf['security'] = $sec;
-        if (function_exists('setConfigFile')) setConfigFile('security.php', $sec);
+        if (function_exists('setConfigFile') && !setConfigFile('security.php', ['secret' => $master], $sec)) {
+            Logger::addSite('error', 'Security: the new master secret could not be written to config/security.php');
+        }
     }
     return hash_hmac('sha256', $purpose, $master);
 }
@@ -984,7 +986,9 @@ function addHackReport(string $msg): void {
     if ($conf['security']['block'] && ($_SERVER['HTTP_SEC_FETCH_SITE'] ?? 'none') === 'none') {
         $btime = time() + 86400;
         $cidr = getIpHostCidr($ip);
-        if ($cidr !== false) setConfigFile('security.php', ['blocker_ip' => getBanList($cidr.'|0|'.$btime.'|'._HACK)], $conf['security']);
+        if ($cidr !== false && !setConfigFile('security.php', ['blocker_ip' => getBanList($cidr.'|0|'.$btime.'|'._HACK)], $conf['security'])) {
+            Logger::addSite('error', 'Security: the ban of an address could not be written to config/security.php', ['cidr' => $cidr]);
+        }
         setCookies($conf['security']['blocker_cookie'], $btime, 'block');
     }
     $skip = $conf['security']['mail'] ? getReportSkip() : -1;

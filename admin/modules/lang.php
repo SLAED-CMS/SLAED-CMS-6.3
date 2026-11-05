@@ -93,9 +93,6 @@ function lang(): void {
 
 function fileedit(): void {
     global $afile, $conf, $tpl;
-    setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_LANGS]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -103,11 +100,10 @@ function fileedit(): void {
     $lng_cn = [];
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
-    if (!is_dir($lang_path)) {
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO]);
-        setFoot();
-        return;
-    }
+    if (!is_dir($lang_path)) setRedirect($afile.'.php?name=lang', false, 302, _NONE_FOUND, true);
+    setHead();
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_LANGS]);
     foreach (scandir($lang_path) as $file) {
         if (preg_match('#^(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
     }
@@ -294,6 +290,7 @@ function config(): void {
 function configsave(): void {
     global $afile, $conf;
     $warn = !checkAdminPost('lang');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
             'key' => getVar('post', 'key', 'text', ''),
@@ -301,9 +298,10 @@ function configsave(): void {
             'count' => getVar('post', 'count', 'num', 0),
             'per_page' => getVar('post', 'per_page', 'num', 100)
         ];
-        setConfigFile('lang.php', $cont, $conf['lang']);
+        $warn = !setConfigFile('lang.php', $cont, $conf['lang']);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=lang&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=lang&op=config', false, 302, $text, $warn);
 }
 
 function info(): void {

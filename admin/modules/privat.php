@@ -276,6 +276,7 @@ function config(): void {
 function save(): void {
     global $afile;
     $warn = !checkAdminPost('privat');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
             'num' => getVar('post', 'num', 'num', 50),
@@ -292,9 +293,10 @@ function save(): void {
             'web' => getVar('post', 'web', 'num'),
             'act' => getVar('post', 'act', 'num')
         ];
-        setConfigFile('privat.php', $cont);
+        $warn = !setConfigFile('privat.php', $cont);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=privat&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=privat&op=config', false, 302, $text, $warn);
 }
 
 function delete(): void {

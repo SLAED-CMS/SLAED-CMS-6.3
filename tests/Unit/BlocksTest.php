@@ -80,11 +80,11 @@ final class BlocksTest extends TestCase
         $this->assertSame([4, false], [$opts, $banner], 'The form offered a banner position');
     }
 
-    # A text over the column is refused with a page before any query on both forms, which the empty SQL log of the run proves, and the field declares its store to the editor
+    # A text over the column is refused before any query on both forms, which the empty SQL log of the run proves, with its form again holding what was typed and the reason listed
     #[Test]
     public function aTextOverTheColumnIsRefusedWhole(): void
     {
-        $this->assertSame([200, 200, 0, true], $this->getRun()['room']);
+        $this->assertSame([200, 200, 0, true, true, true], $this->getRun()['room']);
     }
 
     # The one writer of the order: a new block at the end, a move into another position at its number with the old one closed up, a deletion, a drag and the fix

@@ -61,9 +61,9 @@ function setRedirect(string $url, bool $refer = false, int $code = 302, string $
     throw new LogicException('redirect');
 }
 
-# Record a written configuration instead of writing it
-function setConfigFile(string $name, array $cont): bool {
-    $GLOBALS['pdone']['data']['cfg'][$name] = $cont;
+# Record a written configuration instead of writing it, merged on its base as the string form of core/system.php merges it
+function setConfigFile(string $name, array $cont, array $base = []): bool {
+    $GLOBALS['pdone']['data']['cfg'][$name] = array_replace_recursive($base, $cont);
     return true;
 }
 

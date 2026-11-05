@@ -48,7 +48,7 @@ function getUploadsSearch(string $mod): string {
 }
 
 function uploads(): void {
-    global $conf, $stop, $tpl;
+    global $conf;
     getAdminFileMode('uploads');
     $walk = getAdminFilePath('dir');
     if ($walk === '') $walk = getAdminFilePath('dir', 'post');
@@ -56,7 +56,6 @@ function uploads(): void {
     $dir = ($walk === '') ? getUploadFolder($conf['uploads']['dir']) : implode('/', array_slice($part, 0, ($part[0] === basename(NODE_DIR)) ? 2 : 1));
     setHead();
     $cont = getTplAdminTabs(getUploadsTabs() + ['subtitle_html' => getUploadsSearch($dir)]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     echo $cont.checkPerms(UPLOADS_DIR).getAdminFileShell(true, ($walk === '') ? ['dir' => $dir] : []);
     setFoot();
 }
@@ -413,14 +412,16 @@ function tplconfig(): void {
 function tplsave(): void {
     global $afile, $conf;
     $warn = !checkAdminPost('uploads');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [];
         $typm = [...explode(',', $conf['uploads']['typ']), 'full'];
         $tmp = getVar('post', 'tmp[]');
         for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i] ?? '';
-        setConfigFile('filetype.php', $cont);
+        $warn = !setConfigFile('filetype.php', $cont);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=uploads&op=tplconfig', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=uploads&op=tplconfig', false, 302, $text, $warn);
 }
 
 function config(): void {

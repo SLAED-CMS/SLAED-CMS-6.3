@@ -145,6 +145,7 @@ function edit(): void {
     global $afile, $tpl, $com;
     $id = getVar('get', 'id', 'num');
     $flt = getCommentsFilter();
+    $row = $com->getComment($id) ?: setRedirect($afile.'.php?'.$flt['back'], false, 302, _NONE_FOUND, true);
     setHead();
     $cont = getTplAdminTabs([
         'ops' => [$flt['base'], $flt['base'].'&status=1', $flt['cur'].'&op=config', $flt['cur'].'&op=info'],
@@ -152,7 +153,6 @@ function edit(): void {
         'tab' => $flt['status'],
         'subtitle_html' => getCommentsSearch($flt, false),
     ]);
-    $row = $com->getComment($id);
     $cmod = (string)($row['modul'] ?? '');
     $nick = (string)($row['nick'] ?? '');
     $ip = (string)($row['ip'] ?? '');
@@ -389,6 +389,7 @@ function config(): void {
 function save(): void {
     global $afile;
     $warn = !checkAdminPost('comments');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
             'num' => getVar('post', 'num', 'num', 15),
@@ -407,9 +408,10 @@ function save(): void {
             'profil' => getVar('post', 'profil', 'num'),
             'web' => getVar('post', 'web', 'num'),
         ];
-        setConfigFile('comments.php', $cont);
+        $warn = !setConfigFile('comments.php', $cont);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=comments&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=comments&op=config', false, 302, $text, $warn);
 }
 
 function approve(): void {

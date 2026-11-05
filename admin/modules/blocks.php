@@ -46,10 +46,13 @@ function blocks(): void {
     setFoot();
 }
 
-function add(): void {
+function add(array $sent = [], array $stop = []): void {
     global $db, $conf, $afile, $tpl;
+    $sent += ['title' => '', 'url' => '', 'refresh' => '3600', 'content' => '', 'bpos' => 'l', 'where' => [], 'lang' => '', 'status' => '1', 'expire' => '0',
+        'action' => 'd', 'view' => '0'];
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 1]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $stop]);
     $rows = [
         [
             'label_for' => 'f-title',
@@ -61,7 +64,7 @@ function add(): void {
                 'name_attr' => 'title',
                 'input_id' => 'f-title',
                 'placeholder_text' => _TITLE,
-                'value_attr' => '',
+                'value_attr' => (string)$sent['title'],
             ]),
         ],
         [
@@ -72,7 +75,7 @@ function add(): void {
                 'name_attr' => 'url',
                 'input_id' => 'f-url',
                 'placeholder_text' => _RSSFILE,
-                'value_attr' => '',
+                'value_attr' => (string)$sent['url'],
             ]),
         ],
         [
@@ -94,11 +97,11 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
                 'name_attr' => 'refresh',
                 'selectid' => 'f-refresh',
-                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => true])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.']),
+                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$sent['refresh'] === '1800'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$sent['refresh'] === '3600'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '18000'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '36000'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '86400']),
             ]),
         ],
     ];
@@ -131,7 +134,7 @@ function add(): void {
             'label' => _CONTENT,
             'id' => '1',
             'name' => 'content',
-            'value' => '',
+            'value' => (string)$sent['content'],
             'mod' => 'all',
             'store' => 'blocks.content',
             'rows' => '15',
@@ -145,16 +148,16 @@ function add(): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bpos',
             'selectid' => 'f-bpos',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => $sent['bpos'] === 'l'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => $sent['bpos'] === 'c'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => $sent['bpos'] === 'd'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => $sent['bpos'] === 'r']),
         ]),
     ];
     $rows[] = [
         'label_html' => _BLOCK_VIEW,
         'label_id' => $labid = getFieldIds('', 'blockwhere')['label'],
-        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => getBlockWhereItems([])]),
+        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => getBlockWhereItems($sent['where'])]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -164,7 +167,7 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
                 'selectid' => 'f-lang',
-                'options_html' => getTplLanguageOptions(),
+                'options_html' => getTplLanguageOptions((string)$sent['lang']),
             ]),
         ];
     }
@@ -174,7 +177,7 @@ function add(): void {
         'field_html' => getTplRadioGroup([
             'labelledby' => $labid,
             'name' => 'status',
-            'value' => '1',
+            'value' => (string)$sent['status'],
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
@@ -187,7 +190,7 @@ function add(): void {
             'name_attr' => 'expire',
             'input_id' => 'f-expire',
             'placeholder_text' => _EXPIRATION,
-            'value_attr' => '0',
+            'value_attr' => (string)$sent['expire'],
         ]),
     ];
     $rows[] = [
@@ -196,8 +199,8 @@ function add(): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'action',
             'selectid' => 'f-action',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _DELETE]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => $sent['action'] === 'd'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => $sent['action'] === 'r']),
         ]),
     ];
     $rows[] = [
@@ -206,10 +209,10 @@ function add(): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
             'selectid' => 'f-view',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => true])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (string)$sent['view'] === '0'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (string)$sent['view'] === '1'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (string)$sent['view'] === '2'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (string)$sent['view'] === '3']),
         ]),
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -315,7 +318,7 @@ function fix(): void {
 }
 
 function addsave(): void {
-    global $db, $afile, $tpl;
+    global $db, $afile;
     $warn = !checkAdminPost('blocks');
     $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
     $content = filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true));
@@ -349,12 +352,9 @@ function addsave(): void {
     }
     $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
     if ($room !== '' || (($content == '') && ($bfile == ''))) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room ?: ($url ? _RSSFAIL : _BLOCKS_EMPTY)]).$tpl->getHtmlPart('box', [
-            'content_html' => $tpl->getHtmlFrag('span', ['back_text' => _BACK]),
-        ]);
-        setFoot();
+        $sent = ['title' => $title, 'url' => $url, 'refresh' => (string)$refresh, 'content' => getVar('post', 'content', 'raw', ''), 'bpos' => $bpos, 'where' => $bwhere,
+            'lang' => $lang, 'status' => (string)$active, 'expire' => (string)$days, 'action' => $action ?: 'd', 'view' => (string)$view];
+        add($sent, [$room ?: ($url ? _RSSFAIL : _BLOCKS_EMPTY)]);
     } else {
         $param = ($bfile === 'node.php') ? json_encode(['type' => [], 'mode' => 'last', 'limit' => 10]) : '';
         $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, 0, :active, :refresh, :btime, :lang, :bfile, :view,'
@@ -413,14 +413,8 @@ function getBlockCodeForm(string $bf, string $flag, string $text, string $ver, s
 }
 
 function filecode(): void {
-    global $db, $afile, $tpl;
-    if (!checkAdminPost('blocks')) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    global $afile;
+    if (!checkAdminPost('blocks')) setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, _TOKENMISS, true);
     $bf = getVar('post', 'bf', 'text', '');
     if ($bf != '') {
         $flag = getVar('post', 'flag', 'var', '');
@@ -434,6 +428,7 @@ function filecode(): void {
                 setRedirect($afile.'.php?name=blocks&op=fileedit');
                 return;
             }
+            if (!is_file(BASE_DIR.'/blocks/'.$bf)) setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, _NONE_FOUND, true);
             $bfstr = file_get_contents(BASE_DIR.'/blocks/'.$bf);
             if (strpos($bfstr, 'BLOCKHTML') === false) {
                 $flaged = 'php';
@@ -485,14 +480,19 @@ function filecodesave(): void {
     setFoot();
 }
 
-function edit(): void {
+function edit(int $bid = 0, array $sent = [], array $stop = []): void {
     global $afile, $conf, $db, $tpl;
+    $bid = $bid ?: getVar('get', 'id', 'num');
+    $sql = 'SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which, param FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
+    $row = $db->getSqlRow($db->getSqlQuery($sql, ['bid' => $bid])) ?: setRedirect($afile.'.php?name=blocks', false, 302, _NONE_FOUND, true);
+    $oldpos = (string)$row['bpos'];
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
-    $bid = getVar('get', 'id', 'num');
-    $sql = 'SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which, param FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
-    $row = $db->getSqlRow($db->getSqlQuery($sql, ['bid' => $bid]));
-    [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $lang, $bfile, $view, $expire, $action, $which, $param] = $row;
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $stop]);
+    [
+        'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'status' => $active, 'refresh' => $refresh,
+        'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which, 'param' => $param,
+    ] = array_replace($row, $sent);
     if ($url != '') {
         $type = '('._BLOCKRSS.')';
     } elseif ($bfile != '') {
@@ -689,7 +689,7 @@ function edit(): void {
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=blocks&op=editsave',
         'hidden' => [
-            ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],
+            ['nameattr' => 'oldposition', 'valueattr' => $oldpos],
             ['nameattr' => 'bid', 'valueattr' => (string)$bid],
             ['nameattr' => 'bkey', 'valueattr' => (string)$bkey],
             ['nameattr' => 'weight', 'valueattr' => (string)$weight],
@@ -704,7 +704,7 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $afile, $tpl;
+    global $db, $afile;
     $warn = !checkAdminPost('blocks');
     $bid = getVar('post', 'bid', 'num');
     $bkey = filterCutText(getVar('post', 'bkey', 'var', ''), 15);
@@ -732,10 +732,9 @@ function editsave(): void {
     $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
     if ($room === '' && !$url && $bfile === '' && $content === '') $room = _BLOCKS_EMPTY;
     if ($room !== '') {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room]).$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('span', ['back_text' => _BACK])]);
-        setFoot();
+        $sent = ['title' => $title, 'content' => getVar('post', 'content', 'raw', ''), 'bpos' => $bpos, 'status' => $active, 'lang' => $lang, 'view' => $view,
+            'action' => $action ?: 'd', 'which' => getBlockWhich($bwhere)];
+        edit((int)$bid, $sent, [$room]);
         return;
     }
     $param = '';

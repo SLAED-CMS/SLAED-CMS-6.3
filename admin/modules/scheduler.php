@@ -319,6 +319,7 @@ function save(): void {
     $rawname = getVar('post', 'job', 'var', '');
     $name = preg_replace('#[^a-z]#', '', strtolower($rawname));
     $warn = !checkAdminPost('scheduler');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $type = getVar('post', 'type', 'var', 'custom');
         $title = trim(getVar('post', 'title', 'text', ''));
@@ -375,11 +376,12 @@ function save(): void {
             if (is_array($jval)) $data['jobs'][$jkey] = getSchedulerJob((string)$jkey, $jval);
         }
         ksort($data['jobs']);
-        setConfigFile('scheduler.php', $data);
-        if ($issys && $name === 'dbbackup') {
-            setConfigFile('security.php', ['log_b' => getVar('post', 'log_b', 'num'), 'dump_age' => max(1, intval(getVar('post', 'dump_age', 'num', 7)))], $conf['security']);
+        $warn = !setConfigFile('scheduler.php', $data);
+        if (!$warn && $issys && $name === 'dbbackup') {
+            $sets = ['log_b' => getVar('post', 'log_b', 'num'), 'dump_age' => max(1, intval(getVar('post', 'dump_age', 'num', 7)))];
+            $warn = !setConfigFile('security.php', $sets, $conf['security']);
         }
-        if ($issys && $name === 'filescan') {
+        if (!$warn && $issys && $name === 'filescan') {
             $dskip = [];
             foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", getVar('post', 'dump_skip', 'raw', ''))) as $line) {
                 $line = trim(str_replace('\\', '/', $line));
@@ -390,10 +392,11 @@ function save(): void {
                 $dskip[] = str_ends_with($line, '/') ? $line : $line.'/';
             }
             $sets = ['log_d' => getVar('post', 'log_d', 'num'), 'mail_d' => getVar('post', 'mail_d', 'num'), 'dump_skip' => implode("\n", array_unique($dskip))];
-            setConfigFile('security.php', $sets, $conf['security']);
+            $warn = !setConfigFile('security.php', $sets, $conf['security']);
         }
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=scheduler&op=add&job='.$name, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=scheduler&op=add&job='.$name, false, 302, $text, $warn);
 }
 
 function run(): void {
@@ -442,6 +445,7 @@ function delete(): void {
     $warn = !checkAdminPost('scheduler');
     $names = array_map(static fn(mixed $v): string => is_string($v) ? (string)preg_replace('#[^a-z]#', '', strtolower($v)) : '', getVar('post', 'id[]', 'var'));
     $done = false;
+    $text = $warn ? _TOKENMISS : _ERROR;
     if (!$warn) {
         $cfg = is_readable(CONFIG_DIR.'/scheduler.php') ? (require CONFIG_DIR.'/scheduler.php') : [];
         $schedcfg = is_array($cfg) && isset($cfg['scheduler']) && is_array($cfg['scheduler']) ? $cfg['scheduler'] : ($conf['scheduler'] ?? []);
@@ -452,11 +456,14 @@ function delete(): void {
             $jobs = array_diff_key($jobs, array_flip($drop));
             $data = $schedcfg;
             $data['jobs'] = $jobs;
-            $done = setConfigFile('scheduler.php', $data) && $done;
+            $kept = setConfigFile('scheduler.php', $data);
+            if (!$kept) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
+            $done = $kept && $done;
             foreach ($done ? $drop : [] as $one) if (is_file(LOGS_DIR.'/scheduler/'.$one.'.json')) unlink(LOGS_DIR.'/scheduler/'.$one.'.json');
         }
+        if ($done) $text = _SUCCDELETE;
     }
-    setRedirect($afile.'.php?name=scheduler', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
+    setRedirect($afile.'.php?name=scheduler', false, 302, $text, !$done);
 }
 
 function info(): void {

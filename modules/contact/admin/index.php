@@ -58,7 +58,7 @@ function save(): void {
             'admins' => getVar('post', 'admins', 'num', 0),
         ];
         $room = checkEditorTextRoom($cont['info'], 'config');
-        if ($room === '') setConfigFile('contact.php', $cont);
+        if ($room === '' && !setConfigFile('contact.php', $cont)) $room = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
     setRedirect($afile.'.php?name=contact', false, 302, $iswarn ? _TOKENMISS : ($room ?: _SUCCSAVE), $iswarn || $room !== '');
 }

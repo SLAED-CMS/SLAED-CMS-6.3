@@ -156,7 +156,7 @@ function xslsave(): void {
     $template = getVar('post', 'template', 'raw', '');
     if ($iswarn || $template === '') setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $iswarn ? _TOKENMISS : _CERROR1, true);
     $dir = dirname($file);
-    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, _NO_INFO, true);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, _ERROR_UP, true);
     $man = getAdminFileManager('system');
     $path = getAdminFileRel($file);
     $ver = getVar('post', 'ver', 'word', '');
@@ -277,7 +277,7 @@ function configsave(): void {
             'xsl' => getVar('post', 'xsl', 'num', 0),
             'txt' => getVar('post', 'txt', 'num', 0),
         ];
-        setConfigFile('sitemap.php', $cont);
+        if (!setConfigFile('sitemap.php', $cont)) [$iswarn, $text] = [true, getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP];
     }
     setRedirect($afile.'.php?name=sitemap&op=config', false, 302, $text, $iswarn);
 }

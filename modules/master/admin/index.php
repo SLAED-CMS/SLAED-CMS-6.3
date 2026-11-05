@@ -341,7 +341,7 @@ function save(): void {
             'limit' => max(1, min(100, getVar('post', 'limit', 'num', 5)))];
         $warn = !setConfigFile('master.php', $data) || !setMasterJobs();
         if ($warn) {
-            setRedirect($afile.'.php?name=master&tab=5', false, 302, _ERROR, true);
+            setRedirect($afile.'.php?name=master&tab=5', false, 302, getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP, true);
             return;
         }
     }
@@ -379,7 +379,7 @@ function share(): void {
     $res = $db->getSqlQuery('SELECT share FROM '.PREFIX_DB.'_master_release WHERE ver = :ver', ['ver' => $ver]);
     $row = $res ? $db->getSqlRow($res) : false;
     if (!$row) {
-        setRedirect($afile.'.php?name=master', false, 302, _NO_INFO, true);
+        setRedirect($afile.'.php?name=master', false, 302, _NONE_FOUND, true);
         return;
     }
     setHead();

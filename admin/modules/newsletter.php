@@ -184,21 +184,19 @@ function add(): void {
     $days = getVar('post', 'days', 'num', 365);
     $lock = false;
     if ($id) {
-        $camp = $db->getSqlRow($db->getSqlQuery('SELECT title, body, audit, apar, status FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]));
-        if ($camp) {
-            $title = (string)$camp['title'];
-            $body = (string)$camp['body'];
-            $pick = $camp['audit'].'-'.$camp['apar'];
-            if ((string)$camp['audit'] === 'active') $days = intval($camp['apar']);
-            $lock = intval($camp['status']) !== 0;
-            $nid = $lock ? 0 : $id;
-        }
+        $sql = 'SELECT title, body, audit, apar, status FROM '.PREFIX_DB.'_newsletter WHERE id = :id';
+        $camp = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id])) ?: setRedirect($afile.'.php?name=newsletter', false, 302, _NONE_FOUND, true);
+        $title = (string)$camp['title'];
+        $body = (string)$camp['body'];
+        $pick = $camp['audit'].'-'.$camp['apar'];
+        if ((string)$camp['audit'] === 'active') $days = intval($camp['apar']);
+        $lock = intval($camp['status']) !== 0;
+        $nid = $lock ? 0 : $id;
     }
     if (str_starts_with($pick, 'active-')) $pick = 'active-'.$days;
-    $stoptext = is_array($stop) ? implode("\n", $stop) : (string)$stop;
     setHead();
     $cont = getCampTabs(1);
-    if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($lock) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLLOCKED]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $form = $tpl->getHtmlPart('form', [
@@ -840,6 +838,7 @@ function mailconf(): void {
 function mailsave(): void {
     global $afile, $conf;
     $warn = !checkAdminPost('newsletter');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $mtrans = getVar('post', 'mailtrans', 'var', 'php');
         if (!in_array($mtrans, ['php', 'sendmail', 'smtp'], true)) $mtrans = 'php';
@@ -886,10 +885,11 @@ function mailsave(): void {
         $file = CONFIG_DIR.'/global.php';
         if (function_exists('opcache_invalidate')) opcache_invalidate($file, true);
         $glob = is_file($file) ? require $file : [];
-        if (is_array($glob) && $glob) setConfigFile('global.php', ['mtemp' => filterTrustedTags(getVar('post', 'mtemp', 'raw'), isAdmin(true))], $glob);
-        setConfigFile('mail.php', $mail, is_array($conf['mail'] ?? null) ? $conf['mail'] : []);
+        $warn = !is_array($glob) || !$glob || !setConfigFile('global.php', ['mtemp' => filterTrustedTags(getVar('post', 'mtemp', 'raw'), isAdmin(true))], $glob);
+        $warn = !setConfigFile('mail.php', $mail, is_array($conf['mail'] ?? null) ? $conf['mail'] : []) || $warn;
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=newsletter&op=mailconf', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=newsletter&op=mailconf', false, 302, $text, $warn);
 }
 
 # Queue a test message and drain the queue in this request; a run that sent nothing says so, as the rate window or the time budget can end it first
@@ -955,6 +955,7 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $warn = !checkAdminPost('newsletter');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $content = [
             'abort' => max(1, min(100, getVar('post', 'abort', 'num', 10))),
@@ -963,9 +964,10 @@ function configsave(): void {
             'canary' => max(0, getVar('post', 'canary', 'num', 100)),
             'canarymin' => max(0, getVar('post', 'canarymin', 'num', 500)),
         ];
-        setConfigFile('newsletter.php', $content);
+        $warn = !setConfigFile('newsletter.php', $content);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=newsletter&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=newsletter&op=config', false, 302, $text, $warn);
 }
 
 function info(): void {

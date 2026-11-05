@@ -189,11 +189,12 @@ function addAdminAccount(): void {
         $alang     = getCookies('language');
         if (!isset(getLanguageList()[$alang])) $alang = '';
         $aip       = getip();
-        if (!$aname || !analyze_name($aname)) $stop = _ERRORINVNICK;
-        if ($apass === '' && $atwo === '') $stop = _NOPASS;
-        if ($apass !== $atwo) $stop = _ERROR_PASS;
-        if (strlen($aname) > 25) $stop = _NICKLONG;
-        if (!checkAdminPost('add_admin')) $stop = _TOKENMISS;
+        $stop = [];
+        if (!checkAdminPost('add_admin')) $stop[] = _TOKENMISS;
+        if (!$aname || !analyze_name($aname)) $stop[] = _ERRORINVNICK;
+        if ($apass === '' && $atwo === '') $stop[] = _NOPASS;
+        if ($apass !== $atwo) $stop[] = _ERROR_PASS;
+        if (strlen($aname) > 25) $stop[] = _NICKLONG;
         if (!$stop) {
             $apwd = getPassHash($apass);
             $db->getSqlQuery(
@@ -287,7 +288,7 @@ function getAdminLoginForm(): void {
     global $db, $afile, $conf, $stop, $tpl;
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $cont .= $tpl->getHtmlPart('auth-form', [
             'route' => $afile,
             'rows' => [
@@ -350,7 +351,7 @@ function getAdminLoginForm(): void {
             'submit' => ['button_type' => 'submit', 'submit_label' => _SEND],
         ]);
     } else {
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $capt = getCaptcha('adminlogin');
         $rows = [
             [
@@ -444,7 +445,7 @@ function updateAdminSession(): void {
 # End the panel session: drop the session row, forget the administrator, and hand the browser back to the login page
 function deleteAdminSession(): void {
     global $db, $admin, $afile, $conf;
-    if (!checkAdminPost('logout')) setRedirect($afile.'.php');
+    if (!checkAdminPost('logout')) setRedirect($afile.'.php', false, 302, _TOKENMISS, true);
     $aname = filterText(substr($admin[1], 0, 25), 1);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :name AND guest = :guest', ['name' => $aname, 'guest' => '3']);
     unset($_SESSION[$conf['admin_c']], $_SESSION[$conf['admin_c'].'-time'], $admin);

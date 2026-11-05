@@ -200,6 +200,7 @@ function config(): void {
 function configsave(): void {
     global $afile, $conf;
     $iswarn = !checkAdminPost('changelog');
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $confdata = (isAdmin(true) ? [
             'source' => chlogSource(getVar('post', 'source', 'var', 'local')),
@@ -215,9 +216,10 @@ function configsave(): void {
             'showstat' => getVar('post', 'showstat', 'num', 0),
             'exporten' => getVar('post', 'exporten', 'num', 0)
         ];
-        setConfigFile('changelog.php', $confdata);
+        $iswarn = !setConfigFile('changelog.php', $confdata);
+        if ($iswarn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=changelog&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=changelog&op=config', false, 302, $text, $iswarn);
 }
 
 function export(): void {

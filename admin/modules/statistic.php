@@ -566,6 +566,7 @@ function config(): void {
 function save(): void {
     global $afile;
     $warn = !checkAdminPost('statistic');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $lines = static fn(string $key): array => array_values(array_unique(array_filter(array_map('trim', preg_split('#[,\r\n]+#', getVar('post', $key, 'text', ''))))));
         $bots = [];
@@ -584,9 +585,10 @@ function save(): void {
             'social' => $hosts('social'),
             'ai' => $hosts('ai'),
         ];
-        setConfigFile('statistic.php', $cont);
+        $warn = !setConfigFile('statistic.php', $cont);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=statistic&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=statistic&op=config', false, 302, $text, $warn);
 }
 
 function info(): void {

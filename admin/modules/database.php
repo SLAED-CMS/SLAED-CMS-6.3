@@ -209,14 +209,11 @@ function dump(): void {
     $action = getVar('post', 'action', 'var', '');
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
     $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL];
+    $run = $type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec');
+    if ($run && !checkAdminPost('database')) setRedirect($afile.'.php?name=database&op=dump', false, 302, _TOKENMISS, true);
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
-    if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec')) {
-        if (!checkAdminPost('database')) {
-            echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-            setFoot();
-            return;
-        }
+    if ($run) {
         $parsed = getSqlbatch(getSqlFilled($string));
         if ($parsed['error'] !== '') {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $parsed['error']]);
@@ -226,7 +223,7 @@ function dump(): void {
             $isdump = ($action === 'exec');
             if ($isdump) {
                 if (!checkDblock()) {
-                    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
+                    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DB_RUNBUSY]);
                 } else {
                     Logger::addDatabase('info', 'Run started', ['blocks' => count($items)]);
                     try {

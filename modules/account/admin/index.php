@@ -154,7 +154,7 @@ function add(bool $fresh = false): void {
             $birth,
             $gender,
             $field
-        ] = $db->getSqlRow($result);
+        ] = $db->getSqlRow($result) ?: setRedirect($afile.'.php?name=account', false, 302, _NONE_FOUND, true);
         $warn = ($warn) ? explode('|', $warn) : [];
     } else {
         $uid = getVar('post', 'uid', 'num', 0);
@@ -537,128 +537,126 @@ function add(bool $fresh = false): void {
 function addsave(): void {
     global $db, $afile, $conf, $stop, $prs, $mailer, $pnt, $admin;
     $stop = [];
-    $iswarn = !checkAdminPost('account');
-    if (!$iswarn) {
-        $uid = getVar('post', 'uid', 'num');
-        $uname = getVar('post', 'uname', 'name');
-        $rank = filterCutText(getVar('post', 'rank'), 25);
-        $email = getVar('post', 'email');
-        $site = filterCutText(getVar('post', 'site', 'url'), 255);
-        $avatar = filterCutText(getVar('post', 'avatar', '', ''), 255);
-        $reg = getVar('req', 'reg', 'time');
-        $occ = filterCutText(getVar('post', 'occ'), 100);
-        $from = filterCutText(getVar('post', 'from'), 100);
-        $inter = filterCutText(getVar('post', 'inter'), 150);
-        $sig = filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true));
-        $view = getVar('post', 'view', 'num');
-        $pass = getVar('post', 'pass');
-        $pass2 = getVar('post', 'pass2');
-        $story = getVar('post', 'story', 'num');
-        $blockon = getVar('post', 'blockon', 'num');
-        $block = filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true));
-        $theme = getVar('post', 'theme');
-        if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
-        $news = getVar('post', 'news', 'num');
-        $lang = getVar('post', 'lang');
-        if (!isset(getLanguageList()[$lang])) $lang = '';
-        $pdiff = trim(getVar('post', 'pdiff', 'raw', ''));
-        $pnote = trim(getVar('post', 'pnote', 'raw', ''));
-        $pkey = getVar('post', 'pkey', 'raw', '');
-        $warnvals = getVar('post', 'warn[]', 'num');
-        $warnings = is_array($warnvals) ? filterText(implode('|', str_replace('|', '', $warnvals))) : 0;
-        $access = getVar('post', 'access', 'num');
-        $group = getVar('post', 'group');
-        $birth = getVar('req', 'birth', 'date', null);
-        $gender = getVar('post', 'gender');
-        [$fold] = $uid ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) ?: ['']) : [''];
-        $flds = getFieldsPost('account', (string)$fold);
-        $field = $flds['json'];
-        $mail = getVar('post', 'mail', 'num');
-        if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
-        $stop = array_merge((array)$stop, $flds['stop']);
-        if ($uname) {
-            [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
-            [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname]));
-            if (($uid != $existId && $uname == $existName) || ($uid != $tempId && $uname == $tempName)) $stop[] = _USEREXIST;
-            [$mid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email])) ?: [0];
-            [$tmid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $email])) ?: [0];
-            if (($mid && $uid != $mid) || ($tmid && $uid != $tmid)) $stop[] = _ERROR_EMAIL;
-        } else {
-            $stop[] = _ERROR_ALL;
-        }
-        if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
-        checkemail($email);
-        if ($pass != $pass2) $stop[] = _ERROR_PASS;
-        $pbad = !$uid || !preg_match('/^-?[1-9][0-9]{0,6}$/D', $pdiff) || abs(intval($pdiff)) > 1000000 || $pnote === '' || !$pnt->checkNote($pnote);
-        if ($pdiff !== '' && ($pbad || !preg_match('/^[0-9a-f]{32}$/D', $pkey))) $stop[] = _POINTS_BADDIFF;
-        $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_points WHERE uid = :uid AND action = \'adjust\' AND scope = \'account\' AND source = :src';
-        $twice = $pdiff !== '' && !$pbad && preg_match('/^[0-9a-f]{32}$/D', $pkey) && ($res = $db->getSqlQuery($sql, ['uid' => $uid, 'src' => 'adjust:'.$pkey]))
-            && $res->fetchColumn();
-        if ($twice) $stop[] = _POINTS_TWICE;
-        if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
-        if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
-        if (!$stop) {
-            $text = _SUCCSAVE;
-            $open = $db->setSqlBegin();
-            if ($uid) {
-                if ($pass && $pass == $pass2) {
-                    $saltpass = getPassHash($pass);
-                    $ok = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
-                        .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = COALESCE(NULLIF(:storynum, 0),'
-                        .' storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access,'
-                        .' grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
-                        'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block,
-                        'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth,
-                        'gender' => $gender, 'field' => $field, 'id' => $uid
-                    ]);
-                } else {
-                    $ok = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
-                        .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = COALESCE(NULLIF(:storynum, 0), storynum),'
-                        .' blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group,'
-                        .' birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
-                        'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
-                        'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender,
-                        'field' => $field, 'id' => $uid
-                    ]);
-                }
-            } else {
+    $uid = getVar('post', 'uid', 'num');
+    if (!checkAdminPost('account')) setRedirect($afile.'.php?name=account&op=add'.($uid ? '&id='.$uid : ''), false, 302, _TOKENMISS, true);
+    $uname = getVar('post', 'uname', 'name');
+    $rank = filterCutText(getVar('post', 'rank'), 25);
+    $email = getVar('post', 'email');
+    $site = filterCutText(getVar('post', 'site', 'url'), 255);
+    $avatar = filterCutText(getVar('post', 'avatar', '', ''), 255);
+    $reg = getVar('req', 'reg', 'time');
+    $occ = filterCutText(getVar('post', 'occ'), 100);
+    $from = filterCutText(getVar('post', 'from'), 100);
+    $inter = filterCutText(getVar('post', 'inter'), 150);
+    $sig = filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true));
+    $view = getVar('post', 'view', 'num');
+    $pass = getVar('post', 'pass');
+    $pass2 = getVar('post', 'pass2');
+    $story = getVar('post', 'story', 'num');
+    $blockon = getVar('post', 'blockon', 'num');
+    $block = filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true));
+    $theme = getVar('post', 'theme');
+    if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
+    $news = getVar('post', 'news', 'num');
+    $lang = getVar('post', 'lang');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
+    $pdiff = trim(getVar('post', 'pdiff', 'raw', ''));
+    $pnote = trim(getVar('post', 'pnote', 'raw', ''));
+    $pkey = getVar('post', 'pkey', 'raw', '');
+    $warnvals = getVar('post', 'warn[]', 'num');
+    $warnings = is_array($warnvals) ? filterText(implode('|', str_replace('|', '', $warnvals))) : 0;
+    $access = getVar('post', 'access', 'num');
+    $group = getVar('post', 'group');
+    $birth = getVar('req', 'birth', 'date', null);
+    $gender = getVar('post', 'gender');
+    [$fold] = $uid ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) ?: ['']) : [''];
+    $flds = getFieldsPost('account', (string)$fold);
+    $field = $flds['json'];
+    $mail = getVar('post', 'mail', 'num');
+    if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
+    $stop = array_merge((array)$stop, $flds['stop']);
+    if ($uname) {
+        [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
+        [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname]));
+        if (($uid != $existId && $uname == $existName) || ($uid != $tempId && $uname == $tempName)) $stop[] = _USEREXIST;
+        [$mid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email])) ?: [0];
+        [$tmid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $email])) ?: [0];
+        if (($mid && $uid != $mid) || ($tmid && $uid != $tmid)) $stop[] = _ERROR_EMAIL;
+    } else {
+        $stop[] = _ERROR_ALL;
+    }
+    if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
+    checkemail($email);
+    if ($pass != $pass2) $stop[] = _ERROR_PASS;
+    $pbad = !$uid || !preg_match('/^-?[1-9][0-9]{0,6}$/D', $pdiff) || abs(intval($pdiff)) > 1000000 || $pnote === '' || !$pnt->checkNote($pnote);
+    if ($pdiff !== '' && ($pbad || !preg_match('/^[0-9a-f]{32}$/D', $pkey))) $stop[] = _POINTS_BADDIFF;
+    $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_points WHERE uid = :uid AND action = \'adjust\' AND scope = \'account\' AND source = :src';
+    $twice = $pdiff !== '' && !$pbad && preg_match('/^[0-9a-f]{32}$/D', $pkey) && ($res = $db->getSqlQuery($sql, ['uid' => $uid, 'src' => 'adjust:'.$pkey]))
+        && $res->fetchColumn();
+    if ($twice) $stop[] = _POINTS_TWICE;
+    if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
+    if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
+    if (!$stop) {
+        $text = _SUCCSAVE;
+        $open = $db->setSqlBegin();
+        if ($uid) {
+            if ($pass && $pass == $pass2) {
                 $saltpass = getPassHash($pass);
-                $ok = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum,'
-                    .' blockon, block, theme, newslet, lang, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ,'
-                    .' :from, :interests, :sig, :viewemail, :password, COALESCE(NULLIF(:storynum, 0), DEFAULT(storynum)), :blockon, :block, :theme, :newsletter, :lang,'
-                    .' :warnings, :access, :group, :birthday, :gender, :field)', [
+                $ok = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
+                    .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = COALESCE(NULLIF(:storynum, 0),'
+                    .' storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access,'
+                    .' grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
                     'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
                     'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block,
                     'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth,
-                    'gender' => $gender, 'field' => $field
+                    'gender' => $gender, 'field' => $field, 'id' => $uid
+                ]);
+            } else {
+                $ok = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
+                    .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = COALESCE(NULLIF(:storynum, 0), storynum),'
+                    .' blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group,'
+                    .' birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
+                    'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
+                    'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender,
+                    'field' => $field, 'id' => $uid
                 ]);
             }
-            $twin = $ok ? '' : $db->getSqlTwin();
-            $rid = $uid ? intval($uid) : ($ok ? intval($db->getSqlLastId()) : 0);
-            $ok = $open && $ok && (new Route($db))->setRouteName('user', $rid, 'users', $uname, $uname) !== '' && $db->setSqlCommit();
-            if ($open && !$ok) $db->setSqlRollback();
-            if (!$ok) {
-                $stop[] = match ($twin) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
-                add($twice);
-                return;
-            }
-            $data = ['aid' => intval(substr($admin[0], 0, 11)), 'note' => $pnote, 'points' => intval($pdiff)];
-            if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.$pkey, (int)$uid, $data)) {
-                setRedirect($afile.'.php?name=account&op=add&id='.$uid, false, 302, _POINTS_BADSAVE, true);
-            }
-            if ($mail) {
-                $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
-                $mailtext = getVar('post', 'mailtext', 'text');
-                $msg = nl2br($prs->filterContent(filterTrustedTags(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), isAdmin(true)), false, 'all'), false);
-                $mailer->addQueue(['kind' => 'account', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                $text = _MAIL_SEND;
-            }
-            setRedirect($afile.'.php?name=account', false, 302, $text);
         } else {
-            add($twice);
+            $saltpass = getPassHash($pass);
+            $ok = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum,'
+                .' blockon, block, theme, newslet, lang, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ,'
+                .' :from, :interests, :sig, :viewemail, :password, COALESCE(NULLIF(:storynum, 0), DEFAULT(storynum)), :blockon, :block, :theme, :newsletter, :lang,'
+                .' :warnings, :access, :group, :birthday, :gender, :field)', [
+                'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
+                'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block,
+                'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth,
+                'gender' => $gender, 'field' => $field
+            ]);
         }
+        $twin = $ok ? '' : $db->getSqlTwin();
+        $rid = $uid ? intval($uid) : ($ok ? intval($db->getSqlLastId()) : 0);
+        $ok = $open && $ok && (new Route($db))->setRouteName('user', $rid, 'users', $uname, $uname) !== '' && $db->setSqlCommit();
+        if ($open && !$ok) $db->setSqlRollback();
+        if (!$ok) {
+            $stop[] = match ($twin) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
+            add($twice);
+            return;
+        }
+        $data = ['aid' => intval(substr($admin[0], 0, 11)), 'note' => $pnote, 'points' => intval($pdiff)];
+        if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.$pkey, (int)$uid, $data)) {
+            setRedirect($afile.'.php?name=account&op=add&id='.$uid, false, 302, _POINTS_BADSAVE, true);
+        }
+        if ($mail) {
+            $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
+            $mailtext = getVar('post', 'mailtext', 'text');
+            $msg = nl2br($prs->filterContent(filterTrustedTags(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), isAdmin(true)), false, 'all'), false);
+            $mailer->addQueue(['kind' => 'account', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
+            $text = _MAIL_SEND;
+        }
+        setRedirect($afile.'.php?name=account', false, 302, $text);
+    } else {
+        add($twice);
     }
 }
 
@@ -1064,6 +1062,7 @@ function config(): void {
 function save(): void {
     global $afile;
     $iswarn = !checkAdminPost('account');
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
         $cont = [
@@ -1089,9 +1088,10 @@ function save(): void {
             'name_b' => strtolower(strtr(getVar('post', 'nameb', 'text'), $protect)),
             'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
         ];
-        setConfigFile('users.php', $cont);
+        $iswarn = !setConfigFile('users.php', $cont);
+        if ($iswarn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=account&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=account&op=config', false, 302, $text, $iswarn);
 }
 
 function newdrop(): void {
@@ -1417,6 +1417,7 @@ function favconf(): void {
 function favsave(): void {
     global $afile;
     $warn = !checkAdminPost('account');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
             'num' => getVar('post', 'num', 'num', 15),
@@ -1426,9 +1427,10 @@ function favsave(): void {
             'favorites' => getVar('post', 'favorites', 'num'),
             'favact' => getVar('post', 'favact', 'num')
         ];
-        setConfigFile('favorites.php', $cont);
+        $warn = !setConfigFile('favorites.php', $cont);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=account&op=favconf', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=account&op=favconf', false, 302, $text, $warn);
 }
 
 function favdrop(): void {

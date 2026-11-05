@@ -228,6 +228,74 @@ class ConfigFileTest extends TestCase
         }
     }
 
+    # A refused write is a state the caller must name: a call that starts a statement throws its answer away and the screen flashes a success over it
+    #[Test]
+    public function noWriterDropsTheResult(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $files = array_merge(glob($root.'/admin/modules/*.php') ?: [], glob($root.'/modules/*/admin/index.php') ?: [], glob($root.'/modules/*/index.php') ?: []);
+        $iter = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/core', \FilesystemIterator::SKIP_DOTS));
+        foreach ($iter as $file) if ($file->getExtension() === 'php') $files[] = $file->getPathname();
+        $skip = [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT];
+        $drop = [];
+        $seen = 0;
+        foreach ($files as $path) {
+            $last = null;
+            foreach (token_get_all((string)file_get_contents($path)) as $tok) {
+                if (is_array($tok) && in_array($tok[0], $skip, true)) continue;
+                if (is_array($tok) && $tok[0] === T_STRING && $tok[1] === 'setConfigFile' && !(is_array($last) && $last[0] === T_FUNCTION)) {
+                    $seen++;
+                    $head = is_array($last) ? $last[0] : $last;
+                    if (in_array($head, [';', '{', '}', ')', ':', T_ELSE, T_OPEN_TAG], true)) {
+                        $drop[] = str_replace('\\', '/', substr($path, strlen($root) + 1)).':'.$tok[2];
+                    }
+                }
+                $last = $tok;
+            }
+        }
+        $this->assertGreaterThan(40, $seen, 'The scan no longer finds the writers');
+        $this->assertSame([], $drop, 'A call of setConfigFile() drops its result');
+    }
+
+    # A screen that saves a config file names a refused save by the journal: an interrupted operation or a failed write, never a success
+    #[Test]
+    public function aRefusedSaveIsNamed(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $miss = [];
+        foreach (array_merge(glob($root.'/admin/modules/*.php') ?: [], glob($root.'/modules/*/admin/index.php') ?: []) as $path) {
+            $code = (string)file_get_contents($path);
+            preg_match_all('/^function (\w+)\(.*?^}$/ms', $code, $all, PREG_SET_ORDER);
+            foreach ($all as [$body, $name]) {
+                if (!str_contains($body, 'setConfigFile(') || !str_contains($body, 'setRedirect(')) continue;
+                if (!str_contains($body, '_CONFIG_PENDING : _ERROR_UP')) $miss[] =substr($path, strlen($root) + 1).' '.$name;
+            }
+        }
+        $this->assertSame([], $miss, 'A save reports a refused config write as a success or a bare error');
+    }
+
+    # A handler that changes a few keys of an area writes those keys on the area as the base, so a key another screen owns survives its save
+    #[Test]
+    public function thePartWritersWriteOnTheBase(): void
+    {
+        $list = [
+            ['admin/modules/security.php', 'bansave', 'security'],
+            ['admin/modules/security.php', 'passsave', 'security'],
+            ['admin/modules/update.php', 'save', 'update'],
+            ['admin/modules/config.php', 'replacesave', 'replace'],
+            ['admin/modules/modules.php', 'status', 'modules'],
+            ['admin/modules/modules.php', 'save', 'modules'],
+            ['modules/rss/admin/index.php', 'save', 'rss'],
+            ['modules/search/admin/index.php', 'reindex', 'search'],
+            ['modules/search/admin/index.php', 'modadd', 'search'],
+        ];
+        foreach ($list as [$path, $func, $area]) {
+            $body = $this->getBody($path, $func);
+            $rule = '/setConfigFile\(\''.$area.'\.php\', [^;]+, \(?(array\))?\(?\$conf\[\''.$area.'\'\]/';
+            $this->assertMatchesRegularExpression($rule, $body, $path.' '.$func.' writes its whole area');
+        }
+    }
+
     # The restore entry belongs to the main administrator alone: the module guard, the scoped POST token, and a screen that reads nothing but the journal
     #[Test]
     public function theRestoreEntryIsGuarded(): void

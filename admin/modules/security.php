@@ -24,7 +24,6 @@ function banlist(): void {
         $subs .= $tpl->getHtmlFrag('tabs-link', ['href' => $base.$key, 'hx_get' => $base.$key, 'is_active' => ($key === 'user') === $user, 'label' => $label, 'title' => $label]);
     }
     $note = checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert();
-    if (getVar('get', 'send', 'var')) $note .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $rows = [];
     if (!$user) {
         foreach (explode('||', (string)$conf['security']['blocker_ip']) as $val) {
@@ -206,13 +205,14 @@ function banlist(): void {
 }
 
 function bansave(): void {
-    global $db, $conf, $afile, $tpl, $prs, $mailer;
+    global $db, $conf, $afile, $prs, $mailer;
     $warn = !checkAdminPost('security');
-    $send = '';
     $id = getVar('post', 'id', 'num');
     $kind = getVar('post', 'kind', 'word', '');
     $keys = getVar('post', 'id[]', 'raw');
     $done = false;
+    $isban = false;
+    $text = $warn ? _TOKENMISS : _ERROR;
     if (!$warn) {
         $cidr = getVar('post', 'cidr', 'text');
         $name = getVar('post', 'uname', 'name');
@@ -254,18 +254,22 @@ function bansave(): void {
             $time = time() + (($time > 0) ? $time : 30) * 86400;
             $cont['blocker_user'] .= $name.'|'.$time.'|'.$info.'||';
             $done = true;
-            if ($mail) {
-                [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
-                $subject = $conf['sitename'].' - '._SECURITY;
-                $msg = nl2br($prs->filterContent(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), false, 'all'), false);
-                $mailer->addQueue(['kind' => 'security', 'email' => $mail_addr, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                $send = '&send=1';
-            }
+            $isban = true;
         }
-        if ($done) setConfigFile('security.php', $cont);
+        if ($done) {
+            $done = setConfigFile('security.php', ['blocker_ip' => $cont['blocker_ip'], 'blocker_user' => $cont['blocker_user']], $conf['security']);
+            $text = $done ? _SUCCSAVE : (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP);
+        }
+        if ($done && $isban && $mail) {
+            [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
+            $subject = $conf['sitename'].' - '._SECURITY;
+            $msg = nl2br($prs->filterContent(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), false, 'all'), false);
+            $mailer->addQueue(['kind' => 'security', 'email' => $mail_addr, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
+            $text = _MAIL_SEND;
+        }
     }
     $kind = ($id === 4 || $kind === 'user') ? 'user' : 'ip';
-    setRedirect($afile.'.php?name=security&op=banlist&kind='.$kind.$send, false, 302, $warn ? _TOKENMISS : ($done ? '' : _ERROR), !$done);
+    setRedirect($afile.'.php?name=security&op=banlist&kind='.$kind, false, 302, $text, !$done);
 }
 
 function passwd(): void {
@@ -339,6 +343,7 @@ function passwd(): void {
 function passsave(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('security');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $protect = ["\r" => '', "\n" => '', ' ' => ''];
         $admin_ip = getVar('post', 'admin_ip', 'text');
@@ -355,14 +360,11 @@ function passsave(): void {
             if ($cidr !== false) $ips[] = $cidr;
         }
         $hops = array_map('getIpCidr', preg_split('#[\s,]+#', getVar('post', 'proxy', 'text', ''), -1, PREG_SPLIT_NO_EMPTY) ?: []);
-        $cont = $conf['security'];
-        $cont['proxy'] = implode(',', array_filter($hops));
-        $cont['admin_ip'] = implode(',', $ips);
-        $cont['login'] = $xlogin;
-        $cont['password'] = $xpassword;
-        setConfigFile('security.php', $cont);
+        $cont = ['proxy' => implode(',', array_filter($hops)), 'admin_ip' => implode(',', $ips), 'login' => $xlogin, 'password' => $xpassword];
+        $warn = !setConfigFile('security.php', $cont, $conf['security']);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=security&op=passwd', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=security&op=passwd', false, 302, $text, $warn);
 }
 
 function oauthkeys(): void {
@@ -463,6 +465,7 @@ function oauthkeys(): void {
 function oauthsave(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('security');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
         $cont = [
@@ -478,9 +481,10 @@ function oauthsave(): void {
                 'secret' => strtr(getVar('post', 'msecret', 'text'), $protect),
             ],
         ];
-        setConfigFile('oauth.php', $cont, $conf['oauth'] ?? []);
+        $warn = !setConfigFile('oauth.php', $cont, $conf['oauth'] ?? []);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=security&op=oauthkeys', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=security&op=oauthkeys', false, 302, $text, $warn);
 }
 
 function config(): void {
@@ -755,7 +759,9 @@ function configsave(): void {
                 'storage' => 'file',
             ],
         ];
-        setConfigFile('security.php', $cont, $conf['security']);
+        $warn = !setConfigFile('security.php', $cont, $conf['security']);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
+        if ($warn && $move && rename(PUBLIC_DIR.'/'.$nfile.'.php', PUBLIC_DIR.'/'.$tafile.'.php')) $afile = $tafile;
     }
     setRedirect($afile.'.php?name=security&op=config', false, 302, $text, $warn);
 }

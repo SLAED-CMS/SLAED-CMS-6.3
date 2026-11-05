@@ -304,12 +304,14 @@ function config(): void {
 function configsave(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('logs');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = ['log_size' => getVar('post', 'log_size', 'num', '1048576')];
         foreach (['error_log', 'write_h', 'write_w', 'log', 'log_a', 'log_u'] as $name) $cont[$name] = getVar('post', $name, 'num');
-        setConfigFile('security.php', $cont, $conf['security']);
+        $warn = !setConfigFile('security.php', $cont, $conf['security']);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=logs&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=logs&op=config', false, 302, $text, $warn);
 }
 
 function info(): void {

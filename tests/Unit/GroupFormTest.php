@@ -38,7 +38,7 @@ final class GroupFormTest extends TestCase
     {
         $data = $this->getProbe('save', ['post' => ['points' => '1000'] + self::POST, 'row' => ['Пользователи', '1000']]);
         $this->assertArrayNotHasKey('write', $data);
-        $this->assertSame('taken Пользователи 1 000', $data['stop']);
+        $this->assertSame(['taken Пользователи 1 000'], $data['stop']);
         $this->assertSame(['points' => 1000, 'id' => 0], $data['read'][0]);
     }
 
@@ -76,11 +76,11 @@ final class GroupFormTest extends TestCase
     #[Test]
     public function aBadIconOrColourIsRefused(): void
     {
-        $this->assertSame('_groups_badrank', $this->getProbe('save', ['post' => ['rank_icon' => 'Star Fill"'] + self::POST])['stop']);
-        $this->assertSame('_groups_badrank', $this->getProbe('save', ['post' => ['rank_color' => 'red'] + self::POST])['stop']);
+        $this->assertSame(['_groups_badrank'], $this->getProbe('save', ['post' => ['rank_icon' => 'Star Fill"'] + self::POST])['stop']);
+        $this->assertSame(['_groups_badrank'], $this->getProbe('save', ['post' => ['rank_color' => 'red'] + self::POST])['stop']);
         $data = $this->getProbe('save', ['post' => ['color' => 'red;x'] + self::POST]);
         $this->assertArrayNotHasKey('write', $data);
-        $this->assertStringContainsString('_groups_badcolor', $data['stop']);
+        $this->assertContains('_groups_badcolor', $data['stop']);
     }
 
     # The stand's top step, 15 000 with five of five stars: half again above rounded to a thousand, a sixth mark lit, the steel kept, the first swatch

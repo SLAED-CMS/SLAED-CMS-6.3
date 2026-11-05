@@ -246,6 +246,7 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $iswarn = !checkAdminPost('forum');
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $cont = [
             'defis' => urlencode(getVar('post', 'defis', 'let', '>')),
@@ -265,9 +266,10 @@ function configsave(): void {
             'profil' => getVar('post', 'profil', 'num', 0),
             'web' => getVar('post', 'web', 'num', 0),
         ];
-        setConfigFile('forum.php', $cont);
+        $iswarn = !setConfigFile('forum.php', $cont);
+        if ($iswarn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=forum&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=forum&op=config', false, 302, $text, $iswarn);
 }
 
 function sync(): void {

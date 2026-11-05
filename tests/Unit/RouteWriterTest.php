@@ -87,6 +87,13 @@ final class RouteWriterTest extends TestCase
         $this->assertSame([303, 0, [['forum/modul-poiska', 2, null]]], $run['delete']);
     }
 
+    # A user save of the panel without its token goes back to the form with the flash and writes no row, where it used to answer an empty page
+    #[Test]
+    public function aUserSaveWithoutTheTokenGoesBackToItsForm(): void
+    {
+        $this->assertSame([303, true, 0], $this->getRun()['user']['forged']);
+    }
+
     # An account gets its path when its row is created, a new login moves it, the freed path is never given to the next account, a deletion leaves every path gone
     #[Test]
     public function anAccountGetsMovesAndLosesItsPath(): void

@@ -103,11 +103,7 @@ function add(): void {
     $aid = getVar('req', 'id', 'num', 0);
     $stop = $GLOBALS['stop'] ?? [];
     if ($aid) {
-        $row = getAdminrow($aid);
-        if (!$row) {
-            setRedirect($afile.'.php?name=admins');
-            return;
-        }
+        $row = getAdminrow($aid) ?: setRedirect($afile.'.php?name=admins', false, 302, _NONE_FOUND, true);
         [$aid, $name, $title, $url, $email, $super, $editor, $smail, $mods, $lang] = $row;
         $mods = implode(',', filterAdminmods(getAdminModuleNames((string)$mods)));
     } else {
@@ -449,9 +445,7 @@ function save(): void {
 function delete(): void {
     global $db, $afile, $admin;
     $aid = getVar('post', 'aid', 'num', 0);
-    if (!$aid) {
-        setRedirect($afile.'.php?name=admins');
-    }
+    if (!$aid) setRedirect($afile.'.php?name=admins', false, 302, _NONE_FOUND, true);
     $warn = !checkAdminPost('admins');
     $text = _SUCCDELETE;
     if (!$warn && $aid) {
@@ -463,7 +457,7 @@ function delete(): void {
             $text = _ADMINLASTSUPER;
         } else {
             $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]);
-            if (!$res || $res->rowCount() < 1) [$warn, $text] = [true, _ERROR];
+            if (!$res || $res->rowCount() < 1) [$warn, $text] = [true, $res ? _NONE_FOUND : _ERROR];
         }
     } else {
         $text = _TOKENMISS;

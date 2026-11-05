@@ -3242,9 +3242,11 @@ function getRouteWriters(PDO $pdo, string $work): array {
     $form = getRouteReply('root', 'GET', 'admin.php?name=account&op=add')['body'];
     $pairs = getRouteInputs($form, 'addsave');
     $user = getRoutePairs($pairs, ['uname' => 'Eduard', 'email' => 'eduard@probe.test', 'pass' => 'Secret-123', 'pass2' => 'Secret-123']) + ['sig' => '', 'block' => ''];
+    $forged = getRouteReply('root', 'POST', 'admin.php', array_diff_key($user, ['token' => 1]));
+    $forged = [$forged['code'], str_ends_with($forged['head']['location'] ?? '', 'name=account&op=add'), (int)$one('SELECT COUNT(*) FROM '.$pre.'users WHERE name = \'Eduard\'')];
     $made = getRouteReply('root', 'POST', 'admin.php', $user);
     $uid = (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'Eduard\'');
-    $out['user'] = ['made' => [$made['code'], getRouteAddress($pdo, 'user', $uid)]];
+    $out['user'] = ['made' => [$made['code'], getRouteAddress($pdo, 'user', $uid)], 'forged' => $forged];
     $pairs = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id='.$uid)['body'], 'addsave');
     $same = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs) + ['sig' => '', 'block' => '']);
     $out['user']['same'] = [$same['code'], getRouteAddress($pdo, 'user', $uid)];
@@ -4189,9 +4191,12 @@ function getRouteBlocks(PDO $pdo): array {
         $box($page('root', 'admin.php?name=blocks&op=edit&id=95'), 'page-10'), substr_count($opts, '<option'), (bool)preg_match('#value="[bf]"#', $opts)];
     $tok = getRouteToken($addf, 'addsave');
     $over = ['token' => $tok, 'title' => 'Too long', 'content' => str_repeat('x', 65536), 'bpos' => 'r', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd'];
-    $out['room'] = [getRouteReply('root', 'POST', 'admin.php?name=blocks', $over + ['op' => 'addsave'])['code'],
-        getRouteReply('root', 'POST', 'admin.php?name=blocks', $over + ['op' => 'editsave', 'bid' => '90', 'oldposition' => 'r'])['code'],
-        (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE title = \'Too long\''), str_contains($addf, 'blocks.content')];
+    $roomadd = getRouteReply('root', 'POST', 'admin.php?name=blocks', $over + ['op' => 'addsave']);
+    $roomedit = getRouteReply('root', 'POST', 'admin.php?name=blocks', $over + ['op' => 'editsave', 'bid' => '90', 'oldposition' => 'r']);
+    $again = fn(array $rep, string $op): bool => str_contains($rep['body'], 'value="Too long"') && str_contains($rep['body'], 'sl-alert-list')
+        && getRouteToken($rep['body'], $op) !== '';
+    $out['room'] = [$roomadd['code'], $roomedit['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE title = \'Too long\''), str_contains($addf, 'blocks.content'),
+        $again($roomadd, 'addsave'), $again($roomedit, 'editsave')];
     $add = ['op' => 'addsave', 'token' => $tok, 'content' => 'added text', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd', 'blockwhere[]' => 'all'];
     getRouteReply('root', 'POST', 'admin.php?name=blocks', $add + ['title' => 'Added', 'bpos' => 'r']);
     $banned = getRouteReply('root', 'POST', 'admin.php?name=blocks', $add + ['title' => 'Banned', 'bpos' => 'b']);

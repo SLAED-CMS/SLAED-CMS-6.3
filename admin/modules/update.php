@@ -252,11 +252,10 @@ function save(): void {
     global $afile, $conf;
     if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update&tab=1', false, 302, _TOKENMISS, true);
     $bit = static fn(string $key): string => (getVar('post', $key, 'num', 1) === 1) ? '1' : '0';
-    $data = (array)($conf['update'] ?? []);
-    $data['check'] = ['upcheck' => $bit('upcheck'), 'channel' => (getVar('post', 'channel', 'var', '') === 'beta') ? 'beta' : 'stable', 'keepbak' => $bit('keepbak'),
-        'upsite' => $bit('upsite')];
-    $done = setConfigFile('update.php', $data);
-    setRedirect($afile.'.php?name=update&tab=1', false, 302, $done ? _SUCCSAVE : _ERROR, !$done);
+    $data = ['check' => ['upcheck' => $bit('upcheck'), 'channel' => (getVar('post', 'channel', 'var', '') === 'beta') ? 'beta' : 'stable', 'keepbak' => $bit('keepbak'),
+        'upsite' => $bit('upsite')]];
+    $done = setConfigFile('update.php', $data, (array)($conf['update'] ?? []));
+    setRedirect($afile.'.php?name=update&tab=1', false, 302, $done ? _SUCCSAVE : (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP), !$done);
 }
 
 function check(): void {

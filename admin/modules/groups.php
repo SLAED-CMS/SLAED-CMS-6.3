@@ -131,7 +131,7 @@ function add(): void {
         $rank = trim((string)getVar('post', 'rank_icon', 'raw')).':'.min($total, intval(getVar('post', 'rank_lit', 'num'))).':'.$total.':'.$tone;
     } elseif ($id) {
         $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
-        [$gid, $grname, $intro, $points, $extra, $rank, $color] = $db->getSqlRow($result) ?: [0, '', '', 0, 0, '', ''];
+        [$gid, $grname, $intro, $points, $extra, $rank, $color] = $db->getSqlRow($result) ?: setRedirect($afile.'.php?name=groups', false, 302, _NONE_FOUND, true);
     } else {
         $next = getGroupNext();
         [$gid, $grname, $intro, $extra] = [0, '', '', 0];
@@ -162,7 +162,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
         'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $form = $tpl->getHtmlPart('group-form', [
         'action_url' => $afile.'.php',
         'list_url' => $afile.'.php?name=groups',
@@ -257,7 +257,7 @@ function save(): void {
             $taken = $db->getSqlRow($db->getSqlQuery('SELECT name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 AND points = :points AND id != :id LIMIT 1', [
                 'points' => $points, 'id' => intval($gid),
             ]));
-            if ($taken) $stop[] = sprintf(_GROUPS_TAKEN, htmlspecialchars((string)$taken[0]), number_format((int)$taken[1], 0, '', ' '));
+            if ($taken) $stop[] = sprintf(_GROUPS_TAKEN, (string)$taken[0], number_format((int)$taken[1], 0, '', ' '));
         }
     }
     if ($warn || !$stop) {
@@ -275,7 +275,6 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=groups', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
     } else {
-        $stop = implode("\n", $stop);
         add();
     }
 }

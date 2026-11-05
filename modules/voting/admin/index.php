@@ -208,7 +208,8 @@ function add(): void {
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->getSqlQuery('SELECT id, modul, title, body, answer, time, enddate, multi, lang, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
-        [$id, $modul, $title, $body, $answer, $date, $enddate, $multi, $lang, $acomm, $typ, $status] = $db->getSqlRow($result);
+        [$id, $modul, $title, $body, $answer, $date, $enddate, $multi, $lang, $acomm, $typ, $status] = $db->getSqlRow($result)
+            ?: setRedirect($afile.'.php?name=voting', false, 302, _NONE_FOUND, true);
         $path = (new Route($db))->getRouteList('poll', [intval($id)])[intval($id)] ?? '';
         $pname = substr((string)strrchr('/'.$path, '/'), 1);
         $body = explode('|', $body);
@@ -504,6 +505,7 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $iswarn = !checkAdminPost('voting');
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $cont = [
             'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
@@ -514,9 +516,10 @@ function configsave(): void {
             'answ' => getVar('post', 'answ', 'num', 10),
             'block' => getVar('post', 'block', 'num', 0),
         ];
-        setConfigFile('voting.php', $cont);
+        $iswarn = !setConfigFile('voting.php', $cont);
+        if ($iswarn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=voting&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=voting&op=config', false, 302, $text, $iswarn);
 }
 
 function info(): void {

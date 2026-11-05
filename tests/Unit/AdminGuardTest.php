@@ -312,6 +312,76 @@ final class AdminGuardTest extends TestCase
             'A gone category is read as a row of nulls');
     }
 
+    # A missing token answers with the flash back to the form or the list: the alert in place of a page, the silent redirects and the empty page of the user save are gone
+    #[Test]
+    public function aMissingTokenAnswersWithAFlash(): void
+    {
+        foreach (array_merge($this->getAdminFiles(), ['modules/forum/index.php']) as $path) {
+            $this->assertStringNotContainsString("'text' => _TOKENMISS]", $this->getFile($path), $path.' prints a missing token as an alert of its page');
+        }
+        $user = "if (!checkAdminPost('account')) setRedirect(\$afile.'.php?name=account&op=add'.(\$uid ? '&id='.\$uid : ''), false, 302, _TOKENMISS, true);";
+        $this->assertStringContainsString($user, $this->getBody('modules/account/admin/index.php', 'addsave'), 'A user save without the token answers an empty page');
+        $this->assertStringContainsString("if (!checkAdminPost('blocks')) setRedirect(\$afile.'.php?name=blocks&op=fileedit', false, 302, _TOKENMISS, true);",
+            $this->getBody('admin/modules/blocks.php', 'filecode'), 'The code of a file block answers a missing token with a page of its own');
+        $dump = $this->getBody('admin/modules/database.php', 'dump');
+        $this->assertStringContainsString("if (\$run && !checkAdminPost('database')) setRedirect(\$afile.'.php?name=database&op=dump', false, 302, _TOKENMISS, true);", $dump,
+            'A query without the token answers with a page of its own');
+        $this->assertStringContainsString('_DB_RUNBUSY', $dump, 'A run that is already active is named by a literal');
+        $this->assertSame(3, substr_count($this->getFile('modules/forum/index.php'), "setRedirect(getSeoUrl(['name' => \$conf['name']]), false, 302, _TOKENMISS, true);"),
+            'A write of the forum without the token is not named');
+        $this->assertStringContainsString('_TOKENMISS, true);', $this->getBody('admin/index.php', 'deleteAdminSession'), 'A logout without the token goes back silently');
+    }
+
+    # The edit of a record that is not there goes back to its list with _NONE_FOUND, never to an empty form, an alert in place of the form or a redirect without a word
+    #[Test]
+    public function aGoneRecordReturnsToItsList(): void
+    {
+        $sites = [
+            ['admin/modules/admins.php', 'add'], ['admin/modules/admins.php', 'delete'], ['modules/account/admin/index.php', 'add'], ['admin/modules/groups.php', 'add'],
+            ['modules/voting/admin/index.php', 'add'], ['admin/modules/blocks.php', 'edit'], ['admin/modules/blocks.php', 'filecode'], ['admin/modules/comments.php', 'edit'],
+            ['admin/modules/newsletter.php', 'add'], ['admin/modules/lang.php', 'fileedit'], ['modules/search/admin/index.php', 'edit'],
+            ['admin/modules/modules.php', 'edit'], ['modules/master/admin/index.php', 'share'],
+        ];
+        foreach ($sites as [$path, $name]) {
+            $this->assertStringContainsString('_NONE_FOUND, true);', $this->getBody($path, $name), $name.'() of '.$path.' does not go back to its list with _NONE_FOUND');
+        }
+        foreach ($this->getAdminFiles() as $path) $this->assertStringNotContainsString('_NO_INFO, true);', $this->getFile($path), $path.' names a gone record _NO_INFO');
+    }
+
+    # A refused form shows its list of reasons in messages over the form again: no joined text, no bare page with a back link
+    #[Test]
+    public function aRefusedFormShowsItsListOverTheForm(): void
+    {
+        foreach (array_merge($this->getAdminFiles(), ['admin/index.php']) as $path) {
+            $code = $this->getFile($path);
+            $this->assertStringNotContainsString('implode("\n", $stop)', $code, $path.' joins the refusals into one text');
+            $this->assertDoesNotMatchRegularExpression("/'text' => \\\$stop(text)?\]/", $code, $path.' prints the refusals as a text');
+        }
+        $add = $this->getBody('admin/modules/blocks.php', 'addsave');
+        $edit = $this->getBody('admin/modules/blocks.php', 'editsave');
+        $this->assertStringNotContainsString('back_text', $add.$edit, 'A refused block answers a bare page with a back link');
+        $this->assertStringContainsString('add($sent, [', $add, 'A refused new block loses what was typed');
+        $this->assertStringContainsString('edit((int)$bid, $sent, [$room]);', $edit, 'A refused block edit loses what was typed');
+    }
+
+    # A count after a POST travels in the flash by sprintf(), never as a flag of the address read into a second alert
+    #[Test]
+    public function aCountTravelsInTheFlash(): void
+    {
+        $search = $this->getFile('modules/search/admin/index.php');
+        foreach (['&reindex=', '&pick=', "getVar('get', 'reindex'", "getVar('get', 'pick'"] as $flag) {
+            $this->assertStringNotContainsString($flag, $search, 'The search settings carry a count in the address: '.$flag);
+        }
+        $this->assertStringContainsString('sprintf(_SEARCHAUTODONE, ', $this->getBody('modules/search/admin/index.php', 'reindex'), 'The reindex count left the flash');
+        $this->assertStringContainsString('sprintf(_SEARCH_ADDED, ', $this->getBody('modules/search/admin/index.php', 'modadd'), 'The count of added modules left the flash');
+        $security = $this->getFile('admin/modules/security.php');
+        $this->assertStringNotContainsString('&send=1', $security, 'The ban mail is told by a flag of the address');
+        $this->assertStringNotContainsString("getVar('get', 'send'", $security, 'The ban list reads a flag of the address into an alert');
+        $save = $this->getBody('admin/modules/security.php', 'bansave');
+        $this->assertStringContainsString('$text = $done ? _SUCCSAVE : ', $save, 'A saved ban list flashes an empty text');
+        $this->assertStringContainsString('$text = _MAIL_SEND;', $save, 'A queued ban mail is not named in the flash');
+    }
+
     # The right node is one box of the Node group: listed among the modules too, its second box sent the right again when the first was cleared
     #[Test]
     public function theRightNodeHasOneBox(): void

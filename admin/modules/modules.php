@@ -90,7 +90,9 @@ function modules(): void {
         sort($removed, SORT_NATURAL | SORT_FLAG_CASE);
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
     }
-    if ($config) setConfigFile('modules.php', $conf['modules']);
+    if ($config && !setConfigFile('modules.php', $conf['modules'])) {
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP]);
+    }
     $mods = [];
     foreach ($conf['modules'] as $mname => $mdata) {
         $type = (int)($mdata['type'] ?? 1);
@@ -183,7 +185,7 @@ function edit(): void {
     global $conf, $db, $afile, $tpl;
     $mod = getVar('get', 'mod', 'var');
     if (!isset($conf['modules'][$mod])) {
-        setRedirect($afile.'.php?name=modules', false, 302, _NO_INFO, true);
+        setRedirect($afile.'.php?name=modules', false, 302, _NONE_FOUND, true);
         return;
     }
     $lang = $conf['modules'][$mod]['lang'] ?? '_'.strtoupper($mod);
@@ -314,11 +316,12 @@ function status(): void {
     $type = getVar('post', 'type', 'num', 2);
     $warn = !checkAdminPost('modules');
     $done = !$warn && isset($conf['modules'][$mod]);
+    $text = $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR);
     if ($done) {
-        $conf['modules'][$mod]['active'] = $act;
-        setConfigFile('modules.php', $conf['modules']);
+        $done = setConfigFile('modules.php', [$mod => ['active' => $act]], $conf['modules']);
+        if (!$done) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), true, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
+    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), true, 302, $text, !$done);
 }
 
 function save(): void {
@@ -326,12 +329,13 @@ function save(): void {
     $mod = getVar('post', 'mod', 'var');
     $typef = getVar('post', 'type', 'num', 2);
     $warn = !checkAdminPost('modules');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn && isset($conf['modules'][$mod])) {
         $view = getVar('post', 'view', 'num');
         $icon = strtolower(getVar('post', 'icon', 'var'));
         if (!preg_match('/^[a-z0-9-]+$/', $icon)) $icon = 'puzzle';
         $type = $conf['modules'][$mod]['type'] ?? 1;
-        $conf['modules'][$mod] = [
+        $row = [
             'lang' => getVar('post', 'lang', 'var', '_'.strtoupper($mod)),
             'icon' => $icon,
             'active' => getVar('post', 'active', 'num'),
@@ -342,9 +346,10 @@ function save(): void {
             'top' => getVar('post', 'top', 'num'),
             'type' => $type,
         ];
-        setConfigFile('modules.php', $conf['modules']);
+        $warn = !setConfigFile('modules.php', [$mod => $row], $conf['modules']);
+        if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=modules'.($typef !== 2 ? '&type='.$typef : ''), false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=modules'.($typef !== 2 ? '&type='.$typef : ''), false, 302, $text, $warn);
 }
 
 function add(): void {

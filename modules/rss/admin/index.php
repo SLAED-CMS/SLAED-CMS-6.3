@@ -104,8 +104,9 @@ function save(): void {
     $tab = getVar('post', 'tab', 'num', 0);
     if ($tab < 0 || $tab > 1) $tab = 0;
     $iswarn = !checkAdminPost('rss');
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
-        $cont = $conf['rss'] ?? [];
+        $cont = [];
         if ($tab === 1) {
             $cont['min'] = getVar('post', 'min', 'num', 10);
             $cont['max'] = getVar('post', 'max', 'num', 100);
@@ -125,9 +126,10 @@ function save(): void {
             }
             $cont['rss'] = $rss;
         }
-        setConfigFile('rss.php', $cont);
+        $iswarn = !setConfigFile('rss.php', $cont, $conf['rss'] ?? []);
+        if ($iswarn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
-    setRedirect($afile.'.php?name=rss&tab='.$tab, false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=rss&tab='.$tab, false, 302, $text, $iswarn);
 }
 
 function info(): void {

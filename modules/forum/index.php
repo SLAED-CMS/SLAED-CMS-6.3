@@ -923,10 +923,7 @@ function checkForumPost(): bool {
 # A moderator acts only on the topics stored in the category they moderate, whatever else the form lists
 function move(): void {
     global $db, $conf;
-    if (!checkForumPost()) {
-        setRedirect(getSeoUrl(['name' => $conf['name']]));
-        return;
-    }
+    if (!checkForumPost()) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $cat = getVar('post', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
@@ -1149,12 +1146,7 @@ function pmoder(int|string $status, int $subh): string {
 # A named post or topic brings its own category and topic through getForumPlace(), so neither the rights nor the counters can be pointed at another category
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
-    if (!checkForumPost()) {
-        setHead(['title' => _FORUM, 'kind' => 'utility', 'robots' => 'noindex, follow']);
-        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    if (!checkForumPost()) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $fid = getVar('post', 'fid', 'num');
     $pid = getVar('post', 'pid', 'num');
     $place = getForumPlace(intval($fid ?: $pid));
@@ -1314,10 +1306,7 @@ function send(): void {
 function delete(int|string|null $id = null): void {
     global $db, $conf, $pnt;
     $hasargs = ($id !== null);
-    if (!$hasargs && !checkForumPost()) {
-        setRedirect(getSeoUrl(['name' => $conf['name']]));
-        return;
-    }
+    if (!$hasargs && !checkForumPost()) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
     $catid = getForumPlace(intval($id))['cid'];
     $lid = 0;
