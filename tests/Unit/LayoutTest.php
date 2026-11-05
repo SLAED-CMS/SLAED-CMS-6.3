@@ -151,7 +151,7 @@ final class LayoutTest extends TestCase
         $this->assertSame(0, $this->getReader(['v' => 0, 'home' => 1])->getHomeKey());
     }
 
-    # The delivered config/layout.php as the index of git holds it: the working file of the stand is a layout of its own (.rules/git.md), never the delivery
+    # The delivered config/layout.php as the index of git holds it: a publication of the stand not yet staged is not the delivery
     private static function getShippedFile(): array
     {
         $proc = proc_open(['git', '-C', BASE_DIR, 'show', ':config/layout.php'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
@@ -167,40 +167,50 @@ final class LayoutTest extends TestCase
         return $data;
     }
 
-    # The delivered file is of this version and marked shipped; its home page holds the slot of the home module of the settings and has no columns
+    # Every menu item of a list with the items under it, at any depth
+    private static function getMenuItems(array $list): array
+    {
+        $out = [];
+        foreach ($list as $item) $out = [...$out, $item, ...self::getMenuItems($item['kids'])];
+        return $out;
+    }
+
+    # The delivered file, the layout of slaed.net, is of this version in the one shape; its home holds the slot of the home module, its page 404 is not indexed
     #[Test]
-    public function theShippedLayoutIsNeutral(): void
+    public function theShippedLayoutIsInTheOneShape(): void
     {
         $file = self::getShippedFile();
         $this->assertSame(['layout'], array_keys($file));
         $data = $file['layout'];
         $this->assertSame($data, Layout::getLayoutData($data), 'The delivered file is not in the one shape');
-        $this->assertTrue($data['shipped']);
         $read = $this->getReader($data);
         $home = $read->getHomeKey();
         $this->assertSame(1, $home);
         $this->assertSame('', $read->getSlotName($home));
-        $this->assertSame(['3', '3'], $read->getPageColumns($home));
         $this->assertTrue($read->getPage($data['notfound'])['noindex']);
         $ids = [];
         foreach ($data['pages'] as $key => $page) {
             $ids[] = $key;
             foreach ($page['sections'] as $sec) $ids[] = $sec['id'];
         }
-        foreach ($data['menus'] as $list) foreach ($list as $item) $ids[] = $item['id'];
+        foreach ($data['menus'] as $list) foreach (self::getMenuItems($list) as $item) $ids[] = $item['id'];
+        $this->assertSame(count($ids), count(array_unique($ids)), 'The file gives a number twice');
         $this->assertGreaterThan(max($ids), $data['next'], 'The counter of the file would give a number again');
     }
 
-    # The delivery carries a menu of the site's own sections in every menu of lite, every key of its parts and no value of one site: no contact, link, mark or tab
+    # The delivery fills every menu of lite and carries every key of its parts; an item leads to an address of the site from / or of https, a heading without an address holds items
     #[Test]
-    public function theShippedChromeIsNeutral(): void
+    public function theShippedChromeCarriesEveryPart(): void
     {
         $data = self::getShippedFile()['layout'];
         $places = (new Layout([], 'lite', false, false))->getThemePlaces();
         $this->assertSame(array_keys($places['menus']), array_keys($data['menus']));
         foreach ($data['menus'] as $list) {
             $this->assertNotSame([], $list);
-            foreach ($list as $item) $this->assertMatchesRegularExpression('#^/[a-z]*$#D', $item['href'], 'A shipped item leads outside the site');
+            foreach (self::getMenuItems($list) as $item) {
+                if ($item['href'] === '') $this->assertNotSame([], $item['kids'], 'A shipped item without an address holds no items');
+                else $this->assertMatchesRegularExpression('#^(/|https://)#', $item['href'], 'A shipped item has no address of the site or of https');
+            }
         }
         $keys = [];
         foreach ($places['parts'] as $part) {
@@ -211,7 +221,6 @@ final class LayoutTest extends TestCase
         $have = array_keys($data['theme']);
         sort($have);
         $this->assertSame($keys, $have, 'An update brings a site the keys of the delivery, so it carries every key lite declares');
-        $this->assertSame([], array_filter($data['theme'], static fn(mixed $v): bool => !in_array($v, ['', false, []], true)), 'The delivery carries a value of one site');
     }
 
     # The merge of an update writes the delivered file through the string form of setConfigFile(), every scalar as text; the site still has its home page and its slot
@@ -225,11 +234,12 @@ final class LayoutTest extends TestCase
         $file = self::getShippedFile();
         $read = $this->getReader($norm($file['layout']));
         $data = $read->getData();
-        $this->assertSame([Layout::VERSION, true, 1, 2], [$data['v'], $data['shipped'], $data['home'], $data['notfound']]);
+        $this->assertSame([Layout::VERSION, $file['layout']['shipped'], 1, 2], [$data['v'], $data['shipped'], $data['home'], $data['notfound']]);
         $this->assertSame(1, $read->getHomeKey());
         $this->assertSame('', $read->getSlotName(1));
-        $this->assertSame(['3', '3'], $read->getPageColumns(1));
+        $this->assertSame([$file['layout']['pages'][1]['side'], $file['layout']['pages'][1]['top']], $read->getPageColumns(1));
         $this->assertFalse(Layout::getLayoutData($norm(array_replace($file['layout'], ['shipped' => false])))['shipped']);
+        $this->assertTrue(Layout::getLayoutData($norm(array_replace($file['layout'], ['shipped' => true])))['shipped']);
     }
 
     # The home page and the page 404 never answer for a module; the first page whose shown slot holds it does, a hidden or switched off slot none
@@ -246,7 +256,7 @@ final class LayoutTest extends TestCase
         $this->assertNull($guest->getSlotName(4));
         $this->assertNull($guest->getSlotName(99));
         $this->assertSame(4, $this->getReader($this->getLayout(), true)->getModuleKey('forum'));
-        $this->assertSame(['2', '0'], $guest->getPageColumns(3));
+        $this->assertNull($guest->getPageColumns(3), 'The page of a module answered columns of its own');
         $this->assertSame(['3', '3'], $guest->getPageColumns(2));
         $this->assertSame(0, $this->getReader($this->getLayout(['home' => 9]))->getHomeKey());
     }

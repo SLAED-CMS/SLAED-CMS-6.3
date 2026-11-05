@@ -145,6 +145,25 @@ final class RequestWatchTest extends TestCase
         $this->assertStringStartsWith('192.0.2.1/32', $ban[0]);
     }
 
+    # A ban of the panel goes through the same list: past the cap of automatic bans the manual one is added after the other manual ones, and nothing expired stays
+    #[Test]
+    public function manualBanJoinsTheCappedList(): void
+    {
+        $ban = array_values(array_filter($this->getProbe()['hand']));
+        $this->assertCount(1002, $ban);
+        $this->assertStringStartsWith('192.0.2.1/32', $ban[0]);
+        $this->assertStringStartsWith('203.0.113.2/32|0|', $ban[1]);
+        $this->assertStringEndsWith('|manual', $ban[1]);
+        $this->assertSame(1000, count(array_filter($ban, static fn(string $v): bool => str_ends_with($v, '|hack'))));
+    }
+
+    # One rule of a new password for the site and the panel: both fields, the same text, minpass counted in bytes
+    #[Test]
+    public function aNewPasswordFollowsOneRule(): void
+    {
+        $this->assertSame(['nopass', 'nopass', 'differ', 'short: 8', '', ''], $this->getProbe()['rule']);
+    }
+
     # One security mail an hour, the next one saying how many it follows
     #[Test]
     public function securityMailIsHeldWithinTheHour(): void
@@ -170,11 +189,30 @@ final class RequestWatchTest extends TestCase
         $this->assertSame(['ran' => true, 'file' => true], $info['super_token']);
     }
 
-    # A write of the forum takes the token of a POST body alone: a token in the address opens nothing
+    # A write of the site takes the token of a POST body alone, in the scope of its module: a token in the address or of a GET opens nothing
     #[Test]
-    public function forumWriteTakesOnlyBodyToken(): void
+    public function siteWriteTakesOnlyBodyToken(): void
     {
-        $this->assertSame([false, false, true], $this->getProbe()['forum']);
+        $this->assertSame([[false, ''], [false, ''], [true, 'forum']], $this->getProbe()['site']);
+    }
+
+    # Every token write of a site module goes through checkSitePost() with its own scope, and its forms render the token of that scope
+    #[Test]
+    public function siteWritesShareOneTokenCheck(): void
+    {
+        $root = dirname(__DIR__, 2);
+        foreach (glob($root.'/modules/*/index.php') ?: [] as $file) {
+            $code = (string)file_get_contents($file);
+            $name = basename(dirname($file));
+            $this->assertStringNotContainsString("checkSiteToken(getVar('post', 'token'", $code, $name.' checks a body token by hand');
+            $this->assertStringNotContainsString('checkForumPost', $code, $name.' keeps a token check of its own');
+        }
+        $writes = ['forum' => 3, 'contact' => 1, 'recommend' => 1, 'account' => 9, 'node' => 3];
+        foreach ($writes as $name => $num) {
+            $code = (string)file_get_contents($root.'/modules/'.$name.'/index.php');
+            $this->assertSame($num, substr_count($code, "checkSitePost('".$name."')"), $name.' does not check each write in its own scope');
+            $this->assertStringNotContainsString("'value_attr' => getSiteToken(), 'input_attr' => ''])", $code, $name.' renders a form token of another scope');
+        }
     }
 
     # A password stored from any of the old escaped forms still opens, and nothing opens with a wrong or an empty one

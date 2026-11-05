@@ -61,9 +61,9 @@ final class LayoutDraftTest extends TestCase
         $this->assertSame(['undo' => 1, 'phone' => '+49 1', 'next' => 25], $data['back']);
         $this->assertSame('', $data['broken'], 'A draft that does not read did not start as the site');
         $this->assertFalse($data['panel'], 'A section of the panel got a page of the site');
-        $made = ['made' => ['key' => 20, 'mod' => 'news'], 'page' => ['Mod news', '2', '0', ''], 'slot' => ['id' => 21, 'type' => 'module', 'on' => true, 'module' => 'news'],
+        $made = ['made' => ['key' => 20, 'mod' => 'news'], 'page' => ['Mod news', null, null, ''], 'slot' => ['id' => 21, 'type' => 'module', 'on' => true, 'module' => 'news'],
             'dirty' => false, 'stored' => [1, 2, 9], 'next' => 20];
-        $this->assertSame($made, $data['made'], 'The page of a module is not made in memory with the columns of its module');
+        $this->assertSame($made, $data['made'], 'The page of a module is not made in memory, or stores columns of its own');
         $this->assertSame(['made' => false, 'title' => 'Changed', 'next' => 22, 'file' => []], $data['kept'], 'The first change did not write the page of a module');
     }
 

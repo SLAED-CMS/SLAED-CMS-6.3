@@ -235,6 +235,7 @@ function add(bool $fresh = false): void {
             'label_for' => 'f-email',
             'label_html' => _EMAIL,
             'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'email',
                 'name_attr' => 'email',
                 'input_id' => 'f-email',
                 'value_attr' => $email,
@@ -480,13 +481,14 @@ function add(bool $fresh = false): void {
     $rows[] = [
         'label_for' => 'f-pass',
         'label_html' => _PASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass', 'input_id' => 'f-pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass', 'input_id' => 'f-pass', 'value_attr' => '', 'maxlength_num' => 25,
+            'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'new-password']),
     ];
     $rows[] = [
         'label_for' => 'f-pass2',
         'label_html' => _RETYPEPASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass2', 'input_id' => 'f-pass2', 'value_attr' => '', 'maxlength_num' => 25,
-            'placeholder_text' => _RETYPEPASSWORD]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass2', 'input_id' => 'f-pass2', 'value_attr' => '', 'maxlength_num' => 25,
+            'placeholder_text' => _RETYPEPASSWORD, 'autocomplete_attr' => 'new-password']),
     ];
     $rows[] = [
         'label_for' => 'f-mail',
@@ -509,7 +511,7 @@ function add(bool $fresh = false): void {
                 'label_id' => ($fids = getFieldIds('', 'mailtext'))['label'], 'hint_id' => $fids['hint'],
                 'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MAIL_TEXT,
                     'id' => '3', 'name' => 'mailtext',
-                    'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'all',
+                    'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]'."\n"._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'all',
                     'store' => 'config', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '',
                 ]),
             ]]]),
@@ -535,7 +537,7 @@ function add(bool $fresh = false): void {
 }
 
 function addsave(): void {
-    global $db, $afile, $conf, $stop, $prs, $mailer, $pnt, $admin;
+    global $db, $afile, $stop, $pnt, $admin;
     $stop = [];
     $uid = getVar('post', 'uid', 'num');
     if (!checkAdminPost('account')) setRedirect($afile.'.php?name=account&op=add'.($uid ? '&id='.$uid : ''), false, 302, _TOKENMISS, true);
@@ -573,7 +575,7 @@ function addsave(): void {
     $flds = getFieldsPost('account', (string)$fold);
     $field = $flds['json'];
     $mail = getVar('post', 'mail', 'num');
-    if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
+    if (!$uid && (!$uname || !$email)) $stop[] = _ERROR_ALL;
     $stop = array_merge((array)$stop, $flds['stop']);
     if ($uname) {
         [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
@@ -587,7 +589,8 @@ function addsave(): void {
     }
     if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
     checkemail($email);
-    if ($pass != $pass2) $stop[] = _ERROR_PASS;
+    $chg = $pass !== '' || $pass2 !== '';
+    if ((!$uid || $chg) && ($rule = checkPassRule($pass, $pass2)) !== '') $stop[] = $rule;
     $pbad = !$uid || !preg_match('/^-?[1-9][0-9]{0,6}$/D', $pdiff) || abs(intval($pdiff)) > 1000000 || $pnote === '' || !$pnt->checkNote($pnote);
     if ($pdiff !== '' && ($pbad || !preg_match('/^[0-9a-f]{32}$/D', $pkey))) $stop[] = _POINTS_BADDIFF;
     $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_points WHERE uid = :uid AND action = \'adjust\' AND scope = \'account\' AND source = :src';
@@ -647,13 +650,7 @@ function addsave(): void {
         if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.$pkey, (int)$uid, $data)) {
             setRedirect($afile.'.php?name=account&op=add&id='.$uid, false, 302, _POINTS_BADSAVE, true);
         }
-        if ($mail) {
-            $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
-            $mailtext = getVar('post', 'mailtext', 'text');
-            $msg = nl2br($prs->filterContent(filterTrustedTags(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), isAdmin(true)), false, 'all'), false);
-            $mailer->addQueue(['kind' => 'account', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
-            $text = _MAIL_SEND;
-        }
+        if ($mail && $chg && addFormMail('account', $email, _USERPASSWORD.' '.$uname, ['[login]' => $uname, '[pass]' => $pass])) $text = _MAIL_SEND;
         setRedirect($afile.'.php?name=account', false, 302, $text);
     } else {
         add($twice);
@@ -1203,8 +1200,7 @@ function oauthunlink(): void {
     $iswarn = !checkAdminPost('account');
     $act = static function (int $id) use ($db, $admin): bool {
         $link = $db->getSqlRow($db->getSqlQuery('SELECT uid, provider FROM '.PREFIX_DB.'_user_oauth WHERE id = :id', ['id' => $id]));
-        $res = $link ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE id = :id', ['id' => $id]) : false;
-        if (!$res || $res->rowCount() < 1) return false;
+        if (!$link || Oauth::deleteLink(intval($link['uid']), (string)$link['provider'], true) !== '') return false;
         Logger::addOauth('info', 'oauth_admin_unlink', ['prov' => (string)$link['provider'], 'uid' => intval($link['uid']), 'actor' => (int)($admin[0] ?? 0)]);
         return true;
     };

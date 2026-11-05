@@ -50,6 +50,7 @@ define('_ACCOUNT_SOUNDNOTE','Conservé dans ce navigateur pour le site et le pan
 define('_ACCOUNT_SNDALERT','Notifications et questions');
 define('_ACCOUNT_SNDQUEUE','File de modération');
 define('_ACCOUNT_SNDWIN','File vidée');
+define('_ACCOUNT_NOLINK','Ce service externe n\'est pas lié à votre profil.');
 define('_ACTERROR1','Données de l\'utilisateur ne sont pas valides.<br>S\'il vous Plaît, vérifiez les données saisies, ou si Vous n\'êtes pas encore membre, alors cliquez inscription <a href="%s">ici</a>.');
 define('_ACTERROR2','Utilisateur à ces données dans notre base de données n\'est pas trouvé.<br>Vous pouvez Vous enregistrer de <a href="%s">ici</a>.');
 define('_ACTIVATIONERROR','Erreur lors de la revitalisation nouvel utilisateur');
@@ -61,7 +62,6 @@ define('_AVATARSAVE','Choisir un avatar');
 define('_AVATARSELECT','Choisissez votre avatar favori de la galerie, il suffit d\'appuyer sur le bouton gauche de la souris sur l\'image souhaitée.');
 define('_AVATARSETUP','Paramètres avatar');
 define('_BLANKFORAUTO','Le mot de passe peut ne pas indiquer, dans ce cas, le système génère automatiquement');
-define('_CHARMIN','Minimum le nombre de caractères de mot de passe');
 define('_CODEFOR','Le code d\'enregistrement pour');
 define('_CONFIRMATIONCODE','D\'une preuve de code');
 define('_ERRORINPUT','L\'erreur d\'autorisation');

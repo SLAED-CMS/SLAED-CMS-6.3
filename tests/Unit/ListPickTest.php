@@ -78,11 +78,14 @@ final class ListPickTest extends TestCase
         $this->assertFalse($data['warn'], 'The post of two rows was refused: '.$data['text']);
         $name = $case['file'].' '.$case['func'].'()';
         $writes = array_values(array_filter($data['write'], static fn(array $one): bool => in_array($one['sql'], ['DELETE', 'UPDATE'], true)));
-        $calls = array_values(array_filter($data['call'], static fn(array $one): bool => in_array($one[0], ['deleteAdminMessage', 'deleteQueueRows', 'deleteDeadMail'], true)));
+        $acts = ['deleteAdminMessage', 'deleteQueueRows', 'deleteDeadMail', 'deleteLink'];
+        $calls = array_values(array_filter($data['call'], static fn(array $one): bool => in_array($one[0], $acts, true)));
         match ($case['file'].' '.$case['func']) {
             'admin/modules/privat.php delete' => $this->assertSame([['deleteAdminMessage', [3, 5]]], $calls, $name),
             'admin/modules/newsletter.php drop' => $this->assertSame([['deleteQueueRows', [3, 5]]], $calls, $name),
             'admin/modules/newsletter.php revive' => $this->assertSame([['deleteDeadMail', [3, 5]]], $calls, $name),
+            'modules/account/admin/index.php oauthunlink' => $this->assertSame([['deleteLink', [7, 'github', true]], ['deleteLink', [8, 'google', true]]], $calls,
+                $name.' did not unlink both rows through the one writer with force'),
             'admin/modules/logs.php delete' => $this->assertSame(['user'], $data['logs'], $name),
             'admin/modules/scheduler.php delete' => $this->assertSame(['gamma'], array_keys($data['cfg']['scheduler.php']['jobs']), $name.' kept the wrong jobs'),
             'admin/modules/security.php bansave' => $this->assertSame(($case['post']['kind'] === 'ip') ? '10.0.0.2|h|200|b||' : 'bob|200|b||',
@@ -106,7 +109,7 @@ final class ListPickTest extends TestCase
             'search' => $sweep($cases['search'][0], 'probe_search', [3, 5]),
             'search top' => $sweep($cases['search'][0] + ['read' => ['3' => 'alpha', '5' => 'beta']], 'GROUP BY word) AS q', ['alpha', 'beta'], ['top' => 1]),
             'new users' => $sweep($cases['new users'][0], 'probe_users_temp', [3, 5]),
-            'oauth' => $sweep($cases['oauth'][0], 'probe_user_oauth AS o', [3, 5]),
+            'oauth' => $sweep($cases['oauth'][0], 'probe_user_oauth AS o', [7, 8]),
         ];
     }
 
@@ -122,7 +125,7 @@ final class ListPickTest extends TestCase
         $this->assertStringContainsString($case['from'], $data['sweep']['sql'], $name.' swept another list');
         $this->assertSame(['after' => 0, 'upto' => 9], array_intersect_key($data['sweep']['pars'], ['after' => 0, 'upto' => 0]), $name.' lost its cursor');
         $writes = array_filter($data['write'], static fn(array $one): bool => $one['sql'] === 'DELETE');
-        $calls = array_filter($data['call'], static fn(array $one): bool => in_array($one[0], ['deleteAdminMessage', 'deleteQueueRows', 'deleteDeadMail'], true));
+        $calls = array_filter($data['call'], static fn(array $one): bool => in_array($one[0], ['deleteAdminMessage', 'deleteQueueRows', 'deleteDeadMail', 'deleteLink'], true));
         $acted = [...array_map(static fn(array $one): mixed => $one['pars']['id'] ?? $one['pars']['word'] ?? null, $writes),
             ...array_map(static fn(array $one): mixed => $one[1][0], $calls)];
         $this->assertSame($case['acted'], $acted, $name.' did not act on the keys of its portion');

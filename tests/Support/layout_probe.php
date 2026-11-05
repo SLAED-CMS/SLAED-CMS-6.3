@@ -82,6 +82,11 @@ function getModuleName(string $mod): string {
     return 'Mod '.$mod;
 }
 
+# The room of a stored text, a stub of the probe: every text fits
+function checkEditorTextRoom(string $text, string $store): string {
+    return '';
+}
+
 try {
     require_once $psite.'/core/classes/layout.php';
     require_once $psite.'/core/classes/field.php';
@@ -91,7 +96,7 @@ try {
     $plift = array_merge($plift, ['setLayoutBlock', 'getLayoutMake', 'getLayoutAddr', 'setLayoutSecAct', 'setLayoutMenuAct', 'setLayoutItemAct', 'isLayoutSame']);
     $plift = array_merge($plift, ['getLayoutView', 'getLayoutPageTitle', 'getLayoutSecName', 'getLayoutFlat', 'getLayoutLookKeys', 'getLayoutChanges', 'getLayoutIssues']);
     $plift = array_merge($plift, ['setLayoutSecBack', 'setLayoutPresetPage', 'getLayoutSecLabel', 'setLayoutPageCopy', 'setLayoutTextPage', 'getLayoutAddrs']);
-    $plift = array_merge($plift, ['getLayoutModules', 'setLayoutSlotPage', 'getLayoutStored', 'getLayoutImport', 'getLayoutClean', 'getLayoutCleanItems']);
+    $plift = array_merge($plift, ['getLayoutModules', 'getLayoutModuleCols', 'setLayoutSlotPage', 'getLayoutStored', 'getLayoutImport', 'getLayoutClean', 'getLayoutCleanItems']);
     $plift = array_merge($plift, ['getLayoutShowFields', 'getLayoutPageFields', 'getLayoutItemFields']);
     setProbeLift($psite.'/admin/modules/layout.php', $plift, $pwork.'/lift_layout.php');
     $site = ['v' => 1, 'shipped' => false, 'next' => 20, 'home' => 1, 'notfound' => 2, 'theme' => ['phone' => '', 'social' => []],

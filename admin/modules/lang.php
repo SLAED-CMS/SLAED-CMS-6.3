@@ -110,7 +110,7 @@ function fileedit(): void {
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
         $lng_src = $lang_path.'/'.$lng_cn[$j].'.php';
-        checkPerms($lng_src);
+        $cont .= checkPerms($lng_src);
         $vals = getLangConstants($lng_src);
         $lng_arr[$lng_cn[$j]] = $vals;
         $cnst_arr = array_merge($cnst_arr, array_fill_keys(array_keys($vals), ''));
@@ -206,6 +206,7 @@ function save(): void {
     $rows = getVar('post', 'rows', 'num', 0);
     $path = getLangPath($mod, $typ);
     $gone = [];
+    $fail = [];
     if (!$warn && $rows) {
         foreach ($locs as $loc) {
             $file = $path.'/'.$loc.'.php';
@@ -221,14 +222,12 @@ function save(): void {
             foreach ($keep as $cons => $cont) {
                 $body .= 'define(\''.addcslashes((string)$cons, "\\'").'\',\''.addcslashes((string)$cont, "\\'").'\');'."\n";
             }
-            $hand = fopen($file, 'wb');
-            if ($hand === false) continue;
-            fwrite($hand, $body);
-            fclose($hand);
+            if (!setConfigSource($file, $body)) $fail[] = $loc;
         }
     }
+    $text = implode(' ', array_filter([$fail ? sprintf(_LANG_NOWRITE, implode(', ', $fail)) : '', $gone ? sprintf(_LANG_EMPTY, implode(', ', $gone)) : '']));
     $url = $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
-    setRedirect($url, false, 302, $warn ? _TOKENMISS : ($gone ? sprintf(_LANG_EMPTY, implode(', ', $gone)) : _SUCCSAVE), $warn || $gone);
+    setRedirect($url, false, 302, $warn ? _TOKENMISS : (($text !== '') ? $text : _SUCCSAVE), $warn || $text !== '');
 }
 
 function config(): void {

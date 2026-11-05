@@ -306,6 +306,7 @@ class FeedTest extends TestCase
         $this->assertTrue($data['fresh']);
         $this->assertTrue($data['badpage']);
         $this->assertSame(0, $data['badfiles'], 'An address outside the form of Feed is neither fetched nor stored');
+        $this->assertTrue($data['empty'], 'An empty address is answered with nothing instead of the refusal of a feed');
     }
 
     #[Test]
@@ -446,12 +447,13 @@ class FeedTest extends TestCase
             }
         }
         $this->assertSame([], $left, 'The old reader is still called');
-        $this->assertSame(2, substr_count(self::getCode('admin/modules/blocks.php'), 'getRssBody($url)'), 'Both block forms fetch through Feed');
+        $this->assertSame(1, substr_count(self::getCode('core/admin.php'), ": getRssBody(\$new['url']);"), 'The one writer of a block row does not fetch through Feed');
+        $this->assertSame(0, substr_count(self::getCode('admin/modules/blocks.php'), 'getRssBody('), 'A block form fetches a feed of its own');
         $this->assertStringContainsString("\$url = getVar('req', 'url', 'url', '');", self::getCode('modules/account/index.php'));
-        $empty = "echo (\$url === '') ? \$tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM,";
-        $this->assertStringContainsString($empty, self::getCode('modules/account/index.php'), 'An empty address of the cabinet is answered with nothing');
-        $this->assertStringContainsString(': getRssView($url);', self::getCode('modules/account/index.php'));
-        $this->assertStringContainsString('$cont .= getRssView($url);', self::getCode('modules/rss/index.php'));
+        $this->assertStringContainsString('    echo getRssView($url);', self::getCode('modules/account/index.php'), 'The cabinet refuses an empty address by a check of its own');
+        $rss = self::getCode('modules/rss/index.php');
+        $this->assertStringContainsString("if (getVar('post', 'send', 'num') == 1) \$cont .= getRssView(\$url);", $rss, 'The feed page stays silent on a sent empty address');
+        $this->assertSame(2, substr_count($rss, "'name' => 'send', 'val' => '1'"), 'A feed form of the page is not told from the form of the code');
         $core = self::getCode('core/system.php');
         $this->assertStringContainsString('$content = getRssBody($url) ?? $content;', $core, 'A failed refresh keeps the stored body');
         $this->assertStringContainsString("\$prs->filterContent(\$content, true, '', 2)", $core, 'A stored feed is rendered in safe mode');

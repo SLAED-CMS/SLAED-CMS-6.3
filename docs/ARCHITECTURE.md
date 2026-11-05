@@ -103,7 +103,12 @@ without a home page, takes the first entry of the comma-separated module list of
 The block columns of the start page are the `side` and `top` of the page itself
 (`Layout::getPageColumns()`, applied in `setFoot()`), which win over those of the
 module; without a home page in the layout the home route reads them from the module
-row of `config/modules.php` as the named route does. A module whose output carries its
+row of `config/modules.php` as the named route does. The columns have one owner per
+thing: a module its row of `config/modules.php` (the form "Модули"), a Node type its
+`view` (the type form), a page of the builder without a module the page. The page whose
+slot holds a module answers `null` from `getPageColumns()`, so its index and its inner
+pages show the columns of the module; the builder shows them there with a link to the
+owner form and stores none. A module whose output carries its
 own `h1` sets `$sitevars['has_own_title']` after `setHead()` — `setHead()` rebuilds
 that array — and `layouts/home.html` then skips the site name heading; `layouts/app.html`
 never prints one. `modules/presentation` is the module that does this.
@@ -558,7 +563,11 @@ Block definitions and placement are database-driven. `setFoot()` asks
 file-backed blocks are included from `blocks/<file>`, and a row whose file is gone
 prints nothing but to the super administrator. `isBlockShown()` reads `which` for every block,
 `getBlockWhich()` of `core/admin.php` writes it, and `setBlockOrder()` there is the
-one writer of `bpos` and `weight`: every zone numbered from 1. A value of `which` is a
+one writer of `bpos` and `weight`: every zone numbered from 1. `setBlockRow()` there is the
+one writer of a row for "Блоки и баннеры" and the builder alike, by the one spec of the
+fields `getBlockSpec()` both forms read: the title cut, the file of `blocks/`, the room of
+the text, the term capped, a feed that fails at a new address refused, and a system block
+(`bkey` set) never deleted and never given another kind. A value of `which` is a
 module, a Node type or `page-<number>`, a page of the site builder (`getBlockPlaces()`
 lists them, `getBlockStray()` the values no page answers); a page holding a module slot
 answers to the name of its module.
@@ -590,18 +599,20 @@ from its description, and the one type the core owns is the module slot (`Layout
 | Key | Holds |
 |---|---|
 | `v` | the version of the shape, `Layout::VERSION`; a file of another version reads as an empty layout, so a change of the shape is a PHP step of the update that moves the file of a site |
-| `shipped` | true only in the delivered file; the first publication clears it, and the ready pages are offered while it holds |
+| `shipped` | true marks a delivery no site has published yet: the ready pages are offered while it holds, and the first publication clears it; nothing writes true, and the delivered file carries false |
 | `next` | the counter of ids: pages, sections and menu items take their numbers from it, never given twice; a version back from the history or an imported file keeps the larger counter |
 | `home`, `notfound` | the numbers of the home page and of the page 404 |
 | `theme` | the values of the parts of the theme by flat keys without underscore, kept across a change of theme; a theme prints the parts it declares and passes over the others |
 | `menus` | the menus by key, each a list of items: `id`, `title`, `href` (an address of the site from `/` or of `https`), `icon`, `blank`, `who` and `kids` |
-| `pages` | the pages keyed by their permanent number: `title`, `addr`, `desc`, `og`, `noindex`, `who` (0 all, 1 users), `band` (the title band), `side` and `top` (the scale of `config/modules.php`) and `sections` |
+| `pages` | the pages keyed by their permanent number: `title`, `addr`, `desc`, `og`, `noindex`, `who` (0 all, 1 users), `band` (the title band), `side` and `top` (the scale of `config/modules.php`, read on a page without a module slot only) and `sections` |
 
 A section is `id`, `type`, `on`, the fields of "Показ" — `who` (the scale 0–3 of `_blocks.view`), `lang`, `from`,
 `till`, `anchor`, `phone`, `desk` — and the values of its type by the keys of its description; the slot carries
-`module`, empty for the home module of the settings. The delivered file is neutral: a menu of the site's own
-sections, every part empty or off, a home page with its slot and no columns, an empty page 404. The layout of a real
-site — slaed.net among them — reaches it by the import of the builder, never by the tracked file.
+`module`, empty for the home module of the settings. The delivered file is the layout of slaed.net as its stand
+publishes it: every menu of lite filled, every key of the parts of lite, a home page with its slot, a page 404 that is
+not indexed. A new installation opens with it; an update writes the whole file only to a site that lacks it and
+otherwise adds just the keys the site does not have (`Update::getConfigMerge()`), its pages and menus staying the
+site's. `LayoutTest` holds the shape of the delivery, its counter and the addresses of its menus.
 
 ### Rendering
 
@@ -609,7 +620,8 @@ site — slaed.net among them — reaches it by the import of the builder, never
   of the page around the request: the page `page-<n>` the request names, the page whose switched-on slot holds the
   module of a front view (`getModuleKey()`, never the home page or the page 404), or on the start page the home page.
   `setFoot()` then wraps the module output in the sections (`getPageHtml()`) and takes the columns of the page
-  (`getPageColumns()`); a page without a slot prints the module output after its sections.
+  (`getPageColumns()`) unless the page holds the slot of a module; a page without a slot prints the module output after its
+  sections.
 - **A page of sections alone** — no slot, its own address — sets `$conf['name']` to `page-<n>` and passes its
   title, description, picture, `robots` and its path as `route` to `setHead()`. The name `page-<n>` answers 301 to
   that path; the home page, the page 404, a page holding a slot and a page without a row of `_routes` answer 404 under
@@ -654,7 +666,7 @@ draft; its help is `admin/info/layout/ru.md`.
 - **The publication.** `Layout::setPublish()` runs inside the Closure form of `setConfigFile()`, where `layout` is
   one of the shared areas (`docs/NODE.md`, "Configuration protocol"): the published file is checked against the checksum the
   screen opened (`getLayoutHash()`), then the changed rows of `_blocks` (`setLayoutRows()` of the module, each against
-  its row in `bwas`), the addresses through `Route` — a new or renamed page by `setRouteName()`, a deleted one by
+  its row in `bwas` and written by `setBlockRow()`, whose refusal stops the publication by the name of the block), the addresses through `Route` — a new or renamed page by `setRouteName()`, a deleted one by
   `deleteRoute()` — and the file are written in one transaction. The proof of an uncertain commit is a witness row:
   the first touched row of `_blocks` or of `_routes` whose fingerprint (`getWitnessHash()`) changed, which
   `setConfigRestore()` reads again `FOR UPDATE`. A publication that changes no row opens no transaction. `sitename` and
@@ -756,7 +768,7 @@ Confirmed responsibilities:
 - starts the PHP session when needed
 - runs request blocker and request value checks
 - provides `getVar()`
-- provides CSRF helpers such as `getSiteToken()` and `checkSiteToken()`
+- provides CSRF helpers such as `getSiteToken()`, `checkSiteToken()` and `checkSitePost()`, the POST and body token of a write of the site in the scope of its module
 - provides admin/user access helpers
 
 What the web server may reach, the self-check and the journals are under

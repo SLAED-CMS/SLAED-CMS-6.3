@@ -1722,7 +1722,7 @@ Parser in safe mode.
 |---|---|
 | `getRssBody(string $url): ?string` | Markdown for `_blocks.content`; `null` on failure or above the `TEXT` column (65535 bytes) |
 | `getRssBlock(int $bid): void` | a stale block fetches and stores its body, a failure keeps the old one, both move `time`; rendered by `filterContent()` in safe mode |
-| `getRssView(string $url): string` | feed page of the account and rss modules; each outcome (refusals too) is kept 900 seconds in the data cache keyed by the canonical URL and `rss.max`; an address outside the Feed form is neither fetched nor kept; rendered by `filterDoc()` without the parser cache |
+| `getRssView(string $url): string` | feed page of the account and rss modules; an empty address is refused without a fetch; each outcome (refusals too) is kept 900 seconds in the data cache keyed by the canonical URL and `rss.max`; an address outside the Feed form is neither fetched nor kept; rendered by `filterDoc()` without the parser cache |
 | `NodeSync` | fetches outside transactions, keeps the previous body and validators on failure |
 
 The three functions live in `core/system.php`.
@@ -1858,7 +1858,8 @@ of the mode is stored empty, so the list keeps following its mode.
 | `top` | int | 0 | the centre columns, the scale of `top`: 0 both, 1 above the content, 2 below it, 3 none |
 
 `view` carries no rights. See Rendering for how the mode selects templates. The branch of Node in `public/index.php`
-reads `side` and `top` of the type a request names; the row `node` of `config/modules.php` has no say over them.
+reads `side` and `top` of the type a request names; the row `node` of `config/modules.php` has no say over them, nor
+has a page of the site builder that holds the slot of the type: its list and its inner pages show the same columns.
 
 #### Settings: form and admin
 
@@ -3044,7 +3045,7 @@ code. Nothing syncs during a public request.
 
 ### Writes and concurrency
 
-- Changing routes require `POST` and CSRF (`checkSiteToken()` publicly, `checkAdminPost('node')` in the panel);
+- Changing routes require `POST` and CSRF (`checkSitePost('node')` publicly, `checkAdminPost('node')` in the panel);
   administrative `status`, `delete`, `report`, `sync` accept only `POST`, and every successful administrative
   `POST` redirects to a canonical `GET`.
 - `updateNode()`, `updateNodeStatus()`, `deleteNode()` take the expected `_nodes.version` from the `POST` body and

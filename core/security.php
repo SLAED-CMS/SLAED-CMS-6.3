@@ -634,6 +634,12 @@ function checkAdminPost(string $scope): bool {
     return true;
 }
 
+# Authorize one write of the site by POST and a body token of the module scope; an empty body token never falls back to a header
+function checkSitePost(string $scope): bool {
+    $tok = getVar('post', 'token', 'raw', '');
+    return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && is_string($tok) && $tok !== '' && checkSiteToken($tok, $scope);
+}
+
 # Note one action of the panel: the passed token check opens the record once with its scope, operation and object, a redirect sets its result on an open one
 function setAdminLog(array $data): void {
     global $admin, $alog;
@@ -958,7 +964,7 @@ function getReportSkip(): int {
     return $open ? $num : -1;
 }
 
-# The ban list with one automatic ban added: expired rows go, and past the cap the oldest automatic ones, as any guest can provoke a report and a manual ban must outlive that
+# The address ban list with one ban added: expired rows go, and past the cap the oldest automatic ones, as any guest can provoke a report and a manual ban must outlive that
 function getBanList(string $row): string {
     global $conf;
     [$hand, $auto] = [[], []];
@@ -968,8 +974,18 @@ function getBanList(string $row): string {
         if ($part[3] === _HACK) $auto[] = $val;
         else $hand[] = $val;
     }
-    $auto[] = $row;
+    if ((explode('|', $row, 4)[3] ?? '') === _HACK) $auto[] = $row;
+    else $hand[] = $row;
     return implode('||', array_merge($hand, array_slice($auto, -1000))).'||';
+}
+
+# The refusal of a new password and its repeat, empty when both match and reach minpass of the accounts; strlen() counts bytes, as the rule always did
+function checkPassRule(string $pass, string $two): string {
+    global $conf;
+    $min = (int)($conf['users']['minpass'] ?? 0);
+    if ($pass === '' || $two === '') return _NOPASS;
+    if ($pass !== $two) return _ERROR_PASS;
+    return (strlen($pass) < $min) ? _CHARMIN.': '.$min : '';
 }
 
 # Add a hack report with optional block and email; a request another page sent, an image in a post among them, is refused but bans nobody, as the visitor did not write it

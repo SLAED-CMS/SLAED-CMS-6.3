@@ -269,8 +269,9 @@ final class Layout {
         return true;
     }
 
-    # The columns of a page as a module carries them in config/modules.php: side for the side zones, top for the centre, 3 by default
-    public function getPageColumns(int $key): array {
+    # The columns of a page of the builder on the scale of config/modules.php, 3 by default; null for the page of a module, whose columns its own form owns
+    public function getPageColumns(int $key): ?array {
+        if (!in_array($key, [(int)$this->data['home'], (int)$this->data['notfound']], true) && ($this->getSlotName($key) ?? '') !== '') return null;
         $page = $this->getPage($key);
         return [(string)($page['side'] ?? '3'), (string)($page['top'] ?? '3')];
     }

@@ -192,8 +192,7 @@ function addAdminAccount(): void {
         $stop = [];
         if (!checkAdminPost('add_admin')) $stop[] = _TOKENMISS;
         if (!$aname || !analyze_name($aname)) $stop[] = _ERRORINVNICK;
-        if ($apass === '' && $atwo === '') $stop[] = _NOPASS;
-        if ($apass !== $atwo) $stop[] = _ERROR_PASS;
+        if (($rule = checkPassRule($apass, $atwo)) !== '') $stop[] = $rule;
         if (strlen($aname) > 25) $stop[] = _NICKLONG;
         if (!$stop) {
             $apwd = getPassHash($apass);
@@ -319,6 +318,7 @@ function getAdminLoginForm(): void {
                     'has_colon' => true,
                     'label' => _EMAIL,
                     'field_html' => $tpl->getHtmlFrag('input', [
+                        'itype' => 'email',
                         'name_attr' => 'aemail',
                         'value_attr' => getVar('post', 'aemail', 'text'),
                         'maxlength_num' => 255,
@@ -329,12 +329,14 @@ function getAdminLoginForm(): void {
                 [
                     'has_colon' => true,
                     'label' => _PASSWORD,
-                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd', 'placeholder_text' => _PASSWORD, 'is_required' => true]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'apwd', 'placeholder_text' => _PASSWORD, 'is_required' => true,
+                        'autocomplete_attr' => 'new-password']),
                 ],
                 [
                     'has_colon' => true,
                     'label' => _RETYPEPASSWORD,
-                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd2', 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'apwd2', 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true,
+                        'autocomplete_attr' => 'new-password']),
                 ],
                 [
                     'label' => _CREATEUSERDATA,

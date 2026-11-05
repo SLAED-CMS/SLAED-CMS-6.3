@@ -80,7 +80,7 @@ function info(): void {
                 'label' => _SELECTASITE,
                 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'selectid' => 'f-url-pick', 'options_html' => rss_select()]),
             ]),
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'name' => 'send', 'val' => '1', 'label' => _OK]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
@@ -94,9 +94,9 @@ function info(): void {
                     'name_attr' => 'url', 'input_id' => 'f-url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL,
                 ]),
             ]),
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'name' => 'send', 'val' => '1', 'label' => _OK]),
         ]);
-        $cont .= getRssView($url);
+        if (getVar('post', 'send', 'num') == 1) $cont .= getRssView($url);
     }
     echo $cont;
     setFoot();

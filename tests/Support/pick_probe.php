@@ -27,7 +27,7 @@ foreach (['logs', 'config'] as $dir) {
 define('PREFIX_DB', 'probe');
 define('LOGS_DIR', $pwork.'/logs');
 define('CONFIG_DIR', $pwork.'/config');
-foreach (['_TOKENMISS', '_SUCCDELETE', '_SUCCSTATUS', '_SUCCSAVE', '_ERROR', '_NLBUSY', '_BANN_INFO'] as $name) define($name, strtolower($name));
+foreach (['_TOKENMISS', '_SUCCDELETE', '_SUCCSTATUS', '_SUCCSAVE', '_ERROR', '_NLBUSY', '_BANN_INFO', '_REPLACE_BAR'] as $name) define($name, strtolower($name));
 set_time_limit(20);
 $pdone = ['error' => '', 'data' => ['write' => [], 'call' => [], 'cfg' => []]];
 
@@ -144,6 +144,14 @@ final class ProbeCall {
         $GLOBALS['pdone']['data']['call'][] = [$name, ...$args];
         if ($name === 'getCampLeft') return intval($GLOBALS['pcase']['left'][(string)$args[0]] ?? 0);
         return is_array($args[0] ?? null) ? count($args[0]) : true;
+    }
+}
+
+final class Oauth {
+    # Record the unlink of a provider the panel forces and answer a success
+    public static function deleteLink(int $uid, string $prov, bool $force = false): string {
+        $GLOBALS['pdone']['data']['call'][] = ['deleteLink', [$uid, $prov, $force]];
+        return '';
     }
 }
 

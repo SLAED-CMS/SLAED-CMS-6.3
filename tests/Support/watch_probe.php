@@ -34,12 +34,16 @@ define('_NO_INFO', 'none');
 define('_SUCCSAVE', 'saved');
 define('_HACK', 'hack');
 define('_ANONYM', 'guest');
+define('_NOPASS', 'nopass');
+define('_ERROR_PASS', 'differ');
+define('_CHARMIN', 'short');
 set_time_limit(60);
 $pdone = ['error' => '', 'data' => []];
 $conf = ['adminfo' => '1', 'censor' => 0, 'security' => ['url_get' => '1', 'url_post' => '0', 'write_h' => '1', 'blocker_ip' => '']];
 $pseen = [];
 $psuper = false;
 $ptoken = false;
+$pscope = '';
 
 # Cut one top-level function out of a shipped source and load it into this process
 function setProbeLift(string $file, string $func, string $into): void {
@@ -66,8 +70,9 @@ function isAdmin(bool $super = false): bool {
     return $super && $GLOBALS['psuper'];
 }
 
-# Answer the token check of the scenario
+# Answer the token check of the scenario and note the scope it was asked for
 function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
+    $GLOBALS['pscope'] = $scope;
     return $GLOBALS['ptoken'];
 }
 
@@ -112,7 +117,7 @@ final class ProbeTpl {
 
 try {
     $lifts = ['checkRequestData', 'checkRequestValue', 'filterVar', 'filterNum', 'filterWord', 'getVar', 'filterTrustedTags', 'filterText', 'filterHtml', 'filterSourceText',
-        'filterWebUrl', 'getBanList', 'getReportSkip'];
+        'filterWebUrl', 'getBanList', 'getReportSkip', 'checkPassRule'];
     foreach ($lifts as $i => $one) setProbeLift($psite.'/core/security.php', $one, $pwork.'/lift_'.$i.'.php');
     setProbeLift($psite.'/core/helpers.php', 'setTplAdminInfoPage', $pwork.'/lift_info.php');
     require_once $psite.'/core/classes/cache.php';
@@ -144,6 +149,10 @@ try {
     $pauto = array_map(fn(int $v): string => '198.51.100.1/32|0|'.(time() + 900).'|hack', range(1, 1200));
     $conf['security']['blocker_ip'] = '192.0.2.1/32|0|'.(time() + 900).'|manual||'.implode('||', $pauto).'||';
     $pdone['data']['cap'] = explode('||', getBanList('203.0.113.1/32|0|9|hack'));
+    $pdone['data']['hand'] = explode('||', getBanList('203.0.113.2/32|0|'.(time() + 900).'|manual'));
+    $conf['users']['minpass'] = 8;
+    $pdone['data']['rule'] = array_map(fn(array $v): string => checkPassRule(...$v), [['', ''], ['abcdefgh', ''], ['abcdefgh', 'abcdefgx'], ['abcdefg', 'abcdefg'],
+        ['abcdefgh', 'abcdefgh'], ['пароль', 'пароль']]);
     $pdone['data']['skip'] = [getReportSkip(), getReportSkip(), getReportSkip()];
     file_put_contents(LOGS_DIR.'/report_mail.json', json_encode(['time' => time() - 3601, 'num' => 2]));
     $pdone['data']['skip'][] = getReportSkip();
@@ -168,15 +177,16 @@ try {
     };
     $pdone['data']['info'] = ['super_no_token' => $page(true, false), 'admin_token' => $page(false, true), 'admin_no_token' => $page(false, false)];
     $pdone['data']['info']['super_token'] = $page(true, true);
-    setProbeLift($psite.'/modules/forum/index.php', 'checkForumPost', $pwork.'/lift_forum.php');
-    $forum = function(string $method, array $post) {
+    setProbeLift($psite.'/core/security.php', 'checkSitePost', $pwork.'/lift_site.php');
+    $site = function(string $method, array $post) {
         $GLOBALS['ptoken'] = true;
+        $GLOBALS['pscope'] = '';
         $_SERVER['REQUEST_METHOD'] = $method;
         $_POST = $post;
         $_GET = ['token' => 'query'];
-        return checkForumPost();
+        return [checkSitePost('forum'), $GLOBALS['pscope']];
     };
-    $pdone['data']['forum'] = [$forum('GET', []), $forum('POST', []), $forum('POST', ['token' => 'body'])];
+    $pdone['data']['site'] = [$site('GET', ['token' => 'body']), $site('POST', []), $site('POST', ['token' => 'body'])];
     setProbeLift($psite.'/core/system.php', 'checkPassHash', $pwork.'/lift_hash.php');
     setProbeLift($psite.'/modules/account/index.php', 'getPassMatch', $pwork.'/lift_match.php');
     $pform = 'pa$$<w&"ord';

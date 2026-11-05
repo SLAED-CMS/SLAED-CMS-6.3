@@ -638,10 +638,10 @@ function getSecurityEventHours(int $hours = 24): ?array {
     return $seen ? $best : null;
 }
 
-# Collects disk capacity and usage values used by both realtime and full dashboard render paths; a host that disables the disk functions reads as zero
+# The disk of the project; disk_free_space() is statvfs f_bavail, so used holds the blocks Linux keeps for root, and a host without the functions reads zero
 function getMonitorDiskSnapshot(): array {
-    $disksum = function_exists('disk_total_space') ? (float)disk_total_space('.') : 0.0;
-    $diskfree = function_exists('disk_free_space') ? (float)disk_free_space('.') : 0.0;
+    $disksum = function_exists('disk_total_space') ? (float)disk_total_space(BASE_DIR) : 0.0;
+    $diskfree = function_exists('disk_free_space') ? (float)disk_free_space(BASE_DIR) : 0.0;
     $diskused = max($disksum - $diskfree, 0);
     $diskpct = ($disksum > 0) ? round(($diskused / $disksum) * 100, 1) : 0;
     return [
@@ -906,7 +906,7 @@ function getCockpitRings(array $snap): array {
             $row('lightning-charge', _ADM_FREQ, ($cpu['freq'] === 'N/A') ? 'N/A' : filterDecimal((float)$cpu['freq']).' GHz')]),
         'ram' => $ring('RAM', _ADM_RAM, (float)$mem['percent'], getPercentTone((float)$mem['percent']), [$row('memory', _ADM_USED, filterSize($mem['used'])),
             $row('stack', _OVERALL, filterSize($mem['total'])), $row('check2-circle', _ADM_AVAIL, filterSize($mem['free']))]),
-        'disk' => $ring(_ADM_DISK, _ADM_DISK, (float)$snap['disk_pct'], getPercentTone((float)$snap['disk_pct']), [$row('pie-chart', _ADM_USED,
+        'disk' => $ring(_ADM_DISK, _ADM_DISK, (float)$snap['disk_pct'], getPercentTone((float)$snap['disk_pct']), [$row('pie-chart', _ADM_DISKUSED,
             filterSize($snap['disk_used'])), $row('box', _ADM_FREE, filterSize($snap['disk_free']))]),
         'opcache' => $ring('OPcache', 'OPcache', $hit, $opon ? getPercentTone(100 - $hit) : 'warn', array_merge([$row('bullseye', _ADM_HITS,
             $opon ? filterDecimal(round($hit, 1)).'%' : _OFF)], $opcrow)),

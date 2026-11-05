@@ -109,6 +109,7 @@ define('_CERROR8','Interdit l\'envoi de message vous-même!');
 define('_CERROR9','Le placement de liens dans les commentaires sont non-fumeurs!');
 define('_CHANGE','Paramètres');
 define('_CHANGEFREQ','La fréquence de mise à jour');
+define('_CHARMIN','Minimum le nombre de caractères de mot de passe');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Marquer tous');
 define('_CHECKOP','Action');

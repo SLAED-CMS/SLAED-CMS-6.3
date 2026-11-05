@@ -109,6 +109,7 @@ define('_CERROR8','Заборонено надсилання повідомле�
 define('_CERROR9','Розміщення посилань у коментарях заборонено!');
 define('_CHANGE','Налаштування');
 define('_CHANGEFREQ','Частота поновлення');
+define('_CHARMIN','Мінімально допустима кількість символів в паролі');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Позначити всі');
 define('_CHECKOP','Дія');

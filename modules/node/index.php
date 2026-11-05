@@ -364,7 +364,7 @@ function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): arr
         'prio_title' => _PRIORITY,
         'is_owner' => $owner,
         'action' => $owner ? getSeoUrl(['name' => $type->name, 'op' => 'support', 'id' => $node->id]) : '',
-        'token' => $owner ? getSiteToken() : '',
+        'token' => $owner ? getSiteToken('node') : '',
         'next' => $shut ? $maps['state']['staff'] : $maps['state']['closed'],
         'switch_label' => $shut ? _NODE_REOPEN : _NODE_CLOSE,
         'card_href' => checkNodeModer($type) ? HOME_PATH.$afile.'.php?name=node&op=support&id='.$node->id : '',
@@ -437,7 +437,7 @@ function getNodeAssetView(NodeType $type, array $view): string {
             'items' => $items,
             'role_title' => getConst($def['title']),
             'poster' => $poster,
-            'token' => getSiteToken(),
+            'token' => getSiteToken('node'),
             'report_label' => _NODE_REPORT,
             'download_label' => _DOWNLOAD,
             'visit_label' => _NODE_VISIT,
@@ -874,7 +874,7 @@ function setNodeForm(): void {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $act = getVar('post', 'action', 'var', '');
         if (!in_array($act, ['preview', 'submit'], true)) setNodeDeny(400);
-        if (!checkSiteToken(getVar('post', 'token', 'raw', ''))) setNodeDeny(403);
+        if (!checkSitePost('node')) setNodeDeny(403);
         $human = !checkCaptcha('comment');
         [$input, $vals, $bad] = getNodeFormPost($type, checkNodeModer($type), null, $human);
         $state = getNodeFlowState($type);
@@ -911,7 +911,7 @@ function setNodeForm(): void {
     }
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'submit', 'label_text' => _SEND, 'is_selected' => true]);
-    $send = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])
+    $send = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('node'), 'input_attr' => ''])
         .$tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options_html' => $opts])
         .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
     echo $tpl->getHtmlFrag('title', ['title' => getModuleName($type->name).' - '._ADD, 'is_level_one' => true])
@@ -964,7 +964,7 @@ function setNodeReport(): void {
     global $conf, $db;
     $id = getNodeNumber('id', 404);
     if (!$id) setNodeDeny(404);
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''))) setNodeDeny(403);
+    if (!checkSitePost('node')) setNodeDeny(403);
     $type = getNodeRoute();
     $key = $conf['user_c'].'-report';
     $wait = (int)($_SESSION[$key] ?? 0) + 60 - time();
@@ -992,7 +992,7 @@ function setNodeSupport(): void {
     global $conf;
     $id = getNodeNumber('id', 404);
     if (!$id) setNodeDeny(404);
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''))) setNodeDeny(403);
+    if (!checkSitePost('node')) setNodeDeny(403);
     $type = getNodeRoute();
     $hand = getNodeHandler($type);
     if (!$hand instanceof NodeSupport) setNodeDeny(404);

@@ -33,7 +33,7 @@ final class BlocksTest extends TestCase
         return self::$probe;
     }
 
-    # A Node type draws the columns of its own settings, docs none at the side, and a page of the builder draws its own and the blocks that name page-<key>
+    # A Node type draws the columns of its own settings on its list and its pages alike, the page holding its slot none of its own; a builder page draws its own
     #[Test]
     public function aTypeAndAPageKeepTheirColumns(): void
     {
@@ -41,7 +41,7 @@ final class BlocksTest extends TestCase
         [$right, $after, , , $page] = $run['news'];
         $this->assertSame([true, true, false], [$right, $after, $page], 'News lost the right or the centre column, or drew a block of a page');
         $this->assertSame([false, true], $run['docs'][1], 'A material of docs drew the side columns its type switched off, or lost the centre');
-        $this->assertSame([false, false, true], $run['docs'][0], 'The list of docs did not take the columns of the page holding its slot');
+        $this->assertSame([false, true, true], $run['docs'][0], 'The list of docs took columns from the page holding its slot instead of its type');
         $this->assertSame([true, true, true], $run['about'], 'The page About lost a column or the block that names page-10');
     }
 
@@ -97,5 +97,44 @@ final class BlocksTest extends TestCase
         $this->assertSame('94:1,96:2,97:3,98:4,99:5', $run['delete'], 'A deletion left a gap');
         $this->assertSame('99:1,98:2,97:3,96:4,94:5', $run['drag'], 'A drag did not take the order');
         $this->assertSame('99:1,98:2,97:3,96:4,94:5', $run['fix'], 'The fix did not number the position from one');
+    }
+
+    # One rule for a system block on both screens: no delete offered or done, its kind kept against a posted file, its empty body no refusal
+    #[Test]
+    public function aSystemBlockStaysWhatItIs(): void
+    {
+        [$offer, $other, $row, $code] = $this->getRun()['system'];
+        $this->assertSame([false, true], [$offer, $other], 'The list offered to delete the system block, or no longer the others');
+        $this->assertSame('userbox:', $row, 'The system block was deleted, lost its key or took a file');
+        $this->assertSame(303, $code, 'The save of the system block with its empty body was refused');
+        $this->assertTrue($this->getRun()['builder'][0], 'The builder did not name the system block it refused to delete');
+    }
+
+    # One spec of the fields read by the forms and the writer: the title cut at 60, the term capped at 3650 days, a file outside blocks/ refused, a new feed that fails refused
+    #[Test]
+    public function theFieldsFollowOneSpec(): void
+    {
+        [$cut, $days, $bad, $code, $said, $feed, $addf, $editf, $typed] = $this->getRun()['spec'];
+        $this->assertSame([1, 3650, 0], [$cut, $days, $bad], 'The title was not cut, the term not capped, or a file outside blocks/ was taken');
+        $this->assertSame([200, true, 'http://127.0.0.1:1/old.xml|feed text'], [$code, $said, $feed], 'A feed that failed at its new address was stored');
+        $this->assertTrue($typed, 'The refused form lost the address that was typed');
+        $this->assertSame([true, true], [$addf, $editf], 'A form does not offer the limits of the spec');
+    }
+
+    # The builder publishes its blocks through the one writer: an empty block and a feed that does not answer refused by name, a filled one written at the end of its zone
+    #[Test]
+    public function theBuilderWritesThroughTheOneWriter(): void
+    {
+        [, $empty, $added, $row, $order, $feed] = $this->getRun()['builder'];
+        $this->assertSame([true, true], [$empty, $added], 'The builder published an empty block, or not the filled one');
+        $this->assertSame(['r:1', true], [$row, $order], 'The block of the builder lost its zone or status, or the zone is not numbered from one');
+        $this->assertTrue($feed, 'The builder published a feed that does not answer');
+    }
+
+    # The page holding the slot of a type shows the columns of the type with the link to its form and stores none; the home page keeps its own
+    #[Test]
+    public function aModulePageShowsTheColumnsOfItsOwner(): void
+    {
+        $this->assertSame([true, false, true], $this->getRun()['columns']);
     }
 }

@@ -258,9 +258,8 @@ function edit(): void {
             'label_html' => _UGROUP,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts, 'is_config' => true]),
         ],
-        ['label_for' => 'f-side', 'label_html' => _BLOCKS_SIDE, 'hint_html' => _BLOCKS_PAGEHINT, 'hint_id' => $hntid = getFieldIds('f-side')['hint'],
+        ['label_for' => 'f-side', 'label_html' => _BLOCKS_SIDE,
         'field_html' => $tpl->getHtmlFrag('select', [
-            'describedby' => $hntid,
             'name_attr' => 'side',
             'selectid' => 'f-side',
             'is_config' => true,
@@ -270,9 +269,8 @@ function edit(): void {
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MOD2, 'is_selected' => (int)$side === 2]).
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$side === 3]),
         ])],
-        ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP, 'hint_html' => _BLOCKS_PAGEHINT, 'hint_id' => $hntid = getFieldIds('f-top')['hint'],
+        ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP,
         'field_html' => $tpl->getHtmlFrag('select', [
-            'describedby' => $hntid,
             'name_attr' => 'top',
             'selectid' => 'f-top',
             'is_config' => true,

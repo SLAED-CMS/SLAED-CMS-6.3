@@ -347,7 +347,7 @@ final class UploadIntegrationTest extends TestCase
     {
         $guards = [
             'core/system.php' => 'getEditorRouteRule(',
-            'modules/account/index.php' => 'checkSiteToken(',
+            'modules/account/index.php' => 'checkSitePost(',
             'admin/modules/uploads.php' => 'checkAdminPost(',
         ];
         foreach (self::ADAPTERS as $path => $name) {
@@ -503,7 +503,7 @@ final class UploadIntegrationTest extends TestCase
         $body = $this->getBody('modules/account/index.php', 'savehome');
         $user = strpos($body, 'is_user()');
         $post = strpos($body, 'REQUEST_METHOD');
-        $tok = strpos($body, 'checkSiteToken(');
+        $tok = strpos($body, 'checkSitePost(');
         $this->assertNotFalse($user, 'A signed out visitor reaches the profile write, where the member of the row is read off an identity that was never proven');
         $this->assertNotFalse($post, 'The profile write answers a GET, so an address alone changes an account');
         $this->assertNotFalse($tok, 'The profile write asks for no token at all');

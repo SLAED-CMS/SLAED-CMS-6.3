@@ -371,7 +371,7 @@ class Comment {
         if (!$id || !isset(self::MODULES[$mod])) return CommentMode::Disabled;
         $tab = PREFIX_DB.self::MODULES[$mod];
         if ($mod === 'account') {
-            if ($this->site['prof'] === 1 && !is_user() && !isAdmin()) return CommentMode::Disabled;
+            if ($this->site['prof'] === 1 && !is_user() && !is_moder('account')) return CommentMode::Disabled;
             $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id FROM '.$tab.' WHERE id = :id', ['id' => $id]));
             return $row ? CommentMode::Open : CommentMode::Disabled;
         }

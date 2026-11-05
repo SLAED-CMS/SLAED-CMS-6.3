@@ -517,15 +517,14 @@ function getAdminBlockList(): string {
                     ['is_col_status' => true, 'stat' => $turn],
                     ['content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _EDITOR,
-                        'dial' => [
+                        'dial' => array_merge([
                             [
                                 'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
                                 'icon_name' => 'pencil',
                                 'title' => _FULLEDIT,
                             ],
                             $turn,
-                            getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE) + ['later' => 'gone del'],
-                        ],
+                        ], ($bkey == '') ? [getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE) + ['later' => 'gone del']] : []),
                     ]), 'is_col_actions' => true],
                 ],
             ]),
@@ -632,6 +631,104 @@ function getBlockWhich(array $marks): string {
     if (in_array('infly', $marks, true)) $which = in_array('flyfix', $marks, true) ? 'infly,'.str_replace('infly,', '', $which) : 'infly,';
     if (in_array('ihome', $marks, true) && $which !== 'home') $which = 'ihome,'.str_replace(',ihome', '', $which);
     return $which;
+}
+
+# The one spec of the fields of a block, read by the block form, the inspector of the builder and setBlockRow(): lengths, term, choices, the files of blocks/
+function getBlockSpec(): array {
+    $file = '/^[a-z0-9_\-]{1,251}\.php$/i';
+    $files = array_values(array_filter(scandir(BASE_DIR.'/blocks') ?: [], static fn(string $v): bool => preg_match($file, $v) === 1));
+    return ['title' => 60, 'url' => 200, 'days' => 3650, 'file' => $file, 'files' => $files, 'zones' => ['l', 'r', 'c', 'd'],
+        'refresh' => [1800, 3600, 18000, 36000, 86400], 'view' => [0, 1, 2, 3], 'action' => ['d', 'r']];
+}
+
+# The one writer of a row of _blocks for both screens: $bid 0 adds, $set null deletes; a system block keeps its key and kind and is never deleted; the answer is the id or a refusal
+function setBlockRow(int $bid, ?array $set, int $place = 0): int|string {
+    global $db;
+    $spec = getBlockSpec();
+    $keys = ['bkey', 'title', 'content', 'url', 'bpos', 'status', 'refresh', 'time', 'lang', 'bfile', 'view', 'action', 'which', 'param'];
+    $old = $bid ? $db->getSqlRow($db->getSqlQuery('SELECT '.implode(', ', $keys).' FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid])) : null;
+    if ($bid && !$old) return _NONE_FOUND;
+    $row = $old ? array_intersect_key($old, array_flip($keys)) : array_fill_keys($keys, '');
+    $sys = $row['bkey'] !== '';
+    if ($set === null && $sys) return sprintf(_BLOCKS_SYSKEEP, getConst((string)$row['title']));
+    $own = !$db->checkSqlActive();
+    if ($set === null) {
+        $done = (!$own || $db->setSqlBegin()) && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]) !== false;
+        $done = $done && (!in_array($row['bpos'], $spec['zones'], true) || setBlockOrder((string)$row['bpos']));
+        if ($own && !($done && $db->setSqlCommit())) $db->setSqlRollback();
+        return $done ? $bid : _ERROR;
+    }
+    $fed = array_key_exists('feed', $set);
+    $set = array_filter($set, static fn(mixed $v): bool => $v !== null);
+    if ($sys) $set = array_diff_key($set, ['bfile' => true, 'url' => true, 'param' => true, 'feed' => true]);
+    $new = array_replace($row, $bid ? [] : ['status' => 0, 'refresh' => 3600, 'time' => 0, 'view' => 0, 'action' => 'd', 'param' => '']);
+    if (isset($set['title'])) $new['title'] = filterCutText(trim((string)$set['title']), $spec['title']);
+    if (isset($set['bfile'])) $new['bfile'] = preg_match($spec['file'], (string)$set['bfile']) ? (string)$set['bfile'] : '';
+    if (isset($set['url'])) $new['url'] = filterCutText(trim((string)$set['url']), $spec['url']);
+    if (!$sys && $new['bfile'] !== '') $new['url'] = '';
+    if (!$sys && $new['url'] !== '') $new['bfile'] = '';
+    $kind = $sys ? 'sys' : (($new['bfile'] !== '') ? 'file' : (($new['url'] !== '') ? 'rss' : 'html'));
+    if ($kind === 'file' && $new['title'] === '') $new['title'] = filterCutText(str_replace('_', ' ', substr($new['bfile'], 0, -4)), $spec['title']);
+    if (in_array($kind, ['html', 'sys'], true) && isset($set['content'])) {
+        $new['content'] = filterSourceText((string)$set['content'], isAdmin(true));
+        if (($room = checkEditorTextRoom($new['content'], 'blocks.content')) !== '') return $room;
+    }
+    if ($kind === 'html' && trim((string)$new['content']) === '') return _BLOCKS_EMPTY;
+    if ($kind === 'rss' && isset($set['url'])) {
+        $feed = $fed ? ($set['feed'] ?? null) : getRssBody($new['url']);
+        if ($feed === null && $new['url'] !== $row['url']) return _RSSFAIL;
+        if ($feed !== null) [$new['content'], $new['time']] = [(string)$feed, time()];
+    }
+    if (isset($set['bpos'])) $new['bpos'] = (string)$set['bpos'];
+    if (!in_array($new['bpos'], $spec['zones'], true)) return _ERROR;
+    if (isset($set['status'])) $new['status'] = empty($set['status']) ? 0 : 1;
+    if (isset($set['refresh']) && in_array(intval($set['refresh']), $spec['refresh'], true)) $new['refresh'] = intval($set['refresh']);
+    if (isset($set['lang'])) $new['lang'] = isset(getLanguageList()[(string)$set['lang']]) ? (string)$set['lang'] : '';
+    if (isset($set['view'])) $new['view'] = in_array(intval($set['view']), $spec['view'], true) ? intval($set['view']) : 0;
+    if (isset($set['action'])) $new['action'] = in_array((string)$set['action'], $spec['action'], true) ? (string)$set['action'] : 'd';
+    if (isset($set['which'])) {
+        $was = explode(',', (string)$row['which']);
+        $allow = array_merge(array_keys(getBlockPlaces()), ['all', 'home', 'ihome', 'otricanie', 'infly', 'flyfix'], $was);
+        $new['which'] = getBlockWhich(array_values(array_intersect(array_map('strval', (array)$set['which']), $allow)));
+    }
+    if ($kind !== 'sys' && isset($set['param'])) $new['param'] = (string)$set['param'];
+    elseif ($kind !== 'sys' && (!$bid || $new['bfile'] !== $row['bfile'])) $new['param'] = ($new['bfile'] === 'node.php') ? '{"type":[],"mode":"last","limit":10}' : '';
+    if ($new['bfile'] === 'node.php' && getNodeBlockParam((string)$new['param']) === null) return _BLOCKPROBLEM;
+    $days = isset($set['days']) ? max(0, min(intval($set['days']), $spec['days'])) : null;
+    $pars = array_diff_assoc(array_map('strval', array_diff_key($new, ['bkey' => true, 'bpos' => true])), array_map('strval', $row));
+    if (!$bid) $pars = array_diff_key(array_map('strval', $new), ['bkey' => true]) + ['weight' => '0'];
+    $cols = array_keys($pars);
+    $till = ($days === null) ? '' : (($days > 0) ? 'NOW() + INTERVAL :days DAY' : 'NULL');
+    if ($till === '' && $bid && intval($new['status']) === 1 && intval($row['status']) !== 1) $till = 'CASE WHEN expire < NOW() THEN NULL ELSE expire END';
+    if ($till !== '') $cols[] = 'expire';
+    $vals = $pars + (($days > 0) ? ['days' => $days] : []);
+    $marks = array_map(static fn(string $v): string => ($v !== 'expire') ? ':'.$v : $till, $cols);
+    $pairs = array_map(static fn(string $v, string $m): string => $v.' = '.$m, $cols, $marks);
+    $sql = $bid ? 'UPDATE '.PREFIX_DB.'_blocks SET '.implode(', ', $pairs).' WHERE id = :bid'
+        : 'INSERT INTO '.PREFIX_DB.'_blocks (bkey, '.implode(', ', $cols).') VALUES (\'\', '.implode(', ', $marks).')';
+    $done = !$own || $db->setSqlBegin();
+    $done = $done && ($cols === [] || $db->getSqlQuery($sql, $vals + ($bid ? ['bid' => $bid] : [])) !== false);
+    $nid = $bid ?: ($done ? intval($db->getSqlLastId()) : 0);
+    $done = $done && (($bid && $new['bpos'] === $row['bpos']) || setBlockOrder($new['bpos'], [$nid], $place));
+    if ($own && !($done && $db->setSqlCommit())) $db->setSqlRollback();
+    return $done ? $nid : _ERROR;
+}
+
+# The name and the logo of the site, checked alike for the settings and the builder; the name is kept as typed, not HTML-escaped, and a refused key goes to $bad
+function filterSiteBrand(array $sets, array &$bad): array {
+    global $conf;
+    $out = [];
+    if (array_key_exists('sitename', $sets)) {
+        $site = is_string($sets['sitename']) ? trim($sets['sitename']) : '';
+        if ($site === '' || mb_strlen($site) > 255 || preg_match('/[\x00-\x1F\x7F]/', $site)) $bad[] = 'sitename';
+        else $out['sitename'] = $site;
+    }
+    if (array_key_exists('site_logo', $sets)) {
+        $logo = basename(is_string($sets['site_logo']) ? $sets['site_logo'] : '');
+        if ($logo === '' || !is_file(PUBLIC_DIR.'/templates/'.(string)($conf['theme'] ?? '').'/images/logos/'.$logo)) $bad[] = 'site_logo';
+        else $out['site_logo'] = $logo;
+    }
+    return $out;
 }
 
 # Add voting
@@ -1502,4 +1599,13 @@ function getUpdateAlert(): string {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => ($one['level'] === 'danger') ? 'error' : $one['level'], 'text' => $text.$hide]);
     }
     return $cont;
+}
+
+# Queue the letter an administrator wrote in the field mailtext of a panel form: its placeholders filled in one pass, so a typed value never fills a later one
+function addFormMail(string $kind, string $email, string $title, array $vars): bool {
+    global $conf, $prs, $mailer;
+    $text = strtr(getVar('post', 'mailtext', 'text', ''), $vars);
+    $body = nl2br($prs->filterContent(filterTrustedTags($text, isAdmin(true)), false, 'all'), false);
+    return $email !== '' && $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $conf['sitename'].' - '.$title, 'body' => $body,
+        'sender' => $conf['adminmail'], 'prio' => 3]);
 }

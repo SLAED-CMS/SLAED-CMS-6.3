@@ -342,10 +342,9 @@ function getPointsJournal(string $note): string {
     global $db, $afile, $conf, $tpl;
     $uid = getVar('get', 'uid', 'num', 0);
     $act = getVar('get', 'act', 'word', '');
-    $day = getVar('get', 'day', 'text', '');
+    $day = getVar('get', 'day', 'date', '');
     $names = array_keys($conf['points']['actions']);
     $act = in_array($act, $names, true) ? $act : '';
-    $day = (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day) && strtotime($day) !== false) ? $day : '';
     $where = [];
     $pars = [];
     if ($uid) [$where[], $pars['uid']] = ['p.uid = :uid', $uid];

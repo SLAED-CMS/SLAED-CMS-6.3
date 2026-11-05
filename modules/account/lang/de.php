@@ -50,6 +50,7 @@ define('_ACCOUNT_SOUNDNOTE','Wird in diesem Browser für die Website und das Pan
 define('_ACCOUNT_SNDALERT','Hinweise und Rückfragen');
 define('_ACCOUNT_SNDQUEUE','Moderationswarteschlange');
 define('_ACCOUNT_SNDWIN','Geleerte Warteschlange');
+define('_ACCOUNT_NOLINK','Dieser externe Dienst ist nicht mit Ihrem Profil verknüpft.');
 define('_ACTERROR1','Die Prüfzahl zur Freischaltung Ihres neuen Accounts ist nicht korrekt.<br>Sie müssen auf den per eMail erhaltenen Link klicken, damit Ihr Benutzerkonto freigeschaltet wird - <a href="%s">hier</a>.');
 define('_ACTERROR2','Es existiert kein Benutzer mit diesen Angaben in unserer Datenbank.<br>Sie können sich <a href="%s">hier</a> als neuen Benutzer kostenlos anmelden.');
 define('_ACTIVATIONERROR','Fehler bei der Benutzeraktivierung');
@@ -61,7 +62,6 @@ define('_AVATARSAVE','Avatar auswählen');
 define('_AVATARSELECT','Wählen Sie Ihr Lieblingsbild aus der Galerie, mit der linke Maustaste auf das gewünschte Bild klicken.');
 define('_AVATARSETUP','Avatar Einstellungen');
 define('_BLANKFORAUTO','Bitte leerlassen, wenn das Passwort automatisch generiert werden soll.');
-define('_CHARMIN','Die minimal zulässige Anzahl von Zeichen in einem Kennwort');
 define('_CODEFOR','Bestätigungs-Code für');
 define('_CONFIRMATIONCODE','Bestätigungs-Code');
 define('_ERRORINPUT','Fehler bei der Anmeldung');

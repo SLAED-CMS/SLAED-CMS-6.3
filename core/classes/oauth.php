@@ -361,19 +361,19 @@ class Oauth {
         return ((int)($err['code'] ?? 0) === 1062) ? 'link_duplicate' : 'link_failed';
     }
 
-    # Unlinks a provider only when a usable password or another link survives; a FOR UPDATE lock on the user row serializes concurrent unlinks so neither can drop the last method
-    public static function deleteLink(int $uid, string $prov): string {
+    # Unlinks a provider, unless forced only when a usable password or another link survives; forced it also clears the link of a user row that is gone
+    public static function deleteLink(int $uid, string $prov, bool $force = false): string {
         global $db;
         if (!$db->setSqlBegin()) return 'link_failed';
         $lock = $db->getSqlQuery('SELECT id, password FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
         $urow = ($lock) ? $db->getSqlRow($lock) : null;
-        if (!is_array($urow) || empty($urow['id'])) {
+        if ($lock === false || (!$force && (!is_array($urow) || empty($urow['id'])))) {
             $db->setSqlRollback();
             return 'link_failed';
         }
         $pass = (string)($urow['password'] ?? '');
         $haspw = $pass !== '' && !str_starts_with($pass, '!');
-        if (!$haspw) {
+        if (!$haspw && !$force) {
             $other = $db->getSqlQuery(
                 'SELECT 1 FROM '.PREFIX_DB.'_user_oauth WHERE uid = :uid AND provider <> :prov LIMIT 1',
                 ['uid' => $uid, 'prov' => $prov]
@@ -388,9 +388,9 @@ class Oauth {
             }
         }
         $del = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
-        if ($del === false) {
+        if ($del === false || $del->rowCount() < 1) {
             $db->setSqlRollback();
-            return 'link_failed';
+            return ($del === false) ? 'link_failed' : 'link_missing';
         }
         if (!$db->setSqlCommit()) {
             $db->setSqlRollback();

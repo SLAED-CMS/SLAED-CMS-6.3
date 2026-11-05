@@ -230,6 +230,30 @@ final class AdminGuardTest extends TestCase
         $this->assertStringNotContainsString('$adm = isAdmin();', $body, 'Any administrator is taken for the administrator of the accounts');
     }
 
+    # A closed profile opens to an administrator of the accounts alone, on the page, in the link, the files, the activity and the comments of a profile
+    #[Test]
+    public function aClosedProfileOpensToTheAccountRightAlone(): void
+    {
+        $open = "|| is_moder('account')) {";
+        $this->assertStringContainsString($open, $this->getBody('modules/account/index.php', 'view'));
+        $this->assertStringContainsString($open, $this->getBody('core/system.php', 'user_info'));
+        $this->assertStringContainsString("!is_user() && !is_moder('account')) return false;", $this->getBody('core/user.php', 'checkProfileFile'));
+        $this->assertStringContainsString("!is_user() && !is_moder('account'))) return '';", $this->getBody('core/user.php', 'getProfileLastView'));
+        $this->assertStringContainsString("\$this->site['prof'] === 1 && !is_user() && !is_moder('account')", $this->getFile('core/classes/comment.php'));
+        $home = $this->getBody('modules/account/index.php', 'edithome');
+        $this->assertStringContainsString("(isAdmin() ? ['mod' => _ACCOUNT_SNDQUEUE", $home, 'The queue sounds are for any administrator');
+    }
+
+    # The recommendation is a mail form like the contact form and asks the captcha under its switch
+    #[Test]
+    public function theRecommendationAsksTheCaptchaOfTheContactForm(): void
+    {
+        $code = $this->getFile('modules/recommend/index.php');
+        $this->assertStringContainsString("'captcha' => getCaptcha('contact'),", $code);
+        $this->assertStringContainsString("if (checkCaptcha('contact')) \$stop[] = _SECCODEINCOR;", $code);
+        $this->assertStringNotContainsString("Captcha('comment')", $code);
+    }
+
     # The forum list only reads; the repair of the counters is a posted op of its own behind the admin POST guard
     #[Test]
     public function theForumRepairIsAPostedOp(): void
@@ -361,7 +385,8 @@ final class AdminGuardTest extends TestCase
         $edit = $this->getBody('admin/modules/blocks.php', 'editsave');
         $this->assertStringNotContainsString('back_text', $add.$edit, 'A refused block answers a bare page with a back link');
         $this->assertStringContainsString('add($sent, [', $add, 'A refused new block loses what was typed');
-        $this->assertStringContainsString('edit((int)$bid, $sent, [$room]);', $edit, 'A refused block edit loses what was typed');
+        $keep = "edit(\$bid, ['title' => (string)\$set['title'], 'content' => (string)\$set['content']";
+        $this->assertStringContainsString($keep, $edit, 'A refused block edit loses what was typed');
     }
 
     # A count after a POST travels in the flash by sprintf(), never as a flag of the address read into a second alert
@@ -494,5 +519,53 @@ final class AdminGuardTest extends TestCase
         if ($kept === '') $this->assertSame('menu', $data['drop'] ?? '', 'An empty order left the cookie in place');
         elseif ($kept !== null) $this->assertSame(['menu', $kept], $data['set'] ?? [], $value.' was not stored as '.$kept);
         else $this->assertArrayNotHasKey('set', $data, $value.' was stored');
+    }
+
+    # People and safety on one standard: a ban joins the capped list and is told by its kind, a letter of a form has one writer, a password one rule, a date one type
+    #[Test]
+    public function peopleAndSafetyFollowOneStandard(): void
+    {
+        $save = $this->getBody('admin/modules/security.php', 'bansave');
+        $this->assertStringContainsString("\$cont['blocker_ip'] = getBanList(\$cidr.'|'.\$hash.'|'.\$time.'|'.\$info);", $save, 'A ban of the panel skips the drop and the cap');
+        $this->assertStringNotContainsString("getVar('post', 'id', 'num')", $save, 'A ban is told by a hidden number');
+        $list = $this->getBody('admin/modules/security.php', 'banlist');
+        foreach (['ip', 'user'] as $kind) {
+            $this->assertStringContainsString("['nameattr' => 'kind', 'valueattr' => '".$kind."']", $list, 'The form of the '.$kind.' ban sends no kind');
+        }
+        $mails = [['admin/modules/security.php', 'bansave'], ['admin/modules/admins.php', 'save'], ['modules/account/admin/index.php', 'addsave']];
+        foreach ($mails as [$path, $func]) {
+            $body = $this->getBody($path, $func);
+            $this->assertStringContainsString('addFormMail(', $body, $path.' '.$func.' queues its letter by hand');
+            $this->assertStringNotContainsString('->addQueue(', $body, $path.' '.$func.' queues its letter by hand');
+        }
+        $this->assertStringContainsString("if (\$mail && \$chg && addFormMail('account'", $this->getBody('modules/account/admin/index.php', 'addsave'),
+            'A user save sends the login mail without a new password');
+        $rules = [['admin/modules/admins.php', 'save'], ['modules/account/admin/index.php', 'addsave'], ['modules/account/index.php', 'finnewuser'],
+            ['modules/account/index.php', 'savepass']];
+        foreach ($rules as [$path, $func]) {
+            $this->assertStringContainsString('checkPassRule(', $this->getBody($path, $func), $path.' '.$func.' checks a password by hand');
+        }
+        $this->assertStringContainsString('checkPassRule($apass, $atwo)', $this->getFile('admin/index.php'), 'The first administrator skips the rule of a password');
+        foreach (['admin/index.php', 'admin/modules/admins.php', 'modules/account/admin/index.php', 'modules/account/index.php'] as $path) {
+            $this->assertStringNotContainsString('_CHARMIN', $this->getFile($path), $path.' checks minpass by hand');
+            $this->assertStringNotContainsString('$stop[] = _NOPASS', $this->getFile($path), $path.' checks a password by hand');
+        }
+        $form = $this->getBody('modules/account/admin/index.php', 'add');
+        foreach (["'itype' => 'email', 'name_attr' => 'email'", "'itype' => 'password', 'name_attr' => 'pass',", "'itype' => 'password', 'name_attr' => 'pass2',"] as $field) {
+            $this->assertStringContainsString($field, (string)preg_replace('/,\s+/', ', ', $form), 'The user form shows a credential as plain text: '.$field);
+        }
+        $this->assertStringNotContainsString("[login]\\n'", $form, 'The login mail of a user joins the nick and the password by a literal backslash and n');
+        $site = (string)preg_replace('/,\s+/', ', ', $this->getFile('modules/account/index.php'));
+        foreach (["'itype' => 'password', 'name_attr' => 'user_password',", "'itype' => 'password', 'name_attr' => 'user_password2',", "'itype' => 'email', 'name_attr' => 'mail',",
+            "'itype' => 'email', 'name_attr' => 'email',"] as $field) {
+            $this->assertStringContainsString($field, $site, 'A form of the site shows a credential as plain text: '.$field);
+        }
+        $this->assertDoesNotMatchRegularExpression("/\['name_attr' => '(user_password2?|pass2?|apwd2?|mail|email|aemail)',/", $site.$form.$this->getFile('admin/index.php'),
+            'A credential field has no type');
+        foreach ([['admin/modules/logs.php', 'logview'], ['admin/modules/logs.php', 'logins'], ['admin/modules/groups.php', 'getPointsJournal']] as [$path, $func]) {
+            $body = $this->getBody($path, $func);
+            $this->assertStringNotContainsString('\d{4}-\d{2}-\d{2}', $body, $path.' '.$func.' reads a date by its own pattern');
+            $this->assertMatchesRegularExpression("/getVar\('get', '(from|day)', 'date', ''\)/", $body, $path.' '.$func.' reads no date by its type');
+        }
     }
 }

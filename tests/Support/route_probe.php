@@ -784,7 +784,7 @@ function getRouteSupport(PDO $pdo): array {
     $ctok = fn(string $html): string => preg_match('#id="formcsave".*?name="token"\s+value="([a-f0-9]{64})"#s', $html, $hit) ? $hit[1] : '';
     $reply = function (string $who, int $id, string $text) use ($ctok) {
         $page = getRouteReply($who, 'GET', 'index.php?name=help&op=view&id='.$id);
-        $tok = $ctok($page['body']) ?: getRouteToken($page['body'], '/support/');
+        $tok = $ctok($page['body']) ?: (preg_match('#name="sl-token" content="([a-f0-9]{64})"#', $page['body'], $hit) ? $hit[1] : '');
         return getRouteReply($who, 'POST', 'index.php?go=1&op=addComment&id='.$id.'&mod=help&com=1', ['text' => $text, 'name' => '', 'token' => $tok]);
     };
     $out = ['guest' => [$code('', 'index.php?name=help'), $code('', 'index.php?name=help&op=add'), $code('', 'index.php?name=help&op=view&id=1')]];
@@ -830,6 +830,7 @@ function getRouteSupport(PDO $pdo): array {
     $out['profile'] = [str_contains($prof('boris'), 'Anna reply one'), str_contains($prof('anna'), 'Anna reply one'), str_contains($prof('helper'), 'Anna reply one')];
     $page = getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid);
     $tok = getRouteToken($page['body'], '/support/');
+    $bnode = getRouteToken(getRouteReply('boris', 'GET', 'index.php?name=help&op=view&id='.$bid)['body'], '/support/');
     $ver = getRouteField($page['body'], 'version');
     $before = $when($aid);
     sleep(1);
@@ -840,7 +841,7 @@ function getRouteSupport(PDO $pdo): array {
         getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $tok, 'version' => $ver, 'state' => '2'])['code'],
         getRouteReply('anna', 'GET', 'index.php?name=help&op=support&id='.$aid)['code'],
         getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['version' => (string)$card($aid)['version'], 'state' => '0'])['code'],
-        getRouteReply('boris', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $btok, 'version' => (string)$card($aid)['version'], 'state' => '0'])['code'],
+        getRouteReply('boris', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $bnode, 'version' => (string)$card($aid)['version'], 'state' => '0'])['code'],
         getRouteReply('anna', 'POST', 'index.php?name=news&op=support&id=101', ['token' => $tok, 'version' => '1', 'state' => '0'])['code'],
     ];
     $late = $reply('anna', $aid, 'Anna after close');
@@ -3244,9 +3245,12 @@ function getRouteWriters(PDO $pdo, string $work): array {
     $user = getRoutePairs($pairs, ['uname' => 'Eduard', 'email' => 'eduard@probe.test', 'pass' => 'Secret-123', 'pass2' => 'Secret-123']) + ['sig' => '', 'block' => ''];
     $forged = getRouteReply('root', 'POST', 'admin.php', array_diff_key($user, ['token' => 1]));
     $forged = [$forged['code'], str_ends_with($forged['head']['location'] ?? '', 'name=account&op=add'), (int)$one('SELECT COUNT(*) FROM '.$pre.'users WHERE name = \'Eduard\'')];
+    $bare = fn(array $pass): array => [($res = getRouteReply('root', 'POST', 'admin.php', array_replace($user, $pass)))['code'],
+        str_contains($res['body'], 'name="uname"'), (int)$one('SELECT COUNT(*) FROM '.$pre.'users WHERE name = \'Eduard\'')];
+    $nopass = [$bare(['pass' => '', 'pass2' => '']), $bare(['pass' => 'Short-1', 'pass2' => 'Short-1']), $bare(['pass2' => 'Secret-124'])];
     $made = getRouteReply('root', 'POST', 'admin.php', $user);
     $uid = (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'Eduard\'');
-    $out['user'] = ['made' => [$made['code'], getRouteAddress($pdo, 'user', $uid)], 'forged' => $forged];
+    $out['user'] = ['made' => [$made['code'], getRouteAddress($pdo, 'user', $uid)], 'forged' => $forged, 'nopass' => $nopass];
     $pairs = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id='.$uid)['body'], 'addsave');
     $same = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs) + ['sig' => '', 'block' => '']);
     $out['user']['same'] = [$same['code'], getRouteAddress($pdo, 'user', $uid)];
@@ -4216,6 +4220,57 @@ function getRouteBlocks(PDO $pdo): array {
     $pdo->exec('UPDATE '.$pre.'blocks SET weight = weight * 10 WHERE bpos = \'r\'');
     getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'fix', 'token' => getRouteToken($list, 'fix')]);
     $out['fix'] = $zone('r');
+    $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES (80, \'userbox\', \'User box\', \'\', \'\', \'d\', 1, 1, 0, 0, \'\', \'\', 0, NULL, \'d\', \'all\', \'\')');
+    $list = $page('root', 'admin.php?name=blocks');
+    preg_match_all('#name="op" value="delete".{0,300}?name="id" value="(\d+)"#s', $list, $hits);
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'delete', 'id' => '80', 'token' => getRouteToken($list, 'delete')]);
+    $sysedit = $page('root', 'admin.php?name=blocks&op=edit&id=80');
+    $sysave = getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'editsave', 'token' => getRouteToken($sysedit, 'editsave'), 'bid' => '80', 'bkey' => '',
+        'title' => 'User box', 'content' => '', 'bpos' => 'd', 'status' => '1', 'view' => '0', 'action' => 'd', 'blockwhere[]' => 'all', 'bfile' => 'menu.php']);
+    $out['system'] = [in_array('80', $hits[1], true), in_array('96', $hits[1], true), (string)$one('SELECT CONCAT(bkey, \':\', bfile) FROM '.$pre.'blocks WHERE id = 80'),
+        $sysave['code']];
+    $spec = ['op' => 'addsave', 'token' => $tok, 'content' => 'spec text', 'bpos' => 'l', 'status' => '1', 'view' => '0', 'action' => 'd', 'blockwhere[]' => 'all'];
+    getRouteReply('root', 'POST', 'admin.php?name=blocks', $spec + ['title' => str_repeat('t', 70), 'expire' => '99999']);
+    getRouteReply('root', 'POST', 'admin.php?name=blocks', ['title' => 'Bad file', 'bfile' => '../core/admin.php', 'content' => '', 'expire' => '0'] + $spec);
+    $rssid = (int)$one('SELECT MAX(id) FROM '.$pre.'blocks') + 1;
+    $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES ('.$rssid.', \'\', \'Feed\', \'feed text\', \'http://127.0.0.1:1/old.xml\', \'d\', 2, 1, 3600, 0, \'\', \'\', 0, NULL, \'d\', \'all\', \'\')');
+    $rsedit = $page('root', 'admin.php?name=blocks&op=edit&id='.$rssid);
+    $rssave = getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'editsave', 'token' => getRouteToken($rsedit, 'editsave'), 'bid' => (string)$rssid,
+        'title' => 'Feed', 'url' => 'http://127.0.0.1:1/new.xml', 'refresh' => '3600', 'bpos' => 'd', 'status' => '1', 'view' => '0', 'action' => 'd', 'blockwhere[]' => 'all']);
+    $out['spec'] = [(int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE title = \''.str_repeat('t', 60).'\''),
+        (int)$one('SELECT DATEDIFF(expire, NOW()) FROM '.$pre.'blocks WHERE title = \''.str_repeat('t', 60).'\''),
+        (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE title = \'Bad file\''), $rssave['code'], str_contains($rssave['body'], $word('_RSSFAIL')),
+        (string)$one('SELECT CONCAT(url, \'|\', content) FROM '.$pre.'blocks WHERE id = '.$rssid), str_contains($addf, 'maxlength="60"') && str_contains($addf, 'max="3650"'),
+        str_contains($page('root', 'admin.php?name=blocks&op=edit&id=90'), 'maxlength="60"'), str_contains($rssave['body'], 'value="http://127.0.0.1:1/new.xml"')];
+    $attr = static fn(string $html, string $name): string => preg_match('#'.$name.'="([^"]*)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $screen = $page('root', 'admin.php?name=layout');
+    $lay = ['token' => $attr($screen, 'data-sl-lay-token'), 'ed' => $attr($screen, 'data-sl-lay-ed'), 'rev' => $attr($screen, 'data-sl-lay-rev'),
+        'live' => $attr($screen, 'data-sl-lay-live'), 'page' => '1'];
+    $act = static function (string $op, array $pars) use (&$lay, $attr): string {
+        $one = getRouteReply('root', 'POST', 'admin.php?name=layout&op='.$op, $pars + $lay);
+        $lay['rev'] = $attr($one['body'], 'data-sl-lay-rev') ?: $lay['rev'];
+        $lay['live'] = $attr($one['body'], 'data-sl-lay-live') ?: $lay['live'];
+        $evs = json_decode($one['head']['hx-trigger'] ?? '{}', true) ?: [];
+        return (string)($evs['sl-quick-note'] ?? ($evs['sl-layout-saved']['text'] ?? ''));
+    };
+    $sysdel = $act('act', ['act' => 'blk-del', 'id' => '80']);
+    $act('act', ['act' => 'blk-add']);
+    $empty = $act('act', ['act' => 'publish']);
+    $rows = (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks');
+    $act('save', ['sel' => 'blk:n1', 'field[content]' => 'built text', 'field[status]' => '1']);
+    $act('act', ['act' => 'publish']);
+    $out['builder'] = [str_contains($sysdel, 'User box'), str_contains($empty, explode('%s', $word('_LAYOUT_BLKBAD'))[1]) && str_contains($empty, $word('_BLOCKS_EMPTY')),
+        $rows === (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks') - 1, (string)$one('SELECT CONCAT(bpos, \':\', status) FROM '.$pre.'blocks WHERE content = \'built text\''),
+        array_map(static fn(string $v): int => (int)explode(':', $v)[1], explode(',', $zone('r'))) === range(1, count(explode(',', $zone('r'))))];
+    $act('act', ['act' => 'blk-add']);
+    $act('save', ['sel' => 'blk:n2', 'field[kind]' => 'rss', 'field[url]' => 'http://127.0.0.1:1/built.xml']);
+    $feed = $act('act', ['act' => 'publish']);
+    $out['builder'][] = str_contains($feed, $word('_RSSFAIL')) && (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE url LIKE \'%built.xml\'') === 0;
+    $insp = $page('root', 'admin.php?name=layout&op=pick&sel=page:13&page=13');
+    $home = $page('root', 'admin.php?name=layout&op=pick&sel=page:1&page=1');
+    $out['columns'] = [str_contains($insp, 'name=node&amp;op=type&amp;type=docs'), str_contains($insp, 'field[side]'), str_contains($home, 'field[side]')];
     return $out;
 }
 
@@ -4289,7 +4344,8 @@ function getRoutePublish(PDO $pdo, string $work): array {
     };
     $out = ['marks' => [$tok !== '', strlen($ed) === 12, strlen($rev) === 16, strlen($live) === 40]];
     $out['acts'] = [$post('act', ['act' => 'blk-del', 'id' => '91'])['code'], $post('save', ['sel' => 'blk:90', 'field[title]' => 'Right now'])['code'],
-        $post('act', ['act' => 'blk-add'])['code'], $post('act', ['act' => 'page-add'])['code'], $post('act', ['act' => 'page-del', 'id' => '12'])['code'],
+        $post('act', ['act' => 'blk-add'])['code'], $post('save', ['sel' => 'blk:n1', 'field[content]' => 'new text'])['code'],
+        $post('act', ['act' => 'page-add'])['code'], $post('act', ['act' => 'page-del', 'id' => '12'])['code'],
         $post('save', ['sel' => 'page:10', 'field[addr]' => 'about-team'])['code']];
     $before = $trace();
     $pages = count($draft()['layout']['pages'] ?? []);

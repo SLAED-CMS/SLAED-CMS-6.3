@@ -91,7 +91,7 @@ function contact(): void {
         $semail = getVar('post', 'semail', 'text');
         $message = nl2br(getVar('post', 'message', 'text'), false);
         $stop = [];
-        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'contact')) $stop[] = _ERROR;
+        if (!checkSitePost('contact')) $stop[] = _ERROR;
         if (!$sname) $stop[] = _CERROR3;
         if (!$message) $stop[] = _CERROR1;
         checkemail($semail);

@@ -218,7 +218,7 @@ class Parser {
         }, $src) ?? $src;
         foreach (explode('||', $rules) as $word) {
             if ($word === '') continue;
-            $warray = explode('|', $word);
+            $warray = explode('|', $word, 2);
             if (empty($warray[0])) continue;
             $src = preg_replace('#'.str_replace('#', '\#', $warray[0]).'#i', $warray[1] ?? '', $src) ?? $src;
         }

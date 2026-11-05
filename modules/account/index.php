@@ -33,10 +33,12 @@ function account(): void {
             'label_for' => 'f-user-password',
             'label' => _PASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'password',
                 'name_attr' => 'user_password',
                 'input_id' => 'f-user-password',
                 'maxlength_num' => 72,
                 'placeholder_text' => _PASSWORD,
+                'autocomplete_attr' => 'current-password',
                 'is_required' => true,
             ]),
         ]);
@@ -122,6 +124,7 @@ function newuser(): void {
                 'label_for' => 'f-mail',
                 'label' => _EMAIL,
                 'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'email',
                     'name_attr' => 'mail',
                     'input_id' => 'f-mail',
                     'value_attr' => $mail,
@@ -133,19 +136,23 @@ function newuser(): void {
                 'label_for' => 'f-user-password',
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'password',
                     'name_attr' => 'user_password',
                     'input_id' => 'f-user-password',
                     'maxlength_num' => 72,
                     'placeholder_text' => _PASSWORD,
+                    'autocomplete_attr' => 'new-password',
                 ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-user-password2',
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'password',
                     'name_attr' => 'user_password2',
                     'input_id' => 'f-user-password2',
                     'maxlength_num' => 72,
                     'placeholder_text' => _RETYPEPASSWORD,
+                    'autocomplete_attr' => 'new-password',
                 ]),
             ]);
             if (!empty($conf['users']['rule'])) {
@@ -193,17 +200,15 @@ function finnewuser(): void {
         $nick = getVar('post', $unkey, 'name');
         $mail = getVar('post', 'mail', 'text');
         $rules = getVar('post', 'rules', 'num');
-        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
+        if (!checkSitePost('account')) $stop[] = _ERROR;
         checkuser($nick, $mail, $rules);
         $pass = getPassInput('user_password');
         $pass2 = getPassInput('user_password2');
         if (checkCaptcha('register')) $stop[] = _SECCODEINCOR;
-        if ($pass == '' && $pass2 == '') {
+        if ($pass === '' && $pass2 === '') {
             $pass = getRandomString(max(12, intval($conf['users']['minpass'])));
-        } elseif ($pass != $pass2) {
-            $stop[] = _ERROR_PASS;
-        } elseif ($pass == $pass2 && strlen($pass) < $conf['users']['minpass']) {
-            $stop[] = _CHARMIN.': '.$conf['users']['minpass'];
+        } elseif (($rule = checkPassRule($pass, $pass2)) !== '') {
+            $stop[] = $rule;
         }
         if (!$stop) {
             $check = md5(getRandomString(10));
@@ -305,7 +310,7 @@ function activate(): void {
 
 function view(): void {
     global $db, $conf, $afile, $tpl, $com, $pnt;
-    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
+    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_moder('account')) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
         if ($uname) {
@@ -693,10 +698,10 @@ function profil(): void {
 
 # Answer the feed a member asked for in the cabinet; an empty or malformed address is refused as a feed that could not be read, never answered with nothing
 function rssfeed(): void {
-    global $conf, $tpl;
+    global $conf;
     if (!is_user() || ($conf['rss']['use'] ?? 0) != 1) exit;
     $url = getVar('req', 'url', 'url', '');
-    echo ($url === '') ? $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : getRssView($url);
+    echo getRssView($url);
     exit;
 }
 
@@ -878,6 +883,7 @@ function passlost(): void {
             'label_for' => 'f-email',
             'label' => _EMAIL,
             'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'email',
                 'name_attr' => 'email',
                 'input_id' => 'f-email',
                 'value_attr' => $email,
@@ -943,7 +949,7 @@ function passmail(): void {
     global $db, $conf, $stop, $tpl, $mailer;
     $email = getVar('post', 'email', 'text');
     $code = (string)getVar('post', 'code', 'text');
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
+    if (!checkSitePost('account')) $stop[] = _ERROR;
     checkemail($email);
     if (!$stop) {
         $result = $db->getSqlQuery('SELECT name, email, password FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email]);
@@ -1008,7 +1014,7 @@ function setUserLogin(int $uid, string $name, string $pass, int $story, int $blo
 
 function login(): void {
     global $db, $conf, $stop;
-    $block = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'account');
+    $block = !checkSitePost('account');
     if ($block) $stop[] = _ERROR;
     if (checkCaptcha('login')) [$stop[], $block] = [_SECCODEINCOR, true];
     $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
@@ -1038,8 +1044,7 @@ function login(): void {
 
 function logout(): void {
     global $db, $user;
-    $tok = getVar('post', 'token', 'raw', '');
-    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $tok === '' || !checkSiteToken($tok, 'account')) setRedirect(HOME_PATH);
+    if (!checkSitePost('account')) setRedirect(HOME_PATH);
     $nick = (is_array($user) && isset($user[1])) ? htmlspecialchars(substr((string)$user[1], 0, 25)) : '';
     setCookiesDelete('account');
     if ($nick !== '') $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
@@ -1144,6 +1149,7 @@ function edithome(): void {
             'options_html' => $gopt,
         ])];
         $flds[] = ['label' => _YOUREMAIL, 'label_for' => 'f-mail', 'control_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'email',
             'name_attr' => 'mail',
             'input_id' => 'f-mail',
             'value_attr' => $info['email'],
@@ -1491,7 +1497,7 @@ function savehome(): void {
         edithome();
         return;
     }
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
+    if (!checkSitePost('account')) $stop[] = _ERROR;
     $mail = getVar('post', 'mail', 'text');
     $sig = filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true));
     $block = filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true));
@@ -1589,7 +1595,7 @@ function savehome(): void {
 function setavatar(): void {
     global $db, $user, $tpl;
     if (!is_user() || strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') exit;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) {
+    if (!checkSitePost('account')) {
         header('HTTP/1.1 403 Forbidden');
         exit;
     }
@@ -1604,12 +1610,12 @@ function setavatar(): void {
 
 function savepass(): void {
     global $user, $db, $conf, $stop, $tpl, $mailer;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
+    if (!checkSitePost('account')) $stop[] = _ERROR;
     $newpass = getPassInput('newpass');
     $repeat = getPassInput('newpass2');
     $oldpass = getPassInput('oldpass');
     if (!$stop && is_user() && $oldpass && $newpass && $repeat) {
-        if (strlen($newpass) >= $conf['users']['minpass']) {
+        if (($rule = checkPassRule($newpass, $repeat)) === '') {
             $uid = (int)$user[0];
             [$nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery(
                 'SELECT name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :id',
@@ -1618,33 +1624,28 @@ function savepass(): void {
             $good = !empty($pass) && !Captcha::isLoginLimited('user', (string)$nick) && getPassMatch($oldpass, (string)$pass) !== '';
             if (!$good) Captcha::registerLoginFailure('user', (string)$nick);
             if ($good) {
-                if ($newpass == $repeat) {
-                    $hash = getPassHash($newpass);
-                    if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $hash, 'id' => $uid])) {
-                        $stop[] = _ERROR;
-                        edithome();
-                        return;
-                    }
-                    $link = $tpl->getHtmlFrag('link', [
-                        'href' => getPublicUrl(['name' => $conf['name']]),
-                        'title' => getPublicUrl(['name' => $conf['name']]),
-                        'label_html' => getPublicUrl(['name' => $conf['name']]),
-                    ]);
-                    $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
-                    $message = getMailFrame(sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link));
-                    $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, getUserToken($hash), $story, $blockon, $theme]);
-                    setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);
-                } else {
-                    $stop[] = _ERROR_PASS;
+                $hash = getPassHash($newpass);
+                if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $hash, 'id' => $uid])) {
+                    $stop[] = _ERROR;
                     edithome();
+                    return;
                 }
+                $link = $tpl->getHtmlFrag('link', [
+                    'href' => getPublicUrl(['name' => $conf['name']]),
+                    'title' => getPublicUrl(['name' => $conf['name']]),
+                    'label_html' => getPublicUrl(['name' => $conf['name']]),
+                ]);
+                $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
+                $message = getMailFrame(sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link));
+                $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
+                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, getUserToken($hash), $story, $blockon, $theme]);
+                setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);
             } else {
                 $stop[] = _ERROROLD;
                 edithome();
             }
         } else {
-            $stop[] = _CHARMIN.': '.$conf['users']['minpass'];
+            $stop[] = $rule;
             edithome();
         }
     } else {
@@ -1861,7 +1862,7 @@ function oauthfinish(): void {
         setFoot();
         return;
     }
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) {
+    if (!checkSitePost('account')) {
         Logger::addOauth('warning', 'csrf_failed');
         oautherror();
     }
@@ -1976,11 +1977,12 @@ function oauthfinish(): void {
 function oauthunlink(): void {
     global $user, $conf;
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !is_user()) setRedirect(getSeoUrl(['name' => $conf['name']]));
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _TOKENMISS, true);
+    if (!checkSitePost('account')) setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _TOKENMISS, true);
     $prov = strtolower(getVar('post', 'prov', 'word'));
     $cuid = (int)$user[0];
     $ecode = Oauth::deleteLink($cuid, $prov);
-    if ($ecode !== '') setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _OAUTHLAST, true);
+    $etext = match ($ecode) { '' => '', 'unlink_last_method' => _OAUTHLAST, 'link_missing' => _ACCOUNT_NOLINK, default => _ERROR };
+    if ($etext !== '') setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, $etext, true);
     Logger::addOauth('info', 'oauth_unlink', ['prov' => $prov, 'uid' => $cuid]);
     setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _OAUTHOFF);
 }

@@ -59,7 +59,7 @@ function recommend(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('recommend')]).$fields,
-        'captcha' => getCaptcha('comment'),
+        'captcha' => getCaptcha('contact'),
         'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'label' => _SEND]),
     ]);
     echo $cont;
@@ -74,11 +74,11 @@ function send(): void {
     $fname = getVar('post', 'fname', 'name');
     $femail = getVar('post', 'femail', 'text');
     $stop = [];
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'recommend')) $stop[] = _ERROR;
+    if (!checkSitePost('recommend')) $stop[] = _ERROR;
     if (!$sname || !$fname) $stop[] = _ERROR_ALL;
     checkemail($semail);
     checkemail($femail);
-    if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
+    if (checkCaptcha('contact')) $stop[] = _SECCODEINCOR;
     if (!$stop) {
         $subject = $conf['sitename'].' - '._INTSITE;
         $siteLink = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'], 'title' => $conf['sitename'], 'label' => $conf['homeurl'], 'is_blank' => true]);

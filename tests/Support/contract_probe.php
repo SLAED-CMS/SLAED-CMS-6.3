@@ -901,6 +901,7 @@ function getProbeRssView(): array {
     $count = count(glob($dir.'/*') ?: []);
     $out['badpage'] = str_contains(getRssView('ftp://feed.example.com/rss'), _RSS_PROBLEM);
     $out['badfiles'] = count(glob($dir.'/*') ?: []) - $count;
+    $out['empty'] = str_contains(getRssView(''), _RSS_PROBLEM);
     return $out;
 }
 

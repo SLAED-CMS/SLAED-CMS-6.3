@@ -68,6 +68,38 @@ final class ReplaceRuleTest extends TestCase
         $this->assertSame('_tokenmiss', $bare['text']);
     }
 
+    # The sign | joins the word to its replacement and the rules to each other, so a rule that holds one is refused whole by the number of its field and nothing is written
+    #[Test]
+    public function aBarInARuleIsRefused(): void
+    {
+        foreach ([['word[1]' => 'two', 'repl[1]' => 'a | b'], ['word[1]' => 'tw|o', 'repl[1]' => 'b']] as $bad) {
+            $done = $this->getSave(['type' => 'faq', 'word[0]' => 'one', 'repl[0]' => '1'] + $bad);
+            $this->assertSame([], $done['cfg'], 'A rule with | reached the file');
+            $this->assertTrue($done['warn']);
+            $this->assertSame('_replace_bar', $done['text']);
+            $this->assertSame('admin.php?name=config&op=replace&type=faq', $done['url']);
+        }
+    }
+
+    # The parser splits a rule once, at its first |, as the form of the panel shows it, so a stored replacement that holds | reaches the page whole
+    #[Test]
+    public function theParserSplitsARuleOnce(): void
+    {
+        require_once BASE_DIR.'/core/classes/parser.php';
+        $keep = $GLOBALS['conf'] ?? null;
+        $GLOBALS['conf'] = ['replace' => ['faq' => 'SLAED|<b>A | B</b>||cms|CMS']];
+        try {
+            $call = new \ReflectionMethod(\Parser::class, 'replaceText');
+            $out = $call->invoke((new \ReflectionClass(\Parser::class))->newInstanceWithoutConstructor(), '<p>SLAED cms</p>', 'faq');
+        } finally {
+            if ($keep === null) unset($GLOBALS['conf']);
+            else $GLOBALS['conf'] = $keep;
+        }
+        $this->assertSame('<p><b>A | B</b> CMS</p>', $out);
+        $code = (string)file_get_contents(BASE_DIR.'/admin/modules/config.php');
+        $this->assertStringContainsString("explode('|', \$fieldc[\$c] ?? '', 2)", $code, 'The form of the panel splits a rule otherwise than the parser');
+    }
+
     # The rules are a tab of the settings of the main administrator, and their file stays where the parser reads it
     #[Test]
     public function theSectionIsATabOfTheSettings(): void

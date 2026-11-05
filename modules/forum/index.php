@@ -399,7 +399,7 @@ function forum(): void {
                                 .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
                             $cont .= $tpl->getHtmlPart('form-wrap', [
                                 'action' => getSeoUrl(['name' => $conf['name']]),
-                                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => '']).$topicList,
+                                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']).$topicList,
                             ]);
                         } else {
                             $cont .= $topicList;
@@ -781,7 +781,7 @@ function view(): void {
                         'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete', 'input_attr' => ''])
                             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$fcat, 'input_attr' => ''])
                             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$fid, 'input_attr' => ''])
-                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => '']),
+                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']),
                         'title' => _ONDELETE,
                         'icon_name' => 'trash',
                         'confirm_text' => _DELETE.' "'.$val[5].'"?',
@@ -836,7 +836,7 @@ function view(): void {
                     ]);
                 $cont .= $tpl->getHtmlPart('form-wrap', [
                     'action' => getSeoUrl(['name' => $conf['name']]),
-                    'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])
+                    'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => ''])
                         .$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'content' => $selmm]),
                 ]);
             }
@@ -883,7 +883,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => '',
@@ -914,16 +914,10 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     return '';
 }
 
-# A write of the forum takes its token from the body of a POST, as a query token leaks through history, logs and Referer; an empty one would send checkSiteToken() to the request
-function checkForumPost(): bool {
-    $tok = getVar('post', 'token', 'raw', '');
-    return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $tok !== '' && checkSiteToken($tok);
-}
-
 # A moderator acts only on the topics stored in the category they moderate, whatever else the form lists
 function move(): void {
     global $db, $conf;
-    if (!checkForumPost()) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
+    if (!checkSitePost('forum')) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $cat = getVar('post', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
@@ -1084,7 +1078,7 @@ function add(): void {
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$pid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => '']);
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => '',
             'field_html' => $hide
@@ -1146,7 +1140,7 @@ function pmoder(int|string $status, int $subh): string {
 # A named post or topic brings its own category and topic through getForumPlace(), so neither the rights nor the counters can be pointed at another category
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
-    if (!checkForumPost()) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
+    if (!checkSitePost('forum')) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $fid = getVar('post', 'fid', 'num');
     $pid = getVar('post', 'pid', 'num');
     $place = getForumPlace(intval($fid ?: $pid));
@@ -1306,7 +1300,7 @@ function send(): void {
 function delete(int|string|null $id = null): void {
     global $db, $conf, $pnt;
     $hasargs = ($id !== null);
-    if (!$hasargs && !checkForumPost()) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
+    if (!$hasargs && !checkSitePost('forum')) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
     $catid = getForumPlace(intval($id))['cid'];
     $lid = 0;

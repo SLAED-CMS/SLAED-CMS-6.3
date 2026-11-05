@@ -324,7 +324,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $conf, $stop, $admin, $prs, $mailer;
+    global $db, $afile, $conf, $stop, $admin;
     $aid = getVar('post', 'aid', 'num', 0);
     $warn = !checkAdminPost('admins');
     $name = getVar('post', 'aname', 'name', '');
@@ -350,10 +350,7 @@ function save(): void {
     if (!Editor::isValidEditor($edit, 'admin')) $edit = (string)($conf['editor']['admin'] ?? 'plain');
     if (!Editor::isValidEditor($edit, 'admin')) $edit = 'plain';
     $chg = ($pwd !== '' || $ptwo !== '');
-    if (!$aid || $chg) {
-        if ($pwd === '' || $ptwo === '') $stop[] = _NOPASS;
-        if ($pwd !== $ptwo) $stop[] = _ERROR_PASS;
-    }
+    if ((!$aid || $chg) && ($rule = checkPassRule($pwd, $ptwo)) !== '') $stop[] = $rule;
     if ($name) {
         [$adid, $aname] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name])) ?? [0, ''];
         if ($aid != $adid && $name === $aname) $stop[] = _USEREXIST;
@@ -429,14 +426,7 @@ function save(): void {
             );
         }
         if (!$done) $stop[] = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
-        if ($aid && !$chg) $mail = 0;
-        if ($done && $mail) {
-            $subj = $conf['sitename'].' - '._USERPASSWORD.' '.$name;
-            $text = getVar('post', 'mailtext', 'text', '');
-            $text = str_replace('[pass]', $pwd, str_replace('[login]', $name, $text));
-            $text = $prs->filterContent($text, false, 'all');
-            $mailer->addQueue(['kind' => 'admins', 'email' => $email, 'title' => $subj, 'body' => nl2br($text, false), 'sender' => $conf['adminmail'], 'prio' => 3]);
-        }
+        $mail = $done && $mail && $chg && addFormMail('admins', $email, _USERPASSWORD.' '.$name, ['[login]' => $name, '[pass]' => $pwd]);
         if ($done) setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);
     }
     add();

@@ -38,7 +38,7 @@ final class LayoutPublishTest extends TestCase
     {
         $run = $this->getRun();
         $this->assertSame([true, true, true, true], $run['marks'], 'The token, the editor, the revision or the checksum is missing from the screen');
-        $this->assertSame(array_fill(0, 6, 200), $run['acts']);
+        $this->assertSame(array_fill(0, 7, 200), $run['acts']);
     }
 
     # A write of another editor over a draft it did not see is refused by the name and the time of the last writer, and the draft keeps its pages

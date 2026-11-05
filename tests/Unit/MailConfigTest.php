@@ -89,13 +89,14 @@ final class MailConfigTest extends TestCase
         }
     }
 
-    # The general settings rewrite global.php whole, so their form keeps mtemp it no longer shows; the mail section holds a password and stays the main administrator's
+    # The general settings and the mail form write global.php on the file as it stands, so neither drops the keys of the other; the mail password stays the main administrator's
     #[Test]
     public function theMailFormWritesItsOwnKeysAlone(): void
     {
         $conf = (string)file_get_contents(BASE_DIR.'/admin/modules/config.php');
         $mail = (string)file_get_contents(BASE_DIR.'/admin/modules/newsletter.php');
-        $this->assertStringContainsString("'mtemp' => (string)\$conf['mtemp'],", $conf, 'A save of the general settings drops the mail frame from global.php');
+        $this->assertStringContainsString("setConfigFile('global.php', \$cont, \$glob)", $conf, 'A save of the general settings drops the keys it does not show from global.php');
+        $this->assertStringNotContainsString("'mtemp' =>", $conf, 'A save of the general settings writes back a mail frame it read before the mail form saved');
         $this->assertStringNotContainsString("'mail.php'", $conf, 'The general settings still write the mail settings');
         $this->assertStringContainsString("setConfigFile('mail.php', \$mail,", $mail, 'A save without a password no longer keeps the stored one');
         $this->assertMatchesRegularExpression("#setConfigFile\('global\.php', \['mtemp' => [^;]+\], \\\$glob\);#", $mail, 'The mail form writes global.php without its other keys');

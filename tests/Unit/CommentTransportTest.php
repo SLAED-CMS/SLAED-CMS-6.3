@@ -81,6 +81,18 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("'id' => 'repcstat'", $code);
     }
 
+    # An empty comment is refused by the server alone, shown under the list in place of the last refusal, and a stored comment takes that refusal away
+    #[Test]
+    public function aRefusalIsTheServersAlone(): void
+    {
+        $this->assertStringNotContainsString('hx_on_click', $this->getSource('core/user.php', 'setComShow'), 'The form still checks the text in the browser');
+        $code = $this->getSource('core/user.php', 'addComment');
+        $this->assertSame(2, substr_count($code, "header('HX-Retarget: #repcstat');"), 'A refusal is not shown where the other answers of the form go');
+        $this->assertStringContainsString("if (\$body === '') \$stop[] = _CERROR1;", $this->getFile('core/classes/comment.php'));
+        $js = $this->getFile('public/plugins/system/slaed.js');
+        $this->assertStringContainsString("var stat = document.getElementById('repcstat');", $js, 'A stored comment leaves the old refusal');
+    }
+
     # A submit without HTMX stores the comment and answers a 303 back to the target page rather than a bare fragment
     #[Test]
     public function aPlainSubmitAnswersARedirect(): void

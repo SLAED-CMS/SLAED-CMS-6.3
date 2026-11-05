@@ -91,7 +91,7 @@ function banlist(): void {
         $form = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=security&op=bansave',
             'hidden' => [
-                ['nameattr' => 'id', 'valueattr' => '2'],
+                ['nameattr' => 'kind', 'valueattr' => 'ip'],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
             ],
             'rows' => $iprows,
@@ -183,7 +183,7 @@ function banlist(): void {
         $form = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=security&op=bansave',
             'hidden' => [
-                ['nameattr' => 'id', 'valueattr' => '4'],
+                ['nameattr' => 'kind', 'valueattr' => 'user'],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
             ],
             'rows' => $userrows,
@@ -205,9 +205,8 @@ function banlist(): void {
 }
 
 function bansave(): void {
-    global $db, $conf, $afile, $prs, $mailer;
+    global $db, $conf, $afile;
     $warn = !checkAdminPost('security');
-    $id = getVar('post', 'id', 'num');
     $kind = getVar('post', 'kind', 'word', '');
     $keys = getVar('post', 'id[]', 'raw');
     $done = false;
@@ -219,7 +218,6 @@ function bansave(): void {
         $mail = getVar('post', 'mail', 'bool');
         $info = trim(getVar('post', 'info', 'text'));
         $info = ($info) ? $info : _BANN_INFO;
-        $mailtext = trim(getVar('post', 'mailtext', 'text'));
         $hash = getVar('post', 'hash', 'text', '0');
         $time = getVar('post', 'time', 'num');
         $cidr = $cidr ? getIpCidr($cidr) : '';
@@ -237,9 +235,9 @@ function bansave(): void {
             }
             $done = $new !== $cont['blocker_ip'];
             $cont['blocker_ip'] = $new;
-        } elseif ($id == 2 && $cidr) {
+        } elseif ($kind === 'ip' && $cidr) {
             $time = time() + (($time > 0) ? $time : 30) * 86400;
-            $cont['blocker_ip'] .= $cidr.'|'.$hash.'|'.$time.'|'.$info.'||';
+            $cont['blocker_ip'] = getBanList($cidr.'|'.$hash.'|'.$time.'|'.$info);
             $done = true;
         } elseif ($kind === 'user' && $keys) {
             $left = '';
@@ -250,7 +248,7 @@ function bansave(): void {
             }
             $done = $left !== $cont['blocker_user'];
             $cont['blocker_user'] = $left;
-        } elseif ($id == 4 && $name) {
+        } elseif ($kind === 'user' && $name) {
             $time = time() + (($time > 0) ? $time : 30) * 86400;
             $cont['blocker_user'] .= $name.'|'.$time.'|'.$info.'||';
             $done = true;
@@ -261,14 +259,11 @@ function bansave(): void {
             $text = $done ? _SUCCSAVE : (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP);
         }
         if ($done && $isban && $mail) {
-            [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
-            $subject = $conf['sitename'].' - '._SECURITY;
-            $msg = nl2br($prs->filterContent(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), false, 'all'), false);
-            $mailer->addQueue(['kind' => 'security', 'email' => $mail_addr, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
-            $text = _MAIL_SEND;
+            $addr = (string)($db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]))[0] ?? '');
+            if (addFormMail('security', $addr, _SECURITY, ['[time]' => getTimeLeft($time), '[info]' => $info])) $text = _MAIL_SEND;
         }
     }
-    $kind = ($id === 4 || $kind === 'user') ? 'user' : 'ip';
+    $kind = ($kind === 'user') ? 'user' : 'ip';
     setRedirect($afile.'.php?name=security&op=banlist&kind='.$kind, false, 302, $text, !$done);
 }
 

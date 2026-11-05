@@ -290,7 +290,7 @@ function getMonitorGround(array $snap): string {
             getMonitorSize(_MONITOR_CACHE, $store['cache']),
         ]),
     ]);
-    $drive = $pane(['title' => _ADM_DISK, 'content_html' => getTplMeter(_ADM_DISK, $snap['disk_used'], $snap['disk_total'],
+    $drive = $pane(['title' => _ADM_DISK, 'content_html' => getTplMeter(_ADM_DISKUSED, $snap['disk_used'], $snap['disk_total'],
         sprintf(_MONITOR_OF, filterSize($snap['disk_used']), filterSize($snap['disk_total']))).$list([
         getMonitorSize(_ADM_FREE, $snap['disk_free']),
         getMonitorRow(_MONITOR_READ, $rate($disk['read_rate'])),

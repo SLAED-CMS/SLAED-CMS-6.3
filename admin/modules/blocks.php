@@ -48,6 +48,7 @@ function blocks(): void {
 
 function add(array $sent = [], array $stop = []): void {
     global $db, $conf, $afile, $tpl;
+    $spec = getBlockSpec();
     $sent += ['title' => '', 'url' => '', 'refresh' => '3600', 'content' => '', 'bpos' => 'l', 'where' => [], 'lang' => '', 'status' => '1', 'expire' => '0',
         'action' => 'd', 'view' => '0'];
     setHead();
@@ -60,7 +61,7 @@ function add(array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
                 'itype' => 'text',
                 'is_required' => true,
-                'maxlength_num' => 60,
+                'maxlength_num' => $spec['title'],
                 'name_attr' => 'title',
                 'input_id' => 'f-title',
                 'placeholder_text' => _TITLE,
@@ -72,6 +73,7 @@ function add(array $sent = [], array $stop = []): void {
             'label_html' => _RSSFILE,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
+                'maxlength_num' => $spec['url'],
                 'name_attr' => 'url',
                 'input_id' => 'f-url',
                 'placeholder_text' => _RSSFILE,
@@ -106,16 +108,9 @@ function add(array $sent = [], array $stop = []): void {
         ],
     ];
     $bfopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
-    $files = scandir(BASE_DIR.'/blocks');
-    foreach ($files as $file) {
-        if (preg_match('/^(.+)\.php$/', $file, $matches)) {
-            if ($file === 'node.php' || $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
-                $bfopts .= $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => $file,
-                    'label_text' => $matches[0],
-                ]);
-            }
-        }
+    foreach ($spec['files'] as $file) {
+        if ($file !== 'node.php' && $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) > 0) continue;
+        $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => $file]);
     }
     $rows[] = [
         'label_for' => 'f-bfile',
@@ -187,6 +182,7 @@ function add(array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
             'itype' => 'number',
             'is_required' => true,
+            'input_attr' => 'min="0" max="'.$spec['days'].'"',
             'name_attr' => 'expire',
             'input_id' => 'f-expire',
             'placeholder_text' => _EXPIRATION,
@@ -318,59 +314,27 @@ function fix(): void {
 }
 
 function addsave(): void {
-    global $db, $afile;
-    $warn = !checkAdminPost('blocks');
-    $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
-    $content = filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true));
-    $url = getVar('post', 'url', 'url', '');
-    $bpos = getVar('post', 'bpos', 'var', '');
-    $active = getVar('post', 'status', 'num', 0);
-    $refresh = getVar('post', 'refresh', 'num', 0);
-    $headline = getVar('post', 'headline', 'url', '');
-    $lang = getVar('post', 'lang', 'var', '');
-    if (!isset(getLanguageList()[$lang])) $lang = '';
-    $bfile = getVar('post', 'bfile', 'text', '');
-    $bfile = preg_match('/^[a-z0-9_\-]{1,251}\.php$/i', $bfile) ? $bfile : '';
-    $view = getVar('post', 'view', 'num', 0);
-    $days = getVar('post', 'expire', 'num', 0);
-    $action = getVar('post', 'action', 'var', '');
-    if (!in_array($action, ['d', 'r'], true)) $action = '';
-    $url = filterCutText(($headline) ? $headline : $url, 200);
-    $bwhere = getVar('post', 'blockwhere[]', 'var', []);
-    $bkey = '';
-    $btime = 0;
-    if ($bfile != '') {
-        $url = '';
-        if ($title == '') $title = filterCutText(str_replace('_', ' ', str_replace('.php', '', $bfile)), 60);
-    }
-    if ($url) {
-        $btime = time();
-        $content = getRssBody($url) ?? '';
-    }
-    if ($warn) {
-        setRedirect($afile.'.php?name=blocks&op=add', false, 302, _TOKENMISS, true);
-    }
-    $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
-    if ($room !== '' || (($content == '') && ($bfile == ''))) {
-        $sent = ['title' => $title, 'url' => $url, 'refresh' => (string)$refresh, 'content' => getVar('post', 'content', 'raw', ''), 'bpos' => $bpos, 'where' => $bwhere,
-            'lang' => $lang, 'status' => (string)$active, 'expire' => (string)$days, 'action' => $action ?: 'd', 'view' => (string)$view];
-        add($sent, [$room ?: ($url ? _RSSFAIL : _BLOCKS_EMPTY)]);
-    } else {
-        $param = ($bfile === 'node.php') ? json_encode(['type' => [], 'mode' => 'last', 'limit' => 10]) : '';
-        $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, 0, :active, :refresh, :btime, :lang, :bfile, :view,'
-            .(($days > 0) ? ' NOW() + INTERVAL :days DAY,' : ' NULL,').' :action, :which, :param)';
-        $done = in_array($bpos, ['l', 'r', 'c', 'd'], true) && $db->setSqlBegin();
-        $done = $done && $db->getSqlQuery($sql, [
-            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'active' => $active, 'refresh' => $refresh,
-            'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'action' => $action, 'which' => getBlockWhich($bwhere), 'param' => $param,
-        ] + (($days > 0) ? ['days' => $days] : [])) !== false;
-        $done = $done && setBlockOrder($bpos, [(int)$db->getSqlLastId()]) && $db->setSqlCommit();
-        if (!$done) {
-            $db->setSqlRollback();
-            setRedirect($afile.'.php?name=blocks&op=add', false, 302, _ERROR, true);
-        }
-        setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
-    }
+    global $afile;
+    if (!checkAdminPost('blocks')) setRedirect($afile.'.php?name=blocks&op=add', false, 302, _TOKENMISS, true);
+    $set = [
+        'title' => getVar('post', 'title', 'title', ''),
+        'content' => getVar('post', 'content', 'raw', ''),
+        'url' => getVar('post', 'headline', 'url', '') ?: getVar('post', 'url', 'url', ''),
+        'bfile' => getVar('post', 'bfile', 'text', ''),
+        'bpos' => getVar('post', 'bpos', 'var', ''),
+        'status' => getVar('post', 'status', 'num', 0),
+        'refresh' => getVar('post', 'refresh', 'num', 3600),
+        'lang' => getVar('post', 'lang', 'var', ''),
+        'view' => getVar('post', 'view', 'num', 0),
+        'days' => getVar('post', 'expire', 'num', 0),
+        'action' => getVar('post', 'action', 'var', 'd'),
+        'which' => getVar('post', 'blockwhere[]', 'var', []),
+    ];
+    $res = setBlockRow(0, $set);
+    if (is_int($res)) setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
+    if ($res === _ERROR) setRedirect($afile.'.php?name=blocks&op=add', false, 302, _ERROR, true);
+    $sent = array_map('strval', array_diff_key($set, ['which' => true, 'days' => true])) + ['where' => $set['which'], 'expire' => (string)$set['days']];
+    add($sent, [$res]);
 }
 
 function getBlockCodeForm(string $bf, string $flag, string $text, string $ver, string $note = ''): string {
@@ -482,15 +446,15 @@ function filecodesave(): void {
 
 function edit(int $bid = 0, array $sent = [], array $stop = []): void {
     global $afile, $conf, $db, $tpl;
+    $spec = getBlockSpec();
     $bid = $bid ?: getVar('get', 'id', 'num');
     $sql = 'SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which, param FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
     $row = $db->getSqlRow($db->getSqlQuery($sql, ['bid' => $bid])) ?: setRedirect($afile.'.php?name=blocks', false, 302, _NONE_FOUND, true);
-    $oldpos = (string)$row['bpos'];
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $stop]);
     [
-        'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'status' => $active, 'refresh' => $refresh,
+        'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'status' => $active, 'refresh' => $refresh,
         'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which, 'param' => $param,
     ] = array_replace($row, $sent);
     if ($url != '') {
@@ -507,7 +471,7 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
             'itype' => 'text',
             'is_required' => true,
-            'maxlength_num' => 50,
+            'maxlength_num' => $spec['title'],
             'name_attr' => 'title',
             'input_id' => 'f-title',
             'placeholder_text' => _TITLE,
@@ -516,20 +480,12 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
     ]];
     if ($bfile != '') {
         $bfopts = '';
-        $files = scandir(BASE_DIR.'/blocks');
+        $files = $spec['files'];
         if (!in_array($bfile, $files, true)) {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _BLOCK_NOFILE.': blocks/'.htmlspecialchars($bfile, ENT_QUOTES)]);
             $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $bfile, 'label_text' => $bfile.' — '._BLOCK_NOFILE, 'is_selected' => true]);
         }
-        foreach ($files as $file) {
-            if (preg_match('/^(.+)\.php$/', $file, $matches)) {
-                $bfopts .= $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => $file,
-                    'label_text' => $matches[0],
-                    'is_selected' => $bfile == $file,
-                ]);
-            }
-        }
+        foreach ($files as $file) $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => $file, 'is_selected' => $bfile === $file]);
         $rows[] = [
             'label_for' => 'f-bfile',
             'label_html' => _FILENAME,
@@ -563,6 +519,7 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
             'label_html' => _RSSFILE,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
+                'maxlength_num' => $spec['url'],
                 'name_attr' => 'url',
                 'input_id' => 'f-url',
                 'placeholder_text' => _RSSFILE,
@@ -642,6 +599,7 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         $exptxt = $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'is_required' => true,
+            'input_attr' => 'min="0" max="'.$spec['days'].'"',
             'name_attr' => 'expire',
             'input_id' => 'f-expire',
             'describedby' => 'f-expire-hint',
@@ -689,9 +647,7 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=blocks&op=editsave',
         'hidden' => [
-            ['nameattr' => 'oldposition', 'valueattr' => $oldpos],
             ['nameattr' => 'bid', 'valueattr' => (string)$bid],
-            ['nameattr' => 'bkey', 'valueattr' => (string)$bkey],
             ['nameattr' => 'weight', 'valueattr' => (string)$weight],
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
             ['nameattr' => 'op', 'valueattr' => 'editsave'],
@@ -704,106 +660,54 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
 }
 
 function editsave(): void {
-    global $db, $afile;
-    $warn = !checkAdminPost('blocks');
-    $bid = getVar('post', 'bid', 'num');
-    $bkey = filterCutText(getVar('post', 'bkey', 'var', ''), 15);
-    $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
-    $content = filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true));
-    $url = filterCutText(getVar('post', 'url', 'url', ''), 200);
-    $oldpos = getVar('post', 'oldposition', 'var', '');
-    $bpos = getVar('post', 'bpos', 'var', '');
-    $active = getVar('post', 'status', 'num', 0);
-    $refresh = getVar('post', 'refresh', 'num', 0);
-    $weight = getVar('post', 'weight', 'num', 0);
-    $lang = getVar('post', 'lang', 'var', '');
-    if (!isset(getLanguageList()[$lang])) $lang = '';
-    $bfile = getVar('post', 'bfile', 'text', '');
-    $bfile = preg_match('/^[a-z0-9_\-]{1,251}\.php$/i', $bfile) ? $bfile : '';
-    $view = getVar('post', 'view', 'num', 0);
-    $days = getVar('post', 'expire', 'num', 0);
-    $action = getVar('post', 'action', 'var', '');
-    if (!in_array($action, ['d', 'r'], true)) $action = '';
-    $bwhere = getVar('post', 'blockwhere[]', 'var', []);
-    if ($warn) {
-        setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
-    }
-    if (!in_array($bpos, ['l', 'r', 'c', 'd'], true)) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _ERROR, true);
-    $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
-    if ($room === '' && !$url && $bfile === '' && $content === '') $room = _BLOCKS_EMPTY;
-    if ($room !== '') {
-        $sent = ['title' => $title, 'content' => getVar('post', 'content', 'raw', ''), 'bpos' => $bpos, 'status' => $active, 'lang' => $lang, 'view' => $view,
-            'action' => $action ?: 'd', 'which' => getBlockWhich($bwhere)];
-        edit((int)$bid, $sent, [$room]);
-        return;
-    }
-    $param = '';
-    if ($bfile === 'node.php') {
+    global $afile;
+    $bid = getVar('post', 'bid', 'num', 0);
+    if (!checkAdminPost('blocks')) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
+    $set = [
+        'title' => getVar('post', 'title', 'title', ''),
+        'content' => getVar('post', 'content', 'raw', ''),
+        'url' => getVar('post', 'url', 'url', ''),
+        'bfile' => getVar('post', 'bfile', 'text', ''),
+        'bpos' => getVar('post', 'bpos', 'var', ''),
+        'status' => getVar('post', 'status', 'num', 0),
+        'refresh' => getVar('post', 'refresh', 'num', null),
+        'lang' => getVar('post', 'lang', 'var', ''),
+        'view' => getVar('post', 'view', 'num', 0),
+        'days' => getVar('post', 'expire', 'num', null),
+        'action' => getVar('post', 'action', 'var', 'd'),
+        'which' => getVar('post', 'blockwhere[]', 'var', []),
+    ];
+    if ($set['bfile'] === 'node.php') {
         $pick = getVar('post', 'ntype[]', 'var', []);
-        $set = ['type' => array_values(array_intersect(array_keys(getNodeTypeMap()), $pick)), 'mode' => getVar('post', 'nmode', 'raw', 'last')];
-        $set['limit'] = intval(getVar('post', 'nlimit', 'num', 10));
-        $param = (string)json_encode($set, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (count($set['type']) !== count(array_unique($pick)) || getNodeBlockParam($param) === null) {
-            setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _BLOCKPROBLEM, true);
-        }
+        $node = ['type' => array_values(array_intersect(array_keys(getNodeTypeMap()), $pick)), 'mode' => getVar('post', 'nmode', 'raw', 'last')];
+        $node['limit'] = intval(getVar('post', 'nlimit', 'num', 10));
+        $set['param'] = (string)json_encode($node, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (count($node['type']) !== count(array_unique($pick))) $set['param'] = '';
     }
-    $which = getBlockWhich($bwhere);
-    $fresh = false;
-    if ($url) {
-        $bkey = '';
-        $content = getRssBody($url);
-        $fresh = $content !== null;
-        if (!$fresh) [$content] = $db->getSqlRow($db->getSqlQuery('SELECT content FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
-    }
-    $fail = !$db->setSqlBegin();
-    $put = function (string $sql, array $pars) use ($db, &$fail): PDOStatement|false {
-        $res = $fail ? false : $db->getSqlQuery($sql, $pars);
-        if ($res === false) $fail = true;
-        return $res;
-    };
-    $put('UPDATE '.PREFIX_DB.'_blocks SET param = :param, which = :which WHERE id = :bid', ['param' => $param, 'which' => $which, 'bid' => $bid]);
-    $pars = ['bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang,
-        'bfile' => $bfile, 'view' => $view, 'bid' => $bid];
-    $sql = 'UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, status = :active, refresh = :refresh,'
-        .' lang = :lang, bfile = :bfile, view = :view';
-    if ($fresh) {
-        $sql .= ', time = :time';
-        $pars['time'] = time();
-    }
-    if ($url) {
-        $put($sql.' WHERE id = :bid', $pars);
-    } else {
-        $exp = ($days > 0) ? ', expire = COALESCE(expire, NOW() + INTERVAL :days DAY)' : '';
-        $put($sql.$exp.', action = :action WHERE id = :bid', ['action' => $action] + (($days > 0) ? ['days' => $days] : []) + $pars);
-    }
-    if (!$fail && $oldpos !== $bpos && !setBlockOrder($bpos, [$bid], $weight)) $fail = true;
-    if (!$fail && !$db->setSqlCommit()) $fail = true;
-    if ($fail) {
-        $db->setSqlRollback();
-        setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _ERROR, true);
-    }
-    setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
+    $res = setBlockRow($bid, $set, getVar('post', 'weight', 'num', 0));
+    if (is_int($res)) setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
+    if ($res === _NONE_FOUND) setRedirect($afile.'.php?name=blocks', false, 302, _NONE_FOUND, true);
+    if (in_array($res, [_ERROR, _BLOCKPROBLEM], true)) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, $res, true);
+    edit($bid, ['title' => (string)$set['title'], 'content' => (string)$set['content'], 'url' => (string)$set['url'], 'bpos' => (string)$set['bpos'],
+        'status' => (string)$set['status'], 'lang' => (string)$set['lang'], 'view' => (string)$set['view'], 'action' => (string)$set['action'],
+        'which' => getBlockWhich($set['which'])], [$res]);
 }
 
 function change(): void {
-    global $db, $afile;
-    $id = getVar('post', 'id', 'num');
+    global $afile;
+    $id = getVar('post', 'id', 'num', 0);
     $act = getVar('post', 'act', 'num', 0);
     $warn = !checkAdminPost('blocks');
-    $wipe = $act ? '' : ', expire = CASE WHEN expire < NOW() THEN NULL ELSE expire END';
-    $res = (!$warn && $id) ? $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = :active'.$wipe.' WHERE id = :id', ['active' => $act ? 0 : 1, 'id' => $id]) : false;
-    $done = $res && $res->rowCount() > 0;
-    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
+    $res = (!$warn && $id) ? setBlockRow($id, ['status' => $act ? 0 : 1]) : _ERROR;
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : (is_int($res) ? _SUCCSTATUS : $res), !is_int($res));
 }
 
 function delete(): void {
-    global $db, $afile;
-    $id = getVar('post', 'id', 'num');
+    global $afile;
+    $id = getVar('post', 'id', 'num', 0);
     $warn = !checkAdminPost('blocks');
-    $row = (!$warn && $id) ? $db->getSqlRow($db->getSqlQuery('SELECT bpos FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id])) : false;
-    $done = $row && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]) !== false;
-    if ($done && in_array($row[0], ['l', 'r', 'c', 'd'], true)) setBlockOrder((string)$row[0]);
-    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
+    $res = (!$warn && $id) ? setBlockRow($id, null) : _ERROR;
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : (is_int($res) ? _SUCCDELETE : $res), !is_int($res));
 }
 
 function info(): void {

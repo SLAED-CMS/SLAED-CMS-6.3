@@ -2833,8 +2833,10 @@
     }
     window.addEventListener('hashchange', setCommentHash);
 
-    // Only a stored comment clears the form: a refused submit keeps the text the visitor typed, the reply target it named and the key it was refused with
+    // Only a stored comment clears the form and the refusal shown under the list: a refused submit keeps the text the visitor typed, the reply target it named and the key it was refused with
     document.addEventListener('sl-comment-add', function () {
+        var stat = document.getElementById('repcstat');
+        if (stat) stat.innerHTML = '';
         var form = document.getElementById('formcsave');
         if (!form) return;
         form.reset();

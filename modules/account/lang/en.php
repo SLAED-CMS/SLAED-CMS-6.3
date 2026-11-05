@@ -50,6 +50,7 @@ define('_ACCOUNT_SOUNDNOTE','Kept in this browser for the site and the panel: wh
 define('_ACCOUNT_SNDALERT','Notices and questions');
 define('_ACCOUNT_SNDQUEUE','Moderation queue');
 define('_ACCOUNT_SNDWIN','An emptied queue');
+define('_ACCOUNT_NOLINK','This external service is not linked to your profile.');
 define('_ACTERROR1','New user verification number is invalid.<br>Please be sure to click on the link you received by email or apply for a new account <a href="%s">here</a>.');
 define('_ACTERROR2','There is no user in the database with this information.<br>You can register a new user from <a href="%s">here</a>.');
 define('_ACTIVATIONERROR','New User Activation Error');
@@ -61,7 +62,6 @@ define('_AVATARSAVE','Select Avatar from gallery');
 define('_AVATARSELECT','Choose your favorite avatar from the gallery, it is enough to press the left mouse button on the desired image.');
 define('_AVATARSETUP','Select avatar');
 define('_BLANKFORAUTO','Leave blank for auto-generate your password');
-define('_CHARMIN','Minimum number of characters in the password');
 define('_CODEFOR','Confirmation Code for');
 define('_CONFIRMATIONCODE','Confirmation Code');
 define('_ERRORINPUT','Authorization error');

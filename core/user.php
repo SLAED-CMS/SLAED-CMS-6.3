@@ -283,8 +283,6 @@ function setComShow(int $id, int $acomm, ?string $route): string {
             'hx_include' => '#formcsave',
             'hx_target' => '#repcrows',
             'hx_swap' => 'afterbegin',
-            'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim())'
-                .' { alert(\''._CERROR1.'\'); event.preventDefault(); }',
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => $post,
@@ -461,6 +459,8 @@ function addComment(): void {
     if ($new['error'] !== '' || ($own && !$db->setSqlCommit())) {
         if ($own) $db->setSqlRollback();
         if (!$live) setRedirect($back.'#comm', false, 303, $new['error'] ?: (string)_ERROR, true);
+        header('HX-Retarget: #repcstat');
+        header('HX-Reswap: innerHTML');
         echo $tpl->getHtmlFrag('alert', ['text' => $new['error'] ?: _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         return;
     }
@@ -657,7 +657,7 @@ function checkPrivatNames(string $text): string {
 # Answer whether the reader gets one file of an account text: a name of the signature to whom may open the profile, of the own block to its owner, a preview the own upload
 function checkProfileFile(string $mod, int $id, string $key): bool {
     global $db, $conf, $user;
-    if (intval($conf['users']['prof'] ?? 0) === 1 && !is_user() && !isAdmin()) return false;
+    if (intval($conf['users']['prof'] ?? 0) === 1 && !is_user() && !is_moder('account')) return false;
     if ($id < 1) return $mod === 'profile' && checkUploadPreview('profile', $key);
     $row = $db->getSqlRow($db->getSqlQuery('SELECT sig, block FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]));
     if (!$row) return false;
@@ -1267,7 +1267,7 @@ function getProfileModules(int $uid = 0): array {
 # Build the "last activity" feed with per-module tabs for a public profile, the fixed modules read in one UNION ALL round-trip
 function getProfileLastView(int $uid): string {
     global $db, $conf, $tpl, $prs, $com;
-    if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
+    if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !is_moder('account'))) return '';
     $limit = intval(getUserNews(25));
     $mods = getProfileModules($uid);
     $parts = [];

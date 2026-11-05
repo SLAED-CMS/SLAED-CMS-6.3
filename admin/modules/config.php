@@ -743,7 +743,10 @@ function save(): void {
 
         $homeurl = getVar('post', 'homeurl', 'url');
         $xhomeurl = ($homeurl !== '' && substr($homeurl, -1) == '/') ? substr($homeurl, 0, -1) : $homeurl;
-        $xsite_logo = str_replace('templates/'.$conf['theme'].'/images/logos/', '', getVar('post', 'site_logo', 'text'));
+        $keys = [];
+        $brand = filterSiteBrand(['sitename' => getVar('post', 'sitename', 'raw', ''), 'site_logo' => getVar('post', 'site_logo', 'raw', '')], $keys);
+        $names = array_map(static fn(string $v): string => ($v === 'sitename') ? _SITENAME : _LOGO, $keys);
+        if ($keys) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, sprintf(_ADM_BADVAL, implode(', ', $names)), true);
         $xadlogo = basename(str_replace('templates/admin/images/logos/', '', getVar('post', 'admin_logo', 'text')));
         if (!is_file(PUBLIC_DIR.'/templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed_logo_256x73.png';
 
@@ -796,11 +799,10 @@ function save(): void {
         }
 
         $cont = [
-            'webroot' => ($conf['webroot'] ?? '') === 'project' ? 'project' : 'public',
-            'sitename' => getVar('post', 'sitename', 'text'),
+            'sitename' => $brand['sitename'],
             'homeurl' => $xhomeurl,
             'admin_logo' => $xadlogo,
-            'site_logo' => $xsite_logo,
+            'site_logo' => $brand['site_logo'],
             'slogan' => getVar('post', 'slogan', 'text'),
             'admininfo' => getVar('post', 'admininfo', 'text'),
             'startdate' => getVar('post', 'startdate', 'time'),
@@ -812,10 +814,7 @@ function save(): void {
             'ip_link' => getVar('post', 'ip_link', 'url', 'http://whois.domaintools.com/'),
             'theme' => ($xtheme = getVar('post', 'theme', 'var')) && checkThemeAssets($xtheme) ? $xtheme : (string)$conf['theme'],
             'module' => $xmodule,
-            'editor' => [
-                'user' => $eduser,
-                'code' => (string)($conf['editor']['code'] ?? 'codemirror'),
-            ],
+            'editor' => ['user' => $eduser],
             'gtime' => getVar('post', 'gtime', 'text'),
             'var_view' => getVar('post', 'var_view', 'num'),
             'syntax' => getVar('post', 'syntax', 'num'),
@@ -840,9 +839,7 @@ function save(): void {
             'multilingual' => getVar('post', 'multilingual', 'num'),
             'flags' => getVar('post', 'flags', 'num'),
             'geoip_anon' => getVar('post', 'geoipanon', 'num', 1),
-            'geoip_asn' => (string)($conf['geoip_asn'] ?? 'storage/geoip/asn.mmdb'),
             'geoip_cache' => getVar('post', 'geoipcache', 'num', 86400),
-            'geoip_country' => (string)($conf['geoip_country'] ?? 'storage/geoip/country.mmdb'),
             'geoip_enabled' => getVar('post', 'geoipenabled', 'num', 1),
             'geoip_store' => getVar('post', 'geoipstore', 'num', 0),
             'geoip_test' => $test,
@@ -855,10 +852,12 @@ function save(): void {
             'css_f' => strtr(getVar('post', 'css_f', 'text', ''), $kprotect),
             'script_f' => strtr(getVar('post', 'script_f', 'text',
                 'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
-            'mtemp' => (string)$conf['mtemp'],
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
         ];
-        $warn = !setConfigFile('global.php', $cont);
+        $file = CONFIG_DIR.'/global.php';
+        if (function_exists('opcache_invalidate')) opcache_invalidate($file, true);
+        $glob = is_file($file) ? require $file : [];
+        $warn = !is_array($glob) || !$glob || !setConfigFile('global.php', $cont, $glob);
         if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $text, $warn);
@@ -972,11 +971,14 @@ function replacesave(): void {
     }
     if (!$warn) {
         $rules = [];
+        $bars = [];
         for ($i = 0; $i < 50; $i++) {
             $word = getVar('post', 'word['.$i.']', 'word', '0');
             $body = getVar('post', 'repl['.$i.']', '', '0');
+            if (str_contains($word.$body, '|')) $bars[] = $i + 1;
             if ($word !== '0' || $body !== '0') $rules[] = $word.'|'.$body;
         }
+        if ($bars) setRedirect($afile.'.php?name=config&op=replace&type='.$type, false, 302, sprintf(_REPLACE_BAR, implode(', ', $bars)), true);
         $warn = !setConfigFile('replace.php', [$type => implode('||', $rules)], $conf['replace'] ?? []);
         if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
     }

@@ -98,7 +98,7 @@ final class EditorBreakTest extends TestCase
                 "filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true))" => 1],
             'modules/account/admin/index.php' => ["filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true))" => 2,
                 "filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true))" => 2],
-            'admin/modules/blocks.php' => ["filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true))" => 2],
+            'core/admin.php' => ["filterSourceText((string)\$set['content'], isAdmin(true))" => 1],
             'core/system.php' => ["filterContent(\$content, true, 'all', 2, '', [], true)" => 1],
             'admin/modules/newsletter.php' => ["filterSourceText(getVar('post', 'body', 'raw', " => 2],
             'core/classes/mail.php' => ["filterContent(\$body, true, 'all', 0, '', [], true)" => 1],

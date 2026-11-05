@@ -94,6 +94,13 @@ final class RouteWriterTest extends TestCase
         $this->assertSame([303, true, 0], $this->getRun()['user']['forged']);
     }
 
+    # A new user of the panel needs a password by the rule of the site: none, one shorter than minpass or a repeat that differs answers the form again and writes no row
+    #[Test]
+    public function aUserOfThePanelNeedsAPassword(): void
+    {
+        $this->assertSame(array_fill(0, 3, [200, true, 0]), $this->getRun()['user']['nopass']);
+    }
+
     # An account gets its path when its row is created, a new login moves it, the freed path is never given to the next account, a deletion leaves every path gone
     #[Test]
     public function anAccountGetsMovesAndLosesItsPath(): void

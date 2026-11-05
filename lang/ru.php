@@ -109,6 +109,7 @@ define('_CERROR8','Запрещена отправка сообщений сам
 define('_CERROR9','Размещение ссылок в комментариях запрещено!');
 define('_CHANGE','Настройки');
 define('_CHANGEFREQ','Частота обновления');
+define('_CHARMIN','Минимально допустимое количество символов в пароле');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Отметить все');
 define('_CHECKOP','Действие');

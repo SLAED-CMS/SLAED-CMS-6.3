@@ -47,20 +47,27 @@ function getLayoutDraft(): array {
 
 # The page of a module the edit of a page in the floating menu opened while no page holds its slot: made in memory, written by the first change
 function setLayoutSlotPage(array &$dft, string $mod): void {
-    global $conf;
     if (!isset(getLayoutModules()[$mod])) return;
     foreach ($dft['layout']['pages'] as $page) {
         foreach ($page['sections'] as $sec) if (($sec['type'] ?? '') === Layout::SLOT && (string)($sec['module'] ?? '') === $mod) return;
     }
-    $cols = isset($conf['node']['types'][$mod]) ? (getNodeTypeMap()[$mod]->settings['view'] ?? []) : ($conf['modules'][$mod] ?? []);
-    [$side, $top] = array_map(static fn(mixed $v): string => in_array((string)$v, ['0', '1', '2', '3'], true) ? (string)$v : '0', [$cols['side'] ?? '', $cols['top'] ?? '']);
     $dft['base'] = $dft['layout'];
     $key = $dft['layout']['next']++;
     $sec = ['id' => $dft['layout']['next']++, 'type' => Layout::SLOT, 'on' => true, 'module' => $mod, 'who' => '0', 'lang' => '', 'from' => '', 'till' => '', 'anchor' => '',
         'phone' => true, 'desk' => true];
-    $dft['layout']['pages'][$key] = ['title' => getModuleName($mod), 'addr' => '', 'desc' => '', 'band' => true, 'side' => $side, 'top' => $top, 'og' => '', 'noindex' => false,
-        'who' => '0', 'sections' => [$sec]];
+    $dft['layout']['pages'][$key] = ['title' => getModuleName($mod), 'addr' => '', 'desc' => '', 'band' => true, 'og' => '', 'noindex' => false, 'who' => '0',
+        'sections' => [$sec]];
     $dft['made'] = ['key' => $key, 'mod' => $mod];
+}
+
+# The block columns of a module or a Node type as its own form keeps them, a value off the scale read as 0, and the address of that form
+function getLayoutModuleCols(string $mod): array {
+    global $conf, $afile;
+    $type = isset($conf['node']['types'][$mod]);
+    $cols = $type ? (getNodeTypeMap()[$mod]->settings['view'] ?? []) : ($conf['modules'][$mod] ?? []);
+    $out = array_map(static fn(mixed $v): string => in_array((string)$v, ['0', '1', '2', '3'], true) ? (string)$v : '0', [$cols['side'] ?? '', $cols['top'] ?? '']);
+    $out[] = $afile.'.php?'.($type ? 'name=node&op=type&type=' : 'name=modules&op=edit&mod=').urlencode($mod);
+    return $out;
 }
 
 # The draft as its file holds it, without the page of a module the screen made in memory: what Ctrl+Z, the state, the checks and the publication read
@@ -226,7 +233,8 @@ function getLayoutShowFields(): array {
 
 # The fields of a page; a page holding a slot answers at its module's address with its module's words, the page 404 has no address
 function getLayoutPageFields(array $lay, int $key): array {
-    $slot = getLayoutView($lay)->getSlotName($key) !== null;
+    $view = getLayoutView($lay);
+    $slot = $view->getSlotName($key) !== null;
     $own = !$slot && $key !== $lay['notfound'] && $key !== $lay['home'];
     $out = [['key' => 'title', 'label' => '_TITLE', 'type' => 'text', 'max' => 255]];
     if ($own) {
@@ -237,6 +245,7 @@ function getLayoutPageFields(array $lay, int $key): array {
         $out[] = ['key' => 'who', 'label' => '_LAYOUT_WHO', 'type' => 'choice', 'options' => ['0' => '_MVALL', '1' => '_MVUSERS']];
     }
     $out[] = ['key' => 'band', 'label' => '_LAYOUT_BAND', 'type' => 'bool', 'show' => 'switch'];
+    if ($view->getPageColumns($key) === null) return $out;
     $out[] = ['key' => 'side', 'label' => '_BLOCKS_SIDE', 'type' => 'choice',
         'options' => ['0' => '_BLOCKS_MOD0', '1' => '_BLOCKS_MOD1', '2' => '_BLOCKS_MOD2', '3' => '_BLOCKS_MOD3']];
     $out[] = ['key' => 'top', 'label' => '_BLOCKS_TOP', 'type' => 'choice',
@@ -256,21 +265,20 @@ function getLayoutItemFields(array $menu): array {
 # The fields of a block in the order of its own screen; the field of its kind shows for that kind only, a block of the system keeps its kind
 function getLayoutBlockFields(array $blk, array $zones): array {
     global $conf;
-    $out = [['key' => 'title', 'label' => '_TITLE', 'type' => 'text', 'max' => 60]];
+    $spec = getBlockSpec();
+    $out = [['key' => 'title', 'label' => '_TITLE', 'type' => 'text', 'max' => $spec['title']]];
     if ($blk['kind'] !== 'sys') {
         $out[] = ['key' => 'kind', 'label' => '_LAYOUT_BKIND', 'type' => 'choice', 'show' => 'seg', 'options' => ['file' => '_FILE', 'html' => 'HTML', 'rss' => 'RSS']];
-        $files = [];
-        foreach (scandir(BASE_DIR.'/blocks') ?: [] as $file) if (preg_match('/^[a-z0-9_\-]{1,251}\.php$/i', $file)) $files[$file] = $file;
-        $out[] = ['key' => 'bfile', 'label' => '_FILENAME', 'type' => 'choice', 'options' => $files, 'when' => ['kind', 'file']];
+        $out[] = ['key' => 'bfile', 'label' => '_FILENAME', 'type' => 'choice', 'options' => array_combine($spec['files'], $spec['files']), 'when' => ['kind', 'file']];
         $out[] = ['key' => 'content', 'label' => '_CONTENT', 'type' => 'textarea', 'when' => ['kind', 'html']];
-        $out[] = ['key' => 'url', 'label' => '_RSSFILE', 'type' => 'url', 'max' => 200, 'when' => ['kind', 'rss']];
+        $out[] = ['key' => 'url', 'label' => '_RSSFILE', 'type' => 'url', 'max' => $spec['url'], 'when' => ['kind', 'rss']];
     }
     $pos = [];
     foreach ($zones as $zone => $one) $pos[$zone] = (string)($one['title'] ?? $zone);
     $out[] = ['key' => 'bpos', 'label' => '_POSITION', 'type' => 'choice', 'options' => $pos];
     $out[] = ['key' => 'which', 'label' => '_BLOCK_VIEW', 'type' => 'checks'];
     $out[] = ['key' => 'status', 'label' => '_ACTIVATE2', 'type' => 'bool', 'show' => 'switch'];
-    $out[] = ['key' => 'days', 'label' => '_EXPIRATION', 'type' => 'int', 'min' => 0, 'max' => 3650];
+    $out[] = ['key' => 'days', 'label' => '_EXPIRATION', 'type' => 'int', 'min' => 0, 'max' => $spec['days']];
     $out[] = ['key' => 'action', 'label' => '_AFTEREXPIRATION', 'type' => 'choice', 'options' => ['d' => '_DEACTIVATE', 'r' => '_DELETE']];
     if (!empty($conf['multilingual'])) $out[] = ['key' => 'lang', 'label' => '_LANGUAGE', 'type' => 'choice', 'options' => ['' => '_ALL'] + getLanguageList()];
     $out[] = ['key' => 'view', 'label' => '_VIEWPRIV', 'type' => 'choice', 'options' => ['0' => '_MVALL', '1' => '_MVUSERS', '2' => '_MVADMIN', '3' => '_MVANON']];
@@ -806,7 +814,7 @@ function getLayoutTree(array $dft, int $key, string $tab, string $sel, bool $oob
         $blks = getLayoutBlocks($dft);
         $name = 'page-'.$key;
         if ($slot !== null) $name = $slot;
-        [$side, $top] = $view->getPageColumns($key);
+        [$side, $top] = $view->getPageColumns($key) ?? getLayoutModuleCols((string)$slot);
         $open = ['l' => in_array($side, ['0', '1'], true), 'r' => in_array($side, ['0', '2'], true)];
         $open += ['c' => in_array($top, ['0', '1'], true), 'd' => in_array($top, ['0', '2'], true)];
         $free = [];
@@ -899,7 +907,8 @@ function getLayoutBlockRow(array $blk, string $pname, bool $phome, int $num, Clo
     $on = $blk['status'];
     return $row('blk:'.$blk['id'], $icon, getConst($blk['title']) ?: $blk['bfile'], $sub, 'page', ['key' => $blk['id'], 'is_drag' => !$free, 'is_off' => !$on || !$here,
         'order_num' => $num ?: '', 'order_title' => _SORTORDER,
-        'dial' => $dial([['blk-toggle', $on ? 'eye-slash' : 'eye', $on ? _LAYOUT_BLKOFF : _LAYOUT_BLKON, $blk['id']], ['blk-del', 'trash3', _DELETE, $blk['id']]])]);
+        'dial' => $dial(array_merge([['blk-toggle', $on ? 'eye-slash' : 'eye', $on ? _LAYOUT_BLKOFF : _LAYOUT_BLKON, $blk['id']]],
+            ($blk['kind'] !== 'sys') ? [['blk-del', 'trash3', _DELETE, $blk['id']]] : []))]);
 }
 
 # One row of a menu item in the tree: the name of its page or module over its path, the way to nest it or to bring it a level up, its deletion
@@ -1038,8 +1047,12 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         $say = ($pkey === $lay['home']) ? _LAYOUT_HOMENOTE : _LAYOUT_OWNNOTE;
         if ($slot !== null) $say = sprintf(_LAYOUT_SLOTPAGE, ($slot === '') ? _HOME : getModuleName($slot));
         if ($lost) $say = _LAYOUT_LOSTNOTE;
-        $body .= $note($say).$note(_LAYOUT_COLSNOTE);
+        $cols = ($view->getPageColumns($pkey) === null) ? getLayoutModuleCols((string)$slot) : null;
+        $sides = [_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3];
+        $tops = [_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3];
+        $body .= $note($say).$note($cols ? sprintf(_LAYOUT_COLSOWN, $sides[intval($cols[0])], $tops[intval($cols[1])]) : _LAYOUT_COLSNOTE);
         if (!$lost) $data['groups'] = [[['act' => 'page-copy', 'icon' => 'files', 'title' => _LAYOUT_PAGECOPY, 'id' => $pkey]]];
+        if ($cols) $data['groups'][0][] = ['href' => $cols[2], 'icon' => 'box-arrow-up-right', 'title' => _LAYOUT_COLSEDIT];
         if (!$lost && $pkey !== $lay['home']) $data['danger'] = ['act' => 'page-del', 'label' => _LAYOUT_DELPAGE, 'id' => $pkey];
         $title = $lost ? _LAYOUT_PAGE404 : (($pkey === $lay['home']) ? _HOME : _PAGE);
         return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => $lost ? 'sign-stop' : 'file-earmark-richtext', 'title_text' => $title,
@@ -1290,6 +1303,8 @@ function getLayoutIssues(array $dft, array $types, array $places, Closure $answe
         $word = getConst((string)($blk['title'] ?? $bid));
         $kind = (string)($blk['kind'] ?? '');
         if ($kind === 'html' && trim((string)($blk['content'] ?? '')) === '') $add('code-square', sprintf(_LAYOUT_IS_BLKNONE, $word), _LAYOUT_BLOCKS, 'blk:'.$bid, 0);
+        $room = ($kind === 'html') ? checkEditorTextRoom((string)($blk['content'] ?? ''), 'blocks.content') : '';
+        if ($room !== '') $add('code-square', $word.': '.$room, _LAYOUT_BLOCKS, 'blk:'.$bid, 0);
         if ($kind === 'rss' && preg_match('#^https?://.#i', (string)($blk['url'] ?? '')) !== 1) $add('rss', sprintf(_LAYOUT_IS_NORSS, $word), _LAYOUT_BLOCKS, 'blk:'.$bid, 0);
     }
     return $out;
@@ -1372,8 +1387,9 @@ function setLayoutPageCopy(array &$lay, int $pkey): array {
         if (($sec['type'] ?? '') === Layout::SLOT) $slot = true;
         else $secs[] = array_replace($sec, ['id' => $lay['next']++]);
     }
+    $cols = (getLayoutView($lay)->getPageColumns($pkey) === null) ? getLayoutModuleCols((string)getLayoutView($lay)->getSlotName($pkey)) : null;
     $title = sprintf(_LAYOUT_COPYOF, $from);
-    $lay['pages'][$key] = array_replace($page, ['title' => $title, 'addr' => '', 'sections' => $secs]);
+    $lay['pages'][$key] = array_replace($page, ['title' => $title, 'addr' => '', 'sections' => $secs], $cols ? ['side' => $cols[0], 'top' => $cols[1]] : []);
     $lay['pages'][$key]['addr'] = getLayoutAddr($lay, $title, $key);
     return [$key, sprintf(_LAYOUT_PAGECOPIED, $from).($slot ? ' '._LAYOUT_SLOTKEPT : '')];
 }
@@ -1706,17 +1722,12 @@ function pick(): void {
 # Take the posted settings of config/global.php a theme part names into the draft; a value equal to the site leaves the draft
 function setLayoutConf(array &$new, array $sets, array &$bad): void {
     global $conf;
-    if (array_key_exists('sitename', $sets)) {
-        $site = is_string($sets['sitename']) ? trim($sets['sitename']) : '';
-        if ($site === '' || mb_strlen($site) > 255 || preg_match('/[\x00-\x1F\x7F]/', $site)) $bad[] = _SITENAME;
-        elseif ($site === (string)($conf['sitename'] ?? '')) unset($new['conf']['sitename']);
-        else $new['conf']['sitename'] = $site;
+    $keys = [];
+    foreach (filterSiteBrand($sets, $keys) as $key => $val) {
+        if ($val === (string)($conf[$key] ?? '')) unset($new['conf'][$key]);
+        else $new['conf'][$key] = $val;
     }
-    if (!array_key_exists('site_logo', $sets)) return;
-    $logo = basename(is_string($sets['site_logo']) ? $sets['site_logo'] : '');
-    if ($logo === '' || !is_file(PUBLIC_DIR.'/templates/'.(string)($conf['theme'] ?? '').'/images/logos/'.$logo)) $bad[] = _LAYOUT_LOGO;
-    elseif ($logo === (string)($conf['site_logo'] ?? '')) unset($new['conf']['site_logo']);
-    else $new['conf']['site_logo'] = $logo;
+    foreach ($keys as $key) $bad[] = ($key === 'sitename') ? _SITENAME : _LAYOUT_LOGO;
 }
 
 # Take the posted values of the items of a list into it; an item the post does not carry keeps its values
@@ -1946,7 +1957,7 @@ function setLayoutMenuAct(array &$lay, array $places, string $act, string $sel, 
     return $out;
 }
 
-# Change the blocks of the draft: a new one, a deletion, a switch, or the order of one zone; the answer is the pick and the words of the notice
+# Change the blocks of the draft: a new one, a deletion, a switch, or the order of one zone; the answer is the pick, the notice and the refusal
 function setLayoutBlockAct(array &$new, array $places, string $act, string $bid, string $arg, string $sel): array {
     $blks = getLayoutBlocks($new);
     if ($act === 'blk-add') {
@@ -1955,23 +1966,24 @@ function setLayoutBlockAct(array &$new, array $places, string $act, string $bid,
         $weight = 1 + count(array_filter($blks, static fn(array $v): bool => $v['bpos'] === $zone));
         $new['blocks'][$nid] = ['id' => $nid, 'key' => '', 'title' => _LAYOUT_NEWBLK, 'kind' => 'html', 'bfile' => '', 'content' => '', 'url' => '', 'bpos' => $zone,
             'weight' => $weight, 'status' => false, 'view' => '0', 'lang' => '', 'days' => 0, 'action' => 'd', 'which' => ['all'], 'new' => true];
-        return ['blk:'.$nid, _LAYOUT_BLKADD, false];
+        return ['blk:'.$nid, _LAYOUT_BLKADD, false, ''];
     }
     if ($act === 'blk-order') {
         if (isset($places['zones'][$bid])) setLayoutZone($new, $blks, $bid, explode('-', $arg));
-        return [$sel, '', false];
+        return [$sel, '', false, ''];
     }
     $blk = $blks[$bid] ?? null;
-    if ($blk === null) return [$sel, '', false];
+    if ($blk === null) return [$sel, '', false, ''];
     if ($act === 'blk-toggle') {
         setLayoutBlock($new, $blk, ['status' => !$blk['status']]);
-        return [$sel, sprintf($blk['status'] ? _LAYOUT_BLKHID : _LAYOUT_BLKSHOWN, getConst($blk['title'])), $blk['status']];
+        return [$sel, sprintf($blk['status'] ? _LAYOUT_BLKHID : _LAYOUT_BLKSHOWN, getConst($blk['title'])), $blk['status'], ''];
     }
-    if ($act !== 'blk-del' || $blk['kind'] === 'sys') return [$sel, '', false];
+    if ($act !== 'blk-del') return [$sel, '', false, ''];
+    if ($blk['kind'] === 'sys') return [$sel, '', false, sprintf(_BLOCKS_SYSKEEP, getConst($blk['title']))];
     if ($blk['new']) unset($new['blocks'][$bid]);
     if (!$blk['new'] && !isset($new['blocks'][$bid])) $new['bwas'][$bid] = array_diff_key($blk, ['new' => true]);
     if (!$blk['new']) $new['blocks'][$bid] = ['del' => true];
-    return [($sel === 'blk:'.$bid) ? '' : $sel, sprintf(_LAYOUT_BLKDEL, getConst($blk['title'])), true];
+    return [($sel === 'blk:'.$bid) ? '' : $sel, sprintf(_LAYOUT_BLKDEL, getConst($blk['title'])), true, ''];
 }
 
 function act(): void {
@@ -2050,7 +2062,7 @@ function act(): void {
         }
     } elseif (str_starts_with($act, 'blk-')) {
         $new['layout'] = $lay;
-        [$sel, $text, $undo] = setLayoutBlockAct($new, $places, $act, $bid, $arg, $sel);
+        [$sel, $text, $undo, $warn] = setLayoutBlockAct($new, $places, $act, $bid, $arg, $sel);
         [$lay, $tab] = [$new['layout'], 'page'];
     }
     $new['layout'] = $lay;
@@ -2274,57 +2286,41 @@ function setLayoutFieldBack(array &$new, array $places, string $sel, string $arg
     return true;
 }
 
-# Write the blocks of the draft inside the transaction of the publication: a row changed or gone since the draft touched it stops it by name; the answer is the ids of the new rows
+# Write the draft blocks by setBlockRow() in the transaction of the publication; a row changed or gone since the draft touched it, or one refused, stops it by name
 function setLayoutRows(array $dft, array $rss): array {
-    global $db;
     $now = getLayoutBlocks(['blocks' => []]);
-    $put = static function (string $sql, array $pars) use ($db): void {
-        if ($db->getSqlQuery($sql, $pars) === false) throw new RuntimeException('Layout: a row of the blocks cannot be written');
-    };
-    $cols = static function (array $all, array $set) use ($rss): array {
-        $out = ['title' => mb_substr((string)$all['title'], 0, 60), 'bpos' => (string)$all['bpos'], 'weight' => max(1, intval($all['weight']))];
-        $out += ['status' => empty($all['status']) ? 0 : 1, 'view' => intval($all['view']), 'lang' => (string)$all['lang'], 'action' => (string)$all['action']];
-        $out['which'] = getBlockWhich(array_map('strval', (array)$all['which']));
-        if ($all['kind'] === 'sys') return $out;
-        $out['bfile'] = ($all['kind'] === 'file') ? (string)$all['bfile'] : '';
-        $out['url'] = ($all['kind'] === 'rss') ? (string)$all['url'] : '';
-        if (array_key_exists('bfile', $set) || array_key_exists('kind', $set)) $out['param'] = ($out['bfile'] === 'node.php') ? '{"type":[],"mode":"last","limit":10}' : '';
-        if ($out['url'] !== '' && array_key_exists('url', $set)) [$out['content'], $out['time']] = [$rss[$out['url']] ?? '', time()];
-        elseif (array_key_exists('content', $set)) $out['content'] = filterSourceText((string)$all['content'], true);
-        return $out;
-    };
+    $order = getLayoutBlocks($dft);
     $skip = ['days' => true, 'kind' => true];
-    [$zones, $made] = [[], []];
+    [$zones, $made, $ids] = [[], [], []];
     foreach ($dft['blocks'] as $bid => $set) {
         if (!is_array($set)) continue;
-        $days = intval($set['days'] ?? 0);
-        $till = ($days > 0) ? 'NOW() + INTERVAL :days DAY' : 'NULL';
-        if (!empty($set['new'])) {
-            $vals = $cols($set, $set);
-            $sql = '(bkey, refresh, expire, '.implode(', ', array_keys($vals)).') VALUES (\'\', 3600, '.$till.', :'.implode(', :', array_keys($vals)).')';
-            $put('INSERT INTO '.PREFIX_DB.'_blocks '.$sql, $vals + (($days > 0) ? ['days' => $days] : []));
-            $made[] = intval($db->getSqlLastId());
-            $zones[$vals['bpos']] = true;
-            continue;
-        }
+        $bid = (string)$bid;
+        $fresh = !empty($set['new']);
         $row = $now[$bid] ?? null;
         $was = is_array($dft['bwas'][$bid] ?? null) ? $dft['bwas'][$bid] : [];
-        $name = getConst((string)(($row ?? $was)['title'] ?? $bid));
-        if ($row === null || array_diff_key(array_intersect_key($row, $was), $skip) !== array_diff_key(array_intersect_key($was, $row), $skip)) {
+        $name = getConst((string)(($fresh ? $set : ($row ?? $was))['title'] ?? $bid));
+        if (!$fresh && ($row === null || array_diff_key(array_intersect_key($row, $was), $skip) !== array_diff_key(array_intersect_key($was, $row), $skip))) {
             throw new DomainException(sprintf(_LAYOUT_BLKMOVED, $name, _BLOCKS));
         }
-        $zones[$row['bpos']] = true;
-        if (!empty($set['del'])) {
-            if ($row['kind'] !== 'sys') $put('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => intval($bid)]);
-            continue;
+        $all = $fresh ? $set : array_replace($row, $set);
+        $keys = $fresh ? $all : $set + (array_key_exists('kind', $set) ? ['bfile' => true, 'url' => true, 'content' => true] : []);
+        $put = array_diff_key(array_intersect_key($all, $keys), ['id' => true, 'key' => true, 'kind' => true, 'weight' => true, 'new' => true, 'expire' => true, 'del' => true]);
+        if ($all['kind'] !== 'sys') {
+            if (array_key_exists('bfile', $put) && $all['kind'] !== 'file') $put['bfile'] = '';
+            if (array_key_exists('url', $put) && $all['kind'] !== 'rss') $put['url'] = '';
+            if (($put['url'] ?? '') !== '') $put['feed'] = $rss[$put['url']] ?? null;
         }
-        $vals = $cols(array_replace($row, $set), $set);
-        $zones[$vals['bpos']] = true;
-        $sql = implode(', ', array_map(static fn(string $v): string => $v.' = :'.$v, array_keys($vals))).(array_key_exists('days', $set) ? ', expire = '.$till : '');
-        $put('UPDATE '.PREFIX_DB.'_blocks SET '.$sql.' WHERE id = :id', $vals + ['id' => intval($bid)] + (($days > 0 && array_key_exists('days', $set)) ? ['days' => $days] : []));
+        $res = setBlockRow($fresh ? 0 : intval($bid), empty($set['del']) ? $put : null);
+        if ($res === _ERROR) throw new RuntimeException('Layout: a row of the blocks cannot be written');
+        if (is_string($res)) throw new DomainException(sprintf(_LAYOUT_BLKBAD, $name, $res));
+        if ($fresh) $made[] = $res;
+        $ids[$bid] = $res;
+        $zones[(string)$all['bpos']] = true;
+        if ($row !== null) $zones[$row['bpos']] = true;
     }
-    foreach (array_intersect(array_map('strval', array_keys($zones)), ['l', 'r', 'c', 'd']) as $zone) {
-        if (!setBlockOrder($zone)) throw new RuntimeException('Layout: a zone of the blocks cannot be renumbered');
+    foreach (array_intersect(array_map('strval', array_keys($zones)), getBlockSpec()['zones']) as $zone) {
+        $list = array_map(static fn(string $v): int => $ids[$v] ?? intval($v), array_keys(array_filter($order, static fn(array $v): bool => $v['bpos'] === $zone)));
+        if (!setBlockOrder($zone, $list, 1)) throw new RuntimeException('Layout: a zone of the blocks cannot be renumbered');
     }
     return $made;
 }
@@ -2335,7 +2331,7 @@ function setLayoutPublish(array $dft, int $key, string $sel, string $tab): never
     if (!isLayoutDirty($dft)) setLayoutPane($dft, $key, $sel, $tab, _LAYOUT_PUBNONE, false, false, true);
     $bids = array_map('intval', array_values(array_filter(array_keys($dft['blocks']), static fn($v): bool => preg_match('/^[1-9][0-9]*$/D', (string)$v) === 1)));
     $rss = [];
-    foreach ($dft['blocks'] as $set) if (is_array($set) && empty($set['del']) && (string)($set['url'] ?? '') !== '') $rss[$set['url']] = getRssBody((string)$set['url']) ?? '';
+    foreach ($dft['blocks'] as $set) if (is_array($set) && empty($set['del']) && (string)($set['url'] ?? '') !== '') $rss[$set['url']] = getRssBody((string)$set['url']);
     $work = ($dft['blocks'] !== []) ? static fn(): array => setLayoutRows($dft, $rss) : null;
     $res = Layout::setPublish($db, $dft['layout'], getVar('post', 'live', 'var', ''), $bids, $work);
     $by = substr((string)($admin[1] ?? ''), 0, 25);

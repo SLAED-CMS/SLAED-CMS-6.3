@@ -2137,7 +2137,7 @@ function setFoot(): void {
         $draft = $layout->isDraft() && getVar('get', 'edit', 'num', 0) !== 1;
         $mark = $draft ? $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_DRAFT, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : '';
         $body = $mark.$layout->getPageHtml($lkey, $body, $tpl, $prs);
-        [$blocks, $blocks_c] = $layout->getPageColumns($lkey);
+        [$blocks, $blocks_c] = $layout->getPageColumns($lkey) ?? [$blocks, $blocks_c];
     }
     $flash = getFlashHtml();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
@@ -4515,7 +4515,7 @@ function getAdminDock(): string {
 function user_info(string $name, ?string $route, bool $icon = true): string {
     global $conf, $tpl;
     if (!$name) return '';
-    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
+    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_moder('account')) {
         return $tpl->getHtmlFrag('link', [
             'href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($name), 'route' => $route]),
             'title' => (string)_PERSONALINFO,
@@ -5224,10 +5224,10 @@ function getRssBlock(int $bid): void {
     echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2)]);
 }
 
-# Render the feed page of one address; the address is the visitor's choice, so it goes through filterDoc() and never the parser cache, outcomes cached 900 s
+# Render the feed page of one address, an empty one refused like a feed that failed; the visitor's address goes through filterDoc(), outcomes cached 900 s
 function getRssView(string $url): string {
     global $conf, $tpl, $prs;
-    if ($url === '') return '';
+    if ($url === '') return $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     require_once BASE_DIR.'/core/classes/feed.php';
     $url = getDecodedText($url);
     $norm = Feed::getFeedUrl($url);

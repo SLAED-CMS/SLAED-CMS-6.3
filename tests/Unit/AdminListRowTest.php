@@ -244,7 +244,8 @@ namespace Tests\Unit {
             $this->assertNull($dial->querySelector('tbody .sl-col-status :is(button, form)'), 'The status cell is still a switch');
             $this->assertSame(['sl-status-active', 'img', 'Active'], [$mark->getAttribute('class'), $mark->getAttribute('role'), $mark->getAttribute('title')]);
             $items = iterator_to_array($dial->querySelectorAll('tbody .sl-dial-item'));
-            $this->assertSame(['Edit', 'Turn', 'Delete'], array_map(static fn($one): string => $one->getAttribute('title'), $items), 'The switch is not the dial item before the drop');
+            $names = array_map(static fn($one): string => $one->getAttribute('title'), $items);
+            $this->assertSame(['Edit', 'Turn', 'Delete'], $names, 'The switch is not the dial item before the drop');
             $this->assertSame('lamp typ', $dial->getElementById($items[1]->getAttribute('form'))->getAttribute('data-sl-later'), 'The dial switch lost its deferred kind');
         }
 
