@@ -131,7 +131,7 @@ define('_PRES_GD_FILTER','Классификация + фильтр');
 define('_PRES_GD_TRUST','Доверенная зона');
 define('_PRES_GD_RATE','запр./мин · вход');
 define('_PRES_GD_POLICY','Политика:');
-define('_PRES_GD_POLICY_T','по умолчанию пропуск, угрозам — отказ');
+define('_PRES_GD_POLICY_T','по умолчанию — пропуск, угрозам — отказ');
 define('_PRES_GD_TRUSTED','Доверено:');
 define('_PRES_GD_RUNTIME','среда SLAED');
 define('_PRES_GD_HUMAN','Человек');

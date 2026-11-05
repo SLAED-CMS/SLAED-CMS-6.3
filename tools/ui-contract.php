@@ -675,6 +675,9 @@ return [
             .'the row; the panel pager is a row inside a list foot that has already laid it out, and wraps its line under the row only when the row is full',
         '.sl-pager-info' =>
             'the site centres the page line under the row; the panel pushes it to the right edge of the row on one line, where the panel always printed it',
+        '.sl-pager-tip kbd' =>
+            'the panel draws the plate of a key in one rule with the number of its rows picker (.sl-pager-rows-key), which the site has not, and '
+            .'adds here only what a key alone needs; the site draws the whole plate in this rule',
         '.sl-but-mini' =>
             'the site\'s mini button is a real button element and resets the appearance the browser gives one; in admin the same chip is a link',
         '.sl-but-mini.sl-is-muted' =>

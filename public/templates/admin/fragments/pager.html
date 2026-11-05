@@ -17,7 +17,9 @@
       {% else %}
       <a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
       {% endif %}
+      {% if not is_list %}
       {% include 'fragments/pager-keys.html' %}
+      {% endif %}
     </div>
   </div>
   <p class="sl-pager-info">{{ page_label }} <b>{{ page_of }}</b>{% if range_text %}{% include 'fragments/pager-rows.html' %}{% endif %}{% if count %} · {{ overall }} <b>{{ count }}</b>{% endif %}</p>

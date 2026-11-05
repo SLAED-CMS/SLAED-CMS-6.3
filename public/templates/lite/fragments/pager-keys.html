@@ -1,10 +1,22 @@
-<div class="sl-tip sl-float sl-pager-keys" tabindex="0" role="button" aria-label="{{ _PAGEKEYS }}">
+<div class="sl-tip sl-float sl-pager-keys" tabindex="0" role="button" aria-label="{% if is_desk %}{{ head }}{% else %}{{ _PAGEKEYS }}{% endif %}">
   <span class="sl-but-mini" aria-hidden="true"><i class="bi bi-info-lg"></i></span>
   <div class="sl-float-panel sl-pager-tip" role="tooltip">
-    <p class="sl-pager-tip-head">{{ _PAGEKEYS }}</p>
+    <p class="sl-pager-tip-head">{% if is_desk %}{{ head }}{% else %}{{ _PAGEKEYS }}{% endif %}</p>
     <ul class="sl-pager-tip-keys">
+      {% if is_desk %}
+      <li><kbd><i class="bi bi-arrows-move" role="img" aria-label="{{ arrows }}"></i></kbd>{{ walk }}</li>
+      <li><kbd>Home</kbd><kbd>End</kbd>{{ edge }}</li>
+      <li><kbd>Space</kbd><kbd>Ctrl + {{ click }}</kbd>{{ mark }}</li>
+      <li><kbd>Shift + <i class="bi bi-arrows-move" role="img" aria-label="{{ arrows }}"></i></kbd><kbd>Shift + {{ click }}</kbd>{{ span }}</li>
+      <li><kbd>Enter</kbd>{{ enter }}</li>
+      <li><kbd>{{ rmb }}</kbd>{{ menu }}</li>
+      {% if is_win %}
+      <li><kbd>Esc</kbd>{{ close }}</li>
+      {% endif %}
+      {% else %}
       <li><kbd><i class="bi bi-arrow-left" role="img" aria-label="{{ _KEYLEFT }}"></i></kbd>{{ _PAGEPREV }}</li>
       <li><kbd><i class="bi bi-arrow-right" role="img" aria-label="{{ _KEYRIGHT }}"></i></kbd>{{ _PAGENEXT }}</li>
+      {% endif %}
     </ul>
     <p class="sl-pager-tip-note">{{ _PAGEKEYNOTE }}</p>
   </div>

@@ -150,11 +150,11 @@ final class AdminLogTest extends TestCase
         $this->assertSame([50, 0, 0], $run['days']);
     }
 
-    # Every module links its actions on the security screen for a super-admin; an administrator who may not open it gets a 404 with no link and no table
+    # No module carries a link to the journal, which has its own section and its filter by module; an administrator who may not open it gets a 404 with no table
     #[Test]
-    public function theLinkIsForSuperAdmins(): void
+    public function theJournalIsOneSection(): void
     {
-        $this->assertSame([true, 404, false, false], $this->getRun()['read']['link']);
+        $this->assertSame([false, 404, false, false], $this->getRun()['read']['link']);
     }
 
     # The two order handlers of the panel pass through the shared guard with their scopes, and Oauth keeps no journal of its own

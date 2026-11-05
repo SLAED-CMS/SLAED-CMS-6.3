@@ -1453,9 +1453,9 @@
             if (ev.key === 'ArrowRight') setStep(id, 1);
             return;
         }
-        // Only the catalogue answers to these keys: the rail, the fields and the fan of an object stand in the same window and keep the keys they came with
+        // Only the catalogue answers to these keys: the rail, the fields, the fan of an object and the key tip stand in the same window and keep the keys they came with
         lib = ev.target.closest ? ev.target.closest('.sl-fm-pane[data-sl-pane="lib"]') : null;
-        if (el && lib && !ev.target.matches('input, textarea, select, button, a')) {
+        if (el && lib && !ev.target.matches('input, textarea, select, button, a, [role="button"]')) {
             if (setWalkKeys(getPanelOwn(el), ev)) ev.preventDefault();
             return;
         }

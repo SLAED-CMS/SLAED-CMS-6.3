@@ -23,30 +23,24 @@
         {% if table_html %}
         <div class="sl-list-head">
           <div class="sl-list-head-pager" hx-boost="true">
-            {% if top_html %}
             {{{ top_html }}}
-            {% else %}
-            {% include 'fragments/pager-keys.html' %}
-            {% endif %}
           </div>
-          <div class="sl-list-view">
+          <div class="sl-list-view" data-sl-float-align="end">
             <span class="sl-seg sl-seg-view" data-sl-knob="density" role="group" aria-label="{{ _ADM_VIEW }}">
               {% for item in views %}
               <button type="button" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" data-sl-density="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}"{% if item.is_now %}{% else %} tabindex="-1"{% endif %}><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>
               {% endfor %}
               <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
             </span>
+            {% include 'fragments/pager-keys.html' with keys %}
           </div>
         </div>
         {{{ table_html }}}
+        {% if pager_html or bulk %}
         <div class="sl-div-actions">
           <div class="sl-list-bottom" id="sl-list-end">
             <div class="sl-list-bottom-pager" hx-boost="true" hx-swap="outerHTML show:window:top">
-              {% if pager_html %}
               {{{ pager_html }}}
-              {% else %}
-              {% include 'fragments/pager-keys.html' %}
-              {% endif %}
             </div>
             {% if bulk %}
             <div class="sl-list-bottom-actions">
@@ -71,6 +65,7 @@
             {% endif %}
           </div>
         </div>
+        {% endif %}
         {% else %}
         <p class="sl-list-none{% if is_calm %} sl-list-calm{% endif %}">{{ none_text }}</p>
         {% endif %}

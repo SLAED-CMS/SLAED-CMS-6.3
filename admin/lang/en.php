@@ -1093,7 +1093,7 @@ define('_SESSION','To activate sessions of visitors?');
 define('_SESS_T','Operating time of sessions, in minutes');
 define('_SETUP_TITLE','SLAED CMS installation');
 define('_SETUP_PATH','Installation path');
-define('_SETUP_STEP','step %1$s of %2$s');
+define('_SETUP_STEP','Step %1$s of %2$s');
 define('_SETUP_SERVER','Server');
 define('_SETUP_INSTALL','Installation');
 define('_SETUP_DONE','Done');

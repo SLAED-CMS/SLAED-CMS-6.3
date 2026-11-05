@@ -603,8 +603,9 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 - **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`, and `link_url`
   with `link_text` a plain link beside its button, which leaves the list for a page of its own (the settings of
   "Фавориты"); the tabs that change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
-  and both pagers stand whenever there is more than one page, the filter applied by the server. Without a pager the key
-  tip "i" (`fragments/pager-keys.html`) stands alone above and below the table.
+  and both pagers stand whenever there is more than one page, the filter applied by the server. The key tip "i"
+  (`fragments/pager-keys.html`, scope `keys`) stands once per list, after the view switch, with pages or without; the
+  pager of a list (`is_list`) leaves it out, and the row under the table stands only for a pager or a bulk action.
 - **The view is one for every list.** The switch `sl-seg sl-seg-view` writes the cookie `density` through op `option`:
   `standard` (no cookie), `full`, `compact`, `cards`; `getTplAdminList()` writes `data-sl-density` on the table from the
   first byte and the script changes the attribute at once. The sort is kept per `key` by `getToggleState()` and said on
@@ -973,7 +974,7 @@ business; the face is the stand `public/demo/pg-09-final.html`, in the panel `pg
 
 | Fragment | Prints |
 |---|---|
-| `fragments/pager.html` | the `nav` labelled `_PAGENAV`: the row `sl-pager-main` with the arrows and the rail in `sl-pager-nav`, the side group `sl-pager-side` with "Наверх" on `#top` and the key tip, then the line `sl-pager-info` |
+| `fragments/pager.html` | the `nav` labelled `_PAGENAV`: the row `sl-pager-main` with the arrows and the rail in `sl-pager-nav`, the side group `sl-pager-side` with "Наверх" on `#top` and the key tip outside a panel list, then the line `sl-pager-info` |
 | `fragments/pager-link.html` | one cell: a number (`sl-seg-cell`), an arrow (`sl-but-mini`) or the dots; a link by `href`, an htmx link by `query` with `target_id` and `push_url`, a `span` for the current page and for an arrow at the end of the run |
 
 Both fragments are byte-identical in `templates/admin` and `templates/lite`; only each theme's sheet differs.
@@ -1000,11 +1001,17 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
   pointer and two pagers of one topic lead to the same page. It stands aside when the key was handled already, when the
   focus is in a field, a `select`, a media element or an editable, on a tab or a tab list, inside a `<dialog>` — the
   file manager, the gallery, every window — and on the file desk of the panel (`.sl-fm-split`).
-- **The "i" explains the keys.** The side group carries the system tip `sl-tip sl-float sl-pager-keys` labelled
+- **The "i" explains the keys.** The side group, or in a panel list the row of its view, carries the system tip `sl-tip sl-float sl-pager-keys` labelled
   `_PAGEKEYS`, its panel `sl-pager-tip` with the heading, the two keys as `bi-arrow-left` and `bi-arrow-right` in `kbd`
   caps labelled `_KEYLEFT` and `_KEYRIGHT`, "Предыдущая страница" and "Следующая страница", and the note `_PAGEKEYNOTE`.
   The keys are a plain list, not a `dl`, which each theme lays out as label and value. A touch screen
-  (`pointer: coarse`) has no arrow keys, so the "i" is hidden there; "Наверх" stays everywhere.
+  (`pointer: coarse`) has no arrow keys, so the "i" is hidden there; "Наверх" stays everywhere. A plate keeps its
+  width and line, so a narrow tip wraps the words beside it.
+- **The file screens carry the same "i".** The bar of the catalogue (`file-browser.html`) and of the window of the
+  editor (`file-manager.html`, both themes) end with the tip in the scope `keys` of `getFileKeysView()`: the branch
+  `is_desk` heads it `_EDITOR_DESKKEYS` and lists the arrows, Home and End, Space or Ctrl with a click, Shift with an
+  arrow or a click, Enter — `_UPLOADS_OPEN` in the catalogue, `_EDITOR_INSERT` in the window — the right button, and
+  Esc in the window alone (`is_win`). It is hidden on a touch screen as well.
 - **"Наверх" is a plain anchor.** Every link to the top — the pager, the stuck header of a Node list, the lower
   navigation of `search` and `users`, the panel footer — points at `#top`, which the browser takes for the start of the
   page, and the root of each theme scrolls smoothly unless the reader asked for less motion.

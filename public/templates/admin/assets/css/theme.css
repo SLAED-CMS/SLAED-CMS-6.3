@@ -3496,11 +3496,6 @@ dialog.sl-editor-emoji-panel {
   min-width: 0;
 }
 
-/* A list without pages keeps its key tip at the left edge, over and under the rows alike */
-.sl-list-bottom-pager {
-  text-align: left;
-}
-
 .sl-list-bottom .sl-pager {
   padding: 0;
 }
@@ -3662,7 +3657,7 @@ dialog.sl-editor-emoji-panel {
   padding: 0;
 }
 
-/* The page line stands in the row of its pager, centred between the key tip and what closes the row */
+/* The page line stands in the row of its pager, centred between the side group of the pager and what closes the row */
 :is(.sl-list-head, .sl-list-bottom) .sl-pager-info {
   margin-inline: auto;
 }
@@ -3722,17 +3717,21 @@ dialog.sl-editor-emoji-panel {
   opacity: var(--sl-fade-muted);
 }
 
-/* The view of a canon list stands at the right end of the row over it */
+/* The view of a canon list stands at the right end of the row over it, the one key tip of the list after it, with pages or without */
 .sl-list-view {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
   flex: 0 0 auto;
   margin-left: auto;
 }
 
-/* The head of a canon list stays in view; the row in hand takes the tint softly, a picked row a stronger one */
-.sl-table-list-sort[data-sl-density] thead th {
+/* The head of a canon list and of the file list stays in view above the fans of the rows; the row in hand takes the tint softly, a picked row a stronger one */
+.sl-table-list-sort[data-sl-density] thead th,
+.sl-fm-scroll thead th {
   position: sticky;
   top: 0;
-  z-index: var(--sl-z-raised);
+  z-index: var(--sl-z-sticky);
 }
 
 .sl-table-list-sort[data-sl-density] tbody td {
@@ -6722,7 +6721,7 @@ button.sl-seg-cell:hover {
   color: var(--sl-text-muted);
 }
 
-/* The key tip rests in the subtle system green and carries its own size, since a list without pages keeps it alone */
+/* The key tip rests in the subtle system green and carries its own size, since a list and a file screen keep it in their bar and not in a pager */
 .sl-pager-keys > .sl-but-mini {
   width: var(--sl-size-chip);
   padding: 0;
@@ -6735,7 +6734,7 @@ button.sl-seg-cell:hover {
   color: var(--sl-on-solid);
 }
 
-/* The ways up and down follow the key tip in the colour of the pager: subtle at rest, full like its arrows under the pointer or the focus */
+/* The ways up and down wear the colour of the pager: subtle at rest, full like its arrows under the pointer or the focus */
 .sl-pager-side > a.sl-but-mini {
   background: var(--sl-primary-subtle);
   color: var(--sl-primary-strong);
@@ -6812,6 +6811,13 @@ button.sl-seg-cell:hover {
   color: var(--sl-text-strong);
   font: inherit;
   font-size: var(--sl-font-small);
+}
+
+/* A key plate keeps its width and line, so a narrow tip wraps the words beside it, and a key with a sign leaves a gap before the sign */
+.sl-pager-tip kbd {
+  flex: 0 0 auto;
+  gap: var(--sl-space-2);
+  white-space: nowrap;
 }
 
 .sl-pager-tip kbd .bi,
@@ -7058,7 +7064,8 @@ input.sl-pager-rows-key:focus-visible {
     display: none;
   }
 
-  :is(.sl-list-head-pager, .sl-list-bottom-pager) > .sl-pager-keys {
+  .sl-list-view > .sl-pager-keys,
+  :is(.sl-fm-bar, .sl-fm-lib-bar) > .sl-pager-keys {
     display: none;
   }
 }
@@ -7137,6 +7144,7 @@ input.sl-pager-rows-key:focus-visible {
 .sl-dial.sl-open .sl-dial-toggle,
 .sl-dial:hover .sl-dial-toggle,
 .sl-fm-bar .sl-but-mini[aria-pressed="true"],
+.sl-fm-bar .sl-but-mini[aria-expanded="true"],
 .sl-but-mini.sl-fm-main {
   background: var(--sl-solid-bg);
   color: var(--sl-solid-text);
@@ -7258,6 +7266,14 @@ button.sl-but-mini {
   padding: 0 var(--sl-space-6) 0 var(--sl-space-2);
   text-align: left;
   background-color: var(--sl-bg-muted);
+}
+
+/* A short line parts two column titles; it is painted as the background, so it needs no position and leaves a sticky head as it is */
+.sl-table-list-sort thead th + th {
+  background-image: linear-gradient(var(--sl-border-strong), var(--sl-border-strong));
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 1px 50%;
 }
 
 .sl-table-list-sort th:last-child {
@@ -7522,9 +7538,10 @@ button.sl-but-mini {
 }
 
 /* Module frame: page header with icon, title and subtitle */
+/* The icon stands in the line of the title, also when the filter of the head moves under it */
 .sl-module-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--sl-space-4);
   min-height: var(--sl-module-head-height);
   padding: var(--sl-space-2) 0 var(--sl-space-5) 0;
@@ -7534,6 +7551,7 @@ button.sl-but-mini {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
+  min-height: var(--sl-module-head-height);
 }
 
 /* The icon of the section stands with the page */
@@ -7543,28 +7561,31 @@ button.sl-but-mini {
   line-height: 1;
 }
 
+/* The title keeps its one line at its own width and the filter takes the rest; a filter that finds no room beside it moves to a line of its own */
 .sl-module-head-body {
   flex: 1 1 auto;
   min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 25%) minmax(0, 75%);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0;
+  gap: var(--sl-space-4);
   min-height: var(--sl-module-head-height);
 }
 
 .sl-module-head-title {
+  flex: 0 0 auto;
   margin: 0;
   font-size: var(--sl-font-h1);
   line-height: var(--sl-line-tight);
   color: var(--sl-primary-strong);
-  min-width: 0;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   min-height: var(--sl-module-head-height);
 }
 
 .sl-module-head-subtitle {
+  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   display: flex;
@@ -7660,13 +7681,13 @@ button.sl-but-mini {
 
 /* On a narrow screen the head stacks: the title over its filter, both from the left edge */
 @media (max-width: 900px) {
-  .sl-module-head {
-    align-items: flex-start;
+  .sl-module-head-body {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .sl-module-head-body {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sl-space-4);
+  .sl-module-head-title {
+    white-space: normal;
   }
 
   .sl-module-head-subtitle,
@@ -10887,18 +10908,46 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   border-top: 1px solid var(--sl-border);
 }
 
+/* The quota above already draws the line under itself, and two lines side by side would read as one thick one */
+.sl-fm-quota + .sl-fm-split {
+  border-top: 0;
+}
+
+/* Closed properties give their column to the list; the weight of the plain class lets the narrow steps below, where the column is a row of its own, keep theirs */
+.sl-fm-split:where(:has(> .sl-fm-side[hidden])) {
+  grid-template-columns: 250px minmax(0, 1fr);
+}
+
 .sl-fm-work {
   min-width: 0;
 }
 
-/* A long name ends in its ellipsis at the width the other columns leave, or the table pushes under the properties; a phone scrolls the table in its own frame */
+/* The frame clips and does not scroll: a scrolling frame would hold the sticky column titles inside itself instead of the window; a phone scrolls the table in its own frame */
 .sl-fm-work .sl-table-shell {
-  overflow-x: auto;
+  overflow-x: clip;
+}
+
+/* Every cell keeps one line at the width of its content, and the name takes what the others leave and ends in its ellipsis */
+.sl-fm-work th,
+.sl-fm-work td {
+  white-space: nowrap;
 }
 
 .sl-fm-work td:has(> .sl-fm-name) {
   width: 100%;
   max-width: 0;
+}
+
+/* The middle column is already the frame of the list, so the table keeps only its row lines and squares the corners the frame rounded */
+.sl-fm-work .sl-table-list-sort {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sl-fm-work .sl-table-list-sort thead th,
+.sl-fm-work .sl-table-list-sort tbody :is(tr:last-child, tr.sl-is-closed:not(:has(~ tr[data-sl-group]))) > :is(:first-child, :last-child) {
+  border-radius: 0;
 }
 
 .sl-fm-tree {
@@ -10975,11 +11024,9 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   padding: var(--sl-space-3);
 }
 
-/* The column titles stay while the rows pass under them, and they stand above the fan of a row: a row half under the titles must not push its own button through them */
-.sl-fm-scroll thead th {
-  position: sticky;
-  top: 0;
-  z-index: var(--sl-z-sticky);
+/* The list meets the lines of its column with no gap; tiles and the empty states keep the inset */
+.sl-fm-scroll:has(.sl-table-shell:not([hidden])) {
+  padding: 0;
 }
 
 .sl-fm-name {
@@ -11568,6 +11615,12 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
   .sl-fm-bar input[type="text"] {
     width: var(--sl-fm-search-width);
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-fm-work .sl-table-shell {
+    overflow-x: auto;
   }
 }
 
@@ -12394,6 +12447,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 .sl-fm-win .sl-fm-mode[aria-pressed="true"],
+.sl-fm-win .sl-fm-mode[aria-expanded="true"],
 .sl-editor-diff-mode[aria-pressed="true"] {
   background: var(--sl-bg);
   box-shadow: var(--sl-shadow-xs);
@@ -12405,6 +12459,11 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   display: grid;
   gap: var(--sl-space-6);
   grid-template-columns: minmax(0, 1fr) 246px;
+}
+
+/* Closed properties give their column to the list */
+.sl-fm-win .sl-fm-lib-split:has(> .sl-fm-props[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .sl-fm-win .sl-fm-rows {

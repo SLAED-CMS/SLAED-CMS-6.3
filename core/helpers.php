@@ -245,7 +245,7 @@ function getTplPager(array $data = []): string {
     return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
 }
 
-# Render one full admin module header with title, icon, tabs and a settings find, the action log for a super-admin; the title and a later open tab name the browser tab
+# Render one full admin module header with title, icon, tabs and a settings find; the title and a later open tab name the browser tab
 function getTplAdminTabs(array $data = []): string {
     global $afile, $conf, $tpl, $adminvars;
     $title = _ADMINMENU;
@@ -275,7 +275,6 @@ function getTplAdminTabs(array $data = []): string {
             ];
         }
     }
-    if ($known && isAdmin(true)) $links[] = ['href' => HOME_PATH.$afile.'.php?name=logs&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
     $adminvars['section'] = $title;
     $adminvars['view'] = '';
     $tabs = '';
@@ -468,6 +467,7 @@ function getTplAdminList(array $data): string {
             'rows_html' => $rows,
         ]) : '',
         'views' => $views,
+        'keys' => ['is_list' => true, 'page_of' => ($pages > 1) ? sprintf(_NUMOF, $page, $pages) : ''],
         'none_text' => $none,
         'is_calm' => !empty($data['is_calm']),
         'foot_html' => (string)($data['foot_html'] ?? ''),
@@ -877,6 +877,13 @@ function getUploadPlaceView(array $rule): array {
     ];
 }
 
+# The keys of a file screen for its "i": Enter does what the screen exists for, and only the window of the editor closes under Esc
+function getFileKeysView(string $enter, bool $win): array {
+    return ['is_desk' => true, 'is_win' => $win, 'head' => _EDITOR_DESKKEYS, 'arrows' => _EDITOR_DESKARROW, 'walk' => _EDITOR_DESKWALK, 'edge' => _EDITOR_DESKEDGE,
+        'click' => _EDITOR_DESKCLICK, 'mark' => _EDITOR_DESKMARK, 'span' => _EDITOR_DESKSPAN, 'enter' => $enter, 'rmb' => _EDITOR_DESKRMB, 'menu' => _EDITOR_DESKMENU,
+        'close' => _CLOSE];
+}
+
 # Build the file manager window of one place; its rights come from the place rule and its routes, never from the caller, and its runtime loads once per request
 function getFileManagerWindow(array $opt): string {
     global $tpl;
@@ -905,6 +912,7 @@ function getFileManagerWindow(array $opt): string {
         'alt_id' => (string)($opt['alt'] ?? ''),
         'urlalt_id' => (string)($opt['urlalt'] ?? ''),
         'editor_id' => (string)($opt['editor'] ?? ''),
+        'keys' => getFileKeysView(_EDITOR_INSERT, true),
         'is_field' => $fld,
         'can_upload' => $upl,
         'can_list' => $upl,

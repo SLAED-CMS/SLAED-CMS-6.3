@@ -1234,16 +1234,14 @@ both. The common operations (add, save, delete, status, order) are shown in
 words, any other as its name. The other journals show time, level, message and
 address; `filescan_tree.log` keeps the raw view.
 
-**The link of a module.** `getTplAdminTabs()` ends the tab strip of every module
-known to `$conf['modules']` with "Журнал действий",
-`admin.php?name=logs&op=logview&file=admin&modul=<name>`, for an
-administrator for whom `isAdmin(true)` holds, who alone may open
-"Журналы". No module adds the link by hand or shows a block of entries
-on its own screen.
+**One journal.** The actions of a module are read in "Журналы" by its filter
+"Модуль" (`modul=<name>`), open to an administrator for whom `isAdmin(true)`
+holds. No module carries a tab or a link to the journal, or shows a block of
+entries on its own screen.
 
 `LoginLogTest` holds the table, its reader, the monitor count and the cleanup
 over a disposable schema (`tests/Support/login_probe.php`); `AdminLogTest` the
-file journals, the record of the panel, the view and the link over real
+file journals, the record of the panel, the view and the head of a module without a link to it over real
 requests (`tests/Support/route_probe.php journal`); `JournalSecretTest` and
 `JournalNameTest` that no secret reaches a journal and every file is named
 after what it holds.

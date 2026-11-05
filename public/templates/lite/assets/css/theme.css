@@ -588,8 +588,12 @@ thead tr th[data-sort-method="none"]::after {
   margin: 0;
 }
 
+/* A key plate keeps its width and line, so a narrow tip wraps the words beside it, and a key with a sign leaves a gap before the sign */
 .sl-pager-tip kbd {
+  flex: 0 0 auto;
+  white-space: nowrap;
   display: inline-flex;
+  gap: var(--sl-space-2);
   align-items: center;
   justify-content: center;
   min-width: var(--sl-size-chip);
@@ -616,9 +620,13 @@ thead tr th[data-sort-method="none"]::after {
   font-size: var(--sl-font-small);
 }
 
-/* A touch screen has no arrow keys to explain */
+/* A touch screen has no arrow keys to explain, nor the keys of the file window */
 @media (pointer: coarse) {
   .sl-pager .sl-pager-keys {
+    display: none;
+  }
+
+  .sl-fm-lib-bar > .sl-pager-keys {
     display: none;
   }
 }
@@ -12442,6 +12450,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-fm-win .sl-fm-mode[aria-pressed="true"],
+.sl-fm-win .sl-fm-mode[aria-expanded="true"],
 .sl-editor-diff-mode[aria-pressed="true"] {
   background: var(--sl-bg);
   box-shadow: var(--sl-shadow-xs);
@@ -12453,6 +12462,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: grid;
   gap: var(--sl-space-6);
   grid-template-columns: minmax(0, 1fr) 246px;
+}
+
+/* Closed properties give their column to the list */
+.sl-fm-win .sl-fm-lib-split:has(> .sl-fm-props[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .sl-fm-win .sl-fm-rows {

@@ -1268,7 +1268,8 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'size_text' => $isdir ? '—' : filterSize($row['size']),
             'size_num' => (string)($isdir ? -1 : (int)$row['size']),
             'date_num' => (string)(int)$row['mtime'],
-            'date_text' => date(_TIMESTRING, $row['mtime']),
+            'date_text' => date(_TIMESHORT, $row['mtime']),
+            'time_text' => date(_TIMESTRING, $row['mtime']),
             'day_text' => date(_DATESTRING, $row['mtime']),
             'acts_html' => getAdminFileActs($row),
         ];
@@ -1337,6 +1338,8 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'filter_text' => _UPLOADS_FILTER,
         'list_text' => _LIST,
         'tiles_text' => _UPLOADS_TILES,
+        'props_text' => _UPLOADS_PROPS,
+        'keys' => getFileKeysView(_UPLOADS_OPEN, false),
         'post_url' => $afile.'.php',
         'token' => getSiteToken('uploads'),
         'newfile_text' => _UPLOADS_NEWFILE,

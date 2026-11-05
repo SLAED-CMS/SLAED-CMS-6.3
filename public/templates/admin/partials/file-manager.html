@@ -143,6 +143,10 @@
                 <button type="button" class="sl-fm-mode" data-sl-mode="list" data-editor="{{ editor_id }}" aria-pressed="true" title="{{ list_label }}" aria-label="{{ list_label }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
                 <button type="button" class="sl-fm-mode" data-sl-mode="grid" data-editor="{{ editor_id }}" aria-pressed="false" title="{{ tiles_label }}" aria-label="{{ tiles_label }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
               </span>
+              <span class="sl-fm-modes">
+                <button type="button" class="sl-fm-mode" data-sl-toggle-control="{{ panel_id }}_props" aria-expanded="false" title="{{ props_label }}" aria-label="{{ props_label }}"><i class="bi bi-layout-sidebar-inset-reverse" aria-hidden="true"></i></button>
+              </span>
+              {% include 'fragments/pager-keys.html' with keys %}
             </div>
             <div class="sl-fm-lib-split">
               <div>
@@ -152,7 +156,7 @@
                 </div>
                 <div class="sl-fm-grid" data-sl-modeview="grid" data-sl-slot="fulltiles" hidden></div>
               </div>
-              <aside class="sl-fm-props">
+              <aside class="sl-fm-props" id="{{ panel_id }}_props" data-sl-toggle="{{ panel_id }}_props" data-sl-toggle-default="closed" hidden>
                 <span class="sl-fm-props-cap">{{ props_label }}</span>
                 <span class="sl-fm-props-img" data-sl-slot="propsimg"><i class="bi bi-image" aria-hidden="true"></i></span>
                 <dl data-sl-slot="propslist"></dl>

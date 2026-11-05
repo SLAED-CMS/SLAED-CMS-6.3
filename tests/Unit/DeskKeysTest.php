@@ -136,8 +136,8 @@ final class DeskKeysTest extends TestCase
         $note = 'A held arrow asks the server for the properties of every object it steps over';
         $this->assertStringContainsString('window.setTimeout', $side, $note);
         $lib = $this->getPart(self::EDITJS, '// Only the catalogue answers to these keys', 500);
-        $note = 'The rail and the fields of the window answer the arrows of the catalogue';
-        $this->assertStringContainsString("matches('input, textarea, select, button, a')", $lib, $note);
+        $note = 'The rail, the fields and the key tip of the window answer the arrows of the catalogue, and Enter on the tip inserts a file';
+        $this->assertStringContainsString("matches('input, textarea, select, button, a, [role=\"button\"]')", $lib, $note);
     }
 
     # The window opens on its content and gives the focus back to what opened it, and the key that closes a window lets an open fan win first

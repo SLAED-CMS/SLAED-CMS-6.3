@@ -2990,7 +2990,7 @@ function getRouteJournalView(string $work): array {
         'pages' => [count($cells($first)), str_contains($first, 'class="sl-pager"'), count($view('file=warn&num=3')), count($view('file=warn&level=error&num=2'))],
         'order' => [$cells($first)[0][2] ?? '', $view('file=warn&level=error')[0][2] ?? '', array_unique(array_column($view('file=warn&level=error'), 1))],
         'days' => [count($view('file=warn&from='.$past)), count($view('file=warn&from='.$soon)), count($view('file=warn&to='.$past))],
-        'link' => [str_contains($tabs, 'op=logview&amp;file=admin&amp;modul=voting'), $help['code'], str_contains($help['body'], 'op=logview'),
+        'link' => [str_contains($tabs, 'op=logview'), $help['code'], str_contains($help['body'], 'op=logview'),
             str_contains($deny['body'], '<tbody>')],
     ];
 }
@@ -3052,12 +3052,14 @@ function getRouteSecrets(string $work): array {
     return $out;
 }
 
-# The proxy list the forms of the settings file must keep, and both jobs switched on
+# The proxy list the forms of the settings file must keep, both jobs switched on, and one journal so the list of the journals has a row
 function addRouteFormConf(string $work): void {
     $data = require $work.'/config/security.php';
     $data['security'] = array_replace($data['security'], ['proxy' => '10.9.8.7/32', 'log_b' => '1', 'log_d' => '1', 'mail_d' => '0', 'dump_age' => '7', 'write_h' => '1']);
     setRouteFile($work.'/config/security.php', $data);
     if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    if (!is_dir($work.'/logs')) mkdir($work.'/logs', 0777, true);
+    file_put_contents($work.'/logs/admin.log', '');
 }
 
 # The three forms that write config/security.php over real requests: each shows its own fields, writes them alone and leaves every other key as it was

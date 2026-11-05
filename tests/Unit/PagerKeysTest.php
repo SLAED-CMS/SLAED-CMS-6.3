@@ -107,4 +107,33 @@ final class PagerKeysTest extends TestCase
             }
         }
     }
+
+    # Both file screens explain their keys with the same "i": the catalogue of the panel and the window of the editor in both themes, Esc only in the window
+    #[Test]
+    public function theFileScreensExplainTheirKeys(): void
+    {
+        $note = 'A file screen does not carry the key tip with its own keys';
+        $tag = "{% include 'fragments/pager-keys.html' with keys %}";
+        $this->assertStringContainsString($tag, $this->getFile('public/templates/admin/partials/file-browser.html'), $note);
+        foreach (self::THEMES as $name) {
+            $this->assertStringContainsString($tag, $this->getFile('public/templates/'.$name.'/partials/file-manager.html'), $note);
+            $keys = $this->getFile('public/templates/'.$name.'/fragments/pager-keys.html');
+            $note = 'The key tip of theme '.$name.' has no branch for a file screen';
+            $this->assertStringContainsString('{% if is_desk %}', $keys, $note);
+            $this->assertStringContainsString('<li><kbd>Home</kbd><kbd>End</kbd>{{ edge }}</li>', $keys, $note);
+            $note = 'The tip of theme '.$name.' does not keep Esc to the window';
+            $this->assertMatchesRegularExpression('/\{% if is_win %\}\s+<li><kbd>Esc<\/kbd>\{\{ close \}\}<\/li>/', $keys, $note);
+            $note = 'Theme '.$name.' shows the "i" of a file screen on a touch screen';
+            $css = $this->getFile('public/templates/'.$name.'/assets/css/theme.css');
+            $this->assertMatchesRegularExpression('/@media \(pointer: coarse\) \{[^@]*\.sl-fm-lib-bar\)? > \.sl-pager-keys/', $css, $note);
+        }
+        $this->assertStringContainsString("'keys' => getFileKeysView(_UPLOADS_OPEN, false)", $this->getFile('core/admin.php'), 'Enter of the catalogue does not open');
+        $this->assertStringContainsString("'keys' => getFileKeysView(_EDITOR_INSERT, true)", $this->getFile('core/helpers.php'), 'Enter of the window does not insert');
+        foreach (self::LOCALES as $loc) {
+            $lang = $this->getFile('lang/'.$loc.'.php');
+            foreach (['KEYS', 'ARROW', 'WALK', 'EDGE', 'CLICK', 'MARK', 'SPAN', 'RMB', 'MENU'] as $name) {
+                $this->assertStringContainsString("define('_EDITOR_DESK".$name."',", $lang, 'Locale '.$loc.' is missing _EDITOR_DESK'.$name);
+            }
+        }
+    }
 }
