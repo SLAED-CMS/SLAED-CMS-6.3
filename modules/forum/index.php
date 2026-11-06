@@ -910,8 +910,12 @@ function move(): void {
     if (!checkSitePost('forum')) setRedirect(getSeoUrl(['name' => $conf['name']]), false, 302, _TOKENMISS, true);
     $cat = getVar('post', 'cat', 'num');
     $catid = $cat;
-    if ($conf['forum']['add'] && $catid) {
-        [$authm] = $db->getSqlRow($db->getSqlQuery('SELECT pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+    $crow = ($conf['forum']['add'] && $catid) ? $db->getSqlRow($db->getSqlQuery(
+        'SELECT pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid AND modul = :mod',
+        ['catid' => $catid, 'mod' => $conf['name']]
+    )) : null;
+    if ($crow) {
+        [$authm] = $crow;
         $ismod = is_acess($authm);
         $id = getVar('post', 'id[]', '', []);
         $tmove = getVar('post', 'tmove', 'text');
@@ -955,10 +959,12 @@ function add(): void {
     $place = getForumPlace(intval($id ?: $pid));
     $catid = ($id || $pid) ? $place['cid'] : getVar('req', 'cat', 'num');
     $pid = ($pid && !$id) ? $place['topic'] : $pid;
-    [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery(
-        'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid',
-        ['catid' => $catid]
-    ));
+    $crow = $catid ? $db->getSqlRow($db->getSqlQuery(
+        'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid AND modul = :mod',
+        ['catid' => $catid, 'mod' => $conf['name']]
+    )) : null;
+    if (!$crow) setError(404);
+    [$ctitle, $authp, $authy, $authe, $authm] = $crow;
     $istopic = is_acess($authp);
     $isreply = is_acess($authy);
     $isedit = is_acess($authe);
@@ -1121,11 +1127,12 @@ function send(): void {
     $place = getForumPlace(intval($fid ?: $pid));
     $catid = ($fid || $pid) ? $place['cid'] : getVar('req', 'cat', 'num');
     $pid = ($pid && !$fid) ? $place['topic'] : $pid;
-    if ($conf['forum']['add'] && $catid) {
-        [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery(
-            'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid',
-            ['catid' => $catid]
-        ));
+    $crow = ($conf['forum']['add'] && $catid) ? $db->getSqlRow($db->getSqlQuery(
+        'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid AND modul = :mod',
+        ['catid' => $catid, 'mod' => $conf['name']]
+    )) : null;
+    if ($crow) {
+        [$ctitle, $authp, $authy, $authe, $authm] = $crow;
         $istopic = is_acess($authp);
         $isreply = is_acess($authy);
         $isedit = is_acess($authe);
@@ -1279,8 +1286,12 @@ function delete(int|string|null $id = null): void {
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
     $catid = getForumPlace(intval($id))['cid'];
     $lid = 0;
-    if ($conf['forum']['add'] && $catid && $id) {
-        [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+    $crow = ($conf['forum']['add'] && $catid && $id) ? $db->getSqlRow($db->getSqlQuery(
+        'SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid AND modul = :mod',
+        ['catid' => $catid, 'mod' => $conf['name']]
+    )) : null;
+    if ($crow) {
+        [$authd, $authm] = $crow;
         $isdelete = is_acess($authd);
         $ismod = is_acess($authm);
         [$pid, $uid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, title FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));

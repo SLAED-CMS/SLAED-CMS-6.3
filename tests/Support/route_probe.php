@@ -20,7 +20,7 @@
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
 # The argument head runs the routes, the notices, the theme header and the header of a list with its counts
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
-# The argument files runs the files of the forum on the file route, the writers of a post that bind a name and the unused filter of the upload browser
+# The argument files runs the files of the forum on the file route, the writers of a post that bind a name, the forum of no category and the unused filter of the upload browser
 # The argument journal runs the journals of the panel, the logins and OAuth: a passed token writes one line, a refused one none, and a login is written once
 # The argument address runs the writers of the registry of addresses: every path given, moved and marked gone inside the write of its entity
 # The argument parse runs the resolution of a path: the pages of the address table, the grammar, the cut and the keys of a path over those of the query
@@ -2526,6 +2526,20 @@ function getRouteFiles(PDO $pdo): array {
     $view = getRouteReply('anna', 'POST', 'index.php?name=forum', ['op' => 'send', 'token' => $tok, 'cat' => '6', 'pid' => '601', 'fid' => '0', 'id' => '0',
         'subject' => 'Open topic', 'hometext' => 'Preview [attach=mine-aaaaaaaaaa-2.png align=left title=m]', 'posttype' => 'preview'])['body'];
     $out['draft'] = [str_contains($view, 'go=file&amp;own=forum&amp;name=forum&amp;key=mine-aaaaaaaaaa-2.png&amp;preview=1'), $count() - $was];
+    $st->execute([641, 0, 99, 'Lost topic', 'Text', 3]);
+    $form = fn(string $tail): int => $code('anna', 'index.php?name=forum&op=add'.$tail);
+    $post = fn(array $data): int => getRouteReply('anna', 'POST', 'index.php?name=forum', ['token' => $tok] + $data)['code'];
+    $out['nocat'] = [$code('', 'index.php?name=forum&op=add'), $form(''), $form('&cat=99'), $form('&id=699'), $form('&pid=699'), $form('&id=641'),
+        $post(['op' => 'send', 'cat' => '99', 'pid' => '0', 'fid' => '0', 'id' => '0', 'subject' => 'Lost', 'hometext' => 'Lost', 'posttype' => 'save']),
+        $post(['op' => 'move', 'cat' => '99', 'id[]' => '641', 'tmove' => 's0']), $post(['op' => 'delete', 'id' => '641']),
+        intval($pdo->query('SELECT COUNT(*) FROM '.$pre.'forum WHERE cid = 99')->fetchColumn())];
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, preply, pedit, pdelete, pmod, lang)'
+        .' VALUES (8, \'news\', \'Foreign\', \'\', \'0|0\', \'0|0\', \'0|0\', \'0|0\', \'0|0\', \'0|0\', \'0|0\', \'\')');
+    $st->execute([642, 0, 8, 'Foreign topic', 'Text', 3]);
+    $out['foreign'] = [$code('', 'index.php?name=forum&op=add&cat=8'), $form('&id=642'),
+        $post(['op' => 'send', 'cat' => '8', 'pid' => '0', 'fid' => '0', 'id' => '0', 'subject' => 'Foreign', 'hometext' => 'Foreign', 'posttype' => 'save']),
+        $post(['op' => 'move', 'cat' => '8', 'id[]' => '642', 'tmove' => 's0']), $post(['op' => 'delete', 'id' => '642']),
+        array_map('intval', $pdo->query('SELECT COUNT(*), MAX(status) FROM '.$pre.'forum WHERE cid = 8')->fetch(PDO::FETCH_NUM))];
     return $out;
 }
 

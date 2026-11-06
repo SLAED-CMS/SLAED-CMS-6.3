@@ -175,6 +175,15 @@ final class FileAccessTest extends TestCase
         $this->assertSame([303, 2], $run['own'], 'A reply naming an own upload was refused');
     }
 
+    # A form of no category, of a missing post or of a post whose category is gone or of another module answers 404, and a write naming such a category writes nothing
+    #[Test]
+    public function aForumOfNoCategoryAnswersNotFound(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([404, 404, 404, 404, 404, 404, 303, 303, 303, 1], $run['nocat']);
+        $this->assertSame([404, 404, 303, 303, 303, [1, 3]], $run['foreign'], 'A category of another module took a forum form, a post, a move or a delete');
+    }
+
     # A private message serves its names to the sides that still hold it and to a moderator of account, whatever extensions the rule takes; the folder has no direct address
     #[Test]
     public function aPrivateMessageServesItsTwoSides(): void
