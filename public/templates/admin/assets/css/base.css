@@ -160,6 +160,16 @@
   /* The beam that crosses a solid head: how wide the shaft is, how long one cycle takes, and its light */
   --sl-beam-width: 34%;
   --sl-beam-dur: calc(7s * var(--sl-time-scale));
+  --sl-fav-dur: calc(0.55s * var(--sl-time-scale));
+  /* The overshoot a pressed button pops its icon with: a curve leaving the 0-1 range is a different kind of motion */
+  --sl-fav-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* The burst of a pressed button: the ring, its share of the brand colour and two spark sets, one per pseudo-element */
+  --sl-fav-ring: 14px;
+  --sl-fav-mix: 60%;
+  --sl-fav-shadow:
+    13px -13px var(--sl-warning), -13px -13px var(--sl-primary), 15px 7px var(--sl-warning);
+  --sl-spark-shadow:
+    -15px 7px var(--sl-primary), 10px 14px var(--sl-warning), -10px 14px var(--sl-primary);
   --sl-beam-bg: rgba(255, 255, 255, 0.42);
   /* The light that follows the pointer over the page */
   --sl-pointer-width: 300px;

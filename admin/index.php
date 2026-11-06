@@ -350,7 +350,7 @@ function getAdminLoginForm(): void {
             ],
             'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
             'token' => ['name_attr' => 'token', 'value_attr' => getSiteToken('add_admin')],
-            'submit' => ['button_type' => 'submit', 'submit_label' => _SEND],
+            'submit' => ['button_type' => 'submit', 'submit_label' => _SEND, 'icon_name' => 'send'],
         ]);
     } else {
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
@@ -384,7 +384,7 @@ function getAdminLoginForm(): void {
             'route' => $afile,
             'rows' => $rows,
             'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
-            'submit' => ['button_type' => 'submit', 'submit_label' => _LOGIN],
+            'submit' => ['button_type' => 'submit', 'submit_label' => _LOGIN, 'icon_name' => 'box-arrow-in-right'],
         ]);
     }
     echo $cont;

@@ -2026,7 +2026,8 @@ function setHead(array $seo = []): void {
             ],
             'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN],
             'lost_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'passlost']), 'title' => _PASSFOR, 'label' => _PASSFOR],
-            'register_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'newuser']), 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
+            'register_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'newuser']), 'title' => _REG, 'label' => _REG, 'icon_name' => 'person-plus',
+                'is_account_button' => true],
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
             'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
@@ -3239,6 +3240,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'hx_include' => '#form'.$votid,
         'title' => _VOTE,
         'label' => _VOTE,
+        'icon_name' => 'check2-square',
         'is_button_blue' => true,
     ]) : '';
     $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', [

@@ -7,6 +7,6 @@
   <p class="sl-sec-lines"{% if is_build %} data-sl-text="text" data-sl-lines{% endif %}>{{ text }}</p>
   {% endif %}
   {% if btn and href %}
-  <a class="sl-but sl-sec-cta-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}{% if is_build %} data-sl-text="btn"{% endif %}>{{ btn }}</a>
+  <a class="sl-but sl-sec-cta-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}><i class="bi bi-arrow-right" aria-hidden="true"></i> <span{% if is_build %} data-sl-text="btn"{% endif %}>{{ btn }}</span></a>
   {% endif %}
 </div>

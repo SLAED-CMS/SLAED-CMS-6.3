@@ -136,6 +136,7 @@ define('_COMMENTS_PARENT','Diese Antwort kann dem genannten Kommentar nicht zuge
 define('_COMMENTS_REPLAY','Der Kommentar wurde bereits unter diesem Schlüssel gespeichert und weicht von dieser Anfrage ab.');
 define('_COMMENTS_EDITED','Bearbeitet');
 define('_COMMENTS_REPLY','Antworten');
+define('_COMMENTS_WAIT','Ihr Kommentar wurde gesendet und erscheint nach der Prüfung.');
 define('_CONTENT','Inhalt');
 define('_COUNTRY','Land');
 define('_C_12','Die Menge der Publikationen auf die Seite');

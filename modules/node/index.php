@@ -140,7 +140,7 @@ function getNodeAssetRows(?Node $node): array {
     return $out;
 }
 
-# Read the posted content of a material for the service and the form; a refused captcha reads it without upload, so no file of the refused request is stored
+# Read the posted content of a material; a refused captcha reads it without upload, and a form with no starred main category takes the first checked
 function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload = true): array {
     $feat = $type->settings['features'];
     $sync = $type->ext === 'sync';
@@ -151,6 +151,8 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload =
         $ext = ['url' => $src['url'], 'refresh' => preg_match('/^(?:0|[1-9][0-9]{0,8})$/D', $src['refresh']) ? (int)$src['refresh'] : -1];
     }
     $cats = array_values(array_unique(array_filter(array_map('intval', getVar('post', 'cids[]', '', [])), fn(int $v): bool => $v > 0)));
+    $main = getVar('post', 'cid', 'num', 0);
+    if (!$main) $main = $cats[0] ?? 0;
     $rels = [];
     if ($feat['related']) {
         foreach (preg_split('/[\s,;]+/', getVar('post', 'relrel', 'raw', ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $i => $rid) {
@@ -167,7 +169,7 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload =
     if (!$feat['comments']) $mode = CommentMode::Disabled;
     elseif (!$moder) $mode = CommentMode::Open;
     $vals = [
-        'cid' => $feat['categories'] ? getVar('post', 'cid', 'num', 0) : 0,
+        'cid' => $feat['categories'] ? $main : 0,
         'cids' => $feat['categories'] ? $cats : [],
         'aname' => (getNodeContext()->uid > 0 || $old !== null) ? ($old?->aname ?? '') : trim(getVar('post', 'aname', 'raw', '')),
         'title' => trim(getVar('post', 'title', 'raw', '')),
@@ -246,10 +248,10 @@ function getNodeEditor(NodeType $type, string $key, string $value, string $label
     return getTplTextarea(['id' => '2', 'store' => 'nodes.body', 'rows' => 12] + $base);
 }
 
-# The rows of the resource section; the link input is offered only to a writer the service takes an external address from
-function getNodeAssetHtml(NodeType $type, array $list, bool $link): string {
+# One form row per active resource role, its add plus before the label; the role of a download is offered as files, the link input only to a trusted writer
+function getNodeAssetFields(NodeType $type, array $list, bool $link): array {
     global $tpl;
-    $out = '';
+    $out = [];
     $idx = 0;
     $rows = getNodeAssetList($type, $list);
     foreach ($type->settings['assets'] as $role => $def) {
@@ -269,9 +271,11 @@ function getNodeAssetHtml(NodeType $type, array $list, bool $link): string {
             $group[] = ['is_empty' => $one['src'] === '', 'content_html' => $cell];
             $idx++;
         }
-        $hint = getConst($def['intro']);
-        $out .= $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => getConst($def['title']).($hint !== '' ? ' - '.$hint : '')])
-            .$tpl->getHtmlFrag('repeat', ['rows' => $group, 'add_label' => _ADD]);
+        $gid = 'f-role-'.count($out);
+        $label = ($def['mode'] === 'download') ? _NODE_ATTACH : getConst($def['title']);
+        $out[] = ['label' => $label, 'hint' => getConst($def['intro']), 'hint_id' => $gid.'-hint',
+            'label_html' => $tpl->getHtmlFrag('repeat', ['add_for' => $gid, 'add_label' => _ADD]).htmlspecialchars($label, ENT_QUOTES, 'UTF-8'),
+            'field' => $tpl->getHtmlFrag('repeat', ['group_id' => $gid, 'rows' => $group])];
     }
     return $out;
 }
@@ -289,15 +293,9 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
     }
     if ($feat['categories']) {
         $cats = getNodeCatItems($type, getNodeReader()->getNodePostCats($type));
-        $pad = html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8');
-        $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !$vals['cid']]);
-        foreach ($cats as $one) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one['value_attr'], 'label_text' => str_repeat($pad, $one['depth'] * 4).$one['label_text'],
-                'is_selected' => $one['value_attr'] === $vals['cid']]);
-        }
-        $boxes = array_map(fn(array $v): array => $v + ['name_attr' => 'cids[]', 'is_checked' => in_array($v['value_attr'], $vals['cids'], true)], $cats);
-        $rows[] = ['label' => _CATEGORY, 'for' => 'f-cid', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'selectid' => 'f-cid', 'options_html' => $opts])];
-        $rows[] = ['label' => _NODE_CATS, 'label_id' => 'f-cids-label', 'field' => $tpl->getHtmlFrag('check-list', ['labelledby' => 'f-cids-label', 'items' => $boxes])];
+        $boxes = array_map(fn(array $v): array => $v + ['name_attr' => 'cids[]', 'main_name' => 'cid', 'main_label' => _NODE_MAINCAT, 'sub_label' => _NODE_SUBCAT,
+            'is_main' => $v['value_attr'] === $vals['cid'], 'is_checked' => $v['value_attr'] === $vals['cid'] || in_array($v['value_attr'], $vals['cids'], true)], $cats);
+        $rows[] = ['label' => _CATEGORIES, 'label_id' => 'f-cids-label', 'field' => $tpl->getHtmlFrag('check-list', ['labelledby' => 'f-cids-label', 'items' => $boxes])];
     }
     $rows[] = ['label' => _NODE_INTRO, 'field' => getNodeEditor($type, 'intro', $vals['intro'], _NODE_INTRO), 'full' => true];
     if ($type->ext !== 'sync') {
@@ -313,7 +311,7 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
         $rows[] = ['label' => $one['label_text'], 'for' => $one['label_for'], 'label_id' => $one['label_id'], 'hint' => trim($one['hint_text'].' '.$one['error_text']),
             'hint_id' => $one['hint_id'], 'field' => $one['field_html']];
     }
-    if ($feat['related']) {
+    if ($feat['related'] && $moder) {
         $near = implode(', ', array_column(array_filter($vals['rels'], fn(array $v): bool => $v['type'] === 'related'), 'rid'));
         $rows[] = ['label' => _NODE_RELATED, 'for' => 'f-relrel', 'hint' => _NODE_RELHINT, 'hint_id' => 'f-relrel-hint', 'field' => $tpl->getHtmlFrag('input', [
             'describedby' => 'f-relrel-hint', 'itype' => 'text', 'name_attr' => 'relrel', 'input_id' => 'f-relrel', 'value_attr' => $near, 'maxlength_num' => 4000])];
@@ -324,7 +322,7 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
             'input_id' => 'f-relparent', 'value_attr' => $up])];
     }
     if ($type->settings['assets'] && array_filter($type->settings['assets'], fn(array $v): bool => $v['active'])) {
-        $rows[] = ['label' => _NODE_ASSETS, 'field' => getNodeAssetHtml($type, $vals['assets'], $moder || getNodeFlowState($type) === NodeStatus::Pending), 'full' => true];
+        $rows = array_merge($rows, getNodeAssetFields($type, $vals['assets'], $moder || getNodeFlowState($type) === NodeStatus::Pending));
     }
     return $rows;
 }
@@ -424,16 +422,16 @@ function getNodeMetaVars(NodeType $type, Node $node): array {
     ];
 }
 
-# Render the resources of a prepared material by the display mode of each role; the first image of the standard role poster goes to the player
-function getNodeAssetView(NodeType $type, array $view): string {
+# Render the resources of a prepared material by the display mode of each role, the downloads apart for the foot; the first poster image goes to the player
+function getNodeAssetView(NodeType $type, array $view): array {
     global $tpl;
-    $out = '';
+    $out = ['', ''];
     $poster = (string)($view['assets']['poster'][0]['href'] ?? '');
     foreach ($type->settings['assets'] as $role => $def) {
         $items = $view['assets'][$role] ?? [];
         if (!$items || $def['mode'] === 'none') continue;
         foreach ($items as $i => $one) $items[$i] += ['is_video' => $one['kind'] === 'video', 'is_audio' => $one['kind'] === 'audio'];
-        $out .= $tpl->getHtmlFrag(getNodeTplName('fragments', $def['mode'], $type), [
+        $out[($def['mode'] === 'download') ? 1 : 0] .= $tpl->getHtmlFrag(getNodeTplName('fragments', $def['mode'], $type), [
             'items' => $items,
             'role_title' => getConst($def['title']),
             'poster' => $poster,
@@ -465,9 +463,11 @@ function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, 
     $own = !$moder && $type->ext === '' && $node->id > 0 && $ask->uid > 0 && $node->uid === $ask->uid && (getNodeWriter()->getTextSource($node->id)['allow'] ?? false);
     if ($moder) $meta['moder_html'] = getActionMenu(getNodeModerDial($type, $node, true, true));
     elseif ($own) $meta['moder_html'] = getActionMenu(getNodeQuickItems($type, $node));
+    [$assets, $files] = getNodeAssetView($type, $view);
     return $tpl->getHtmlPart(getNodeTplName('partials', 'view', $type), $view + getNodeViewVars($type) + $meta + [
         'fields_html' => $rows,
-        'assets_html' => getNodeAssetView($type, $view),
+        'assets_html' => $assets,
+        'files_html' => $files,
         'rels_html' => $rels,
         'rels_label' => _NODE_RELATED,
         'poll_html' => $live['poll'] ?? '',
@@ -906,14 +906,12 @@ function setNodeForm(): void {
     setHead(['title' => _ADD, 'ctitle' => getModuleName($type->name)]);
     $rows = '';
     foreach (getNodeFormRows($type, $vals, $errs, checkNodeModer($type), false) as $one) {
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => $one['label'], 'label_for' => $one['for'] ?? '', 'label_id' => $one['label_id'] ?? '',
-            'hint' => $one['hint'] ?? '', 'hint_id' => $one['hint_id'] ?? '', 'field_html' => $one['field']]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => $one['label'], 'label_html' => $one['label_html'] ?? '', 'label_for' => $one['for'] ?? '',
+            'label_id' => $one['label_id'] ?? '', 'hint' => $one['hint'] ?? '', 'hint_id' => $one['hint_id'] ?? '', 'field_html' => $one['field']]);
     }
-    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
-        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'submit', 'label_text' => _SEND, 'is_selected' => true]);
     $send = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('node'), 'input_attr' => ''])
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options_html' => $opts])
-        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
+        .$tpl->getHtmlFrag('form-submit', ['acts' => [['name' => 'action', 'value' => 'preview', 'icon' => 'eye', 'label' => _PREVIEW],
+            ['name' => 'action', 'value' => 'submit', 'icon' => 'send', 'label' => _SEND]]]);
     echo $tpl->getHtmlFrag('title', ['title' => getModuleName($type->name).' - '._ADD, 'is_level_one' => true])
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8'), 'is_warn' => true]) : '')
         .$prev

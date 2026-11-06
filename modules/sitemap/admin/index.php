@@ -101,6 +101,7 @@ function sitemap(): void {
             'text' => str_replace('&', '&amp;', $conts),
         ]),
         'submit_label' => _UPDATE,
+        'icon_name' => 'arrow-repeat',
     ])]);
     echo $cont;
     setFoot();
@@ -109,8 +110,16 @@ function sitemap(): void {
 function add(): void {
     global $afile;
     $iswarn = !checkAdminPost('sitemap');
-    if (!$iswarn) addSchedulerRun('sitemap', 'manual');
-    setRedirect($afile.'.php?name=sitemap', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
+    if (!$iswarn) {
+        $result = addSchedulerRun('sitemap', 'manual');
+        if (($result['status'] ?? '') !== 'success') {
+            $iswarn = true;
+            $mess = trim((string)($result['message'] ?? ''));
+            $text = ($mess !== '') ? $mess : (string)($result['status'] ?? '');
+        }
+    }
+    setRedirect($afile.'.php?name=sitemap', false, 302, $text, $iswarn);
 }
 
 function getXslForm(string $text, string $ver, string $note = ''): string {
@@ -141,7 +150,8 @@ function getXslForm(string $text, string $ver, string $note = ''): string {
 }
 
 function xsledit(): void {
-    if (!isAdmin(true)) die('Illegal file access');
+    global $afile;
+    if (!isAdmin(true)) setRedirect($afile.'.php?name=sitemap', false, 302, _ACCESSDENIED, true);
     $file = SITEMAP_DIR.'/sitemap.xsl';
     setHead();
     echo getXslForm(is_readable($file) ? (string)file_get_contents($file) : '', is_file($file) ? (string)sha1_file($file) : '');
@@ -150,7 +160,7 @@ function xsledit(): void {
 
 function xslsave(): void {
     global $afile;
-    if (!isAdmin(true)) die('Illegal file access');
+    if (!isAdmin(true)) setRedirect($afile.'.php?name=sitemap', false, 302, _ACCESSDENIED, true);
     $iswarn = !checkAdminPost('sitemap');
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
@@ -247,13 +257,8 @@ function configsave(): void {
     if (!$iswarn) {
         $mod = array_values(array_filter((array)getVar('post', 'mod[]', 'var', []), fn(string $v): bool => $v !== '0' && !isset($conf['node']['types'][$v])));
         $picks = getVar('post', 'ntype[]', 'var', []);
-        $vers = getVar('post', 'ver[]', '', []);
-        foreach (getNodeTypeMap() as $name => $type) {
-            $want = in_array($name, is_array($picks) ? $picks : [], true);
-            if (!is_array($vers) || !isset($vers[$name]) || $want === $type->settings['integrations']['sitemap']) continue;
-            $fail = updateNodeTypePart($name, 'integrations', array_replace($type->settings['integrations'], ['sitemap' => $want]), intval($vers[$name]));
-            if ($fail !== '') [$iswarn, $text] = [true, $fail];
-        }
+        $parts = [];
+        foreach (getNodeTypeMap() as $name => $type) $parts[$name] = array_replace($type->settings['integrations'], ['sitemap' => in_array($name, $picks, true)]);
         $cont = [
             'mod' => $mod ? implode(',', $mod) : '0',
             'auto_t' => getVar('post', 'auto_t', 'num', 1) * 3600,
@@ -277,7 +282,8 @@ function configsave(): void {
             'xsl' => getVar('post', 'xsl', 'num', 0),
             'txt' => getVar('post', 'txt', 'num', 0),
         ];
-        if (!setConfigFile('sitemap.php', $cont)) [$iswarn, $text] = [true, getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP];
+        $fail = updateNodeTypeParts(setConfigFile('sitemap.php', $cont), 'integrations', $parts, getVar('post', 'ver[]', '', []));
+        if ($fail !== '') [$iswarn, $text] = [true, $fail];
     }
     setRedirect($afile.'.php?name=sitemap&op=config', false, 302, $text, $iswarn);
 }

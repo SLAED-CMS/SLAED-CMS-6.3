@@ -60,7 +60,7 @@ function changelog(): void {
         'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
         'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
         'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
-        'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN, 'is_chlog_primary' => true],
+        'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN, 'icon_name' => 'funnel', 'is_chlog_primary' => true],
         'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'is_chlog_secondary' => true, 'reset_url' => $afile.'.php?name=changelog'],
         'show_file' => $config['source'] !== 'github',
         'totcount' => $totcount,
@@ -201,6 +201,8 @@ function configsave(): void {
     global $afile, $conf;
     $iswarn = !checkAdminPost('changelog');
     $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
+    $part = array_filter(array_map(fn(string $v): string => getVar('post', $v, 'raw', ''), ['source', 'ghowner', 'ghrepo', 'ghtoken']), fn(string $v): bool => $v !== '');
+    if (!$iswarn && !isAdmin(true) && $part) [$iswarn, $text] = [true, _ACCESSDENIED];
     if (!$iswarn) {
         $confdata = (isAdmin(true) ? [
             'source' => chlogSource(getVar('post', 'source', 'var', 'local')),

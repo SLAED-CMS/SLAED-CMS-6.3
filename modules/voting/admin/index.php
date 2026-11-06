@@ -23,6 +23,13 @@ function getVotingCommentSelect(int $selected): string {
     ]);
 }
 
+# The modules a poll may belong to, the select and the save alike: the types with polls and the module the poll already names
+function getVotingModList(string $keep = ''): array {
+    $mods = array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['features']['poll']));
+    if ($keep !== '' && !in_array($keep, $mods, true)) $mods[] = $keep;
+    return $mods;
+}
+
 function getVotingModuleSelect(string $modul = ''): string {
     global $tpl;
     $opts = $tpl->getHtmlFrag('select-option', [
@@ -30,10 +37,7 @@ function getVotingModuleSelect(string $modul = ''): string {
         'label_text' => _NO,
         'is_selected' => $modul === '',
     ]);
-    $mods = [];
-    foreach (getNodeTypeMap() as $key => $type) if ($type->settings['features']['poll']) $mods[] = $key;
-    if ($modul !== '' && !in_array($modul, $mods, true)) $mods[] = $modul;
-    foreach ($mods as $val) {
+    foreach (getVotingModList($modul) as $val) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => getModuleName($val),
@@ -308,8 +312,6 @@ function add(): void {
         ]);
     }
     $rows[] = ['label_html' => _ADD, 'field_html' => $answ, 'is_full' => true];
-    $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
-        .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -319,19 +321,19 @@ function add(): void {
             ['nameattr' => 'id', 'valueattr' => (string)$id],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'aria_label' => _FUNCTIONS, 'options_html' => $posttypeopts, 'is_inline_gap' => true])
-            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+        'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
-    global $db, $afile, $stop, $conf;
+    global $db, $afile, $stop;
     $iswarn = !checkAdminPost('voting');
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
-    if (!isset(getNodeTypeMap()[$modul]) && !isset($conf['modules'][$modul])) $modul = '';
+    $was = $id ? (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id])->fetchColumn() : '';
+    if (!in_array($modul, getVotingModList($was), true)) $modul = '';
     $title = filterCutText(getVar('post', 'title', 'text', ''), 255);
     $path = filterCutText(trim(getVar('post', 'path', 'raw', '')), 255);
     $body = getVar('post', 'body[]', '', []);
@@ -357,10 +359,9 @@ function save(): void {
     $status = (!$typ) ? '0' : getVar('post', 'status', 'num', 0);
     $stop = [];
     if (!$title) $stop[] = _CERROR;
-    $posttype = getVar('post', 'posttype', 'var', '');
     if ($iswarn) {
         setRedirect($afile.'.php?name=voting', false, 302, _TOKENMISS, true);
-    } elseif (!$stop && $posttype == 'save') {
+    } elseif (!$stop) {
         $open = $db->setSqlBegin();
         if ($id) {
             $done = $open && $db->getSqlQuery(
@@ -386,14 +387,12 @@ function save(): void {
         $done = $done && ($modul !== '' || (new Route($db))->setRouteName('poll', intval($id), 'voting', $path, $title) !== '') && $db->setSqlCommit();
         if ($open && !$done) $db->setSqlRollback();
         setRedirect($afile.'.php?name=voting', false, 302, $done ? _SUCCSAVE : _ERROR, !$done);
-    } elseif ($posttype == 'delete') {
-        delete([$id]);
     } else {
         add();
     }
 }
 
-function delete(array $ids = []): void {
+function delete(): void {
     global $db, $afile, $com, $conf;
     $iswarn = !checkAdminPost('voting');
     $act = static function (int $id) use ($db, $com, $conf): bool {
@@ -431,7 +430,7 @@ function delete(array $ids = []): void {
     };
     $flt = getVotingFilter('post');
     if (!$iswarn && setListPortion('id', PREFIX_DB.'_voting', $flt['where'], $flt['pars'], $act)) exit;
-    $ids = $iswarn ? [] : array_map('intval', $ids ?: getVar('post', 'id[]', 'num'));
+    $ids = $iswarn ? [] : array_map('intval', getVar('post', 'id[]', 'num'));
     $fail = !$iswarn && !$ids;
     foreach ($ids as $id) {
         if (!$act($id)) $fail = true;

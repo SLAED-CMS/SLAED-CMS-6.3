@@ -19,8 +19,8 @@
     {% endif %}
   </span>
   {% endfor %}
-  <button type="submit" class="sl-but-blue">{{ _OK }}</button>
+  <button type="submit" class="sl-but-blue"><i class="bi bi-funnel" aria-hidden="true"></i> {{ _OK }}</button>
   {% if link_url %}
-  <a class="sl-but" href="{{ link_url }}" hx-boost="false">{{ link_text }}</a>
+  <a class="sl-but" href="{{ link_url }}" hx-boost="false"><i class="bi bi-{% if link_icon %}{{ link_icon }}{% else %}box-arrow-up-right{% endif %}" aria-hidden="true"></i> {{ link_text }}</a>
   {% endif %}
 </form>

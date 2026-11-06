@@ -293,9 +293,11 @@ function forum(): void {
                             'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add', 'cat' => $rows[0][0]]),
                             'title' => _NEWTOPIC,
                             'is_account_button' => true,
+                            'icon_name' => 'plus-lg',
                             'label' => _OPEN,
                         ])
-                        : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true, 'label' => _OPEN]);
+                        : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true,
+                            'icon_name' => 'plus-lg', 'label' => _OPEN]);
                     $cat_link = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $rows[0][0]]), 'title' => $rows[0][1], 'label' => $rows[0][1]]);
                     $cont = $tpl->getHtmlFrag('forum-topic-view', ['open' => true, 'button' => $newbt, 'title_html' => $cat_link]);
                     if ($db->getSqlRowCount($query) > 0) {
@@ -666,17 +668,21 @@ function view(): void {
                     'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add', 'cat' => $rows[0][2]]),
                     'title' => _NEWTOPIC,
                     'is_account_button' => true,
+                    'icon_name' => 'plus-lg',
                     'label' => _OPEN,
                 ])
-                : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true, 'label' => _OPEN]);
+                : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true,
+                    'icon_name' => 'plus-lg', 'label' => _OPEN]);
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus))
                 ? $tpl->getHtmlFrag('link', [
                     'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add', 'cat' => $rows[0][2], 'pid' => $topic]),
                     'title' => _TOPICREPLY,
                     'is_account_button' => true,
+                    'icon_name' => 'reply',
                     'label' => _REPLY,
                 ])
-                : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOP, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true, 'label' => _REPLY]);
+                : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOP, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true,
+                    'icon_name' => 'reply', 'label' => _REPLY]);
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]], $conf['forum']['pnum'], $num, '', 'page');
             $favor = getFavoriteButton($topic, $conf['name']);
             $cont = $tpl->getHtmlFrag('forum-topic-view', [
@@ -885,29 +891,13 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
-        $rows .= $tpl->getHtmlFrag('form-field-row', [
-            'label' => '',
-            'field_html' => $tpl->getHtmlFrag('form-submit', [
-                'button_type' => 'submit',
-                'op' => 'send',
-                'extra' => $hide,
-                'name' => '',
-                'val' => '',
-                'select' => false,
-                'show_preview' => false,
-                'show_delete' => false,
-                'label_preview' => _PREVIEW,
-                'label_save' => _SEND,
-                'label_delete' => _DELETE,
-                'label' => _SEND,
-            ]),
-        ]);
         $cont = $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
             'is_reply' => true,
             'fields' => $rows,
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => $hide, 'label' => _SEND, 'icon_name' => 'send']),
         ]);
         return $tpl->getHtmlFrag('title', ['title' => _QUICKREPLY, 'is_level_two' => true]).$cont;
     }
@@ -1079,31 +1069,16 @@ function add(): void {
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$pid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']);
-        $rows .= $tpl->getHtmlFrag('form-field-row', [
-            'label' => '',
-            'field_html' => $hide
-                .$tpl->getHtmlFrag('form-submit', [
-                    'button_type' => 'submit',
-                    'op' => 'send',
-                    'extra' => '',
-                    'name' => '',
-                    'val' => '',
-                    'select' => true,
-                    'select_label' => _FUNCTIONS,
-                    'show_preview' => true,
-                    'show_delete' => false,
-                    'label_preview' => _PREVIEW,
-                    'label_save' => _SEND,
-                    'label_delete' => _DELETE,
-                    'label' => _OK,
-                ]),
-        ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
             'is_reply' => true,
             'fields' => $rows,
+            'submit' => $hide.$tpl->getHtmlFrag('form-submit', ['op' => 'send', 'acts' => [
+                ['name' => 'posttype', 'value' => 'preview', 'icon' => 'eye', 'label' => _PREVIEW],
+                ['name' => 'posttype', 'value' => 'save', 'icon' => 'send', 'label' => _SEND],
+            ]]),
         ]);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;

@@ -131,6 +131,7 @@ function getUpdateInstall(array $state, array $man): string {
             'hidden' => [['name_attr' => 'token', 'value_attr' => getSiteToken('update')]],
             'rows' => $rows,
             'submit_label' => _UPDATE_INSTALL,
+            'icon_name' => 'download',
             'is_disabled' => $short,
         ])]);
 }
@@ -197,7 +198,7 @@ function getUpdatePack(array $state, string $chan): array {
         'rows' => [['label_for' => 'f-file', 'label_html' => _FILE, 'hint_html' => htmlspecialchars($hint, ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-file-hint',
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'file', 'name_attr' => 'file', 'input_id' => 'f-file', 'describedby' => 'f-file-hint',
                 'input_attr' => 'accept="application/zip,.zip"', 'is_required' => true])]],
-        'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _UPDATE_UPLOAD, 'button_type' => 'submit']),
+        'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _UPDATE_UPLOAD, 'icon_name' => 'cloud-upload', 'button_type' => 'submit']),
     ])]);
     return $out;
 }
@@ -333,6 +334,7 @@ function setUpdateCode(string $title, string $lead, string $op, string $button, 
             ['update', $op, getSiteToken('update'), $codes['token']]),
         'rows' => [['label_html' => _UPDATE_CODE, 'hint_html' => _UPDATE_CODEHINT, 'hint_id' => $hid, 'field_html' => $block]],
         'submit_label' => $button,
+        'icon_name' => $danger ? 'arrow-counterclockwise' : 'play-fill',
         'is_danger' => $danger,
     ]);
     setHead();

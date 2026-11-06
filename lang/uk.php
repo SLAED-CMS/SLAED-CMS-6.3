@@ -136,6 +136,7 @@ define('_COMMENTS_PARENT','Цю відповідь неможливо додат
 define('_COMMENTS_REPLAY','Коментар із таким ключем уже збережено і він відрізняється від цього запиту.');
 define('_COMMENTS_EDITED','Змінено');
 define('_COMMENTS_REPLY','Відповісти');
+define('_COMMENTS_WAIT','Коментар надіслано, він з’явиться після перевірки.');
 define('_CONTENT','Зміст');
 define('_COUNTRY','Країна');
 define('_C_12','Кількість публікацій на сторінку');

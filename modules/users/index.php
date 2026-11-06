@@ -118,8 +118,8 @@ function rules(): void {
     ]);
     $cont .= $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
-        'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
-        'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
+        'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'icon_name' => 'house-door', 'is_navi_lower' => true],
+        'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'icon_name' => 'arrow-up', 'is_navi_lower' => true],
     ]);
     echo $cont;
     setFoot();
@@ -171,8 +171,8 @@ function stats(): void {
         ]);
         $cont .= $tpl->getHtmlPart('navi-lower', [
             'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
-            'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
-            'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
+            'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'icon_name' => 'house-door', 'is_navi_lower' => true],
+            'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'icon_name' => 'arrow-up', 'is_navi_lower' => true],
         ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);

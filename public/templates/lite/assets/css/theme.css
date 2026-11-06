@@ -188,6 +188,23 @@ h1.sl-title {
   margin-bottom: var(--sl-space-7);
 }
 
+/* The foot of a material is one row: its downloads on the left and the rating on the right share one middle line */
+.sl-fullview > .sl-meta-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-5);
+}
+
+.sl-fullview > .sl-meta-foot::after {
+  content: none;
+}
+
+.sl-fullview > .sl-meta-foot > .sl-pull-right {
+  order: 1;
+  margin: 0 0 0 auto;
+}
+
 /* Article footer: action row under the entry */
 .sl-meta-foot .sl-rate-box,
 .sl-rate-box .sl-rate {
@@ -1403,6 +1420,43 @@ select.sl-field {
   overflow-y: auto;
 }
 
+/* The chip of a checked category says main or additional; a click on an additional one makes it the main, and an unchecked row carries none */
+.sl-check-main {
+  gap: var(--sl-space-2);
+  margin-left: var(--sl-space-3);
+  cursor: pointer;
+}
+
+.sl-check-list > div:not(:has(> label > input[type="checkbox"]:checked)) > .sl-check-main,
+.sl-check-main > .bi-star-fill,
+.sl-check-main > span:last-child,
+.sl-check-main:has(> input:checked) > .bi-star,
+.sl-check-main:has(> input:checked) > span:first-of-type {
+  display: none;
+}
+
+.sl-check-main:has(> input:checked) > .bi-star-fill,
+.sl-check-main:has(> input:checked) > span:last-child {
+  display: inline;
+}
+
+/* The main one wears the warning tone over the info chip it is drawn with, and takes no click */
+.sl-check-main:has(> input:checked) {
+  background: var(--sl-chip-bg);
+  color: var(--sl-warning);
+  cursor: default;
+}
+
+.sl-check-main:not(:has(> input:checked)):hover {
+  background: var(--sl-chip-hover-bg, var(--sl-chip-tint-bg));
+}
+
+.sl-check-main:has(> input:focus-visible) {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+  border-radius: var(--sl-radius-pill);
+}
+
 .sl-field[type="file"] {
   height: auto;
   padding: var(--sl-field-pad-y) var(--sl-field-pad-x);
@@ -1438,6 +1492,11 @@ select.sl-field {
 
 .sl-inline-form {
   display: inline;
+}
+
+/* A tip whose button is a whole form stands in a row spaced by its gap, so it takes no gutter of its own */
+.sl-inline-form > .sl-tip {
+  margin-right: 0;
 }
 
 .sl-hidden {
@@ -1625,7 +1684,6 @@ button.sl-but-mini:hover,
 .sl-inline-edit > .sl-but,
 .sl-inline-edit > .sl-but-green,
 .sl-inline-edit > .sl-but-blue,
-.sl-inline-edit > input[type="submit"],
 .sl-inline-edit > button {
   margin-top: var(--sl-space-4);
 }
@@ -1749,13 +1807,13 @@ button.sl-but-mini:hover,
   grid-column: 1 / -1;
 }
 
-/* One pair of tracks serves both rows: the editable form row and the read-only value row of a view page draw the same two columns */
+/* One pair of tracks serves the form row and the read-only value row; the caption stands at the top of its field, never at half the height of a tall one */
 .sl-form-row,
 .sl-value-row {
   display: grid;
   grid-template-columns: 1fr 3fr;
   gap: var(--sl-space-6);
-  align-items: center;
+  align-items: start;
   margin-bottom: var(--sl-space-4);
   width: 100%;
 }
@@ -1782,13 +1840,19 @@ button.sl-but-mini:hover,
   align-items: start;
 }
 
-/* A tall field is read from its first line, so the label meets it there instead of floating at half its height */
-.sl-form-row:has(textarea, .sl-check-list) {
-  align-items: start;
+/* A caption meets the first line of a field box, so a text area keeps it at its top; a plain value or a list of boxes starts level */
+.sl-form-row:has(> .sl-form-field :is(input:not([type="hidden"], [type="checkbox"]), select, textarea, button)) > :first-child {
+  padding-top: calc((var(--sl-field-height) - 1lh) / 2);
 }
 
-.sl-form-row:has(textarea, .sl-check-list) .sl-form-label {
-  padding-top: var(--sl-space-3);
+/* An editor row stacks its caption over the editor, so the caption takes no offset */
+.sl-form-row:has([id$="_toast"]) > :first-child,
+.sl-form-row:has(.toastui-editor-defaultUI) > :first-child,
+.sl-form-row:has(.ck-editor) > :first-child,
+.sl-form-row:has(.cm-editor) > :first-child,
+.sl-form-row:has(.tox-tinymce) > :first-child,
+.sl-form-row:has(.sl-editor) > :first-child {
+  padding-top: 0;
 }
 
 .sl-form-field {
@@ -2809,8 +2873,8 @@ pre code.hljs {
   line-height: 1;
 }
 
-/* A popover opens from a real button beside its panel: the panel is no part of the button, so its links stay links */
-.sl-tip > button {
+/* A popover opens from a real button beside its panel: the panel is no part of the button, so its links stay links; a mini button keeps its own round face */
+.sl-tip > button:not(.sl-but-mini) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2824,7 +2888,8 @@ pre code.hljs {
 }
 
 .sl-tip:focus-visible,
-.sl-tip > button:focus-visible {
+.sl-tip > button:focus-visible,
+[data-sl-repeat-add]:not([data-sl-repeat-add=""]):focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
   border-radius: var(--sl-radius-circle);
@@ -5116,10 +5181,10 @@ dialog.sl-editor-emoji-panel {
 
 .sl-block-user-ava p > a:hover { color: var(--sl-primary); }
 
-.sl-block-user-ava p img {
-  display: block;
-  max-width: 100%;
-  height: auto;
+/* The rank of the group stands on its own line under the nick, where its picture stood, and above the group it names */
+.sl-block-user-ava p > .sl-rank {
+  display: flex;
+  width: fit-content;
   margin: var(--sl-space-1) 0;
 }
 
@@ -7539,8 +7604,24 @@ td.sl-fl-col-stat {
   gap: var(--sl-space-3);
 }
 
+/* The head of a topic is one row: the title on the left and its buttons on the right share one middle line, and the row takes the margin of the title */
+.sl-forum-top {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sl-space-7);
+  margin-bottom: var(--sl-space-5);
+}
+
+.sl-forum-top .sl-heading {
+  min-width: 0;
+  margin: 0;
+}
+
 .sl-forum-top .sl-pull-right {
-  margin-left: var(--sl-space-7);
+  flex: none;
+  float: none;
 }
 
 .sl-forum-foot {
@@ -7555,9 +7636,26 @@ td.sl-fl-col-stat {
 /* The pager shares the foot with the topic buttons; a container of inline size has no width of its own, so it is given one and wraps under them when the line is short */
 .sl-forum-foot .sl-pager {
   flex: 1 1 var(--sl-layout-sidebar);
+  flex-flow: row wrap;
+  align-items: center;
   min-width: 0;
   padding: 0;
   border-top: 0;
+}
+
+/* In the foot of a topic the pager reads from the left edge, its keys after the pages, and the topic buttons keep the right one */
+.sl-forum-foot .sl-pager-main {
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: flex-start;
+  width: auto;
+}
+
+.sl-forum-foot .sl-pager-nav {
+  grid-column: 1;
+}
+
+.sl-forum-foot .sl-pager-info {
+  text-align: left;
 }
 
 .sl-forum-foot .sl-pull-right {
@@ -8784,9 +8882,11 @@ a.sl-chip-neutral {
 }
 
 /* Article controls: favourite, share, live status and freshness */
-/* Favourites star: round mini toggle in the title; on = browser-bookmark blue, limit = muted and inert */
+/* Favourites star: round mini toggle in the title, its margin box one line high, so it sits on the middle of the first line and the line keeps its height */
 .sl-fav {
   margin-right: 0;
+  margin-block: calc((1lh - var(--sl-size-chip)) / 2);
+  vertical-align: top;
 }
 
 .sl-fav .sl-but-mini {
@@ -8808,7 +8908,7 @@ a.sl-chip-neutral {
   cursor: not-allowed;
 }
 
-/* Burst: drawn for the favourite star and serving the rating stars, so its figures keep the favourite's names */
+/* Burst: drawn for the favourite star and serving the rating stars and every pressed button, so its figures keep the favourite's names */
 .sl-is-burst {
   animation: sl-burst-ring var(--sl-fav-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6);
 }
@@ -8837,6 +8937,12 @@ a.sl-chip-neutral {
 
 .sl-is-burst::after {
   box-shadow: var(--sl-spark-shadow);
+}
+
+/* A button with words throws its sparks from its icon, which stands one gutter in, not from the middle of its words */
+.sl-but.sl-is-burst::before,
+.sl-but.sl-is-burst::after {
+  left: calc(var(--sl-space-6) + 0.5em);
 }
 
 /* A rating star and a thumb take the round the ring wave needs only while they burst */
@@ -10166,7 +10272,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   align-items: center;
   justify-content: space-between;
   gap: var(--sl-space-5);
-  margin-top: var(--sl-space-7);
+  margin: var(--sl-space-7) 0;
   padding: var(--sl-space-4) var(--sl-space-6);
   border: 1px solid var(--sl-warning);
   border-radius: var(--sl-radius-pill);
@@ -10178,19 +10284,18 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     visibility 0s;
 }
 
-/* Out of the tab order and the flow; the visibility waits for the fade on the way out only, so the shorthand is not repeated */
+/* A clean form keeps its button at its end like every form; the frame that floats, the note and the undo come with the first change */
 [data-sl-dirty="0"] .sl-opt-save {
-  visibility: hidden;
-  max-height: 0;
-  margin-top: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(var(--sl-space-6));
-  pointer-events: none;
-  transition-delay: 0s, 0s, var(--sl-time-base);
+  position: static;
+  justify-content: center;
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+}
+
+[data-sl-dirty="0"] .sl-opt-save > span:first-child,
+[data-sl-dirty="0"] .sl-opt-save [data-sl-clean] {
+  display: none;
 }
 
 .sl-opt-save > span {
@@ -10204,6 +10309,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 /* The button carries a gutter of its own for a row of buttons, and this row is spaced by a gap */
 .sl-opt-save .sl-but {
   margin: 0;
+}
+
+/* The undo is a mini button with words, so its glyph keeps the gap of every icon beside a text */
+.sl-opt-save .sl-but-mini {
+  gap: var(--sl-space-2);
 }
 
 /* Below the step the grid keeps two of six tracks, the narrowest tile that still holds a field */
@@ -11855,8 +11965,43 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-3);
 }
 
-.sl-file-door > small {
-  color: var(--sl-text-muted);
+/* The add control standing apart from its group, named by its id, is a green plus before the label of its row: the glyph of the info tip in the colour of adding */
+[data-sl-repeat-add]:not([data-sl-repeat-add=""]) {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 var(--sl-space-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* A resource row of a material form is one line: the door with its tip whole, then the title taking the rest or wrapping under it */
+[data-sl-repeat]:has(> [data-sl-repeat-row] > .sl-file-door) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sl-space-3);
+}
+
+[data-sl-repeat-row]:has(> .sl-file-door) {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: stretch;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+[data-sl-repeat-row] > .sl-file-door {
+  flex: none;
+}
+
+[data-sl-repeat-row]:has(> .sl-file-door) > input[type="text"] {
+  flex: 1 1 0;
 }
 
 /* The cross of the chip is the same control the window uses, worn down to the line height of the chip it stands in */

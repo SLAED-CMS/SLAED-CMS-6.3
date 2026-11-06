@@ -11,7 +11,7 @@
   <input type="hidden" name="field" value="{{ field }}">
   <input type="hidden" name="stamp" value="{{ stamp }}">
   {{{ editor_html }}}
-  <input type="submit" value="{{ save_label }}" class="sl-but">
-  <input type="button" value="{{ back_label }}" class="sl-but" data-sl-quick-cancel>
+  <button type="submit" class="sl-but"><i class="bi bi-check-lg" aria-hidden="true"></i> {{ save_label }}</button>
+  <button type="button" class="sl-but" data-sl-quick-cancel><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ back_label }}</button>
 </form>
 {% endif %}

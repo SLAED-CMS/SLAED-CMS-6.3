@@ -1135,7 +1135,6 @@ function getFileManagerField(array $opt): string {
         'editor_id' => $eid,
         'open_label' => _EUPLOAD,
         'clear_label' => _DELETE,
-        'limits_text' => $txt['limits'],
         'file_name' => (string)($opt['name'] ?? ''),
         'path_name' => (string)($opt['path'] ?? ''),
         'url_name' => $link ? (string)($opt['url'] ?? '') : '',
@@ -1565,11 +1564,11 @@ function getModuleNavi(array $p): string {
         'title' => $title,
         'nav_label' => $htitle,
         'is_heading' => $p['is_heading'] ?? true,
-        'home_link' => ['href' => $home, 'title' => $htitle, 'label' => _HOME, 'is_navi_button' => true],
-        'best_link' => $best ? ['href' => $best, 'title' => $btit, 'label' => $btit, 'is_navi_button' => true] : [],
-        'pop_link' => $pop ? ['href' => $pop, 'title' => $ptit, 'label' => $ptit, 'is_navi_button' => true] : [],
-        'list_link' => $list ? ['href' => $list, 'title' => _LIST, 'label' => _LIST, 'is_navi_button' => true] : [],
-        'add_link' => $add ? ['href' => $add, 'title' => _ADD, 'label' => _ADD, 'is_navi_button' => true] : [],
+        'home_link' => ['href' => $home, 'title' => $htitle, 'label' => _HOME, 'icon_name' => 'house-door', 'is_navi_button' => true],
+        'best_link' => $best ? ['href' => $best, 'title' => $btit, 'label' => $btit, 'icon_name' => 'trophy', 'is_navi_button' => true] : [],
+        'pop_link' => $pop ? ['href' => $pop, 'title' => $ptit, 'label' => $ptit, 'icon_name' => 'fire', 'is_navi_button' => true] : [],
+        'list_link' => $list ? ['href' => $list, 'title' => _LIST, 'label' => _LIST, 'icon_name' => 'list-ul', 'is_navi_button' => true] : [],
+        'add_link' => $add ? ['href' => $add, 'title' => _ADD, 'label' => _ADD, 'icon_name' => 'plus-lg', 'is_navi_button' => true] : [],
     ]);
 }
 

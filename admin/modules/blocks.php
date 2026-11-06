@@ -220,6 +220,7 @@ function add(array $sent = [], array $stop = []): void {
         ],
         'rows' => $rows,
         'submit_label' => _CREATEBLOCK,
+        'icon_name' => 'plus-lg',
     ])]);
     setFoot();
 }
@@ -263,6 +264,7 @@ function fileadd(): void {
         ],
         'rows' => $rows,
         'submit_label' => _CREATEBLOCK,
+        'icon_name' => 'plus-lg',
     ])]);
     setFoot();
 }

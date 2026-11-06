@@ -41,8 +41,8 @@ final class ListPickTest extends TestCase
             'newsletter campaigns' => [['file' => 'admin/modules/newsletter.php', 'func' => 'delete', 'lift' => ['getCampFilter'], 'post' => ['id' => [3, 5]]]],
             'newsletter queue' => [['file' => 'admin/modules/newsletter.php', 'func' => 'drop', 'lift' => ['getQueueQuery'], 'post' => ['id' => [3, 5]]]],
             'newsletter dead' => [['file' => 'admin/modules/newsletter.php', 'func' => 'revive', 'lift' => ['getDeadFilter'], 'post' => ['id' => [3, 5]]]],
-            'search' => [['file' => 'modules/search/admin/index.php', 'func' => 'drop', 'lift' => ['getSearchlink', 'getSearchwhere'], 'conf' => ['search' => ['mods' => '']],
-                'post' => ['id' => [3, 5]]]],
+            'search' => [['file' => 'modules/search/admin/index.php', 'func' => 'drop', 'lift' => ['getSearchlink', 'getSearchModList', 'getSearchwhere'],
+                'conf' => ['search' => ['mods' => '']], 'post' => ['id' => [3, 5]]]],
             'new users' => [['file' => 'modules/account/admin/index.php', 'func' => 'newdrop', 'lift' => ['getAccountScope'], 'post' => ['id' => [3, 5]]]],
             'oauth' => [['file' => 'modules/account/admin/index.php', 'func' => 'oauthunlink', 'lift' => ['getAccountScope'], 'post' => ['id' => [3, 5]],
                 'read' => ['3' => ['uid' => 7, 'provider' => 'github'], '5' => ['uid' => 8, 'provider' => 'google']]]],
@@ -201,5 +201,56 @@ final class ListPickTest extends TestCase
         $logs = array_values(array_filter($data['call'], static fn(array $one): bool => $one[0] === 'addOauth'));
         $this->assertSame([['addOauth', 'oauth_admin_unlink', ['prov' => 'github', 'uid' => 7, 'actor' => 1]],
             ['addOauth', 'oauth_admin_unlink', ['prov' => 'google', 'uid' => 8, 'actor' => 1]]], $logs);
+    }
+
+    # The posts of the form "Очистка" of search: a mode it names deletes its rows, while 0 days, a missing or unknown module and an unknown mode delete nothing
+    public static function getClears(): array
+    {
+        $none = [[], '_error', true];
+        return [
+            'all' => [['mode' => 'all'], [['sql' => 'DELETE', 'pars' => ['id' => 0]]], '_succdelete', false],
+            'module' => [['mode' => 'mod', 'cmod' => 'forum'], [['sql' => 'DELETE', 'pars' => ['modul' => 'forum']]], '_succdelete', false],
+            'days' => [['mode' => 'days', 'days' => '30'], [['sql' => 'DELETE', 'pars' => []]], '_succdelete', false],
+            'empty words' => [['mode' => 'empty'], [['sql' => 'DELETE', 'pars' => ['word' => '']]], '_succdelete', false],
+            'zero days' => [['mode' => 'days', 'days' => '0'], ...$none],
+            'no days' => [['mode' => 'days'], ...$none],
+            'no module' => [['mode' => 'mod'], ...$none],
+            'unknown module' => [['mode' => 'mod', 'cmod' => 'ghost'], ...$none],
+            'unknown mode' => [['mode' => 'wipe', 'cmod' => 'forum', 'days' => '30'], ...$none],
+            'no mode' => [['cmod' => 'forum'], ...$none],
+        ];
+    }
+
+    # A clear runs the one query of its mode, and a mode it cannot carry out answers an error with nothing deleted
+    #[Test]
+    #[DataProvider('getClears')]
+    public function aClearOfSearchDeletesOnlyWhatItsModeNames(array $post, array $write, string $text, bool $warn): void
+    {
+        $data = $this->getProbe(['file' => 'modules/search/admin/index.php', 'func' => 'clear', 'lift' => ['getSearchModList'], 'conf' => ['search' => ['mods' => 'forum']],
+            'post' => $post, 'token' => true]);
+        $this->assertSame($write, $data['write'], 'The clear deleted other rows than its mode names');
+        $this->assertSame([$text, $warn], [$data['text'], $data['warn']]);
+    }
+
+    # The edits of the row 7 of search, stored with the module pages that is no longer in the list of the search
+    public static function getEdits(): array
+    {
+        return [
+            'own module' => [['modul' => 'pages'], 'pages', '_succsave', false],
+            'listed module' => [['modul' => 'forum'], 'forum', '_succsave', false],
+            'foreign module' => [['modul' => 'shop'], '', '_succsave', false],
+            'empty word' => [['modul' => 'pages', 'word' => ''], null, '_cerror', true],
+        ];
+    }
+
+    # An edit keeps the module its row already names, takes one of the list, drops any other and writes no empty word
+    #[Test]
+    #[DataProvider('getEdits')]
+    public function anEditOfSearchKeepsTheModuleOfItsRow(array $post, ?string $mod, string $text, bool $warn): void
+    {
+        $data = $this->getProbe(['file' => 'modules/search/admin/index.php', 'func' => 'editsave', 'lift' => ['getSearchlink', 'getSearchModList'],
+            'conf' => ['search' => ['mods' => 'forum']], 'post' => $post + ['id' => '7', 'word' => 'probe'], 'read' => ['7' => 'pages'], 'token' => true]);
+        $this->assertSame($mod, ($mod === null) ? ($data['write'][0] ?? null) : $data['write'][0]['pars']['modul'], 'The edit wrote another module');
+        $this->assertSame([$text, $warn], [$data['text'], $data['warn']]);
     }
 }

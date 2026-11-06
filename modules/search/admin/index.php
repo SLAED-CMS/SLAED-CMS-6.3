@@ -6,11 +6,17 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file access');
 
-function getSearchmodsOpts(string $cmod = ''): array {
+# The modules of the search, one list for every select, filter and write of this section: its settings, the types with the flag search and the module a row already names
+function getSearchModList(string $keep = ''): array {
     global $conf;
-    $mods = array_merge(explode(',', (string)$conf['search']['mods']), array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['integrations']['search'])));
+    $types = array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['integrations']['search']));
+    $mods = array_merge(explode(',', (string)$conf['search']['mods']), $types, [$keep]);
+    return array_values(array_unique(array_filter(array_map('trim', $mods))));
+}
+
+function getSearchmodsOpts(string $cmod = '', string $keep = ''): array {
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']];
-    foreach (array_filter(array_map('trim', $mods)) as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod), 'is_selected' => $cmod === $mod];
+    foreach (getSearchModList($keep) as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod), 'is_selected' => $cmod === $mod];
     return $opts;
 }
 
@@ -158,12 +164,9 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
 }
 
 function getSearchwhere(): array {
-    global $conf;
     $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
-    $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
-    $mods = array_merge($mods, array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['integrations']['search'])));
-    if ($fmod !== '' && !in_array($fmod, $mods, true)) $fmod = '';
+    if ($fmod !== '' && !in_array($fmod, getSearchModList(), true)) $fmod = '';
     $cond = [];
     $pars = [];
     $link = '';
@@ -403,6 +406,7 @@ function config(): void {
             'describedby' => 'f-addall-note',
         ]),
         'submit_label' => _SEARCHADDSEL,
+        'icon_name' => 'plus-lg',
     ]);
     $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHREADY, 'content_html' => $readyform]);
     $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHINVALID, 'content_html' => getSearchauditTable($ilist, 'invalid')]);
@@ -410,6 +414,7 @@ function config(): void {
         'action_url' => $afile.'.php?name=search&op=reindex',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'submit_label' => _SEARCHAUTO,
+        'icon_name' => 'lightning-charge',
     ]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => $reform]);
     $cont .= $html;
@@ -424,14 +429,9 @@ function save(): void {
     if (!$iswarn) {
         $mods = getVar('post', 'search[]', 'var', []);
         $picks = getVar('post', 'ntype[]', 'var', []);
-        $vers = getVar('post', 'ver[]', '', []);
-        foreach (getNodeTypeMap() as $name => $type) {
-            $want = in_array($name, is_array($picks) ? $picks : [], true);
-            if (!is_array($vers) || !isset($vers[$name]) || $want === $type->settings['integrations']['search']) continue;
-            $fail = updateNodeTypePart($name, 'integrations', array_replace($type->settings['integrations'], ['search' => $want]), intval($vers[$name]));
-            if ($fail !== '') [$iswarn, $text] = [true, $fail];
-        }
-        $kept = setConfigFile('search.php', [
+        $parts = [];
+        foreach (getNodeTypeMap() as $name => $type) $parts[$name] = array_replace($type->settings['integrations'], ['search' => in_array($name, $picks, true)]);
+        $fail = updateNodeTypeParts(setConfigFile('search.php', [
             'asearch' => getVar('post', 'asearch', 'num'),
             'mods' => $mods ? implode(',', $mods) : '0',
             'slet' => getVar('post', 'slet', 'num', 3),
@@ -440,8 +440,8 @@ function save(): void {
             'snump' => getVar('post', 'snump', 'num', 5),
             'anum' => getVar('post', 'anum', 'num', 50),
             'anump' => getVar('post', 'anump', 'num', 10),
-        ]);
-        if (!$kept) [$iswarn, $text] = [true, getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP];
+        ]), 'integrations', $parts, getVar('post', 'ver[]', '', []));
+        if ($fail !== '') [$iswarn, $text] = [true, $fail];
     }
     setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
 }
@@ -499,12 +499,12 @@ function edit(): void {
         [
             'label_for' => 'f-word', 'label_html' => _SWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text', 'name_attr' => 'word', 'input_id' => 'f-word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD,
+                'itype' => 'text', 'name_attr' => 'word', 'input_id' => 'f-word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD, 'is_required' => true,
             ]),
         ],
         [
             'label_for' => 'f-modul', 'label_html' => _MODUL,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'selectid' => 'f-modul', 'options' => getSearchmodsOpts((string)$mod)]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'selectid' => 'f-modul', 'options' => getSearchmodsOpts((string)$mod, (string)$mod)]),
         ],
         ['label_html' => _DATE, 'field_html' => getTplAddDateTime(['name' => 'time', 'label' => _DATE, 'time' => (string)$time, 'with' => true, 'max' => 16])],
         [
@@ -533,7 +533,7 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $afile, $conf;
+    global $db, $afile;
     $id = getVar('post', 'id', 'num', 0);
     $sort = getVar('post', 'sort', 'num', 3);
     $order = getVar('post', 'order', 'num', 2);
@@ -544,19 +544,18 @@ function editsave(): void {
     $word = filterCutText(trim(getVar('post', 'word', 'text', '')), 255);
     if (!$iswarn && $word !== '') {
         $mod = strtolower(getVar('post', 'modul', 'var', ''));
-        $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
-        if (!isset(getNodeTypeMap()[$mod]) && !in_array($mod, $mods, true)) $mod = '';
+        $was = (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id])->fetchColumn();
+        if (!in_array($mod, getSearchModList($was), true)) $mod = '';
         $time = getVar('post', 'time', 'time');
         $hits = getVar('post', 'hits', 'num', 1);
         $hits = ($hits > 0) ? $hits : 1;
-        $db->getSqlQuery(
+        $done = $db->getSqlQuery(
             'UPDATE '.PREFIX_DB.'_search SET word = :word, modul = :modul, time = :time, score = :score WHERE id = :id',
             ['word' => $word, 'modul' => $mod, 'time' => $time, 'score' => $hits, 'id' => $id]
-        );
-        setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod), false, 302, _SUCCSAVE, false);
-        return;
+        ) !== false;
+        if ($done) setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod), false, 302, _SUCCSAVE, false);
     }
-    $msg = $iswarn ? _TOKENMISS : _SWORD;
+    $msg = $iswarn ? _TOKENMISS : (($word === '') ? _CERROR : _ERROR);
     setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod, 'edit').'&id='.$id, false, 302, $msg, true);
 }
 
@@ -588,6 +587,7 @@ function delete(): void {
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $rows,
         'submit_label' => _DELETE,
+        'icon_name' => 'trash',
         'is_danger' => true,
         'button_attr' => 'data-sl-confirm="'.htmlspecialchars(_SEARCHCLEAR.'?', ENT_QUOTES, 'UTF-8').'"',
     ])]);
@@ -596,24 +596,23 @@ function delete(): void {
 }
 
 function clear(): void {
-    global $db, $afile, $conf;
+    global $db, $afile;
     $iswarn = !checkAdminPost('search');
+    $done = false;
     if (!$iswarn) {
-        $mode = getVar('post', 'mode', 'var', 'all');
+        $mode = getVar('post', 'mode', 'var', '');
         $cmod = strtolower(getVar('post', 'cmod', 'var', ''));
-        $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
-        $days = getVar('post', 'days', 'num', 30);
-        if ($mode === 'mod' && $cmod !== '') {
-            if (isset(getNodeTypeMap()[$cmod]) || in_array($cmod, $mods, true)) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE modul = :modul', ['modul' => $cmod]);
-        } elseif ($mode === 'days' && $days > 0) {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE time < DATE_SUB(NOW(), INTERVAL '.intval($days).' DAY)');
-        } elseif ($mode === 'empty') {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE word = \'\' OR word IS NULL');
-        } else {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id > :id', ['id' => 0]);
-        }
+        $days = getVar('post', 'days', 'num', 0);
+        $sql = match (true) {
+            $mode === 'all' => ['DELETE FROM '.PREFIX_DB.'_search WHERE id > :id', ['id' => 0]],
+            $mode === 'mod' && in_array($cmod, getSearchModList(), true) => ['DELETE FROM '.PREFIX_DB.'_search WHERE modul = :modul', ['modul' => $cmod]],
+            $mode === 'days' && $days > 0 => ['DELETE FROM '.PREFIX_DB.'_search WHERE time < DATE_SUB(NOW(), INTERVAL '.intval($days).' DAY)', []],
+            $mode === 'empty' => ['DELETE FROM '.PREFIX_DB.'_search WHERE word = :word OR word IS NULL', ['word' => '']],
+            default => null,
+        };
+        $done = $sql !== null && $db->getSqlQuery(...$sql) !== false;
     }
-    setRedirect($afile.'.php?name=search&op=delete', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    setRedirect($afile.'.php?name=search&op=delete', false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function drop(): void {

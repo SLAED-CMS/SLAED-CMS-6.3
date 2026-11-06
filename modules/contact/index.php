@@ -83,6 +83,7 @@ function contact(): void {
             'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
             'op' => 'contact',
             'label' => _SEND,
+            'icon_name' => 'send',
         ]),
     ]);
     if (getVar('post', 'send', 'num') == '1') {

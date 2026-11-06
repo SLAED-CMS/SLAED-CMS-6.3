@@ -1661,8 +1661,8 @@ function getRouteIntact(PDO $pdo, string $work): array {
     $rss = getRouteReply('', 'GET', 'index.php?name=rss&mod=news');
     $sheet = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id=102')['body'];
     $out['ring'] = [$cat['code'], str_contains($cat['body'], 'Ring 96'), $rss['code'], str_contains($rss['body'], 'Ring 96'),
-        (bool)preg_match('#<option[^>]*value="95"[^>]*selected#', $sheet), microtime(true) - $start < 30,
-        strpos($sheet, 'value="97"') < strpos($sheet, 'value="98"'), (bool)preg_match('#value="98"[^>]*>\x{00A0}+Ring 98#u', $sheet)];
+        (bool)preg_match('#name="cid" value="95"[^>]*\bchecked#', $sheet), microtime(true) - $start < 30,
+        strpos($sheet, 'value="97"') < strpos($sheet, 'value="98"'), (bool)preg_match('#--sl-d-depth: 1"><label[^>]*><input type="checkbox" name="cids\[\]" value="98"#', $sheet)];
     return $out;
 }
 
@@ -1779,8 +1779,7 @@ function getRouteSecure(PDO $pdo, string $work): array {
     setRouteCaptcha($work, false);
     $find = getRouteReply('', 'GET', 'index.php?name=search&word=probe')['body'];
     $out['search'] = [str_contains($find, 'title="Q&amp;A probe"'), str_contains($find, 'Q&amp;amp;A')];
-    $pick = fn(string $html): string => preg_match('#<select\b[^>]*name="cid".*?</select>#s', $html, $hit) ? $hit[0] : '';
-    $has = fn(string $html, int $cid): bool => str_contains($pick($html), 'value="'.$cid.'"');
+    $has = fn(string $html, int $cid): bool => str_contains($html, 'name="cid" value="'.$cid.'"');
     [$gform, $aform] = [$form(''), $form('anna')];
     $out['cats'] = [$has($gform, 5), $has($gform, 4), $has($gform, 1), $has($aform, 4), $has($aform, 1)];
     $gtok = getRouteToken($gform, 'name="action"');
@@ -2103,8 +2102,10 @@ function getRouteSeo(PDO $pdo, string $work): array {
     $page = $get('index.php?name=rss')['body'];
     $blk = $cut($page, 'Docs last block');
     $get('index.php?name=rss&num=2');
-    $form = getRouteReply('anna', 'GET', 'index.php?name=news&op=add')['body'];
-    $out['hint'] = [str_contains($form, 'id="f-relrel-hint"'), str_contains($form, 'aria-describedby="f-relrel-hint"'), str_contains($form, 'id=""')];
+    $form = getRouteReply('root', 'GET', 'index.php?name=news&op=add')['body'];
+    $user = getRouteReply('anna', 'GET', 'index.php?name=news&op=add')['body'];
+    $out['hint'] = [str_contains($form, 'id="f-relrel-hint"'), str_contains($form, 'aria-describedby="f-relrel-hint"'), str_contains($form.$user, 'id=""'),
+        str_contains($user, 'name="relrel"')];
     $docs = $get('index.php?go=rss&name=docs')['body'];
     $out['order'] = [strpos($blk, 'Zebra doc') !== false && strpos($blk, 'Zebra doc') < (int)strpos($blk, 'Doc one'),
         strpos($docs, '<title>Zebra doc</title>') !== false && strpos($docs, '<title>Zebra doc</title>') < (int)strpos($docs, '<title>Doc one</title>'),
@@ -2285,7 +2286,8 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $out['bad'] = [$get('index.php?name=docs&fav=1', 'anna')['code'], $get('index.php?name=news&new=2')['code'], $get('index.php?name=news&fav=yes', 'anna')['code']];
     $out['feed'] = array_values(array_filter($hrefs($get('index.php?name=news&cat=1&let=A')['body']), fn(string $v): bool => str_contains($v, 'go=rss')));
     $letter = fn(string $html, string $char): bool => str_contains($html, '/news?let='.$char.'"');
-    $tile = fn(string $html, string $name): string => preg_match('#sl-cat-name">'.$name.'</span><span class="sl-chip sl-chip-info">(\d+)<#', $html, $hit) ? $hit[1] : '';
+    $tile = fn(string $html, string $name): string => preg_match('#sl-cat-name">'.$name.'</span><span title="[^"]*" class="sl-chip sl-chip-info">(\d+)<#', $html, $hit)
+        ? $hit[1] : '';
     $out['counts'] = [[$letter($guest['body'], 'A'), $letter($guest['body'], 'M'), $letter($guest['body'], 'Z')], [$letter($anna['body'], 'M'), $letter($anna['body'], 'Z')],
         [$tile($guest['body'], 'Open'), $tile($anna['body'], 'Open'), $tile($anna['body'], 'Members')]];
     $out['cache'] = [array_keys($keep['sets'] ?? []), abs(($keep['until'] ?? 0) - strtotime('2030-01-01 00:00:00')) < 86400, $keep['sets']['c1']['total'] ?? 0,
@@ -2899,13 +2901,13 @@ function getRouteJournal(PDO $pdo, string $work): array {
     $out['panellogin'] = [$gate['code'], $open['code'], getRouteLines('admin')];
     $mark = $count('admin');
     $tok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=voting&op=add')['body'], 'save');
-    $base = ['name' => 'voting', 'op' => 'save', 'posttype' => 'save', 'title' => 'Journal one', 'body' => ['secret body text'], 'answer' => ['0'],
+    $base = ['name' => 'voting', 'op' => 'save', 'title' => 'Journal one', 'body' => ['secret body text'], 'answer' => ['0'],
         'date' => '2026-01-01 10:00:00', 'enddate' => '2036-01-01 10:00:00', 'token' => $tok];
     $codes = [getRouteReply('root', 'POST', 'admin.php', $base)['code']];
     $mid = (int)$pdo->query('SELECT id FROM '.$pre.'voting WHERE title = \'Journal one\'')->fetchColumn();
     $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => [(string)$mid], 'token' => str_repeat('0', 64)])['code'];
     $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['id' => (string)$mid, 'title' => '']))['code'];
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['id' => (string)$mid, 'posttype' => 'delete']))['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => [(string)$mid], 'token' => $tok])['code'];
     $when = date('Y-m-d H:i:s');
     foreach (['first', 'second'] as $text) {
         $pdo->prepare('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, ip, body, status, shown) VALUES (101, \'news\', ?, 2, \'anna\', \'127.0.0.1\', ?, 1, ?)')
@@ -3266,7 +3268,7 @@ function getRouteWriters(PDO $pdo, string $work): array {
     $act = getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=dora&num=probecode');
     $out['user']['activate'] = [$act['code'], getRouteAddress($pdo, 'user', (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'dora\''))];
     $form = getRouteReply('root', 'GET', 'admin.php?name=voting&op=add')['body'];
-    $vote = getRoutePairs(getRouteInputs($form, 'save'), ['title' => 'Как вам новый дизайн?', 'posttype' => 'save', 'path' => '']);
+    $vote = getRoutePairs(getRouteInputs($form, 'save'), ['title' => 'Как вам новый дизайн?', 'path' => '']);
     $vote['body'] = ['Да', 'Нет'];
     $vote['answer'] = ['0', '0'];
     $poll = getRouteReply('root', 'POST', 'admin.php', $vote);
@@ -3274,11 +3276,11 @@ function getRouteWriters(PDO $pdo, string $work): array {
     $out['poll'] = ['made' => [$poll['code'], getRouteAddress($pdo, 'poll', $vid)]];
     $form = getRouteReply('root', 'GET', 'admin.php?name=voting&op=add&id='.$vid)['body'];
     $out['poll']['field'] = getRouteField($form, 'path');
-    $edit = getRoutePairs(getRouteInputs($form, 'save'), ['posttype' => 'save', 'path' => 'Дизайн']);
+    $edit = getRoutePairs(getRouteInputs($form, 'save'), ['path' => 'Дизайн']);
     $edit['body'] = ['Да', 'Нет'];
     $edit['answer'] = ['0', '0'];
     $out['poll']['moved'] = [getRouteReply('root', 'POST', 'admin.php', $edit)['code'], getRouteAddress($pdo, 'poll', $vid)];
-    $out['poll']['delete'] = [getRouteReply('root', 'POST', 'admin.php', array_replace($edit, ['posttype' => 'delete']))['code'],
+    $out['poll']['delete'] = [getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => [(string)$vid], 'token' => $edit['token']])['code'],
         (int)$one('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = '.$vid), getRouteAddress($pdo, 'poll', $vid)];
     $pdo->exec('CREATE TRIGGER '.$pre.'routes_fail BEFORE INSERT ON '.$pre.'routes FOR EACH ROW BEGIN'
         .' IF NEW.path LIKE \'%/fail%\' THEN SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'probe refuses\'; END IF; END');
@@ -3296,7 +3298,7 @@ function getRouteWriters(PDO $pdo, string $work): array {
     $pdo->exec('INSERT INTO '.$pre.'users_temp (name, email, password, regdate, code) VALUES (\'failing\', \'failing@probe.test\', \'x\', NOW(), \'failcode\')');
     getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=failing&num=failcode');
     $form = getRouteReply('root', 'GET', 'admin.php?name=voting&op=add')['body'];
-    $vote = getRoutePairs(getRouteInputs($form, 'save'), ['title' => 'Failing poll', 'posttype' => 'save', 'path' => '']);
+    $vote = getRoutePairs(getRouteInputs($form, 'save'), ['title' => 'Failing poll', 'path' => '']);
     $vote['body'] = ['Yes', 'No'];
     $vote['answer'] = ['0', '0'];
     getRouteReply('root', 'POST', 'admin.php', $vote);

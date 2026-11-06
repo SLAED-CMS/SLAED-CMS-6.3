@@ -13,7 +13,7 @@
           <li class="sl-d-num sl-font"{% if is_build %} data-sl-text="panever"{% endif %}>{{ parts.panever }}</li>
           {% endif %}
           {% if parts.panebtn and parts.panehref %}
-          <li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}"{% if is_build %} data-sl-text="panebtn"{% endif %}>{{ parts.panebtn }}</a></li>
+          <li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}"><i class="bi bi-download" aria-hidden="true"></i> <span{% if is_build %} data-sl-text="panebtn"{% endif %}>{{ parts.panebtn }}</span></a></li>
           {% endif %}
         </ul>
         {% endif %}

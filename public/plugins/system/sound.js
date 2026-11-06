@@ -40,7 +40,7 @@
     function setSoundView() {
         var zones = getSoundZones();
         document.querySelectorAll('#sl-set-sound').forEach(function (pick) { pick.value = isSoundOn() ? '1' : '0'; });
-        document.querySelectorAll('[data-sl-sound-zone]').forEach(function (box) { box.checked = !!zones[box.getAttribute('data-sl-sound-zone')]; });
+        document.querySelectorAll('[data-sl-sound-zone]').forEach(function (box) { box.checked = (box.value === '1') === !!zones[box.getAttribute('data-sl-sound-zone')]; });
     }
     // Д4 The switch of Options: turned on it answers with the success tone
     function setSoundOn(on) {
@@ -52,13 +52,13 @@
     ['pointerdown', 'keydown'].forEach(function (name) {
         document.addEventListener(name, function () { soundWoke = true; }, { passive: true, once: true });
     });
-    // Answer 15: a zone box of the profile is kept at once on this device and never sent
+    // Answer 15: a zone switch of the profile is kept at once on this device; the form ignores its pair of radios
     document.addEventListener('change', function (event) {
         var box = event.target;
         var zones;
-        if (!box.matches || !box.matches('[data-sl-sound-zone]')) return;
+        if (!box.matches || !box.matches('[data-sl-sound-zone]') || !box.checked) return;
         zones = getSoundZones();
-        zones[box.getAttribute('data-sl-sound-zone')] = box.checked;
+        zones[box.getAttribute('data-sl-sound-zone')] = box.value === '1';
         window.setToggleState('sound-zones', '', JSON.stringify(zones));
     });
     // An answer of the server names its sound by the event sl-sound of HX-Trigger

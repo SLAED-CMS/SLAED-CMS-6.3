@@ -11,7 +11,7 @@
     <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     <b>{{ fail_title }}</b>
     <p>{{ fail_text }}</p>
-    <button type="button" class="sl-but" data-sl-fm-go="self">{{ retry_text }}</button>
+    <button type="button" class="sl-but" data-sl-fm-go="self"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> {{ retry_text }}</button>
   </div>
   <div data-sl-fm-real>
     {% if is_empty %}
@@ -20,7 +20,7 @@
       <b>{{ empty_title }}</b>
       <p>{{ empty_text }}</p>
       {% if reset_url %}
-      <a class="sl-but" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ reset_text }}</a>
+      <a class="sl-but" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> {{ reset_text }}</a>
       {% endif %}
     </div>
     {% else %}

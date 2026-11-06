@@ -1,26 +1,21 @@
-<section class="sl-section">
-  <h2 class="sl-related-title">{{ role_title }}</h2>
-  <ul class="sl-list">
-    {% for item in items %}
-    <li>
-      {% if item.href %}
-      <a href="{{ item.href }}" title="{{ download_label }}" class="sl-but"><i class="bi bi-download" aria-hidden="true"></i> {% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}</a>
-      {% else %}
-      {% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}
-      {% endif %}
-      {% if item.stext %}
-      <span class="sl-chip">{{ item.stext }}</span>
-      {% endif %}
-      {% if item.hits %}
-      <span title="{{ hits_label }}" class="sl-chip sl-card-reads"><i class="bi bi-download" aria-hidden="true"></i> {{ item.hits }}</span>
-      {% endif %}
-      {% if item.intro %}
-      <br>{{ item.intro }}
-      {% endif %}
-      {% if item.rhref %}
-      <form method="post" action="{{ item.rhref }}" class="sl-inline-form"><input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="refer" value="1"><button type="submit" title="{{ report_label }}" aria-label="{{ report_label }}" class="sl-but-mini"><i class="bi bi-flag" aria-hidden="true"></i></button></form>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-</section>
+{% for item in items %}
+<span class="sl-meta-actions">
+  {% if item.href %}
+  <a href="{{ item.href }}" title="{{ download_label }}: {% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}" class="sl-but"><i class="bi bi-download" aria-hidden="true"></i> {{ download_label }}</a>
+  {% else %}
+  <span>{% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}</span>
+  {% endif %}
+  {% if item.rhref %}
+  <form method="post" action="{{ item.rhref }}" class="sl-inline-form"><input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="refer" value="1"><span class="sl-tip sl-float"><button type="submit" aria-label="{{ report_label }}" class="sl-but-mini"><i class="bi bi-flag" aria-hidden="true"></i></button><span class="sl-float-panel" role="tooltip">{{ report_label }}</span></span></form>
+  {% endif %}
+  {% if item.stext %}
+  <span title="{{ _SIZE }}" class="sl-chip sl-chip-info">{{ item.stext }}</span>
+  {% endif %}
+  {% if item.hits %}
+  <span title="{{ _NODE_DLOADS }}" class="sl-chip sl-chip-success sl-card-reads"><i class="bi bi-download" aria-hidden="true"></i> {{ item.hits }}</span>
+  {% endif %}
+  {% if item.intro %}
+  <small>{{ item.intro }}</small>
+  {% endif %}
+</span>
+{% endfor %}

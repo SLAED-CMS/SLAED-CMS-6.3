@@ -67,7 +67,7 @@ function changelog(): void {
         'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
         'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
         'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
-        'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN],
+        'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN, 'icon_name' => 'funnel'],
         'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'reset_url' => getSeoUrl(['name' => $conf['name']])],
         'search' => chlogEsc($filters['search']),
         'author' => chlogEsc($filters['author']),

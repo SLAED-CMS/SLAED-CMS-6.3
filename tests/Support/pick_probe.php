@@ -27,7 +27,7 @@ foreach (['logs', 'config'] as $dir) {
 define('PREFIX_DB', 'probe');
 define('LOGS_DIR', $pwork.'/logs');
 define('CONFIG_DIR', $pwork.'/config');
-foreach (['_TOKENMISS', '_SUCCDELETE', '_SUCCSTATUS', '_SUCCSAVE', '_ERROR', '_NLBUSY', '_BANN_INFO', '_REPLACE_BAR'] as $name) define($name, strtolower($name));
+foreach (['_TOKENMISS', '_SUCCDELETE', '_SUCCSTATUS', '_SUCCSAVE', '_ERROR', '_CERROR','_NLBUSY', '_BANN_INFO', '_REPLACE_BAR'] as $name) define($name, strtolower($name));
 set_time_limit(20);
 $pdone = ['error' => '', 'data' => ['write' => [], 'call' => [], 'cfg' => []]];
 
@@ -173,6 +173,7 @@ register_shutdown_function(static function (): void {
 try {
     setProbeLift($psite.'/core/security.php', 'filterNum', $pwork.'/lift_num.php');
     setProbeLift($psite.'/core/security.php', 'filterVar', $pwork.'/lift_var.php');
+    setProbeLift($psite.'/core/security.php', 'filterCutText', $pwork.'/lift_cut.php');
     setProbeLift($psite.'/core/helpers.php', 'setListPortion', $pwork.'/lift_portion.php');
     foreach (['getIpNorm', 'getIpFamily', 'getIpCidr'] as $func) setProbeLift($psite.'/core/security.php', $func, $pwork.'/lift_'.strtolower($func).'.php');
     foreach ((array)($pcase['logs'] ?? []) as $one) file_put_contents(LOGS_DIR.'/'.$one.'.log', 'x');

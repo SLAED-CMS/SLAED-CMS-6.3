@@ -152,6 +152,7 @@ function fileedit(): void {
                 $tloc = substr($lng_cn[$j], 0, 2);
                 $btn = $tpl->getHtmlFrag('button', [
                     'label' => _OK,
+                    'icon_name' => 'translate',
                     'button_attr' => ' title="'.htmlspecialchars(_EAUTOTR, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
                         .'" onclick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');"',
                 ]);

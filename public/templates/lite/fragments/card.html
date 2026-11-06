@@ -105,7 +105,7 @@
     {% if read_link %}
     {% include 'fragments/link.html' with read_link %}
     {% elseif read_href %}
-    <a href="{{ read_href }}" title="{{ title_attr }}" class="sl-but">{{ read_text }}</a>
+    <a href="{{ read_href }}" title="{{ title_attr }}" class="sl-but"><i class="bi bi-arrow-right" aria-hidden="true"></i> {{ read_text }}</a>
     {% endif %}
   </div>
 </article>

@@ -262,8 +262,10 @@ function dump(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
     $buttons =
-        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'submit_label' => _DB_PARSE, 'is_green' => true])
-        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'exec', 'submit_label' => _EXECUTE, 'is_blue' => true]);
+        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'submit_label' => _DB_PARSE, 'icon_name' => 'search',
+            'is_green' => true])
+        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'exec', 'submit_label' => _EXECUTE,
+            'icon_name' => 'play-fill', 'is_blue' => true]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=database&op=dump',
         'hidden' => [

@@ -136,6 +136,7 @@ define('_COMMENTS_PARENT','Tej odpowiedzi nie można przypisać do wskazanego ko
 define('_COMMENTS_REPLAY','Komentarz został już zapisany pod tym kluczem i różni się od tego żądania.');
 define('_COMMENTS_EDITED','Edytowano');
 define('_COMMENTS_REPLY','Odpowiedz');
+define('_COMMENTS_WAIT','Komentarz został wysłany i pojawi się po sprawdzeniu.');
 define('_CONTENT','Spis treści');
 define('_COUNTRY','Kraj');
 define('_C_12','Ilość publikacji na stronę');

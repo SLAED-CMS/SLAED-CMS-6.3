@@ -2,7 +2,7 @@
   <a class="sl-cat-main"{% if href %} href="{{ href }}"{% endif %} title="{{ title }}"{% if is_current %} aria-current="true"{% endif %}>
     <span class="sl-cat-ico"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i></span>
     <span class="sl-cat-info">
-      <span class="sl-cat-line"><span class="sl-cat-name">{{ name }}</span>{% if count %}<span class="sl-chip sl-chip-info">{{ count }}</span>{% endif %}</span>
+      <span class="sl-cat-line"><span class="sl-cat-name">{{ name }}</span>{% if count %}<span title="{{ _ALLMATERIALS }}" class="sl-chip sl-chip-info">{{ count }}</span>{% endif %}</span>
       {% if description %}
       <span class="sl-cat-desc">{{ description }}</span>
       {% endif %}

@@ -20,13 +20,13 @@
       <span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i><span>{{ sgroup }}</span></span>
       {% endif %}
       {% if is_online %}
-      <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i><span>{{ online_label }}</span></span>
+      <span title="{{ _STATUS }}" class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i><span>{{ online_label }}</span></span>
       {% else %}
-      <span class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i><span>{{ offline_label }}</span></span>
+      <span title="{{ _STATUS }}" class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i><span>{{ offline_label }}</span></span>
       {% endif %}
     </div>
     {% if pm_href %}
-    <div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}">{{ pm_label }}</a></div>
+    <div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}"><i class="bi bi-envelope" aria-hidden="true"></i> {{ pm_label }}</a></div>
     {% endif %}
     {% if rating_html %}
     <div class="sl-profile-score">

@@ -7,4 +7,4 @@
   <option value="delete">{{ label_delete }}</option>
   {% endif %}
 </select>
-{% endif %}{% include 'fragments/button.html' %}
+{% endif %}{% if acts %}{% for act in acts %}<button type="submit" class="sl-but" name="{{ act.name }}" value="{{ act.value }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i> {{ act.label }}</button>{% endfor %}{% else %}{% include 'fragments/button.html' %}{% endif %}

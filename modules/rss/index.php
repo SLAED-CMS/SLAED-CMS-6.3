@@ -65,7 +65,7 @@ function info(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $fields,
-        'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'info', 'label' => _RSS_INFO_CODE]),
+        'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'info', 'label' => _RSS_INFO_CODE, 'icon_name' => 'code-slash']),
     ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';

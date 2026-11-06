@@ -16,8 +16,8 @@ return [
 просто',
             'paneon' => true,
             'panecap' => 'Актуальная версия',
-            'panever' => '6.2',
-            'panebtn' => 'Скачать систему',
+            'panever' => '8.0.0',
+            'panebtn' => 'Скачать',
             'panehref' => '/files',
             'social' => [
                 0 => [

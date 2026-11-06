@@ -174,6 +174,7 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, array
         'is_htmx' => true,
         'hx_target' => 'this',
         'hx_swap' => 'outerHTML',
+        'icon_name' => 'chat-dots',
         'is_button_blue' => true,
     ]);
 }
@@ -240,13 +241,14 @@ function setComShow(int $id, int $acomm, ?string $route): string {
     $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
     $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full, $route)]);
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => '']);
+    $stat = '';
+    $form = '';
     if ($mode !== CommentMode::Disabled && !is_user() && $conf['comments']['anonpost'] == 0) {
-        $cont .= $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getSeoUrl(['name' => 'account'])), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        $form = $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getSeoUrl(['name' => 'account'])), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } elseif ($mode !== CommentMode::Disabled) {
         $userinfo = getUserInfo();
         $note = !is_moder($conf['name']) && ($mode === CommentMode::Moderated || !empty($userinfo['access']) || (!is_user() && $conf['comments']['anonpost'] == 1));
-        if ($note) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        if ($note) $stat = $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         if (is_user()) {
             $name_field = filterText(substr($user[1], 0, 25)).$tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => '', 'input_attr' => '']);
         } else {
@@ -278,13 +280,14 @@ function setComShow(int $id, int $acomm, ?string $route): string {
         $post = HOME_PATH.'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&com='.$page;
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
+            'icon_name' => 'reply',
             'title' => _COMMENTREPLY,
             'hx_post' => $post,
             'hx_include' => '#formcsave',
             'hx_target' => '#repcrows',
             'hx_swap' => 'afterbegin',
         ]);
-        $cont .= $tpl->getHtmlPart('form-add', [
+        $form = $tpl->getHtmlPart('form-add', [
             'action' => $post,
             'form_id' => 'formcsave',
             'form_name' => 'post',
@@ -294,6 +297,7 @@ function setComShow(int $id, int $acomm, ?string $route): string {
             'submit' => $submit,
         ]);
     }
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => $stat]).$form;
     return $tpl->getHtmlFrag('block-content', ['id' => 'comm', 'is_comments_section' => true, 'content' => $cont]);
 }
 
@@ -466,15 +470,15 @@ function addComment(): void {
     }
     $row = $new['id'] ? $com->getComment(intval($new['id'])) : [];
     $open = $row && $row['status'] === CommentStatus::Published->value;
-    if (!$live) setRedirect($back.($open ? '#'.$row['id'] : '#comm'), false, 303, $open ? '' : (string)_POSTNOTE, false);
+    if (!$live) setRedirect($back.($open ? '#'.$row['id'] : '#comm'), false, 303, $open ? '' : (string)_COMMENTS_WAIT, false);
     header('HX-Trigger: sl-comment-add');
-    $note = static function (string $text, string $meta) use ($tpl): void {
+    $note = static function (string $text, string $meta, string $type = 'info') use ($tpl): void {
         header('HX-Retarget: #repcstat');
         header('HX-Reswap: innerHTML');
-        echo $tpl->getHtmlFrag('alert', ['text' => $text, 'meta' => $meta, 'type' => 'info', 'is_warn' => false]);
+        echo $tpl->getHtmlFrag('alert', ['text' => $text, 'meta' => $meta, 'type' => $type, 'is_warn' => false]);
     };
     if (!$open) {
-        $note((string)_POSTNOTE, '');
+        $note((string)_COMMENTS_WAIT, '', 'success');
         return;
     }
     $data = $com->getList($mod, $id, $page);

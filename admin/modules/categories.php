@@ -187,6 +187,7 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('categories')],
         ],
         'submit_label' => _ADD,
+        'icon_name' => 'plus-lg',
     ])]).getAdminIconWindow();
     setFoot();
 }
@@ -324,6 +325,7 @@ function subadd(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('categories')],
             ],
             'submit_label' => _ADD,
+            'icon_name' => 'plus-lg',
         ])]).getAdminIconWindow();
     } else {
         $subtitle = getTplCategoryModule('modul', '', $modul, true);

@@ -215,17 +215,32 @@ class ConfigFileTest extends TestCase
         $this->assertSame(['marker' => false, 'dirs' => 0], $data['trace']);
     }
 
-    # The three shared screens write through the Closure form, merge into the fresh area and report a refusal instead of a success
+    # The three shared screens write through the Closure form, merge into the fresh area and hand the result to the one answer of a Node type part
     #[Test]
     public function theSharedWritersUseTheClosureForm(): void
     {
         foreach (['fields' => 'save', 'uploads' => 'configsave', 'ratings' => 'save'] as $name => $func) {
             $body = $this->getBody('admin/modules/'.$name.'.php', $func);
-            $this->assertStringContainsString('setConfigFile(static function (array $base, Closure $save)', $body, $name.' still posts a prepared file');
+            $this->assertStringContainsString('updateNodeTypeParts(setConfigFile(static function (array $base, Closure $save)', $body, $name.' still posts a prepared file');
             $this->assertStringContainsString("\$base['".$name."'] = array_replace(\$base['".$name."'], ", $body, $name.' replaces its whole area instead of its own keys');
-            $this->assertStringContainsString('_CONFIG_PENDING', $body, $name.' reports a refused save as a success');
             $this->assertStringNotContainsString("setConfigFile('".$name.".php'", $body);
         }
+    }
+
+    # A setting that is also a part of every Node type writes its config first and moves a type only after it, through one helper
+    #[Test]
+    public function aTypePartFollowsItsConfig(): void
+    {
+        $saves = ['admin/modules/fields.php' => 'save', 'admin/modules/ratings.php' => 'save', 'admin/modules/uploads.php' => 'configsave',
+            'modules/search/admin/index.php' => 'save', 'modules/sitemap/admin/index.php' => 'configsave'];
+        foreach ($saves as $file => $func) {
+            $body = $this->getBody($file, $func);
+            $this->assertStringContainsString('updateNodeTypeParts(setConfigFile(', $body, $file.' moves a type apart from its config');
+            $this->assertStringNotContainsString('updateNodeTypePart(', $body, $file.' writes a type before or beside its config');
+        }
+        $body = $this->getBody('core/admin.php', 'updateNodeTypeParts');
+        $this->assertStringStartsWith('if (!$kept) return getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;', trim(substr($body, strpos($body, '{') + 1)),
+            'A refused config moves a type');
     }
 
     # A refused write is a state the caller must name: a call that starts a statement throws its answer away and the screen flashes a success over it
@@ -268,7 +283,8 @@ class ConfigFileTest extends TestCase
             preg_match_all('/^function (\w+)\(.*?^}$/ms', $code, $all, PREG_SET_ORDER);
             foreach ($all as [$body, $name]) {
                 if (!str_contains($body, 'setConfigFile(') || !str_contains($body, 'setRedirect(')) continue;
-                if (!str_contains($body, '_CONFIG_PENDING : _ERROR_UP')) $miss[] =substr($path, strlen($root) + 1).' '.$name;
+                if (str_contains($body, '_CONFIG_PENDING : _ERROR_UP') || str_contains($body, 'updateNodeTypeParts(setConfigFile(')) continue;
+                $miss[] = substr($path, strlen($root) + 1).' '.$name;
             }
         }
         $this->assertSame([], $miss, 'A save reports a refused config write as a success or a bare error');

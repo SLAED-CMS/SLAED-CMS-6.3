@@ -946,6 +946,25 @@ function updateNodeTypePart(string $name, string $part, array $value, int $versi
     return '';
 }
 
+# The answer of a section that owns a part of every Node type: its config result is taken first, so a refused write moves no type
+function updateNodeTypeParts(bool $kept, string $part, array $want, array $vers): string {
+    if (!$kept) return getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
+    foreach (getNodeTypeMap() as $name => $type) {
+        if (!array_key_exists($name, $want)) continue;
+        $have = match ($part) {
+            'integrations' => $type->settings['integrations'],
+            'fields' => $type->fields,
+            'uploads' => $type->uploads,
+            'rating' => $type->rating,
+            default => null,
+        };
+        if ($want[$name] === $have) continue;
+        $fail = updateNodeTypePart($name, $part, $want[$name], intval($vers[$name] ?? 0));
+        if ($fail !== '') return $fail;
+    }
+    return '';
+}
+
 # The file area of the request, named once by its page; the client names only its screen, never a root, and the context decides what it may mean
 function getAdminFileMode(string $set = ''): string {
     static $ctx = '';

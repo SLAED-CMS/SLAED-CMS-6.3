@@ -50,8 +50,8 @@
       <b data-sl-fm-title></b>
       <input type="text" name="arg" value="" aria-label="{{ apply_text }}" autocomplete="off" spellcheck="false" required>
       <span data-sl-fm-marks></span>
-      <button type="submit" class="sl-but-blue">{{ apply_text }}</button>
-      <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
+      <button type="submit" class="sl-but-blue"><i class="bi bi-check-lg" aria-hidden="true"></i> {{ apply_text }}</button>
+      <button type="button" class="sl-but" data-sl-fm-act="close"><i class="bi bi-x-lg" aria-hidden="true"></i> {{ cancel_text }}</button>
     </form>
     {% if is_upload %}
     <form class="sl-fm-load" action="{{ post_url }}" method="post" enctype="multipart/form-data" hidden>
@@ -68,8 +68,8 @@
       </label>
       <small>{{ types_text }}</small>
       <input type="text" name="sitefile" value="" placeholder="{{ link_text }}" aria-label="{{ link_text }}" autocomplete="off" spellcheck="false">
-      <button type="submit" class="sl-but-blue">{{ apply_text }}</button>
-      <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
+      <button type="submit" class="sl-but-blue"><i class="bi bi-check-lg" aria-hidden="true"></i> {{ apply_text }}</button>
+      <button type="button" class="sl-but" data-sl-fm-act="close"><i class="bi bi-x-lg" aria-hidden="true"></i> {{ cancel_text }}</button>
     </form>
     {% endif %}
     {% if file_links %}

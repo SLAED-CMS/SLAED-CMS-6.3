@@ -9,7 +9,7 @@
       <p class="sl-pres-lead sl-sec-lines"{% if is_build %} data-sl-text="text" data-sl-lines{% endif %}>{{ text }}</p>
       {% endif %}
       {% if btn and href or btn2 and href2 %}
-      <p class="sl-sec-acts">{% if btn and href %}<a class="sl-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}{% if is_build %} data-sl-text="btn"{% endif %}>{{ btn }}</a>{% endif %}{% if btn2 and href2 %}<a class="sl-but" href="{{ href2 }}"{% if href2_ext %} target="_blank" rel="noopener"{% endif %}{% if is_build %} data-sl-text="btn2"{% endif %}>{{ btn2 }}</a>{% endif %}</p>
+      <p class="sl-sec-acts">{% if btn and href %}<a class="sl-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}><i class="bi bi-arrow-right" aria-hidden="true"></i> <span{% if is_build %} data-sl-text="btn"{% endif %}>{{ btn }}</span></a>{% endif %}{% if btn2 and href2 %}<a class="sl-but" href="{{ href2 }}"{% if href2_ext %} target="_blank" rel="noopener"{% endif %}><i class="bi bi-arrow-right" aria-hidden="true"></i> <span{% if is_build %} data-sl-text="btn2"{% endif %}>{{ btn2 }}</span></a>{% endif %}</p>
       {% endif %}
     </div>
     {% if pic and photo %}

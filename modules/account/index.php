@@ -47,13 +47,13 @@ function account(): void {
             'content' => $tpl->getHtmlFrag('link', [
                 'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
                 'title' => _PASSWORDLOST,
-                'label' => _PASSWORDLOST,
+                'label' => _PASSWORDLOST, 'icon_name' => 'key',
                 'is_footer_button' => true,
             ])
                 .$tpl->getHtmlFrag('link', [
                     'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']),
                     'title' => _REGNEWUSER,
-                    'label' => _REGNEWUSER,
+                    'label' => _REGNEWUSER, 'icon_name' => 'person-plus',
                     'is_footer_button' => true,
                 ]),
         ]);
@@ -62,7 +62,7 @@ function account(): void {
             'action' => getSeoUrl(['name' => $conf['name']]),
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'captcha' => $captcha,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'login', 'label' => _USERLOGIN]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'login', 'label' => _USERLOGIN, 'icon_name' => 'box-arrow-in-right']),
             'after_submit' => $after,
         ]);
         echo $cont;
@@ -167,11 +167,12 @@ function newuser(): void {
             }
             $after = $tpl->getHtmlFrag('block-content', [
                 'is_form_submit' => true,
-                'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
+                'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN,
+                    'icon_name' => 'box-arrow-in-right', 'is_footer_button' => true])
                     .$tpl->getHtmlFrag('link', [
                         'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
                         'title' => _PASSWORDLOST,
-                        'label' => _PASSWORDLOST,
+                        'label' => _PASSWORDLOST, 'icon_name' => 'key',
                         'is_footer_button' => true,
                     ]),
             ]);
@@ -180,7 +181,7 @@ function newuser(): void {
                 'action' => getSeoUrl(['name' => $conf['name']]),
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'captcha' => $captcha,
-                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'finnewuser', 'label' => _NEWUSER]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'finnewuser', 'label' => _NEWUSER, 'icon_name' => 'person-plus']),
                 'after_submit' => $after,
             ]);
         }
@@ -909,14 +910,16 @@ function passlost(): void {
         }
         $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
-            'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
+            'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN,
+                'icon_name' => 'box-arrow-in-right', 'is_footer_button' => true])
                 .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER,
+                    'icon_name' => 'person-plus',
                     'is_footer_button' => true]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'passmail', 'label' => $send]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'passmail', 'label' => $send, 'icon_name' => 'send']),
             'after_submit' => $after,
         ]);
         echo $cont;
@@ -1228,16 +1231,12 @@ function edithome(): void {
         $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
         $upld = '';
         if (checkEditorUploadAccess((string)$arul['mod'], $arul)) {
-            $upld = $tpl->getHtmlFrag('form-field-row', [
-                'label_for' => 'f-userfile',
-                'label' => _FILE,
-                'field_html' => getFileManagerField([
-                    'id' => 'f-userfile',
-                    'place' => 'users.avatar',
-                    'name' => 'userfile',
-                    'path' => 'filepath',
-                    'path_value' => $take,
-                ]),
+            $upld = getFileManagerField([
+                'id' => 'f-userfile',
+                'place' => 'users.avatar',
+                'name' => 'userfile',
+                'path' => 'filepath',
+                'path_value' => $take,
             ]);
         }
         $tils = [[
@@ -1354,14 +1353,19 @@ function edithome(): void {
             ])];
         }
         if (is_dir(PUBLIC_DIR.'/'.getThemeFilePath('sound'))) {
-            $zone = ['alert' => _ACCOUNT_SNDALERT, 'msg' => _PRIVAT] + (isAdmin() ? ['mod' => _ACCOUNT_SNDQUEUE, 'win' => _ACCOUNT_SNDWIN] : []);
-            $boxes = [];
+            $zone = ['alert' => _ACCOUNT_SNDALERT, 'msg' => _ACCOUNT_SNDMSG] + (isAdmin() ? ['mod' => _ACCOUNT_SNDQUEUE, 'win' => _ACCOUNT_SNDWIN] : []);
             foreach ($zone as $key => $label) {
-                $boxes[] = ['label_text' => $label, 'input_id' => 'f-sound-'.$key, 'input_attr' => 'data-sl-sound-zone="'.$key.'"', 'is_checked' => $key !== 'mod'];
+                $sids = getFieldIds('', 'sound-'.$key);
+                $hint = ($key === 'alert') ? _ACCOUNT_SOUNDNOTE : '';
+                $lins[] = ['label' => $label, 'label_id' => $sids['label'], 'hint' => $hint, 'hint_id' => $sids['hint'], 'control_html' => getTplRadioGroup([
+                    'labelledby' => $sids['label'],
+                    'describedby' => ($hint !== '') ? $sids['hint'] : '',
+                    'name' => 'sound-'.$key,
+                    'value' => ($key === 'mod') ? '0' : '1',
+                    'options' => [['value' => '1', 'label' => _YES, 'input_attr' => 'data-sl-sound-zone="'.$key.'"'],
+                        ['value' => '0', 'label' => _NO, 'input_attr' => 'data-sl-sound-zone="'.$key.'"']],
+                ])];
             }
-            $sids = getFieldIds('', 'sound');
-            $lins[] = ['label' => _ACCOUNT_SOUND, 'label_id' => $sids['label'], 'hint' => _ACCOUNT_SOUNDNOTE, 'hint_id' => $sids['hint'],
-                'control_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $sids['label'], 'describedby' => $sids['hint'], 'items' => $boxes])];
         }
         $tils = [['icon' => getIconName('privacy'), 'title' => _ACCOUNT_PRIVHEAD, 'width' => 6, 'tone' => 2, 'fields' => $lins]];
         $secs[] = ['id' => 'privacy', 'icon' => getIconName('privacy'), 'title' => _ACCOUNT_PRIVACY, 'inform' => true, 'tiles' => $tils];
@@ -1370,7 +1374,7 @@ function edithome(): void {
             $keys = $tpl->getHtmlFrag('link', [
                 'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
                 'title' => _PASSWORDLOST,
-                'label' => _PASSWORDLOST,
+                'label' => _PASSWORDLOST, 'icon_name' => 'key',
                 'is_footer_button' => true,
             ]);
         } else {
@@ -1662,7 +1666,8 @@ function oautherror(): void {
     setHead(['title' => _ERROR]);
     echo $tpl->getHtmlFrag('title', ['title' => _ERROR, 'is_level_one' => true])
         .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OAUTHFAIL])
-        .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true]);
+        .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'icon_name' => 'box-arrow-in-right',
+            'is_footer_button' => true]);
     setFoot();
     exit;
 }
@@ -2007,7 +2012,7 @@ function unsub(): void {
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name'], 'op' => 'unsub', 'key' => $key, 'mail' => rawurlencode($mail)]),
             'no_enctype' => true,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'unsub', 'label' => _MAIL_UNSUB]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'unsub', 'label' => _MAIL_UNSUB, 'icon_name' => 'envelope-x']),
         ]);
     }
     echo $cont;

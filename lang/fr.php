@@ -136,6 +136,7 @@ define('_COMMENTS_PARENT','Cette réponse ne peut pas être rattachée au commen
 define('_COMMENTS_REPLAY','Un commentaire est déjà enregistré sous cette clé et diffère de cette requête.');
 define('_COMMENTS_EDITED','Modifié');
 define('_COMMENTS_REPLY','Répondre');
+define('_COMMENTS_WAIT','Votre commentaire a été envoyé et apparaîtra après vérification.');
 define('_CONTENT','Contenu');
 define('_COUNTRY','Pays');
 define('_C_12','Le nombre de publications sur la page de');

@@ -277,14 +277,14 @@ final class AdminGuardTest extends TestCase
         $this->assertSame(2, substr_count($index, "case 'getSessionStats': getSessionStats(); exit;"));
     }
 
-    # The browser runs the sitemap stylesheet in the origin of the site, so only a super administrator reaches its editor and its save, and the tab is drawn for none else
+    # The browser runs the sitemap stylesheet in the origin of the site, so only a super administrator reaches its editor and save; no other sees the tab, the op flashes a refusal
     #[Test]
     public function theSitemapTemplateIsForTheSuperAdmin(): void
     {
         $file = 'modules/sitemap/admin/index.php';
         foreach (['xsledit', 'xslsave'] as $name) {
             $body = $this->getBody($file, $name);
-            $guard = strpos($body, "if (!isAdmin(true)) die('Illegal file access');");
+            $guard = strpos($body, "if (!isAdmin(true)) setRedirect(\$afile.'.php?name=sitemap', false, 302, _ACCESSDENIED, true);");
             $this->assertNotFalse($guard, $name.'() opens to an administrator of the sitemap alone');
             $this->assertLessThan(strpos($body, 'SITEMAP_DIR'), $guard, $name.'() touches the stylesheet before it asks the right');
         }

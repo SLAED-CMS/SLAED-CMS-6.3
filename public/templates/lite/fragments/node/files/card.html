@@ -43,10 +43,10 @@
     <a href="{{ download.href }}" title="{{ download_label }}" class="sl-but"><i class="bi bi-download" aria-hidden="true"></i> {{ download_label }}</a>
     {% endif %}
     {% if download.stext %}
-    <span class="sl-chip">{{ download.stext }}</span>
+    <span title="{{ _SIZE }}" class="sl-chip sl-chip-info">{{ download.stext }}</span>
     {% endif %}
     {% if href and read_label %}
-    <a href="{{ href }}" title="{{ title }}" class="sl-but">{{ read_label }}</a>
+    <a href="{{ href }}" title="{{ title }}" class="sl-but"><i class="bi bi-arrow-right" aria-hidden="true"></i> {{ read_label }}</a>
     {% endif %}
   </div>
 </article>

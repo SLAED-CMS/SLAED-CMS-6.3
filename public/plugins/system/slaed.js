@@ -676,6 +676,26 @@
         });
     }
 
+    // The main star of a category tree stays on a checked row: a cleared row drops it and the first checked row takes it, as the server reads the form
+    function setCategoryMain() {
+        document.addEventListener('change', function (event) {
+            var box = event.target;
+            var list = box && box.type === 'checkbox' && box.closest ? box.closest('[role="group"]') : null;
+            var stars = list ? list.querySelectorAll('input[data-sl-main]') : [];
+            if (!stars.length) return;
+            var own = list.querySelector('input[data-sl-main][value="' + box.value + '"]');
+            if (own && !box.checked) own.checked = false;
+            if (list.querySelector('input[data-sl-main]:checked')) return;
+            for (var i = 0; i < stars.length; i++) {
+                var pair = list.querySelector('input[type="checkbox"][value="' + stars[i].value + '"]');
+                if (pair && pair.checked) {
+                    stars[i].checked = true;
+                    return;
+                }
+            }
+        });
+    }
+
     // A block takes its default only once, marked as its control is; later runs after a swap keep the state it has and only tell its controls
     function setToggleBlocks() {
         var controls = document.querySelectorAll('[data-sl-toggle-control]');
@@ -1356,7 +1376,7 @@
         }
     }
 
-    // Repeatable rows: the server writes every row and marks the empty ones, so a page without this script shows them all and the form works the same
+    // Repeatable rows: the server writes and marks every row, so a page without this script still works; the add control may stand apart, naming its group
     function setRepeatRows(node) {
         var root = node && node.querySelectorAll ? node : document;
         var groups = root.querySelectorAll('[data-sl-repeat]');
@@ -1364,13 +1384,13 @@
             var box = groups[i];
             if (box.getAttribute('data-sl-repeat-ready') === '1') continue;
             box.setAttribute('data-sl-repeat-ready', '1');
-            var add = box.querySelector(':scope > [data-sl-repeat-add]');
+            var add = box.querySelector(':scope > [data-sl-repeat-add]') || (box.id ? document.querySelector('[data-sl-repeat-add="' + box.id + '"]') : null);
             var rows = box.querySelectorAll(':scope > [data-sl-repeat-row][data-sl-repeat-empty]');
             for (var j = 1; j < rows.length; j++) rows[j].hidden = true;
             if (!add || rows.length < 2) continue;
             add.hidden = false;
             add.addEventListener('click', function () {
-                var group = this.closest('[data-sl-repeat]');
+                var group = document.getElementById(this.getAttribute('data-sl-repeat-add') || '') || this.closest('[data-sl-repeat]');
                 var next = group ? group.querySelector(':scope > [data-sl-repeat-row][hidden]') : null;
                 if (next) {
                     next.hidden = false;
@@ -1824,9 +1844,9 @@
         });
     }
 
-    // A pick of rows, the choice of what to do with them and a control saving itself over htmx change nothing the form would lose
+    // A pick of rows, the choice of what to do with them, a control saving itself over htmx and a sound zone kept by this device change nothing the form would lose
     function isDirtyFree(node) {
-        return !!node.closest('[hx-post], [data-sl-check-item], [data-sl-check-all], .sl-div-actions');
+        return !!node.closest('[hx-post], [data-sl-check-item], [data-sl-check-all], [data-sl-sound-zone], .sl-div-actions');
     }
 
     // The named controls of a form that carry its data; a hidden field is written by scripts and a tab index, never by a hand
@@ -2444,6 +2464,19 @@
         }, 700 + at * 100);
     }
 
+    // A pressed button bursts like the favourite star, the star and the rating on the answer; it holds its sparks all along, as htmx lifts it only until the answer
+    function setPressBurst() {
+        document.addEventListener('click', function (event) {
+            var node = event.target && event.target.closest ? event.target.closest('.sl-but, .sl-but-blue, .sl-but-red, .sl-but-green, .sl-but-foot, .sl-but-back, .sl-but-mini') : null;
+            if (!node || node.disabled || node.getAttribute('aria-disabled') === 'true' || node.closest('.sl-fav, .sl-urating, .sl-rate-like')) return;
+            if (['absolute', 'fixed', 'sticky'].indexOf(window.getComputedStyle(node).position) < 0) {
+                node.style.position = 'relative';
+                window.setTimeout(function () { node.style.removeProperty('position'); }, 700);
+            }
+            setBurst(node);
+        });
+    }
+
     // Favorites: remember the clicked star so the freshly swapped on-state can burst and toast
     var favpending = null;
 
@@ -3018,6 +3051,8 @@
         setLightbox();
         setImageReplace();
         setTableCheckAll();
+        setCategoryMain();
+        setPressBurst();
         setToggleBlocks();
         setFloating(document);
         setFloatOutsideClose();

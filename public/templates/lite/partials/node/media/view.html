@@ -42,9 +42,12 @@
       {{{ body_html }}}
     </div>
   </div>
-  {% if rating_html %}
+  {% if rating_html or files_html %}
   <div class="sl-meta-foot">
+    {% if rating_html %}
     <div class="sl-rate-box sl-pull-right">{{{ rating_html }}}</div>
+    {% endif %}
+    {{{ files_html }}}
   </div>
   {% endif %}
   {{{ tree_html }}}

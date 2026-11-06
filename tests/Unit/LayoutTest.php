@@ -310,8 +310,10 @@ final class LayoutTest extends TestCase
         $this->assertMatchesRegularExpression('#<p class="sl-pres-lead sl-sec-lines">One\n\s*Two</p>#', $html);
         $this->assertStringNotContainsString('javascript:', $html);
         $this->assertStringNotContainsString('>Go<', $html, 'A button without a valid address printed');
-        $this->assertStringContainsString('<a class="sl-but" href="/docs">Docs</a>', $html, 'An address of the site opened a new tab');
-        $this->assertStringContainsString('<a class="sl-but" href="https://example.org/" target="_blank" rel="noopener">More</a>', $html);
+        $this->assertStringContainsString('<a class="sl-but" href="/docs"><i class="bi bi-arrow-right" aria-hidden="true"></i> <span>Docs</span></a>', $html,
+            'An address of the site opened a new tab');
+        $more = '<a class="sl-but" href="https://example.org/" target="_blank" rel="noopener">';
+        $this->assertStringContainsString($more.'<i class="bi bi-arrow-right" aria-hidden="true"></i> <span>More</span></a>', $html);
         $this->assertStringContainsString('src="/uploads/presentation/brand/background-1.png" alt="Mark" style="--sl-d-focus: left top"', $html);
         $this->assertStringContainsString('<md data-mod="layout" data-safe="1">**Bold**</md>', $html);
         $this->assertStringNotContainsString('db.php', $html);
@@ -326,7 +328,7 @@ final class LayoutTest extends TestCase
         $this->assertMatchesRegularExpression('#>01</span>\s*<div><b>First</b></div>.*>02</span>\s*<div><b>Second</b><span class="sl-pres-tags"><span>Then</span>#s', $html);
         $this->assertStringNotContainsString('Later', $html);
         $this->assertStringNotContainsString('Gone', $html);
-        $this->assertStringContainsString('<a class="sl-but sl-sec-cta-but" href="/contact">Write</a>', $html);
+        $this->assertStringContainsString('<a class="sl-but sl-sec-cta-but" href="/contact"><i class="bi bi-arrow-right" aria-hidden="true"></i> <span>Write</span></a>', $html);
         preg_match_all('#<span class="sl-pres-num">(\d+)</span>#', $html, $hit);
         $this->assertSame(['01', '02', '03', '04'], $hit[1], 'Only the framed sections are numbered, in their order');
     }

@@ -644,21 +644,14 @@ function configsave(): void {
     $sent = getVar('post', 'mods', 'raw', '');
     $seen = explode(',', is_string($sent) ? $sent : '');
     $shift = array_merge(array_diff($mods, $seen), array_diff($seen, $mods));
-    if ($sent !== implode(',', $mods)) $cont = [];
-    $warn = ($cont === []) || !setConfigFile(static function (array $base, Closure $save) use ($cont): string {
-        $base['uploads'] = array_replace($base['uploads'], $cont);
-        ksort($base['uploads']);
-        return $save($base) ? 'committed' : 'aborted';
-    });
-    $done = $drop ? _SUCCSAVE.' '._ERROR_FILE.': '.implode(', ', $drop) : _SUCCSAVE;
-    $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : $done;
-    if ($cont === []) $text = sprintf(_NODE_STALE, htmlspecialchars(implode(', ', $shift), ENT_QUOTES, 'UTF-8'));
-    foreach ($parts as $name => $rule) {
-        if ($warn || $rule === $types[$name]->uploads) continue;
-        $fail = updateNodeTypePart($name, 'uploads', $rule, intval($vers[$name] ?? 0));
-        $warn = $fail !== '';
-        if ($warn) $text = $fail;
-    }
+    $text = ($sent !== implode(',', $mods)) ? sprintf(_NODE_STALE, htmlspecialchars(implode(', ', $shift), ENT_QUOTES, 'UTF-8'))
+        : updateNodeTypeParts(setConfigFile(static function (array $base, Closure $save) use ($cont): string {
+            $base['uploads'] = array_replace($base['uploads'], $cont);
+            ksort($base['uploads']);
+            return $save($base) ? 'committed' : 'aborted';
+        }), 'uploads', $parts, $vers);
+    $warn = $text !== '';
+    if (!$warn) $text = $drop ? _SUCCSAVE.' '._ERROR_FILE.': '.implode(', ', $drop) : _SUCCSAVE;
     }
     setRedirect($afile.'.php?name=uploads&op=config', false, 302, $text, $warn);
 }

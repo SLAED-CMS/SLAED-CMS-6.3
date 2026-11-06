@@ -98,8 +98,8 @@ function getMasterReleases(string $head, string $note): string {
         };
         $keys = ['name' => 'master', 'op' => 'state', 'ver' => $ver];
         $acts = [];
-        if ($row['state'] !== 'beta') $acts[] = getTplPostAction($keys + ['state' => 'beta'], 'cone-striped', _MASTER_TOBETA);
-        if ($row['state'] !== 'stable') $acts[] = getTplPostAction($keys + ['state' => 'stable'], 'check2-circle', _MASTER_TOSTABLE);
+        if ($row['state'] !== 'beta') $acts[] = getTplPostAction($keys + ['state' => 'beta'], 'cone-striped', _MASTER_TOBETA, _MASTER_TOBETA.' '.$ver.'?');
+        if ($row['state'] !== 'stable') $acts[] = getTplPostAction($keys + ['state' => 'stable'], 'check2-circle', _MASTER_TOSTABLE, _MASTER_TOSTABLE.' '.$ver.'?');
         if ($served) $acts[] = getTplPostAction($keys + ['state' => 'pause'], 'pause-circle', _PAUSE, _PAUSE.' '.$ver.'?');
         $acts[] = ['href' => $afile.'.php?name=master&op=share&ver='.$ver, 'icon_name' => 'percent', 'title' => _MASTER_SHARE];
         $rows[] = ['name' => $ver, 'cells' => [
@@ -236,7 +236,7 @@ function getMasterNoteList(string $head, string $note): string {
     global $afile, $db, $tpl;
     $rows = [];
     foreach (getMasterInbox()['notes'] as $id) {
-        $act = getTplPostAction(['name' => 'master', 'op' => 'noteadd', 'id' => $id], 'box-arrow-in-down', _MASTER_ACCEPT);
+        $act = getTplPostAction(['name' => 'master', 'op' => 'noteadd', 'id' => $id], 'box-arrow-in-down', _MASTER_ACCEPT, _MASTER_ACCEPT.' '.$id.'?');
         $rows[] = [['is_col_id' => true, 'content_text' => $id], ['content_text' => 'inbox/notes/'.$id.'.json'],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [$act]])]];
     }

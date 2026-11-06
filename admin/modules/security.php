@@ -96,6 +96,7 @@ function banlist(): void {
             ],
             'rows' => $iprows,
             'submit_label' => _ADD,
+            'icon_name' => 'plus-lg',
         ]);
     } else {
         foreach (explode('||', (string)$conf['security']['blocker_user']) as $val) {
@@ -188,6 +189,7 @@ function banlist(): void {
             ],
             'rows' => $userrows,
             'submit_label' => _ADD,
+            'icon_name' => 'plus-lg',
         ]);
     }
     setHead();

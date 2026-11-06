@@ -96,19 +96,15 @@ function save(): void {
     }
     if (!$warn) {
         $own = array_filter($content, fn(string $v): bool => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
-        $warn = !setConfigFile(static function (array $base, Closure $save) use ($own): string {
+        $parts = [];
+        foreach (array_keys($types) as $name) $parts[$name] = $content['node.'.$name];
+        $text = updateNodeTypeParts(setConfigFile(static function (array $base, Closure $save) use ($own): string {
             $base['ratings'] = array_replace($base['ratings'], $own);
             ksort($base['ratings']);
             return $save($base) ? 'committed' : 'aborted';
-        });
-        $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : _SUCCSAVE;
-        $vers = getVar('post', 'ver[]', '', []);
-        foreach ($types as $name => $type) {
-            if ($warn || $content['node.'.$name] === $type->rating) continue;
-            $fail = updateNodeTypePart($name, 'rating', $content['node.'.$name], intval($vers[$name] ?? 0));
-            $warn = $fail !== '';
-            if ($warn) $text = $fail;
-        }
+        }), 'rating', $parts, getVar('post', 'ver[]', '', []));
+        $warn = $text !== '';
+        if (!$warn) $text = _SUCCSAVE;
     }
     setRedirect($afile.'.php?name=ratings', false, 302, $text, $warn);
 }
@@ -141,6 +137,7 @@ function votes(): void {
             ], array_map(static fn($k, $v): array => ['nameattr' => $k, 'valueattr' => (string)$v], array_keys($keep), $keep)),
             'rows' => [['label_for' => 'f-reason', 'label_html' => _RATINGS_REASON, 'field_html' => $field]],
             'submit_label' => _RATINGS_ANNUL,
+            'icon_name' => 'x-circle',
         ])]);
     }
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $scope === '']];

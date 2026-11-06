@@ -805,23 +805,12 @@ thead tr th[data-sort-method="none"]::after {
   vertical-align: middle;
 }
 
-input.sl-but,
-input.sl-but-blue,
-input.sl-but-red,
-input.sl-but-green,
-input.sl-but-foot,
-input.sl-but-back {
-  height: var(--sl-size-control);
-  min-height: var(--sl-size-control);
-  line-height: var(--sl-line-tight);
-}
-
-input[type="submit"].sl-but,
-input[type="submit"].sl-but-blue,
-input[type="submit"].sl-but-red,
-input[type="submit"].sl-but-green,
-input[type="submit"].sl-but-foot,
-input[type="submit"].sl-but-back {
+button[type="submit"].sl-but,
+button[type="submit"].sl-but-blue,
+button[type="submit"].sl-but-red,
+button[type="submit"].sl-but-green,
+button[type="submit"].sl-but-foot,
+button[type="submit"].sl-but-back {
   min-width: var(--sl-btn-width);
 }
 
@@ -865,16 +854,6 @@ input[type="submit"].sl-but-back {
   border-color: var(--sl-solid-border);
   background: var(--sl-solid-bg);
   box-shadow: var(--sl-solid-shadow);
-}
-
-input.sl-but-blue[value="OK"],
-input.sl-but-blue[value="ОК"] {
-  width: var(--sl-btn-mini-width);
-  flex: 0 0 var(--sl-btn-mini-width);
-  min-width: var(--sl-btn-mini-width);
-  padding-left: 0;
-  padding-right: 0;
-  text-align: center;
 }
 
 /* Reserved: danger-action button variant (delete, reset, uninstall); no permanent emitter yet by design */
@@ -1303,6 +1282,36 @@ tr.sl-row-collapsed {
   overflow-y: auto;
 }
 
+/* The chip of a checked category says main or additional; a click on an additional one makes it the main, and an unchecked row carries none */
+.sl-check-main {
+  gap: var(--sl-space-2);
+  margin-left: var(--sl-space-3);
+  cursor: pointer;
+}
+
+.sl-check-list > div:not(:has(> label > input[type="checkbox"]:checked)) > .sl-check-main,
+.sl-check-main > .bi-star-fill,
+.sl-check-main > span:last-child,
+.sl-check-main:has(> input:checked) > .bi-star,
+.sl-check-main:has(> input:checked) > span:first-of-type {
+  display: none;
+}
+
+.sl-check-main:has(> input:checked) > .bi-star-fill,
+.sl-check-main:has(> input:checked) > span:last-child {
+  display: inline;
+}
+
+.sl-check-main:not(:has(> input:checked)):hover {
+  background: var(--sl-tint);
+}
+
+.sl-check-main:has(> input:focus-visible) {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+  border-radius: var(--sl-radius-pill);
+}
+
 /* A row of a tree is indented by its depth, which the row carries as a custom property rather than as one class per level */
 [style*="--sl-d-depth"] {
   margin-left: min(calc(var(--sl-d-depth, 0) * var(--sl-space-8)), 50%);
@@ -1501,7 +1510,8 @@ pre code.hljs {
 }
 
 .sl-tip:focus-visible,
-.sl-tip > button:focus-visible {
+.sl-tip > button:focus-visible,
+[data-sl-repeat-add]:not([data-sl-repeat-add=""]):focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
   border-radius: var(--sl-radius-circle);
@@ -1666,11 +1676,12 @@ pre code.hljs {
   margin-bottom: var(--sl-space-5);
 }
 
+/* The caption stands at the top of its field, its line as high as a control, so a text area, a list or a picture keeps it at their top */
 .sl-div-item {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sl-space-6);
-  align-items: center;
+  align-items: start;
   min-height: var(--sl-item-height);
   padding: var(--sl-space-3) var(--sl-space-4);
   border-bottom: 1px solid var(--sl-border);
@@ -1735,11 +1746,6 @@ pre code.hljs {
 .sl-div-label {
   font-weight: var(--sl-weight-normal);
   line-height: var(--sl-size-control);
-}
-
-/* A tall field is read from its first line, so the label meets it there instead of floating at half its height */
-.sl-div-item:has(textarea) {
-  align-items: start;
 }
 
 .sl-div-label .sl-small {
@@ -4063,6 +4069,18 @@ dialog.sl-editor-emoji-panel {
   --sl-chip-tone: var(--sl-warning-strong);
 }
 
+/* An additional category is the system blue; the panel has no rule for the info tone, so the chip of the list names its own */
+.sl-chip-info.sl-check-main {
+  color: var(--sl-primary-strong);
+}
+
+/* A main category wears the warning tone over the info chip it is drawn with, and takes no click */
+.sl-check-main:has(> input:checked) {
+  background: var(--sl-chip-bg);
+  color: var(--sl-warning-strong);
+  cursor: default;
+}
+
 /* Sidebar blocks: collapsible panels, count rows and shared row hovers */
 .sl-block-sidebar {
   margin-bottom: var(--sl-space-5);
@@ -4645,7 +4663,6 @@ dialog.sl-editor-emoji-panel {
 .sl-inline-edit > .sl-but,
 .sl-inline-edit > .sl-but-green,
 .sl-inline-edit > .sl-but-blue,
-.sl-inline-edit > input[type="submit"],
 .sl-inline-edit > button {
   margin-top: var(--sl-space-4);
 }
@@ -6032,9 +6049,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   max-width: 100%;
 }
 
-.sl-div-actions input[type="submit"].sl-but,
-.sl-div-actions input[type="submit"].sl-but-blue,
-.sl-div-actions input[type="submit"].sl-but-green {
+.sl-div-actions button[type="submit"].sl-but,
+.sl-div-actions button[type="submit"].sl-but-blue,
+.sl-div-actions button[type="submit"].sl-but-green {
   min-width: var(--sl-btn-mini-width);
   height: var(--sl-size-control);
   min-height: var(--sl-size-control);
@@ -11849,8 +11866,43 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   gap: var(--sl-space-3);
 }
 
-.sl-file-door > small {
-  color: var(--sl-text-muted);
+/* The add control standing apart from its group, named by its id, is a green plus before the label of its row: the glyph of the info tip in the colour of adding */
+[data-sl-repeat-add]:not([data-sl-repeat-add=""]) {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 var(--sl-space-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* A resource row of a material form is one line: the door with its tip whole, then the title taking the rest or wrapping under it */
+[data-sl-repeat]:has(> [data-sl-repeat-row] > .sl-file-door) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sl-space-3);
+}
+
+[data-sl-repeat-row]:has(> .sl-file-door) {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: stretch;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+[data-sl-repeat-row] > .sl-file-door {
+  flex: none;
+}
+
+[data-sl-repeat-row]:has(> .sl-file-door) > input[type="text"] {
+  flex: 1 1 0;
 }
 
 /* The cross of the chip is the same control the window uses, worn down to the line height of the chip it stands in */
@@ -14048,5 +14100,78 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
 
   .sl-chart-live .sl-chart-axis em:is(:nth-child(2), :nth-child(4)) {
     display: none;
+  }
+}
+
+/* Burst: the favourite star of the site gives its press to every button of the panel, so its figures keep the favourite's names */
+.sl-is-burst {
+  animation: sl-burst-ring var(--sl-fav-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6);
+}
+
+.sl-is-burst > .bi {
+  animation: sl-burst-pop var(--sl-fav-dur) var(--sl-fav-ease) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6) backwards;
+}
+
+.sl-is-burst::before,
+.sl-is-burst::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  opacity: 0;
+  pointer-events: none;
+  animation: sl-burst-spark var(--sl-fav-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6) forwards;
+}
+
+.sl-is-burst::before {
+  box-shadow: var(--sl-fav-shadow);
+}
+
+.sl-is-burst::after {
+  box-shadow: var(--sl-spark-shadow);
+}
+
+/* A button with words throws its sparks from its icon, which stands one gutter in, not from the middle of its words */
+:is(.sl-but, .sl-but-blue, .sl-but-red, .sl-but-green, .sl-but-foot, .sl-but-back).sl-is-burst::before,
+:is(.sl-but, .sl-but-blue, .sl-but-red, .sl-but-green, .sl-but-foot, .sl-but-back).sl-is-burst::after {
+  left: calc(var(--sl-space-5) + 0.5em);
+}
+
+@keyframes sl-burst-pop {
+  0% {
+    transform: scale(0.4) rotate(-30deg);
+  }
+
+  60% {
+    transform: scale(1.45) rotate(8deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes sl-burst-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-primary) var(--sl-fav-mix), transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 var(--sl-fav-ring) transparent;
+  }
+}
+
+@keyframes sl-burst-spark {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.7);
   }
 }

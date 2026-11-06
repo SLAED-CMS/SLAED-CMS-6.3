@@ -136,6 +136,7 @@ define('_COMMENTS_PARENT','Этот ответ невозможно привяз
 define('_COMMENTS_REPLAY','Комментарий с таким ключом уже сохранён и отличается от этого запроса.');
 define('_COMMENTS_EDITED','Изменён');
 define('_COMMENTS_REPLY','Ответить');
+define('_COMMENTS_WAIT','Комментарий отправлен и появится после проверки.');
 define('_CONTENT','Содержание');
 define('_COUNTRY','Страна');
 define('_C_12','Количество публикаций на страницу');
@@ -613,7 +614,7 @@ define('_PRBYNEW','Сначала новые');
 define('_PRBYOLD','Сначала старые');
 define('_PRBYUNS','Непрочитанные сверху');
 define('_PRESENTATION','Презентация');
-define('_PREVIEW','Предварительный просмотр');
+define('_PREVIEW','Предпросмотр');
 define('_PRFILLED','%1$s заполнены на %2$s процентов');
 define('_PRFILTER','Фильтр');
 define('_PRFOCUS','Фокус');

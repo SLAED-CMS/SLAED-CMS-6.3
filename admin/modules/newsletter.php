@@ -800,7 +800,8 @@ function getMailPanel(): string {
         'maxlength_num' => 100,
         'placeholder_text' => (string)$conf['adminmail'],
         'is_config' => true,
-    ]).$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'op', 'value_attr' => 'mailtest', 'label' => _SEND, 'is_green' => true]), '', _MAIL_TESTINFO, $fids);
+    ]).$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'op', 'value_attr' => 'mailtest', 'label' => _SEND, 'icon_name' => 'send',
+        'is_green' => true]), '', _MAIL_TESTINFO, $fids);
     $fids = getFieldIds('', 'mtemp');
     $rows[] = getMailRow(_MAILTEMP, $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'mtemp',

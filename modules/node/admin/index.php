@@ -123,7 +123,8 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     $feat = $type->settings['features'];
     $rows = [];
     foreach (getNodeFormRows($type, $vals, $errs, true, true) as $one) {
-        $rows[] = ['label_for' => $one['for'] ?? '', 'label_id' => $one['label_id'] ?? '', 'label_html' => htmlspecialchars($one['label'], ENT_QUOTES, 'UTF-8'),
+        $rows[] = ['label_for' => $one['for'] ?? '', 'label_id' => $one['label_id'] ?? '',
+            'label_html' => $one['label_html'] ?? htmlspecialchars($one['label'], ENT_QUOTES, 'UTF-8'),
             'hint_html' => htmlspecialchars($one['hint'] ?? '', ENT_QUOTES, 'UTF-8'), 'hint_id' => $one['hint_id'] ?? '', 'field_html' => $one['field'],
                 'is_full' => !empty($one['full'])];
     }
@@ -495,7 +496,7 @@ function edit(): void {
         $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'sync'], ['name_attr' => 'id', 'value_attr' => $node->id],
             ['name_attr' => 'type', 'value_attr' => $type->name], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
         echo $tpl->getHtmlPart('box', ['title' => _NODE_SOURCE, 'content_html' => $tpl->getHtmlPart('form', ['action_url' => $afile.'.php', 'hidden' => $hidden,
-            'rows' => $rows, 'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_SYNCGO, 'button_type' => 'submit'])])]);
+            'rows' => $rows, 'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_SYNCGO, 'icon_name' => 'arrow-repeat', 'button_type' => 'submit'])])]);
     }
     setFoot();
 }
@@ -1079,7 +1080,7 @@ function typeclone(): void {
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'describedby' => 'f-tname-hint',
                     'value_attr' => $new, 'maxlength_num' => 20,
                 'is_required' => true])]],
-            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_CLONE, 'button_type' => 'submit']),
+            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_CLONE, 'icon_name' => 'copy', 'button_type' => 'submit']),
         ])]);
     setFoot();
 }
@@ -1146,7 +1147,7 @@ function import(): void {
                     'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'describedby' => 'f-tname-hint',
                         'value_attr' => $new, 'maxlength_num' => 20])],
             ],
-            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_IMPORT, 'button_type' => 'submit']),
+            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_IMPORT, 'icon_name' => 'upload', 'button_type' => 'submit']),
         ])]);
     setFoot();
 }

@@ -65,7 +65,7 @@ final class AdminLogTest extends TestCase
         $want = [
             ['action', 'root', 'voting', 'save', 0, 0, 'done', false],
             ['action', 'root', 'voting', 'save', 1, 1, 'open', false],
-            ['action', 'root', 'voting', 'save', 1, 1, 'done', false],
+            ['action', 'root', 'voting', 'delete', 1, 1, 'done', false],
             ['action', 'root', 'comments', 'delete', 1, 2, 'done', false],
             ['action', 'root', 'blocks', 'updateAdminBlockOrder', 0, 0, 'open', false],
             ['action', 'root', 'database', 'dump', 0, 0, 'open', false],

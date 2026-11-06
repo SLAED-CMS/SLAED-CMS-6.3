@@ -11,7 +11,7 @@
         </li>
         {% if captcha %}{{{ captcha }}}{% endif %}
         <li>
-          <button type="{{ submit_button.button_type }}" title="{{ submit_button.title }}" class="sl-but">{{ submit_button.label }}</button>
+          <button type="{{ submit_button.button_type }}" title="{{ submit_button.title }}" class="sl-but"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ submit_button.label }}</button>
         </li>
         <li class="sl-login-links">
           <a href="{{ lost_link.href }}" title="{{ lost_link.title }}" class="sl-chip sl-chip-danger"><i class="bi bi-key" aria-hidden="true"></i>{{ lost_link.label }}</a>

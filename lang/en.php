@@ -136,6 +136,7 @@ define('_COMMENTS_PARENT','This reply cannot be attached to the comment it names
 define('_COMMENTS_REPLAY','A comment was already stored under this key and it differs from this request.');
 define('_COMMENTS_EDITED','Edited');
 define('_COMMENTS_REPLY','Reply');
+define('_COMMENTS_WAIT','Your comment has been sent and will appear after review.');
 define('_CONTENT','Content');
 define('_COUNTRY','Country');
 define('_C_12','Quantity on page');

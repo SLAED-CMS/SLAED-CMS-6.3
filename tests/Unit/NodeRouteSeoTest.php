@@ -84,12 +84,13 @@ final class NodeRouteSeoTest extends NodeRouteCase
         $this->assertSame([303, true, 200, 20, 6], $this->getMode('seo')['support'], 'The support card hides a part of the correspondence');
     }
 
-    # A stale block instance stays off without a log line per render, and the hint of the related field is bound to its input
+    # A stale block stays off without a log line per render; the related field of a moderator binds its hint, and a plain writer is not offered it
     #[Test]
     public function aStaleBlockIsQuietAndTheRelatedHintIsBound(): void
     {
         $run = $this->getMode('seo');
         $this->assertSame([false, false, true], $run['stale'], 'A stale block shows to a guest or writes the site log on every render');
-        $this->assertSame([true, true, false], $run['hint'], 'The hint of the related field has no id or is not described by its input');
+        $this->assertSame([true, true, false, false], $run['hint'],
+            'The hint of the related field has no id or is not described by its input, or a writer who is no moderator is offered the field');
     }
 }

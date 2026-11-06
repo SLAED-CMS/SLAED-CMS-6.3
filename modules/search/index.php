@@ -274,8 +274,8 @@ function getSearchList(array $rows, int $anum, array $state): string {
     $pref = ['mod' => $state['mod'], 'word' => urlencode($state['word'])];
     $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, $pref, $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
-        'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
-        'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
+        'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'icon_name' => 'house-door', 'is_navi_lower' => true],
+        'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'icon_name' => 'arrow-up', 'is_navi_lower' => true],
     ]);
     return $cont;
 }

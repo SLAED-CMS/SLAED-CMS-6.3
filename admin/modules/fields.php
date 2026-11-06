@@ -238,19 +238,14 @@ function save(): void {
         return;
     }
     $own = array_filter($cont, fn(string $v): bool => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
-    $warn = !setConfigFile(static function (array $base, Closure $save) use ($own): string {
+    $parts = [];
+    foreach (array_diff_key($cont, $own) as $key => $val) $parts[substr($key, 5)] = $val;
+    $fail = updateNodeTypeParts(setConfigFile(static function (array $base, Closure $save) use ($own): string {
         $base['fields'] = array_replace($base['fields'], $own);
         ksort($base['fields']);
         return $save($base) ? 'committed' : 'aborted';
-    });
-    $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : _SUCCSAVE;
-    foreach (getNodeTypeMap() as $name => $type) {
-        if ($warn || !isset($cont['node.'.$name]) || $cont['node.'.$name] === $type->fields) continue;
-        $fail = updateNodeTypePart($name, 'fields', $cont['node.'.$name], intval($vers[$name] ?? 0));
-        $warn = $fail !== '';
-        if ($warn) $text = $fail;
-    }
-    setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $text, $warn);
+    }), 'fields', $parts, $vers);
+    setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $fail ?: _SUCCSAVE, $fail !== '');
 }
 
 function info(): void {
