@@ -160,16 +160,22 @@ CREATE TABLE `{prefix}_points` (
 
 ## Configuration
 
-`config/points.php` returns one scope, merged into `config/local.php` like every other configuration file:
+`config/points.php` returns one scope, merged into `config/local.php` like every other configuration file. It ships in the
+shape `setConfigFile()` writes (sorted keys of the scope, one key per line), so an unchanged save of the panel leaves it as
+it is:
 
 ```php
 return [
     'points' => [
-        'active' => '1',
         'actions' => [
-            'publish' => ['points' => '10', 'period' => '86400', 'limit' => '10'],
+            'publish' => [
+                'points' => '10',
+                'period' => '86400',
+                'limit' => '10',
+            ],
             ...
         ],
+        'active' => '1',
     ],
 ];
 ```

@@ -1706,7 +1706,7 @@ pre code.hljs {
   gap: var(--sl-space-5);
 }
 
-.sl-div-side .sl-div-item:is(.sl-div-item-full, .sl-toggle-form-block-item) {
+.sl-div-side .sl-div-item-full {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sl-space-2);
 }
@@ -1930,10 +1930,7 @@ pre code.hljs {
   box-sizing: border-box;
 }
 
-.sl-toggle-form-block-item {
-  grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr);
-}
-
+/* A block of the rows of one thing: its name with the toggle in a cap, the rows under it over the full width of the box with the caption left, as every form of the panel */
 .sl-toggle-form-block {
   padding: var(--sl-space-3) var(--sl-space-4);
   border: 1px solid var(--sl-border);
@@ -1945,45 +1942,23 @@ pre code.hljs {
   margin-top: var(--sl-space-4);
 }
 
+.sl-toggle-form-block > .sl-toggle-form-block-title {
+  display: flex;
+  margin-bottom: var(--sl-space-3);
+}
+
 .sl-toggle-form-block .sl-div-grid {
   margin-bottom: 0;
 }
 
-.sl-toggle-form-block .sl-div-item {
-  padding-left: 0;
-  padding-right: 0;
-  background-color: transparent;
+/* The side panel keeps the rows of a block stacked, the caption over its field, as its narrow column asks */
+.sl-div-side .sl-toggle-form-block .sl-div-grid,
+.sl-div-side .sl-toggle-form-block .sl-div-item {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.sl-toggle-form-block .sl-div-item:hover {
-  background-color: transparent;
-}
-
-.sl-toggle-form-block .sl-div-field .sl-div-item {
-  grid-template-columns: minmax(120px, 1fr) minmax(0, 3fr);
-  gap: var(--sl-space-6);
-  align-items: start;
-  padding: var(--sl-space-3) var(--sl-space-4);
-  border-bottom: 1px solid var(--sl-border);
-  background-color: var(--sl-bg);
-  transition: background-color var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-toggle-form-block .sl-div-field .sl-div-item:hover {
-  background-color: var(--sl-surface);
-}
-
-.sl-toggle-form-block .sl-div-field .sl-div-grid > .sl-div-item:last-child {
-  border-bottom: 0;
-}
-
-.sl-toggle-form-block > .sl-div-grid > .sl-div-item:first-child {
-  padding-top: 0;
-}
-
-.sl-toggle-form-block > .sl-div-grid > .sl-div-item:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+.sl-div-side .sl-toggle-form-block .sl-div-item {
+  gap: var(--sl-space-3);
 }
 
 .sl-toggle-form-block-title {
@@ -2252,7 +2227,8 @@ pre code.hljs {
 .sl-cockpit .sl-bell-tip a[href]:hover,
 .sl-cockpit .sl-bell-tip a[href]:focus-visible,
 .sl-form-hits [role="option"][aria-selected="true"],
-.sl-form-hits [role="option"]:hover {
+.sl-form-hits [role="option"]:hover,
+.sl-code-copy:hover {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -3555,6 +3531,13 @@ dialog.sl-editor-emoji-panel {
   max-width: var(--sl-search-max-width);
   height: var(--sl-size-control);
   box-sizing: border-box;
+}
+
+/* A filter whose every field acts at once sends itself on the pick, so its OK stands only for a browser without scripts */
+@media (scripting: enabled) {
+  .sl-filter:not(:has(.sl-filter-field input, .sl-filter-field select:not([data-sl-filter-now]))) > button[type="submit"] {
+    display: none;
+  }
 }
 
 /* The settings find stands in the module head like the filter of a list, its hits under the field */
@@ -4943,6 +4926,7 @@ html.sl-is-locked {
 .sl-modal-act-close { --sl-modal-act-tone: var(--sl-danger); }
 
 .sl-modal-act:focus-visible,
+.sl-code-copy:focus-visible,
 .sl-editor-dirty:focus-visible,
 .sl-editor-lint:focus-visible,
 .sl-editor-diff-mode:focus-visible {
@@ -6070,7 +6054,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     gap: var(--sl-space-3);
   }
 
-  .sl-toggle-form-block-item,
   .sl-div-item-full :is(.sl-radio-group, .sl-check-list) {
     grid-template-columns: 1fr;
   }
@@ -7890,242 +7873,6 @@ button.sl-but-mini {
   min-width: 0;
 }
 
-/* Changelog admin: filter card and commit cards */
-.sl-changelog {
-  color: var(--sl-text);
-  max-width: var(--sl-changelog-width);
-  margin: 0 auto;
-}
-
-.sl-changelog-filter {
-  background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-7);
-  margin-bottom: var(--sl-space-7);
-  box-shadow: var(--sl-panel-shadow);
-}
-
-.sl-changelog-filter h2 {
-  margin: 0 0 var(--sl-space-6) 0;
-  font-size: var(--sl-font-h4);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-}
-
-.sl-changelog-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--sl-space-6);
-  margin-bottom: var(--sl-space-6);
-}
-
-.sl-changelog-filter-field {
-  display: flex;
-  flex-direction: column;
-}
-
-.sl-changelog-filter-top {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-6);
-  align-items: flex-end;
-  margin-bottom: var(--sl-space-6);
-}
-
-.sl-changelog-filter-top .sl-changelog-filter-field {
-  flex: 1 1 320px;
-}
-
-.sl-changelog-filter-field label {
-  font-size: var(--sl-font-small);
-  font-weight: var(--sl-weight-medium);
-  margin-bottom: var(--sl-space-2);
-  color: var(--sl-text-muted);
-}
-
-.sl-changelog-filter-field input {
-  width: 100%;
-}
-
-.sl-changelog-filter-actions {
-  display: flex;
-  gap: var(--sl-space-4);
-}
-
-.sl-changelog-results {
-  background: var(--sl-bg-subtle);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-6) var(--sl-space-7);
-  margin-bottom: var(--sl-space-7);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sl-changelog-results-info {
-  font-size: var(--sl-font-body);
-  color: var(--sl-text-muted);
-}
-
-.sl-changelog-results-info strong,
-
-.sl-changelog-commits {
-  background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  overflow: hidden;
-  margin-bottom: var(--sl-space-7);
-  box-shadow: var(--sl-panel-shadow);
-}
-
-.sl-changelog-date-header {
-  background: linear-gradient(
-    135deg,
-    var(--sl-primary-strong) 0%,
-    var(--sl-primary) 100%
-  );
-  color: var(--sl-on-solid);
-  padding: var(--sl-space-5) var(--sl-space-7);
-  font-weight: var(--sl-weight-semibold);
-  font-size: var(--sl-font-h4);
-  border-bottom: 1px solid var(--sl-border);
-}
-
-.sl-changelog-commit {
-  padding: var(--sl-space-7);
-  border-bottom: 1px solid var(--sl-border);
-  transition: background-color var(--sl-time-base);
-}
-
-.sl-changelog-commit:last-child {
-  border-bottom: none;
-}
-
-.sl-changelog-commit:hover {
-  background-color: var(--sl-surface);
-}
-
-.sl-changelog-commit-alt {
-  background: var(--sl-bg-muted);
-}
-
-.sl-changelog-commit-header {
-  font-size: var(--sl-font-h4);
-  margin-bottom: var(--sl-space-4);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sl-space-4);
-}
-
-.sl-changelog-commit-header code {
-  background: var(--sl-text);
-  color: var(--sl-warning-subtle);
-  padding: var(--sl-space-2) var(--sl-space-3);
-  border-radius: var(--sl-radius-1);
-  font-size: var(--sl-font-small);
-  font-family: var(--sl-face-mono);
-}
-
-.sl-changelog-commit-meta {
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
-  margin-bottom: var(--sl-space-5);
-  padding-left: var(--sl-space-1);
-}
-
-.sl-changelog-commit-meta strong {
-  font-weight: var(--sl-weight-medium);
-  color: var(--sl-text);
-}
-
-.sl-changelog-commit-body {
-  background: var(--sl-bg-subtle);
-  border-left: var(--sl-changelog-body-border) solid var(--sl-primary-strong);
-  padding: var(--sl-space-5) var(--sl-space-6);
-  margin: var(--sl-space-5) 0;
-  border-radius: var(--sl-radius-1);
-  font-size: var(--sl-font-body);
-  line-height: var(--sl-line-loose);
-}
-
-.sl-changelog-commit-body code {
-  background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  padding: var(--sl-space-1) var(--sl-space-3);
-  border-radius: var(--sl-radius-1);
-  font-size: var(--sl-font-small);
-  color: var(--sl-warning);
-}
-
-.sl-changelog-commit-stats {
-  font-size: var(--sl-font-small);
-  padding: var(--sl-space-4) 0;
-  border-top: 1px solid var(--sl-border);
-  margin-top: var(--sl-space-5);
-}
-
-.sl-changelog-commit-stats strong {
-  font-weight: var(--sl-weight-medium);
-}
-
-.sl-changelog-commit-stats .sl-changelog-add {
-  color: var(--sl-success);
-  font-weight: var(--sl-weight-semibold);
-}
-
-.sl-changelog-commit-stats .sl-changelog-del {
-  color: var(--sl-danger);
-  font-weight: var(--sl-weight-semibold);
-}
-
-.sl-changelog-commit-files {
-  margin-top: var(--sl-space-4);
-  background: var(--sl-bg-muted);
-  border-radius: var(--sl-radius-1);
-  padding: var(--sl-space-4);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-small);
-  max-height: var(--sl-changelog-files-height);
-  overflow-y: auto;
-}
-
-.sl-changelog-commit-files div {
-  padding: var(--sl-space-2) 0;
-  line-height: var(--sl-line-normal);
-}
-
-.sl-changelog-commit-files .sl-changelog-add,
-.sl-changelog-commit-files .sl-changelog-del {
-  display: inline-block;
-  width: var(--sl-changelog-stat-width);
-  text-align: right;
-  font-weight: var(--sl-weight-semibold);
-}
-
-.sl-changelog-pagination {
-  margin: var(--sl-space-7) 0;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .sl-changelog-filter-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sl-changelog-results {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--sl-space-4);
-  }
-
-  .sl-changelog-commit-header {
-    font-size: var(--sl-font-body);
-  }
-}
-
 /* Progress ring: pathLength="100" lets PHP answer one percentage; butt ends, since a round cap closes the gap between almost full and full */
 .sl-knob {
   --sl-knob-size: 100px;
@@ -9569,6 +9316,30 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 .sl-code:not([data-ready]) [data-sl-code-copy],
 .sl-code:not([data-ready]) .sl-code-more {
   display: none;
+}
+
+/* The copy button of a code head is a tool of the code, not an action of a window: a quiet square of the chip height, larger under a finger */
+.sl-code-copy {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+
+.sl-code-copy > .bi { font-size: var(--sl-size-icon-xs); }
+
+@media (pointer: coarse) {
+  .sl-code-copy {
+    width: calc(var(--sl-size-chip) + var(--sl-space-3));
+    height: calc(var(--sl-size-chip) + var(--sl-space-3));
+  }
 }
 
 /* The body is the one part that scrolls sideways, and it takes the focus, so a keyboard reaches a long line too */
@@ -11654,48 +11425,23 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-left: var(--sl-space-3);
 }
 
+/* The day is the segmented switch of the theme, the same as the span of the rhythm; the words of an archive and of a picked day stand in the mono capitals of the cockpit */
 .sl-cockpit-day {
   display: inline-flex;
   align-items: center;
   margin-right: var(--sl-space-3);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  text-transform: uppercase;
   white-space: nowrap;
-  color: var(--sl-text-muted);
 }
 
-.sl-cockpit-day > span:not(.sl-cockpit-set) {
+.sl-cockpit-day > span:not(.sl-seg) {
   display: inline-grid;
   grid-auto-flow: column;
   align-items: center;
   gap: var(--sl-space-3);
-}
-
-.sl-cockpit-set {
-  display: inline-flex;
-  gap: var(--sl-space-1);
-  padding: var(--sl-space-1);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-pill);
-  background: var(--sl-bg-subtle);
-}
-
-.sl-cockpit-set > button {
-  padding: var(--sl-space-1) var(--sl-space-4);
-  border: 0;
-  border-radius: var(--sl-radius-pill);
-  background: transparent;
-  font: inherit;
-  text-transform: inherit;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  text-transform: uppercase;
   color: var(--sl-text-muted);
-  cursor: pointer;
-}
-
-.sl-cockpit-set > [aria-pressed="true"] {
-  background: var(--sl-bg);
-  box-shadow: var(--sl-shadow-xs);
-  color: var(--sl-success-strong);
 }
 
 .sl-cockpit-clear,
@@ -11864,6 +11610,15 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sl-space-3);
+}
+
+/* The door of an ordinary form keeps its file field out of sight beside the button, so a refusal of an empty required field points at the door, and the button wears the focus the field is given */
+.sl-file-door[data-sl-file-form] {
+  position: relative;
+}
+
+.sl-file-door:has(> [data-sl-field="file"]:focus) > .sl-but {
+  box-shadow: var(--sl-shadow-focus);
 }
 
 /* The add control standing apart from its group, named by its id, is a green plus before the label of its row: the glyph of the info tip in the colour of adding */

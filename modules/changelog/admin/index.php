@@ -9,86 +9,81 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('changelog')) die('Illegal file ac
 require_once __DIR__.'/../common.php';
 
 function changelog(): void {
-    global $afile, $conf, $tpl;
+    global $afile, $conf, $tpl, $prs;
     setHead();
     $exporten = $conf['changelog']['exporten'] ?? true;
-    $cont = getTplAdminTabs($exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=export&id=txt', 'name=changelog&op=export&id=md', 'name=changelog&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _MANUAL],
-    ] : [
-        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
-    ]);
-    $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
-
-    $page = max(1, getVar('get', 'page', 'num', 1));
-    $filters = chlogReadFilters('get');
-    chlogCanonicalRedirect($afile.'.php', 'changelog', $filters, $page);
+    $flt = chlogReadFilters('get');
     $config = chlogGetConfig($conf);
-    $loaded = chlogLoadCommits($conf, $filters, __DIR__.'/../../../');
-    $commits = $loaded['commits'];
-    $totcount = $loaded['total'];
+    $loaded = chlogLoadCommits($conf, $flt, __DIR__.'/../../../');
     $error = (string)$loaded['error'];
-
-    if (empty($commits)) {
-        $warnText = $error !== '' ? $error : _CHLOG_ERR_NO_COMMITS;
-        $warnType = $error !== '' ? 'warn' : 'info';
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => ($warnType !== 'info'), 'text' => $warnText]);
-        echo $cont;
-        setFoot();
-        return;
+    $word = $flt['search'];
+    $keys = array_filter(['word' => $word, 'author' => $flt['author'], 'file' => $flt['file'], 'datefrom' => $flt['since'], 'dateto' => $flt['until']], fn($v) => $v !== '');
+    $stat = $config['showstat'] && $config['source'] !== 'github';
+    $total = count($loaded['commits']);
+    $limit = getListLimit($config['perpage'], $total);
+    $pages = max(1, (int)ceil($total / $limit));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $rows = [];
+    foreach (array_slice($loaded['commits'], ($num - 1) * $limit, $limit) as $one) {
+        $title = (string)($one['subject'] ?? '');
+        $body = (string)($one['body'] ?? '');
+        $files = is_array($one['files'] ?? null) ? $one['files'] : [];
+        $html = ($body !== '' && $body !== CHLOG_COMMIT_END) ? $prs->filterDoc($body, true, 'changelog') : '';
+        $tip = $html !== '' ? [['label' => _DESCRIPTION, 'value' => ($word !== '') ? filterTextHighlight($html, $word) : $html]] : [];
+        if (($one['email'] ?? '') !== '') $tip[] = ['label' => _EMAIL, 'has_value_text' => true, 'value_text' => (string)$one['email']];
+        foreach (($stat && $config['showfile']) ? $files : [] as $i => $file) {
+            $tip[] = ['label' => $i ? '' : _CHLOG_FILES, 'has_value_text' => true,
+                'value_text' => '+'.intval($file['added'] ?? 0).' -'.intval($file['deleted'] ?? 0).' '.($file['file'] ?? '')];
+        }
+        $add = array_sum(array_map('intval', array_column($files, 'added')));
+        $del = array_sum(array_map('intval', array_column($files, 'deleted')));
+        $subj = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $rows[] = ['name' => $title, 'details' => $tip, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => (string)($one['hash'] ?? '')],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'content_html' => ($word !== '') ? filterTextHighlight($subj, $word) : $subj],
+            ['is_col_author' => true, 'title_text' => (string)($one['email'] ?? ''), 'has_content_text' => true, 'content_text' => (string)($one['author'] ?? '')],
+            ...($stat ? [
+                ['attr' => 'data-sort="'.($add + $del).'"', 'has_content_text' => true, 'content_text' => '+'.$add.' / -'.$del],
+                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)count($files)],
+            ] : []),
+            ['is_col_date' => true, 'moment' => (string)($one['date'] ?? '')],
+        ]];
     }
-
-    $paged = chlogPaginate($commits, $page, $config['perpage']);
-    $totcom = $paged['total'];
-    $totpage = $paged['pages'];
-    $page = $paged['page'];
-    $compg = $paged['items'];
-
-    if ($config['grpdate']) {
-        $compg = chlogGroupCommitsByDate($compg);
-    }
-
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('changelog', [
-        'action_url' => $afile.'.php',
-        'reset_url' => $afile.'.php?name=changelog',
-        'hidden' => ['name_attr' => 'name', 'value_attr' => 'changelog'],
-        'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'word', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
-        'author_field' => [
-            'itype' => 'text', 'input_id' => 'author', 'name_attr' => 'author', 'value_attr' => chlogEsc($filters['author']), 'placeholder_text' => _CHLOG_AUTHOR_PH,
+    $fields = [
+        ['field_id' => 'sl-chlog-word', 'label' => _CHLOG_SEARCH, 'itype' => 'search', 'name_attr' => 'word', 'value' => $word],
+        ['field_id' => 'sl-chlog-author', 'label' => _CHLOG_AUTHOR, 'itype' => 'text', 'name_attr' => 'author', 'value' => $flt['author']],
+        ...(($config['source'] !== 'github') ? [['field_id' => 'sl-chlog-file', 'label' => _CHLOG_FILE, 'itype' => 'text', 'name_attr' => 'file', 'value' => $flt['file']]] : []),
+        ['field_id' => 'sl-chlog-from', 'label' => _CHLOG_DATE_FROM, 'itype' => 'date', 'name_attr' => 'datefrom', 'value' => $flt['since']],
+        ['field_id' => 'sl-chlog-to', 'label' => _CHLOG_DATE_TO, 'itype' => 'date', 'name_attr' => 'dateto', 'value' => $flt['until']],
+    ];
+    $search = $tpl->getHtmlFrag('list-filter', ['action_url' => $afile.'.php', 'label' => _SEARCH, 'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'changelog']], 'fields' => $fields]);
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(($exporten ? [
+            'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=export&id=txt', 'name=changelog&op=export&id=md', 'name=changelog&op=info'],
+            'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _MANUAL],
+        ] : [
+            'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=info'],
+            'tabs' => [_HOME, _PREFERENCES, _MANUAL],
+        ]) + ['part' => [0], 'subtitle_html' => $search]),
+        'note_html' => checkPerms(CONFIG_DIR.'/changelog.php'),
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _CHLOG_COMMIT, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
+            ['content' => _CHLOG_AUTHOR, 'is_col_author' => true],
+            ...($stat ? [['content' => _CHLOG_CHANGES], ['content' => _CHLOG_FILES, 'is_col_count' => true]] : []),
+            ['content' => _CHLOG_DATE, 'is_col_date' => true],
         ],
-        'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
-        'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
-        'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
-        'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN, 'icon_name' => 'funnel', 'is_chlog_primary' => true],
-        'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'is_chlog_secondary' => true, 'reset_url' => $afile.'.php?name=changelog'],
-        'show_file' => $config['source'] !== 'github',
-        'totcount' => $totcount,
-        'totcom' => $totcom,
-        'page' => $page,
-        'totpage' => $totpage,
-        'page_text' => sprintf(_NUMOF, $page, $totpage),
-        'commits' => chlogRenderCommits($compg, $config + ['highlight' => $filters['search']]),
-        'paging' => rendpage($totcom, $totpage, $config['perpage'], $page, $filters),
-        'txt_filter_heading' => _CHLOG_FILTER,
-        'txt_search_label' => _CHLOG_SEARCH,
-        'txt_search_placeholder' => _CHLOG_SEARCH_PH,
-        'txt_author_label' => _CHLOG_AUTHOR,
-        'txt_author_placeholder' => _CHLOG_AUTHOR_PH,
-        'txt_file_label' => _CHLOG_FILE,
-        'txt_file_placeholder' => _CHLOG_FILE_PH,
-        'txt_datefrom_label' => _CHLOG_DATE_FROM,
-        'txt_dateto_label' => _CHLOG_DATE_TO,
-        'txt_filter_btn' => _CHLOG_FILTER_BTN,
-        'txt_reset_btn' => _CHLOG_RESET_BTN,
-        'txt_total' => _CHLOG_TOTAL,
-        'txt_filtered' => _CHLOG_FILTERED,
-        'txt_page' => _CHLOG_PAGE,
-        'txt_commits' => _CHLOG_COMMITS,
-        'txt_commits_repo' => _CHLOG_COMMITS_REPO,
-    ])]);
-
-    echo $cont;
+        'rows' => $rows,
+        'href' => $afile.'.php?'.http_build_query(['name' => 'changelog'] + $keys, '', '&', PHP_QUERY_RFC3986).'&',
+        'page' => $num,
+        'pages' => $pages,
+        'count' => $total,
+        'limit' => $limit,
+        'base' => $config['perpage'],
+        'none_text' => ($error !== '') ? $error : ($keys ? _NONE_FOUND : _NO_INFO),
+    ]);
     setFoot();
 }
 
@@ -248,19 +243,6 @@ function info(): void {
         'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _MANUAL],
     ]);
-}
-
-
-function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
-    $query = http_build_query(array_filter([
-        'name' => 'changelog',
-        'author' => $filters['author'],
-        'file' => $filters['file'],
-        'word' => $filters['search'],
-        'datefrom' => $filters['since'],
-        'dateto' => $filters['until']
-    ]));
-    return getPageNumbers('', $totcom, $totpage, $perpage, ($query ? $query.'&' : 'name=changelog&'), 10, $page, '', 'page');
 }
 
 switch ($op) {

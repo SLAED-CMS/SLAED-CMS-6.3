@@ -50,43 +50,37 @@ function updateForumSync(): array {
 }
 
 function forum(): void {
-    global $db, $tpl;
+    global $db;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
-        'subtitle_html' => getTplPostButton(['name' => 'forum', 'op' => 'sync'], 'arrow-repeat', _SYNCH),
-    ]);
-    $rows = '';
+    $rows = [];
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => (string)$id],
-                ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('popover', [
-                    'items' => [['label' => _DESCRIPTION, 'value' => $intro ?: _NO, 'is_last' => true]],
-                    'label_text' => $title,
-                    'title_text' => $title,
-                ])],
-                ['is_col_count' => true, 'content_html' => (string)$topics],
-                ['is_col_count' => true, 'content_html' => (string)$posts],
-                ['is_col_status' => true, 'content_html' => ad_status('', $state)],
-            ],
-        ])]);
+        $rows[] = ['name' => (string)$title, 'details' => [['label' => _DESCRIPTION, 'value' => $intro ?: _NO]], 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => (string)$id],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$topics],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$posts],
+            ['is_col_status' => true, 'attr' => 'data-sort="'.intval($state).'"', 'stat' => ['is_on' => intval($state) === 1]],
+        ]];
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
-        'is_wrapless' => true,
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs([
+            'ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'],
+            'tabs' => [_HOME, _PREFERENCES, _MANUAL],
+            'part' => [0],
+            'subtitle_html' => getTplPostButton(['name' => 'forum', 'op' => 'sync'], 'arrow-repeat', _SYNCH),
+        ]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
-            ['content' => _FORUM, 'is_truncate' => true],
+            ['content' => _FORUM, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _NEWTOPICS, 'is_col_count' => true],
             ['content' => _MESSAGES, 'is_col_count' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true],
         ],
-        'rows_html' => $rows,
-    ])]);
-    echo $cont;
+        'rows' => $rows,
+        'count' => count($rows),
+    ]);
     setFoot();
 }
 

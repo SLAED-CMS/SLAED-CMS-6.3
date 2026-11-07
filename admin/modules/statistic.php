@@ -418,6 +418,7 @@ function getStatCockpit(array $data, array $view, string $clock, int $every): st
         'lamp_html' => $tpl->getHtmlPart('statistic-cockpit', ['is_lamp' => true, 'clock_html' => $clock]),
         'nav_html' => $tpl->getHtmlPart('statistic-cockpit', [
             'is_nav' => true,
+            'is_now' => $view['state']['is_now'],
             'set_text' => _STATISTIC_DIAL,
             'now_text' => _STATISTIC_NOW,
             'past_text' => _YESTERDAY,

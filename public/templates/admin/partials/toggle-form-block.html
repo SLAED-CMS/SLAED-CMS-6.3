@@ -1,19 +1,11 @@
 <div id="{{ block_id }}" class="sl-toggle-form-block{% if is_hidden %} sl-hidden{% endif %}"{% if is_toggle_block %} data-sl-toggle="{{ block_id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}"{% endif %}>
-  <div class="sl-div-grid">
-    <div class="sl-div-item sl-toggle-form-block-item">
-      <div class="sl-div-label">
-        {% if toggle_target_id %}
-        <span class="sl-toggle-form-block-title">
-          <span class="sl-plus sl-toggle-form-block-toggle" title="{{ title }}" aria-label="{{ title }}" data-sl-toggle-control="{{ toggle_target_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"></span>
-          <span class="sl-toggle-form-block-label">{{{ label_html }}}</span>
-        </span>
-        {% else %}
-        <span class="sl-toggle-form-block-title">{{{ label_html }}}</span>
-        {% endif %}
-      </div>
-      <div class="sl-div-field">
-        {{{ content_html }}}
-      </div>
-    </div>
+  {% if toggle_target_id %}
+  <div class="sl-toggle-form-block-title">
+    <span class="sl-plus sl-toggle-form-block-toggle" title="{{ title }}" aria-label="{{ title }}" data-sl-toggle-control="{{ toggle_target_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"></span>
+    <span class="sl-toggle-form-block-label">{{{ label_html }}}</span>
   </div>
+  {% else %}
+  <div class="sl-toggle-form-block-title">{{{ label_html }}}</div>
+  {% endif %}
+  {{{ content_html }}}
 </div>

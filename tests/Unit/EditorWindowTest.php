@@ -441,4 +441,46 @@ final class EditorWindowTest extends TestCase
             $this->assertStringNotContainsString("'".$key."' =>", $drv, 'The driver keeps its own '.$key.' beside the shared one, and the two can disagree');
         }
     }
+
+    # An ordinary form sends its file through the same door: a button and a chip, the picker of the browser behind the button, never the bare field of the browser
+    # The door of a form carries no editor id, so the runtime of the window binds nothing to it, and its field is required and out of sight, so the refusal points at the door
+    # The forms that sent a file through the fragment input take the one builder, which names the button by the shared word of all six locales
+    #[Test]
+    public function anOrdinaryFormSendsItsFileThroughTheSameDoor(): void
+    {
+        foreach (['lite', 'admin'] as $theme) {
+            $frag = $this->getFile('public/templates/'.$theme.'/fragments/file-field.html');
+            $this->assertStringContainsString('{% if is_form %} data-sl-file-form{% endif %}', $frag, 'The door of theme '.$theme.' cannot tell a form upload from the window');
+            $this->assertStringContainsString(
+                '{% if editor_id %} data-editor="{{ editor_id }}"{% endif %}',
+                $frag,
+                'The door of a form names an editor, so the runtime of the window takes its button'
+            );
+            $this->assertMatchesRegularExpression(
+                '#\{% if is_form %\}\s*<input type="file" class="sl-visually-hidden"[^>]* tabindex="-1" required>#',
+                $frag,
+                'The field of a form door is shown, skipped by Tab or not required in theme '.$theme
+            );
+            $this->assertStringContainsString(
+                '.sl-file-door[data-sl-file-form]',
+                $this->getFile('public/templates/'.$theme.'/assets/css/theme.css'),
+                'The door of a form in theme '.$theme.' gives its hidden field no place'
+            );
+        }
+        $fld = $this->getBody('core/helpers.php', 'getFormFileField');
+        $this->assertStringContainsString("'is_form' => true", $fld, 'The builder of a form door prints the door of the window');
+        $this->assertStringContainsString("'open_label' => _FILEPICK", $fld, 'The button of a form door is named by a word of its own place');
+        $this->assertStringNotContainsString("'editor_id'", $fld, 'The door of a form names an editor the window would bind to');
+        foreach (self::LOCALES as $lang) {
+            $this->assertMatchesRegularExpression("#define\('_FILEPICK','[^']+'\);#", $this->getFile('lang/'.$lang.'.php'), 'The button of a form door has no word in '.$lang);
+        }
+        foreach (['admin/modules/update.php' => 'getUpdatePack', 'modules/node/admin/index.php' => 'import'] as $path => $name) {
+            $body = $this->getBody($path, $name);
+            $this->assertStringContainsString('getFormFileField(', $body, $name.'() of '.$path.' sends its file past the door');
+            $this->assertStringNotContainsString("'itype' => 'file'", $body, $name.'() of '.$path.' prints the bare field of the browser again');
+        }
+        $js = $this->getFile('public/plugins/system/slaed.js');
+        $this->assertStringContainsString("closest('[data-sl-file-form] [data-sl-act]')", $js, 'Nothing opens the picker or clears the field of a form door');
+        $this->assertStringContainsString('setFileDoors();', $js, 'The behaviour of a form door is written and never started');
+    }
 }

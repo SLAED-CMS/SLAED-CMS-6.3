@@ -50,10 +50,13 @@
           {% endif %}
         </ul>
         {% endif %}
+        <button type="button" class="sl-menu-btn" data-sl-menu-open aria-controls="hmenu" aria-expanded="false"><i class="bi bi-list" aria-hidden="true"></i><span>{{ _MENU }}</span></button>
       </div>
     </header>
-    <nav id="hmenu" aria-label="Главное меню">
+    <div class="sl-menu-scrim" data-sl-menu-close aria-hidden="true"></div>
+    <nav id="hmenu" aria-label="{{ _MENU }}">
       <div class="sl-wrp">
+        <button type="button" class="sl-menu-close sl-circle-action" data-sl-menu-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         {% include 'partials/menu.html' %}
         <form class="sl-search-form" role="search" action="{{ root }}search" method="post">
           <input type="hidden" value="{{ modul }}" name="mod">

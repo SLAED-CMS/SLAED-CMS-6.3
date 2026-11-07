@@ -3044,11 +3044,15 @@ function getRouteSecrets(string $work): array {
         'cachettl' => '900', 'ghtoken' => 'probe-stolen'];
     $chlog = getRouteReply('boss', 'POST', 'admin.php?name=changelog&op=configsave', $form);
     $text = $file('changelog');
-    $out['write'] = ['codes' => [$save['code'], $chlog['code']], 'denied' => str_contains($deny['body'], 'probe-gkey-old'),
+    $own = getRouteReply('boss', 'POST', 'admin.php?name=changelog&op=configsave',
+        ['perpage' => '12'] + array_diff_key($form, array_flip(['source', 'ghowner', 'ghrepo', 'ghtoken'])));
+    $kept = $file('changelog');
+    $out['write'] = ['codes' => [$save['code'], $chlog['code'], $own['code']], 'denied' => str_contains($deny['body'], 'probe-gkey-old'),
         'users' => str_contains($file('users'), "'anum' => '51'"),
         'oauth' => [str_contains($file('oauth'), 'probe-gkey-old'), str_contains($file('oauth'), 'probe-stolen')],
         'token' => [str_contains($text, 'probe-ghtoken-old'), str_contains($text, 'probe-stolen'), str_contains($text, "'perpage' => '11'")],
-        'place' => [str_contains($text, "'source' => 'local'"), str_contains($text, 'probe-foreign')]];
+        'place' => [str_contains($text, "'source' => 'local'"), str_contains($text, 'probe-foreign')],
+        'own' => [str_contains($kept, "'perpage' => '12'"), str_contains($kept, 'probe-ghtoken-old'), str_contains($kept, "'source' => 'local'")]];
     $page = getRouteReply('root', 'GET', 'admin.php?name=security&op=oauthkeys');
     $pairs = getRoutePairs(getRouteInputs($page['body'], 'oauthsave'), ['gsecret' => 'probe-gkey-new']);
     $none = getRouteReply('root', 'POST', 'admin.php', array_diff_key($pairs, ['token' => 1]));

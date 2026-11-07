@@ -592,6 +592,38 @@ function getProbeMerge(): array {
 }
 
 # Remove the scratch tree of this probe
+# Every source the panel writes by name through the string form, saved once with what it holds: a shipped file in another shape is rewritten by the first unchanged save
+# The year of the header is the one line a save writes from the clock, so it is left out of the comparison
+function getProbeShipped(): array {
+    $names = [];
+    foreach (['admin', 'modules', 'core'] as $dir) {
+        $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(BASE_DIR.'/'.$dir, FilesystemIterator::SKIP_DOTS));
+        foreach ($iter as $file) {
+            if ($file->getExtension() !== 'php') continue;
+            preg_match_all("/setConfigFile\\('([a-z][a-z0-9_]*\\.php)'/", (string)file_get_contents($file->getPathname()), $hit);
+            foreach ($hit[1] as $name) $names[$name] = true;
+        }
+    }
+    $names = array_keys($names);
+    sort($names);
+    $year = static fn(string $code): string => (string)preg_replace('/^# 2005 - \d{4} SLAED$/m', '', $code);
+    $moved = [];
+    foreach ($names as $name) {
+        $file = CONFIG_DIR.'/'.$name;
+        if (!is_file($file)) continue;
+        $old = (string)file_get_contents($file);
+        $data = getProbeSource($name);
+        $key = substr($name, 0, -4);
+        $sect = ($key === 'global') ? $data : ($data[$key] ?? null);
+        if (!is_array($sect) || !setConfigFile($name, $sect)) {
+            $moved[] = $name.' (not saved)';
+        } elseif ($year((string)file_get_contents($file)) !== $year($old)) {
+            $moved[] = $name;
+        }
+    }
+    return ['names' => $names, 'moved' => $moved];
+}
+
 function deleteProbeTree(string $dir): void {
     if (!is_dir($dir)) return;
     $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
@@ -615,6 +647,7 @@ try {
         'markergone' => getProbeMarker(true),
         'markerlocked' => getProbeMarker(false),
         'merge' => getProbeMerge(),
+        'shipped' => getProbeShipped(),
         'run' => getProbeRun((string)($pargs[0] ?? ''), (int)($pargs[1] ?? 0)),
         'try' => getProbeTry((string)($pargs[0] ?? '')),
         'wait' => getProbeWait((string)($pargs[0] ?? '')),

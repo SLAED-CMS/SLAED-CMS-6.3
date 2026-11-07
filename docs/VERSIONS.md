@@ -34,6 +34,145 @@ statements (the head and the type are two reads), and a row of a list page passe
 `NodeQuery::getPathSql()` joined the page; the budget of `delete` and the bound of a page take them, here and in
 `docs/NODE.md`. The full run of 100000 materials in fourteen types passes without a failure.
 
+## 2026-11-06
+
+### Every form of the panel and the site is used once in a real browser
+
+Before 8.0 every form, setting and function of the panel and the site was used once through the real HTTP flow on a
+copy of the production site: the 31 sections of the panel, the 13 modules of the site, the requests `go=1`, `go=3`,
+`go=4` and `go=5`, the blocks, by a guest, a user, a delegated administrator with and without the right and the super
+administrator, at 1366 px and at 390 px for the site. Every valid save was read back from the database or the config,
+every wrong input had to be refused writing nothing, and one POST without the token went against every handler that
+changes state. An irreversible action (the steps of `update`, `optimize`, `repair`, `dump` and `delete` of `database`,
+a release of a newsletter, the publication of the builder) was opened up to its confirmation only. What the run
+found and fixed:
+
+- **The panel shell.** The name and the address of the administrator form, an unknown editor of `op=option` refused,
+  the admin block of a delegated administrator refreshed.
+- **The site.** A saved profile says so, its private rows and admin menu open to the right `account` alone, an empty
+  feed address of the cabinet is refused. A comment a moderator sends through the site stays open, so a support
+  request of a moderator is no longer refused.
+- **The forum.** The page titles are built once by `getHeadTitle()`, a new topic no longer counts as a post of its
+  section, the final delete of a topic takes back the points of its replies too.
+- **The content of the panel.** An empty category title and an empty comment body of a moderator are refused; the
+  `http://` of a stored site no longer holds the form of a user in the panel and the cabinet; a type with `support` is
+  not offered by "Добавить" and its `op=add` answers 404; a bad filter or limit of Node is answered with
+  `_NODE_BADFILTER` or `_NODE_LIMITBAD`; the edit of a gone category returns to the list instead of 500; a ban without a
+  term lasts 30 days instead of ending at once.
+- **The site in the panel.** An explicit `tab=0` wins over the tab the session remembered; a value emptied in the
+  language editor is named instead of a false success, and a save of the French files no longer writes `\$` into 13
+  placeholders `%1$s`; an HTML block or a block file without content is refused; an import of the builder no longer
+  shows a phantom change of the page settings.
+- **Files, jobs and mail.** "Файловый менеджер" opens at the folder of its settings again, a bad name is refused with
+  `_UPLOADS_BADNAME`; the form of a job of "Планировщик" names every refusal and keeps what was typed, "Добавить" no
+  longer overwrites a job of the same key, a relative address of a job is stored as typed instead of `http:///…`, a
+  removed job takes its state file along; the text of a mailing starts empty and is framed by the mail template through
+  `getMailFrame()`; a compiled template the job `cachegc` removed during a request is compiled again under its lock.
+- **The system.** A clean or delete of `database` on a table that is not there answers `_ERROR` and writes no SQL error;
+  an empty query of "Запрос" and an empty XSL of `sitemap` are refused; "Очистка" of `search` asks its confirmation; the
+  section of a module whose own tables are not installed shows `_DB_NOTABLES` instead of reading a missing table.
+- **Shipped files.** The language files, `config/lang.php`, `config/forum.php`, `config/replace.php` and
+  `config/points.php` ship in the shape the panel writes, so an unchanged save leaves them as they are
+  (`ConfigFileTest`).
+
+### One thing is done one way
+
+The run listed 28 places where two mechanisms did one thing; each now has one standard.
+
+- **A config write.** No caller of `setConfigFile()` drops its result: a refused save of the panel says
+  `_CONFIG_PENDING` or `_ERROR_UP`, and the writers of a part write the changed keys on the file as it stands.
+- **The answers of the panel.** A missing token is the flash `_TOKENMISS` back to the form or the list, a record that is
+  not there the flash `_NONE_FOUND` back to its list (the editor window of the builder keeps it inside), the refusals of
+  a form one list with what was typed kept, a count after a POST one flash by `sprintf()`.
+- **The site.** A closed profile opens to `is_moder('account')` wherever it is read; `getRssView()` refuses an empty
+  feed itself; an empty comment is refused by the server alone; `checkSitePost()` of `core/security.php` guards every
+  write of `forum`, `contact`, `recommend`, `account` and `node` (`checkForumPost()` is gone); the captcha of
+  `recommend` follows the switch of `contact`.
+- **People and safety.** `Oauth::deleteLink()` is the one unlink, the panel removing the last login method by `force`;
+  `getBanList()` adds a ban of an address, by the panel and by the guard alike; `addFormMail()` of `core/admin.php`
+  writes the ban mail and the login mail of `admins` and `account`, the latter only with a new password;
+  `checkPassRule()` applies `minpass` to the registration, the password change of the cabinet, the forms of `admins`
+  and `account` and the first administrator of `admin.php`; every credential field is of the type `password` or
+  `email`, where the login and the registration of the site showed the password; the date filters of the journals
+  read `getVar(..., 'date', '')`.
+- **The blocks.** `setBlockRow()` of `core/admin.php` writes a row of `_blocks` for "Блоки" and for the publication of
+  the builder, on the one spec `getBlockSpec()`; a system block is neither offered for deletion nor deleted; the columns
+  of a page have one owner, the module or the Node type for its page, the builder for a page without a module, which on
+  the page of a module only shows them.
+- **The site in the panel.** `filterSiteBrand()` checks the site name and logo for the settings and the builder, the
+  name kept as typed; the language files are written through `setConfigSource()` with a failure per locale; a `|` in a
+  rule of "Замена слов" is refused, and `Parser::replaceText()` splits a rule as the form does.
+- **The system and the modules.** `updateNodeTypeParts()` of `core/admin.php` is the one answer of a section that owns a
+  part of every Node type; `clear()` of `search` deletes nothing for 0 days, no module or an unknown mode; a poll is
+  deleted from the list only; every irreversible action asks its confirmation; the parts of the super administrator are
+  hidden from a delegated one and refused by a flash.
+
+### The look is one system
+
+- **Sizes.** A one-line field of the panel is `--sl-size-control` high wherever it stands; the chips of the private
+  messages take `--sl-size-chip` and their bulk bar the sizes of the other forms of the site.
+- **Small classes.** The copy button of a code head is `.sl-code-copy` of both themes and no longer borrows
+  `.sl-modal-act` of a window; "Сейчас" and "Вчера" of "Статистика" are a plain `sl-seg` like "24ч", "7д" and "30д".
+- **A file of an ordinary form.** "Загрузить архив" of `update` (a pane of its own) and the import of Node take the
+  canon `fragments/file-field.html` in its form mode through `getFormFileField()`: a button opens the picker, the
+  chip names the file and its weight, the cross empties it.
+- **Lists.** The list of `changelog` in the panel is a table of `getTplAdminList()`, one row per commit, the body, the
+  e-mail and the files in the "i" of the row; "Группировать по дате" acts on the site alone. The list of forums takes
+  the canon with the view switch and the key tip. A block of rows of a form (`partials/toggle-form-block.html`) spans
+  its box with the name in a cap.
+- **The menu of the site on a phone.** Below 900 px the menu of `lite` is a drawer behind the button `sl-menu-btn` of
+  the head, with a scrim, Esc and the focus back on the button; above 900 px the bar is unchanged. `setDrawer()` moved
+  from `admin-ui.js` into `plugins/system/slaed.js`, one drawer for both themes.
+- **Breaking:** the tokens `--sl-pmf-filter-height` of `lite` and `--sl-changelog-width`, `--sl-changelog-body-border`,
+  `--sl-changelog-files-height` and `--sl-changelog-stat-width` of `admin`, the class `.sl-cockpit-set`,
+  `partials/changelog.html`, `partials/changelog-body.html` and the three `changelog-*` fragments of `admin` are gone; a
+  theme of its own that overrides them is no longer read there.
+
+### The forum of no category answers 404
+
+- **The form.** `add()` of the forum answers 404 for no category, a missing one, a missing post and a post whose
+  category is gone, instead of 500.
+- **The writes.** `send()`, `move()` and `delete()` take a category that is not there, or one of another module, as none
+  and go back to the forum writing nothing, where a guest got the form of a new topic in a category of `news` and its
+  post ended in an SQL error (`FileAccessTest`).
+
+### Every button carries its icon and bursts when pressed, and a material takes its categories from one tree
+
+- **The icon.** `fragments/button.html` of the panel is always a `<button>`, never an `<input>`, as on the site, so a
+  glyph of the icon font stands before its words: the icon its caller names for an action that means more than to
+  confirm, else the arrow of a way back, the turn of a reset or the check (`docs/TEMPLATES.md`).
+- **The burst.** `setPressBurst()` of `plugins/system/slaed.js` gives every `.sl-but*` and `.sl-but-mini` the burst of
+  the favourite star on a press, drawn by the `--sl-fav-*` tokens, which the panel now has too.
+- **Two submits.** The forms of the forum and of a material send "Предпросмотр" and "Отправить" as two named buttons of
+  `fragments/form-submit.html` instead of a select of the action beside one button.
+- **One tree of categories.** The main and the additional categories of a material are one tree of checkboxes, on the
+  site and in the panel alike (`getNodeFormRows()`): the starred row is the main one, `setCategoryMain()` keeps the star
+  on a checked row, and the server takes the first checked row when none is starred.
+- **Breaking:** the main category still posts as `cid`, now from the star of the tree instead of a select; the poll
+  edit of the panel no longer posts `posttype` and deletes nothing, as a poll is deleted from its list.
+
+## 2026-11-05
+
+### The file screens explain their keys, their properties fold away, and the panel has one journal
+
+- **The keys.** The "i" of the lists also ends the bar of "Файловый менеджер" and of the file window of the editor:
+  `getFileKeysView()` lists the arrows, Home and End, Space or Ctrl with a click, Shift for a range, Enter (open in the
+  manager, insert in the window), the right button and, in the window, Esc, in six locales. A list of the panel shows
+  the tip once after its view switch; a touch screen hides it in both themes.
+- **The properties.** A button of the bar of both file screens («Свойства» in the manager, «Свойства файла» in the
+  window) opens and folds the properties column; it starts closed, the browser remembers the choice, and a closed
+  column gives its width to the list. A row of the manager keeps one line, ends a long name in an ellipsis and shows
+  its date to the minute with the full time in its title.
+- **One journal.** A section of the panel no longer ends its tabs with «Журнал действий»: the actions of one section
+  are read in "Журналы" by the filter «Модуль».
+- **The Russian texts.** The Russian language files of the core and the modules read clean: commas, dashes, hyphenated
+  compounds, spelling and the full stop at the end of a sentence.
+
+### The monitor measures the disk of the project
+
+- **The disk.** "Мониторинг" measures the disk that holds `BASE_DIR` instead of the working directory, and its scale
+  reads «Занято и в резерве» (`_ADM_DISKUSED`), as the free space leaves out the blocks the system keeps for root.
+
 ## 2026-11-04
 
 ### The code is SLAED CMS 8.0.0
@@ -44,6 +183,48 @@ statements (the head and the type are two reads), and a row of a list page passe
   builds and `table_update6_3.sql` keep their names as history.
 - **A site moves by itself.** A site whose code is newer than its last step answers 503 until the light mode of the panel
   applies "Применить шаги базы"; a site of the development tree also needs its data marks at `8.0.0`.
+
+### The admin menu counts its queues at once, and the lamp of a list is a mark
+
+- **The queues.** `getAdminQueues()` counts the waiting materials of every Node type but `support` in one statement,
+  `NodeQuery::getNodeCountList()`, and the queue of a support type by `NodeSupport::getNodeSupportCount()` without
+  reading a page; `getSessionCounts()` is read once per request.
+- **The lamp.** The status of a row of a canon list (`getTplAdminList()`) is a mark that only shows the state; its
+  switch is an item of the dial of the row, and a press turns the mark, its words and the title of the item at once.
+
+### A figure runs one way, and a light runs round the frame under the hand
+
+- **The figure.** `setFigureRun()` of `plugins/system/slaed.js` is the one run of a figure in both themes: it climbs to
+  its new value for `--sl-figure-dur`, swollen and in `--sl-figure-text`, and ends on the text the server wrote. The
+  live figures of the panel, the results of a poll and the presentation take it; a still page or a hidden tab shows the
+  text at once.
+- **The light.** Under the hand a turning cone runs round the frame of every framed block of both themes, drawn by
+  `--sl-aurora-width`, `--sl-aurora-mix`, `--sl-aurora-border`, `--sl-aurora-ring` and `--sl-aurora-dur`, which at
+  `0s` turns it off.
+- **Less motion.** The panel drops its entry animations (the tiles of the home, the parts of a ground, the charts, the
+  rows of a list) and the four-dot loader of the live chart.
+- **Breaking:** the tokens `--sl-drift-dur`, `--sl-drift-width`, `--sl-drift-height`, `--sl-drift-dot-width`,
+  `--sl-drift-dot-height`, `--sl-drift-gap` and `--sl-tile-dur` of `admin` are gone, and `--sl-aurora-width` of `admin`
+  is the line of the light instead of a band; a theme of its own that overrides them is no longer read there.
+
+### The presentation reads as one series, and the footer forum lines up its dates
+
+- **One series.** The presentation of `lite` takes one chip shape (a one-line chip is a pill), one head per inner block
+  and two frames at most; its texts in six locales are in sentence case with case and grammar corrected, the map of the
+  modules names Node instead of Master, the request path is seven equal stations on a ring.
+- **The gallery.** The thumbs of the gallery of sites are WebP of 640 px at 82, as `getImageThumb()` takes the format
+  and the quality, instead of small JPEG and GIF.
+- **The footer forum.** The rows of the forum block of the footer share two columns, so every date starts on one line
+  after the longest author; in a block narrower than 280 px the date stands under the author.
+
+### The shipped layout is the layout of slaed.net
+
+- **The layout.** `config/layout.php` ships as slaed.net runs it: the home and the page 404, the menu `main` of five
+  items and `foot` of seven, and the parts of `lite` filled (the tagline, the version pane with its download button,
+  seven social links, the contact line, six marks of the technologies, two tabs of the footer). Its `shipped` is false,
+  so the builder labels its entry of a new page as for a site's own layout.
+- **An existing site.** An update puts a settings file of `config/` only when it is absent, so a site keeps its own
+  layout; only a new installation receives this one.
 
 ## 2026-11-03
 

@@ -327,10 +327,6 @@
   --sl-brand-height: 90px;
   --sl-btn-width: 80px;
   --sl-btn-mini-width: 44px;
-  --sl-changelog-width: 1400px;
-  --sl-changelog-body-border: 3px;
-  --sl-changelog-files-height: 300px;
-  --sl-changelog-stat-width: 50px;
   --sl-check-width: 16px;
   --sl-check-height: 16px;
   --sl-check-ring:
@@ -770,6 +766,17 @@ select {
     background-color var(--sl-time-base) var(--sl-ease-out),
     border-color var(--sl-time-base) var(--sl-ease-out),
     box-shadow var(--sl-time-base) var(--sl-ease-out);
+}
+
+/* A one-line field is the control height of the theme wherever it stands, its border inside that height */
+input:where(
+    :not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not(
+        [type="checkbox"]
+      ):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="image"])
+  ),
+select:where(:not([multiple]):not([size])) {
+  box-sizing: border-box;
+  height: var(--sl-size-control);
 }
 
 input:where(

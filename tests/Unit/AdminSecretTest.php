@@ -59,17 +59,18 @@ final class AdminSecretTest extends TestCase
         $this->assertSame($none, $run['security']);
     }
 
-    # A save by that administrator goes through for the other settings, while a posted key, token, source, owner or repository changes nothing
+    # That administrator saves the rest of a form; a posted key changes nothing, a changelog post naming the token, source, owner or repository is refused whole
     #[Test]
     public function aDelegatedAdministratorWritesNoSecret(): void
     {
         $run = $this->getRun()['write'];
-        $this->assertSame([303, 303], $run['codes']);
+        $this->assertSame([303, 303, 303], $run['codes']);
         $this->assertTrue($run['users'], 'the settings of the section were not saved');
         $this->assertFalse($run['denied'], 'the tab of the keys answered a delegated administrator');
         $this->assertSame([true, false], $run['oauth'], 'config/oauth.php changed');
-        $this->assertSame([true, false, true], $run['token'], 'the token changed or the other settings were not saved');
+        $this->assertSame([true, false, false], $run['token'], 'a refused post changed the token or the other settings');
         $this->assertSame([true, false], $run['place'], 'the source, the owner or the repository changed');
+        $this->assertSame([true, true, true], $run['own'], 'the own form was not saved or moved the token or the source');
     }
 
     # A super-administrator reads and writes both; a save without the token writes nothing and the keys of a provider stay beside the endpoints the form does not carry

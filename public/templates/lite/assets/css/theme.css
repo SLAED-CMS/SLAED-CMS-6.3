@@ -3201,7 +3201,8 @@ pre code.hljs {
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
 .sl-node-head-pill.sl-is-active .sl-but,
 .sl-pager-keys:hover > .sl-but-mini,
-.sl-pager-keys.sl-is-open > .sl-but-mini {
+.sl-pager-keys.sl-is-open > .sl-but-mini,
+.sl-code-copy:hover {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -5754,6 +5755,30 @@ dialog.sl-editor-emoji-panel {
   display: none;
 }
 
+/* The copy button of a code head is a tool of the code, not an action of a window: a quiet square of the chip height, larger under a finger */
+.sl-code-copy {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+
+.sl-code-copy > .bi { font-size: var(--sl-size-icon-xs); }
+
+@media (pointer: coarse) {
+  .sl-code-copy {
+    width: calc(var(--sl-size-chip) + var(--sl-space-3));
+    height: calc(var(--sl-size-chip) + var(--sl-space-3));
+  }
+}
+
 /* The body is the one part that scrolls sideways, and it takes the focus, so a keyboard reaches a long line too */
 .sl-code > .sl-code-body {
   overflow-x: auto;
@@ -6742,7 +6767,9 @@ button.sl-seg-cell:hover {
 }
 
 #topmenu > ul > li > a:hover,
-#topmenu > ul > li:hover > a {
+#topmenu > ul > li:hover > a,
+.sl-menu-btn:hover,
+.sl-menu-btn:focus-visible {
   color: var(--sl-btn-text);
   background-color: var(--sl-bg-subtle);
   background-image: var(--sl-grad-gloss);
@@ -6831,6 +6858,39 @@ button.sl-seg-cell:hover {
   top: 0;
   opacity: 1;
   visibility: visible;
+}
+
+/* The drawer of the menu on a phone: its toggle stands beside the login, and above the step neither the toggle nor its scrim and close show */
+.sl-menu-btn,
+.sl-menu-close,
+.sl-menu-scrim {
+  display: none;
+}
+
+.sl-menu-btn {
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-control);
+  margin: var(--sl-space-5) 0 0 auto;
+  padding: 0 var(--sl-space-6);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  color: var(--sl-text-strong);
+  background-color: var(--sl-bg-subtle);
+  font: inherit;
+  font-weight: var(--sl-weight-bold);
+  cursor: pointer;
+}
+
+.sl-menu-btn .bi {
+  font-size: var(--sl-size-icon-sm);
+  line-height: 1;
+}
+
+/* The reset of base.css takes the outline of every button, so the toggle draws the ring of the theme itself */
+.sl-menu-btn:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
 }
 
 /* Search: header search form */
@@ -8189,9 +8249,56 @@ a.sl-chip-neutral {
     min-width: 0;
   }
 
+  /* A phone: the menu leaves the bar for a drawer from the side over a scrim, behind the toggle of the header */
   #hmenu {
-    overflow-x: clip;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--sl-z-modal);
+    width: min(var(--sl-layout-sidebar), calc(100vw - var(--sl-space-8)));
     padding: var(--sl-space-5) 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-top: 0;
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-float);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform var(--sl-time-slow) var(--sl-ease-out), visibility var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  /* Shown at once, so the focus can enter; hidden only once the slide out has ended */
+  body[data-sl-drawer] #hmenu {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  body[data-sl-drawer] .sl-menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--sl-z-modal);
+    display: block;
+    background: var(--sl-scrim);
+  }
+
+  #hmenu > .sl-wrp {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sl-menu-btn,
+  .sl-menu-close {
+    display: inline-flex;
+  }
+
+  .sl-menu-close {
+    align-self: flex-end;
+    flex: none;
+    margin-bottom: var(--sl-space-5);
+    color: var(--sl-text-strong);
+    background-color: var(--sl-bg-subtle);
   }
 
   .sl-changelog-filter-top {
@@ -8301,13 +8408,43 @@ a.sl-chip-neutral {
     display: inline-block;
   }
 
+  /* Inside the drawer the menu is one column, and a branch opens under its item */
   #topmenu > ul {
-    gap: var(--sl-space-2);
+    display: block;
+  }
+
+  #topmenu > ul > li {
+    display: block;
+    margin: 0 0 var(--sl-space-2);
+  }
+
+  #topmenu > ul > li > a {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   #topmenu ul ul {
-    min-width: min(var(--sl-menu-width), calc(100vw - var(--sl-space-10)));
-    max-width: calc(100vw - var(--sl-space-8));
+    position: static;
+    display: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: var(--sl-space-2) 0 var(--sl-space-3);
+    padding: var(--sl-space-3) 0;
+    opacity: 1;
+    visibility: visible;
+    box-shadow: none;
+  }
+
+  #topmenu li:hover > ul,
+  #topmenu li:focus-within > ul {
+    display: block;
+    top: auto;
+  }
+
+  #topmenu ul ul a {
+    white-space: normal;
   }
 
   .sl-search-form {
@@ -8411,47 +8548,9 @@ a.sl-chip-neutral {
     font-size: var(--sl-font-h4);
   }
 
-  #topmenu > ul {
-    display: block;
-  }
-
   .sl-grid-1-3,
   .sl-grid-1-4 {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  #topmenu > ul > li {
-    display: block;
-    margin: 0 0 var(--sl-space-2);
-  }
-
-  #topmenu > ul > li > a {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  #topmenu ul ul {
-    position: static;
-    display: none;
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    margin: var(--sl-space-2) 0 var(--sl-space-3);
-    padding: var(--sl-space-3) 0;
-    opacity: 1;
-    visibility: visible;
-    box-shadow: none;
-  }
-
-  #topmenu li:hover > ul,
-  #topmenu li:focus-within > ul {
-    display: block;
-    top: auto;
-  }
-
-  #topmenu ul ul a {
-    white-space: normal;
   }
 
   .sl-login-top--head {
@@ -9118,6 +9217,7 @@ button.sl-but-mini.sl-net-brand:hover,
 .sl-rate-plus.sl-is-burst,
 .sl-is-copied,
 .sl-chip.sl-is-copied,
+.sl-code-copy.sl-is-copied,
 a.sl-but-mini.sl-is-copied:hover,
 button.sl-but-mini.sl-is-copied:hover {
   background-color: var(--sl-success);
@@ -9261,6 +9361,7 @@ html.sl-is-locked {
 .sl-modal-act-close { --sl-modal-act-tone: var(--sl-danger); }
 
 .sl-modal-act:focus-visible,
+.sl-code-copy:focus-visible,
 .sl-editor-dirty:focus-visible,
 .sl-editor-lint:focus-visible,
 .sl-editor-diff-mode:focus-visible {
@@ -11103,10 +11204,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-pmf-fold small span + span::before { content: " · "; }
 
 .sl-pmf-fold .sl-chip {
-  height: var(--sl-pmf-chip-height);
   margin-top: var(--sl-space-2);
-  padding: 0 var(--sl-space-3);
-  font-size: var(--sl-font-micro);
 }
 
 .sl-pmf-fold .sl-cab-badge {
@@ -11183,11 +11281,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-pmf-active .sl-chip {
-  height: var(--sl-pmf-filter-height);
-  padding: 0 var(--sl-space-3);
-  border: 1px solid transparent;
   cursor: pointer;
-  font-size: var(--sl-font-micro);
 }
 
 .sl-pmf-active .sl-chip:hover { border-color: var(--sl-border-strong); }
@@ -11394,16 +11488,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-radius: 0;
 }
 
-.sl-pmf-foot .sl-bulk-bar .sl-field {
-  height: var(--sl-size-chip);
-  padding: 0 var(--sl-space-3);
-  font-size: var(--sl-font-small);
-}
-
 .sl-pmf-foot .sl-bulk-bar .sl-but {
-  height: var(--sl-size-chip);
   margin: 0;
-  font-size: var(--sl-font-small);
 }
 
 .sl-duo-main {
@@ -11963,6 +12049,15 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sl-space-3);
+}
+
+/* The door of an ordinary form keeps its file field out of sight beside the button, so a refusal of an empty required field points at the door, and the button wears the focus the field is given */
+.sl-file-door[data-sl-file-form] {
+  position: relative;
+}
+
+.sl-file-door:has(> [data-sl-field="file"]:focus) > .sl-but {
+  box-shadow: var(--sl-shadow-focus);
 }
 
 /* The add control standing apart from its group, named by its id, is a green plus before the label of its row: the glyph of the info tip in the colour of adding */

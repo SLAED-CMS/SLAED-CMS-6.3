@@ -31,7 +31,7 @@ function changelog(): void {
 
     $page = max(1, getVar('get', 'page', 'num', 1));
     $filters = chlogReadFilters('get');
-    chlogCanonicalRedirect('', $conf['name'], $filters, $page);
+    chlogCanonicalRedirect($conf['name'], $filters, $page);
     $config = chlogGetConfig($conf);
     $loaded = chlogLoadCommits($conf, $filters, defined('BASE_DIR') ? (string)BASE_DIR : getcwd());
     $commits = $loaded['commits'];

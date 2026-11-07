@@ -62,6 +62,7 @@
       "url": "/",
       "steps": [
         { "do": "hover", "sel": ".sl-fmenu a", "shot": "menu-hover" },
+        { "do": "click", "sel": "[data-sl-menu-open]", "shot": "drawer-open", "optional": true },
         { "do": "focus", "sel": ".sl-search-form input", "shot": "search-focus" }
       ]
     },

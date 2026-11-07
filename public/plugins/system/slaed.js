@@ -2453,6 +2453,42 @@
         });
     }
 
+    // The name and the weight of the file an ordinary form will send, the same words the chip of the window gives a picked file
+    function setFileDoor(door) {
+        var file = door.querySelector('[data-sl-field="file"]');
+        var one = file && file.files && file.files[0];
+        var chip = door.querySelector('[data-sl-field="chip"]');
+        var name = door.querySelector('[data-sl-field="name"]');
+        var size = one ? one.size : 0;
+        var unit = ['B', 'KB', 'MB', 'GB'];
+        var at = 0;
+        while (size >= 1024 && at < unit.length - 1) {
+            size = size / 1024;
+            at++;
+        }
+        name.textContent = one ? one.name + ' · ' + (at === 0 ? size : size.toFixed(1)) + ' ' + unit[at] : '';
+        name.title = name.textContent;
+        chip.hidden = !one;
+    }
+
+    // The file field of an ordinary form (data-sl-file-form): its button opens the picker of the browser, the cross empties the field and gives the focus back to the button
+    function setFileDoors() {
+        document.addEventListener('click', function (event) {
+            var act = event.target && event.target.closest ? event.target.closest('[data-sl-file-form] [data-sl-act]') : null;
+            var door = act ? act.closest('[data-sl-file-form]') : null;
+            var file = door ? door.querySelector('[data-sl-field="file"]') : null;
+            if (!file) return;
+            if (act.getAttribute('data-sl-act') === 'open') return file.click();
+            file.value = '';
+            setFileDoor(door);
+            door.querySelector('[data-sl-act="open"]').focus();
+        });
+        document.addEventListener('change', function (event) {
+            var door = event.target && event.target.closest ? event.target.closest('[data-sl-file-form]') : null;
+            if (door && event.target.matches('[data-sl-field="file"]')) setFileDoor(door);
+        });
+    }
+
     // Burst: one node pops, rings and throws sparks; a turn staggers it behind the nodes before it in a row
     function setBurst(node, turn) {
         var at = turn || 0;
@@ -3078,6 +3114,7 @@
         setDirtyLeave();
         setCodeBlocks(document);
         setCodeActions();
+        setFileDoors();
         setCommentKeys(document);
         setCommentHash();
         setRatingVotes();
@@ -3286,6 +3323,59 @@
     document.documentElement.addEventListener('pointerleave', setPointerOff);
     document.addEventListener('pointercancel', setPointerOff);
     window.addEventListener('blur', setPointerOff);
+
+    var drawheld = [];
+    // The theme shows the toggle only where its menu is a drawer, so a hidden toggle opens nothing and its leaving view shuts the drawer
+    function isDrawerShown() {
+        var btn = document.querySelector('[data-sl-menu-open]');
+        return !!btn && btn.getClientRects().length > 0;
+    }
+    // The drawer is the element aria-controls of its toggle names, so one mechanism serves the menu of every theme
+    function getDrawerMenu() {
+        var btn = document.querySelector('[data-sl-menu-open]');
+        return btn ? document.getElementById(btn.getAttribute('aria-controls')) : null;
+    }
+    // The drawer of a phone: the rest of the page goes inert while it is open, the focus comes back to the toggle
+    function setDrawer(open) {
+        var btn = document.querySelector('[data-sl-menu-open]');
+        var menu = getDrawerMenu();
+        var on = open && isDrawerShown();
+        if (!menu) return;
+        document.body.toggleAttribute('data-sl-drawer', on);
+        btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+        drawheld.forEach(function (node) { node.inert = false; });
+        drawheld = [];
+        if (on) {
+            for (var node = menu; node.parentElement; node = node.parentElement) {
+                Array.prototype.forEach.call(node.parentElement.children, function (item) {
+                    if (item === node || item.inert || item.hasAttribute('data-sl-menu-close') || item.tagName === 'SCRIPT') return;
+                    item.inert = true;
+                    drawheld.push(item);
+                });
+                if (node.parentElement === document.body) break;
+            }
+            menu.querySelector('input, button, a').focus();
+        } else if (menu.contains(document.activeElement) || document.activeElement === document.body) {
+            btn.focus();
+        }
+    }
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest) return;
+        if (event.target.closest('[data-sl-menu-open]')) setDrawer(!document.body.hasAttribute('data-sl-drawer'));
+        else if (event.target.closest('[data-sl-menu-close]')) setDrawer(false);
+    });
+    // A window opened from the drawer needs the page back: the drawer shuts first, so the window is not left inert and returns the focus to the toggle
+    document.addEventListener('click', function (event) {
+        var own = event.target.closest ? event.target.closest('[data-sl-open]') : null;
+        var menu = getDrawerMenu();
+        if (own && menu && menu.contains(own) && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
+    }, true);
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
+    });
+    window.addEventListener('resize', function () {
+        if (document.body.hasAttribute('data-sl-drawer') && !isDrawerShown()) setDrawer(false);
+    });
 
     // A section of the layout asks an outside server only after the click on its placeholder: the frame waits in a template, and no consent is stored
     document.addEventListener('click', function (event) {

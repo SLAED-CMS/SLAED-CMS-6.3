@@ -94,6 +94,15 @@ class ConfigFileTest extends TestCase
         foreach ($this->getProbe('string')['deny'] as $name => $done) $this->assertFalse($done, $name.' was accepted by the string form');
     }
 
+    # A file the panel writes by name ships in the shape a save writes, so an unchanged save of its form leaves the file as it was
+    #[Test]
+    public function anUnchangedSaveKeepsEveryShippedFile(): void
+    {
+        $data = $this->getProbe('shipped');
+        $this->assertContains('points.php', $data['names'], 'The scan of the panel writers found no setConfigFile() call by name');
+        $this->assertSame([], $data['moved'], 'An unchanged save rewrites these shipped files');
+    }
+
     # The Closure form hands over the five fresh areas without their wrappers and stores native types as they are, replacing only the source that changed
     #[Test]
     public function theClosureFormKeepsNativeTypes(): void

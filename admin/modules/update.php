@@ -191,13 +191,12 @@ function getUpdatePack(array $state, string $chan): array {
     }
     if ($reader === '' || $ready) return $out;
     $hint = sprintf(_UPDATE_UPHINT, (string)ini_get('upload_max_filesize'), (string)ini_get('post_max_size'));
-    $out['html'] .= $tpl->getHtmlPart('box', ['title' => _UPDATE_UPLOAD, 'content_html' => $tpl->getHtmlPart('form', [
+    $out['html'] .= $tpl->getHtmlFrag('pane', ['title' => _UPDATE_UPLOAD, 'icon' => 'cloud-upload', 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=update&op=upload',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [['name_attr' => 'token', 'value_attr' => getSiteToken('update')]],
         'rows' => [['label_for' => 'f-file', 'label_html' => _FILE, 'hint_html' => htmlspecialchars($hint, ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-file-hint',
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'file', 'name_attr' => 'file', 'input_id' => 'f-file', 'describedby' => 'f-file-hint',
-                'input_attr' => 'accept="application/zip,.zip"', 'is_required' => true])]],
+            'field_html' => getFormFileField('file', 'f-file', 'application/zip,.zip', 'f-file-hint')]],
         'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _UPDATE_UPLOAD, 'icon_name' => 'cloud-upload', 'button_type' => 'submit']),
     ])]);
     return $out;

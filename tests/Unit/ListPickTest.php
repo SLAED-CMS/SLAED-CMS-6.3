@@ -203,7 +203,7 @@ final class ListPickTest extends TestCase
             ['addOauth', 'oauth_admin_unlink', ['prov' => 'google', 'uid' => 8, 'actor' => 1]]], $logs);
     }
 
-    # The posts of the form "Очистка" of search: a mode it names deletes its rows, while 0 days, a missing or unknown module and an unknown mode delete nothing
+    # The posts of the clear form of search (op=clear): a mode it names deletes its rows, while 0 days, a missing or unknown module and an unknown mode delete nothing
     public static function getClears(): array
     {
         $none = [[], '_error', true];

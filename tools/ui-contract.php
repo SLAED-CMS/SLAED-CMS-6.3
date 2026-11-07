@@ -224,7 +224,7 @@ return [
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'metric', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'pane', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
-        'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
+        'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn', 'pres-photo', 'pres-rain',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
@@ -581,8 +581,8 @@ return [
         # A filter field, the row list of the window, a panel of the profile facts and the frame every modal opens as: four boxes that stack their children
         # The dialog is the canon of the window, and filing it inside one component's block would hide it from whoever edits either
         '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-profile-panel, dialog.sl-modal[open]',
-        # The same three in the administrative theme, which carries no profile facts
-        '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, dialog.sl-modal[open]',
+        # The row list and the dialog in the administrative theme, which carries no profile facts and no filter card of the changelog
+        '.sl-fm-win .sl-fm-rows, dialog.sl-modal[open]',
         # The row of insertion ways, the tag list of a profile and a chip row of a Node list window: three rows that wrap at one gap, in screens that never meet
         '.sl-fm-win .sl-fm-as, .sl-node-head-sorts, .sl-profile-tags',
         # The typing surface of the editor beside the two columns of the window: both take the height their frame leaves and may shrink inside it
@@ -704,12 +704,6 @@ return [
             .'the site out of two grid tracks. Both collapse to one track on a narrow screen, and the panel row did not until it was given a name of its own',
         '.sl-session-action' =>
             'the site gives the action its own vertical room inside the grid cell; in the panel the row already has it',
-        '.sl-changelog-filter-actions' =>
-            'the site pushes the filter buttons to the end of a four-track grid; the panel grid already ends there',
-        '.sl-changelog-commit-header code' =>
-            'the panel prints a commit hash in a monospace face at the small step, the site in the face the surrounding text already uses',
-        '.sl-changelog-commit-files' =>
-            'the same face, on the file list of the same commit',
         '.sl-knob' =>
             'the panel gauge is a dashboard figure with room under it; the site gauge is a fixed track in a flex row. The size, the stroke and the track '
             .'are values, the flex and the margin are the place each one stands in',
@@ -732,6 +726,16 @@ return [
         '.sl-cockpit-bars > i' =>
             'a bar of the panel carries the level of its own check, which the poll changes, and runs into its new colour; every bar of the presentation '
             .'is a passed check in the colour of its lamp, which nothing changes',
+        '.sl-menu-btn' =>
+            'one toggle of the drawer, two heads: the panel draws the bordered box in a rule joined with its menu tools and keeps here the hiding with '
+            .'the padding and the tone; the site hides it in a rule joined with its scrim and cross and keeps here the whole pill beside the login '
+            .'pills of its header, with its place at the end of that row',
+        '.sl-menu-btn .bi' =>
+            'the site glyph takes line height 1, as the glyphs of its round actions do, so the icon font adds no leading inside the pill; the panel '
+            .'glyph is only sized',
+        '@media (max-width: 900px) .sl-menu-close' =>
+            'the panel cross is a square tool of the top row beside the search of the menu and takes its width there; the site cross is a round action '
+            .'over the menu column, sized by sl-circle-action, so it places itself at the end of the column with its own ground',
     ],
 
     # The skeleton of a theme package: what a directory has to hold before the runtime and the tests accept it as a theme
@@ -784,10 +788,6 @@ return [
             'the panel needs a real button element whenever a value is posted under a name, because an input carries its value and not its label; the site has no '
             .'such caller and stays on the input it has always drawn. On top of that the panel picks a tone class per button and the site has one button, so the '
             .'ladder that reads the tone flags has nothing to map to there',
-        'fragments/changelog-commit.html' =>
-            'one producer hands both themes the commit hash and the author e-mail address; the panel prints them, because a moderator reads a changelog to identify '
-            .'a commit, and the public page drops both, because an address published on an open page is harvested. Guarding them on a key would move that decision '
-            .'into the producer, which feeds one call site and cannot know which theme renders',
         'fragments/checkbox.html' =>
             'the same box under two form systems: the panel wraps it in the label class its radio uses and can set a code sample beside the text, the site names '
             .'its own label class per call and carries a plain shape that takes no class at all. The check-all hook is the one thing both spell, and they spell it '

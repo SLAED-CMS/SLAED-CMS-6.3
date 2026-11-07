@@ -463,6 +463,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` and `codemirror` write them onto the `<textarea>` of `editor-frame`, and the shell runtime copies the name onto the editable area of CodeMirror when it mounts; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. A code editor of `Editor::getCode()` is named by the `label` of its caller, or `_TEXT`.
 - **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
+- **A block of the rows of one thing spans its box.** `partials/toggle-form-block.html` (an additional field, a rule of "Замена слов", a scope of "Рейтинги", a feed of `rss`) puts its name with the toggle `+` in a cap and its rows under it at the full width of the box, the caption left as in every form of the panel; a block standing in the field cell of another row (the answers of a poll) and the items of the side panel of the builder keep them stacked, as every nested grid.
 - **A caption stands at the top of its field.** `.sl-form-row` and `.sl-value-row` of the site and `.sl-div-item` of the panel align to `start`; the first line of a caption meets the line of a single field (on the site by a top padding of half the field height less one line, in the panel by a caption line as high as a control), so a text area, a list or a picture keeps its caption at its top. A baseline alignment was tried and refused: a text area and a picture have no baseline, and the caption fell to their foot
 - **Every chip that shows a value names it.** A size, a count, a date, a status or a module in a chip carries a `title` of an existing constant (`_SIZE`, `_NODE_DLOADS`, `_ALLMATERIALS`, `_COMMENTS`, `_VOTES`, `_DATE`, `_STATUS`, `_MODUL`, `_RATING`, `_CATEGORY`), so a hover says what the figure is; a chip that is a button with its own words needs none
 - **Every button bursts when pressed.** `setPressBurst()` of `slaed.js` gives each `.sl-but*` and `.sl-but-mini` the burst of the favourite star (`.sl-is-burst`: the ring, the pop of the icon, two spark sets), in both themes on the same tokens `--sl-fav-*` and `--sl-spark-shadow`; the star and the rating keep their own burst on the answer of the server, and `--sl-time-scale` 0 stills it
@@ -604,8 +605,10 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `pane` | the window round the list: the keys of `pane-cap.html` and `tiles_html` above the table (the tables of "База данных") |
 | `is_fixed` | the fixed table layout |
 
-- **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`, and `link_url`
-  with `link_text` a plain link beside its button, which leaves the list for a page of its own (the settings of
+- **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; a select with `is_now` sends the
+  form on the pick through `admin-ui.js`, and a filter whose every field is such a select shows its OK button only to
+  a browser without scripts (`@media (scripting: enabled)` in `theme.css`). `link_url`
+  with `link_text` draws a plain link beside its button, which leaves the list for a page of its own (the settings of
   "Фавориты"); the tabs that change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
   and both pagers stand whenever there is more than one page, the filter applied by the server. The key tip "i"
   (`fragments/pager-keys.html`, scope `keys`) stands once per list, after the view switch, with pages or without; the
@@ -710,6 +713,14 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
 - **The menu of the panel.** `getAdminMenu()` marks the current section with `aria-current`, carries the key of its
   module and the chip `sl-queue` of its queue; the filter `sl-menu-find` stands in `sl-menu-top`. The dial `sl-dial`
   closed is one Tab stop, its items reachable once it opens; "…" shows on hover and focus.
+- **The drawer of a phone** is one mechanism for both themes, `setDrawer()` of `slaed.js`: the toggle
+  `data-sl-menu-open` names its menu by `aria-controls` (`sl-menu` in `layouts/admin.html`, `hmenu` in
+  `partials/site-header.html` of `lite`) and says its state by `aria-expanded`; `data-sl-menu-close` on the scrim
+  `sl-menu-scrim` and on the cross `sl-menu-close` shuts it, and so do Escape and a window opened from inside it. While
+  `body[data-sl-drawer]` stands the rest of the page is inert, the focus enters the menu and comes back to the toggle.
+  The theme decides where the menu is a drawer by showing the toggle: a hidden toggle opens nothing, and once it hides
+  the drawer shuts. Both themes take the step of 900 px; above it the menu of `lite` is the bar of the header, below it
+  the same `partials/menu.html` and the search stand in one column of the drawer, a branch under its item.
 - **The title of the tab** puts the most important first: `setFoot()` joins the section, the open tab, `_ADMIN` and the name of
   the site by `getSeoTitle()` over `$conf['defis']`. `getTplAdminTabs()` gives both; its first tab is not written.
 - **The tone of a column block is its role.** `partials/block-sidebar.html` writes `sl-block-menu` for the menu and
@@ -942,6 +953,9 @@ pager — is one component, `sl-seg`, in the `theme.css` of both themes; the fac
   icons, only in lite, since the panel has no mode switch; `sl-seg-view` — a quiet track; `sl-seg-pager` — mini cells,
   the plate set inside the track by `--sl-space-1`, the digits small and bold. A setting (the mode, the view) wears a
   neutral light plate, a place (the current page) the brand colour.
+- **A switch of a screen is the plain `sl-seg`.** The span of the rhythm of "Статистика" (`24ч`, `7д`, `30д`) and the
+  day of its cockpit (`Сейчас`, `Вчера`, `partials/statistic-cockpit.html`, the rail `stat-day`) wear the same track
+  and plate; the cockpit keeps its mono capitals only for the words of an archive and of a picked day.
 - **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-text`,
   `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
   of the plain `sl-seg`; a modifier reads semantic tokens straight instead of redeclaring them, because a custom property

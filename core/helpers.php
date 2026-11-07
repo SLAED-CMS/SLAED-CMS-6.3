@@ -654,7 +654,6 @@ function getTplUserSearchInput(array $data = []): string {
     return $tpl->getHtmlFrag('input', [
         'card_attr' => (string)($data['card'] ?? ''),
         'endpoint_attr' => $endpoint,
-        'is_required' => true,
         'is_user_search' => true,
         'itype' => 'text',
         'input_id' => $inpid,
@@ -1087,6 +1086,21 @@ function getEditorFileKit(string $id, array $data): array {
         ]),
     ]);
     return ['opt' => $opt, 'html' => $html];
+}
+
+# Build the door of a file an ordinary form sends itself: the same button and chip as the window door, the picker of the browser behind the button
+function getFormFileField(string $name, string $id, string $accept, string $hint = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('file-field', [
+        'is_form' => true,
+        'box_id' => $id.'-box',
+        'input_id' => $id,
+        'describedby' => $hint,
+        'open_label' => _FILEPICK,
+        'clear_label' => _DELETE,
+        'file_name' => $name,
+        'accept_attr' => $accept,
+    ]);
 }
 
 # Build the file window door of one form row, registered once a row swapped in by htmx has loaded its runtime; its three hidden carriers are exclusive, read in a fixed order

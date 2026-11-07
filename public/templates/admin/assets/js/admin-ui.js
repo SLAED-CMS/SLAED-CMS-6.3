@@ -1502,47 +1502,10 @@
         }
     });
     phone.addEventListener('change', setMenuFind);
-    var held = [];
-    // The drawer of a phone: the rest of the page goes inert while it is open, the focus comes back to the menu button
-    function setDrawer(open) {
-        var menu = document.getElementById('sl-menu');
-        var btn = document.querySelector('[data-sl-menu-open]');
-        if (!menu || !btn) return;
-        var on = open && phone.matches;
-        document.body.toggleAttribute('data-sl-drawer', on);
-        btn.setAttribute('aria-expanded', on ? 'true' : 'false');
-        held.forEach(function (node) { node.inert = false; });
-        held = [];
-        if (on) {
-            for (var node = menu; node.parentElement; node = node.parentElement) {
-                Array.prototype.forEach.call(node.parentElement.children, function (item) {
-                    if (item === node || item.inert || item.hasAttribute('data-sl-menu-close') || item.tagName === 'SCRIPT') return;
-                    item.inert = true;
-                    held.push(item);
-                });
-                if (node.parentElement === document.body) break;
-            }
-            menu.querySelector('input, button, a').focus();
-        } else if (menu.contains(document.activeElement)) {
-            btn.focus();
-        }
-    }
     document.addEventListener('click', function (event) {
         if (!event.target.closest) return;
-        if (event.target.closest('[data-sl-menu-open]')) setDrawer(!document.body.hasAttribute('data-sl-drawer'));
-        else if (event.target.closest('[data-sl-menu-close]')) setDrawer(false);
-        else if (event.target.closest('[data-sl-pal-open]')) setPanelPalette();
+        if (event.target.closest('[data-sl-pal-open]')) setPanelPalette();
         else if (event.target.closest('[data-sl-rail-toggle]')) setMenuRail(!isMenuRail());
-    });
-    // A window opened from the drawer needs the page back: the drawer shuts first, so the window is not left inert and returns the focus to the menu button
-    document.addEventListener('click', function (event) {
-        if (event.target.closest && event.target.closest('#sl-menu [data-sl-open]') && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
-    }, true);
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
-    });
-    phone.addEventListener('change', function () {
-        if (!phone.matches && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     });
     // A bar or a word that a poll changed flares once; the theme decides how by what the node is, and a running figure flares by setFigureRun() of slaed.js
     function setFigureFresh(node) {
@@ -2365,7 +2328,9 @@
         });
         top.querySelector('[data-sl-stat-date]').textContent = state.day_text;
         top.querySelectorAll('[data-sl-stat-now]').forEach(function (cell) {
-            cell.setAttribute('aria-pressed', (cell.getAttribute('data-sl-stat-now') === '1') === state.is_now ? 'true' : 'false');
+            var on = (cell.getAttribute('data-sl-stat-now') === '1') === state.is_now;
+            cell.classList.toggle('sl-is-active', on);
+            cell.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
         top.classList.toggle('sl-knob-info', state.pace === 'lull');
         top.classList.toggle('sl-knob-ok', state.pace !== 'lull');

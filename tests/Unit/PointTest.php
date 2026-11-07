@@ -49,7 +49,7 @@ final class PointTest extends TestCase
     {
         $conf = require dirname(__DIR__, 2).'/config/points.php';
         $this->assertSame(['points'], array_keys($conf), 'config/points.php does not return exactly one scope');
-        $this->assertSame(['active', 'actions'], array_keys($conf['points']), 'The points scope does not carry exactly active and actions');
+        $this->assertSame(['actions', 'active'], array_keys($conf['points']), 'The points scope does not carry exactly actions and active in the order a save writes');
         $this->assertSame('1', $conf['points']['active']);
         $want = array_map(static fn(array $one): array => ['points' => $one[0], 'period' => $one[1], 'limit' => $one[2]], self::ACTIONS);
         $this->assertSame($want, $conf['points']['actions'], 'The shipped rules are not the fourteen starter rules of docs/POINTS.md');

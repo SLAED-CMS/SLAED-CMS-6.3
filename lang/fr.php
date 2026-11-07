@@ -402,6 +402,7 @@ define('_FIELDS_CHOICE','La valeur ne fait pas partie des options autorisées.')
 define('_FIELDS_MIN','La valeur est inférieure au minimum autorisé.');
 define('_FIELDS_MAX','La valeur est supérieure au maximum autorisé.');
 define('_FILE','Fichier');
+define('_FILEPICK','Choisir un fichier');
 define('_FILES','Répertoire de fichiers');
 define('_FILEUP','Le nombre que vous pouvez télécharger simultanément des fichiers');
 define('_FILE_RENAMED','Fichier chargé et nommé');
@@ -478,6 +479,7 @@ define('_MEDIA','Catalogue de médias');
 define('_MEMUSAGE','Utilisation et limite de la mémoire');
 define('_DBQUERY','Nombre total de requêtes à la base de données');
 define('_DBQTIME','Temps des requêtes à la base de données');
+define('_MENU','Menu');
 define('_MENUCONF','Propre à la carte');
 define('_MENUFOR','Propre à la carte');
 define('_MENUINFO','Propre menu sera reflété dans le bloc de droite ou à gauche de tous les page de votre site. Vous devez utiliser le BB code pour spécifier les adresses ou un lien.');

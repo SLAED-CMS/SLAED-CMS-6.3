@@ -41,6 +41,11 @@ dialog.sl-modal
 A caption with a subtitle fits the same plate height as one without: the height of the plate is part of the look
 and must not float with the content.
 
+`.sl-modal-act` is an action of a window head, of the capsule `sl-editor-pill` and of the floating menu, and of nothing
+else. The copy button of a code head (`fragments/code-block.html`, the link window of the builder) is `.sl-code-copy`, a
+tool of the code: a quiet square of `--sl-size-chip`, larger under a finger; in `lite` a press flashes green by the copy
+feedback of the theme (`.sl-is-copied`).
+
 ## Axes
 
 Four, and nothing else.
@@ -239,6 +244,16 @@ hidden carriers. The runtime reads these names and nothing else does:
 | the box | `data-sl-field="url"` | the hidden text field carrying an address |
 | the box | `data-sl-field="chip"` | the chip; hidden while nothing is picked |
 | the box | `data-sl-field="name"` | the text inside it — name and weight |
+
+**An ordinary form sends its file itself.** `getFormFileField()` in `core/helpers.php` prints the same fragment
+`fragments/file-field.html` with `is_form`: the door carries `data-sl-file-form` and no `data-editor`, so the runtime of
+the window leaves it alone; the button opens the picker of the browser, the chip names the file and its weight, the
+cross empties the field and gives the focus back to the button (`setFileDoors()` of `plugins/system/slaed.js`). The
+field is required, named by the words of the button and out of sight beside it (`sl-visually-hidden`), so the browser
+points its refusal of an empty field at the door, and the button wears the focus the field is given. No path or address
+carrier is printed.
+"Загрузить архив" of `update` and the import of a Node type take it; a bare file field through the fragment `input`
+is printed by no form, and the drop zones of the file windows keep their own.
 
 **The rule is checked at the pick, not only at the submit.** `addFileList()` refuses on count
 first — a drop carries as many files as the pointer held, whatever the picker was told to allow —
