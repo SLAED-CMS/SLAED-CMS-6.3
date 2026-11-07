@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the clean installation of the release: it creates the ten shipped Node profiles, answered over real HTTP
+# CLI probe for the clean installation of the release: it creates the fourteen shipped Node profiles, answered over real HTTP
 # It copies the tracked tree without docs, tests and tools into scratch, creates one disposable MariaDB database, and serves the copy with two built-in servers
 # The installer and the panel run on the first, and the address the installer records points at the second
 # So the refusal of a type directory the panel asks for while it activates a type is answered by a server that is free
@@ -32,8 +32,11 @@ $isite = $iwork.'/site';
 define('IPREF', (($argv[2] ?? '') === 'update') ? (string)($argv[5] ?? '') : 'probe');
 const IPASS = 'Probe-secret-17';
 
-# The ten shipped profiles in the order of their sort
+# The ten profiles in the order of their sort that stand for the modules of 6.2 an update carries
 const IPROFS = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs'];
+
+# Every shipped profile in the order of their sort, the ten of 6.2 first
+const ISHIP = [...IPROFS, 'album', 'portfolio', 'board', 'reviews'];
 
 # Remove one scratch tree
 function deleteInstallTree(string $dir): void {
@@ -300,7 +303,7 @@ function getInstallMuted(callable $run): array {
 # The clean installation through the seven stops of setup.php in one browser session: the first page hands out the token, the stops take the answers, Install starts the run
 # The parts of the run are posted one by one, and the closing stop names the panel and deletes the installer; fail leaves a user file in uploads/node/jokes before the run
 # Its first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
-# Then the ten types, their four shared areas, their directories and the starter material are read, and a request of the recovery form of the panel creates nothing
+# Then the shipped types, their four shared areas, their directories and the starter material are read, and a request of the recovery form of the panel creates nothing
 function getInstallSetup(PDO $pdo, string $base): array {
     global $iguard, $isite, $ifail, $itoken, $iwork;
     $none = !is_file($isite.'/config/db.php');
@@ -347,16 +350,16 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $up = getInstallConf('uploads')['uploads'] ?? [];
     $rate = getInstallConf('ratings')['ratings'] ?? [];
     $out['areas'] = [
-        'uploads' => array_values(array_filter(IPROFS, fn(string $v): bool => ($up[$v] ?? null) === ($up['all'] ?? false))),
+        'uploads' => array_values(array_filter(ISHIP, fn(string $v): bool => ($up[$v] ?? null) === ($up['all'] ?? false))),
         'ratings' => array_values(array_filter(
-            IPROFS,
+            ISHIP,
             fn(string $v): bool => ($rate['node.'.$v] ?? null) === ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1']
         )),
         'fields' => array_keys(getInstallConf('fields')['fields']['node'] ?? []),
     ];
     $out['stale'] = [isset($node['types']['stale']), isset(getInstallConf('fields')['fields']['node']['stale']), isset($up['stale']), isset($rate['node.stale'])];
     $bare = fn(string $v): bool => is_dir($isite.'/uploads/node/'.$v) && !glob($isite.'/uploads/node/'.$v.'/{index.html,.htaccess}', GLOB_BRACE);
-    $out['dirs'] = array_values(array_filter(IPROFS, $bare));
+    $out['dirs'] = array_values(array_filter(ISHIP, $bare));
     $out['mark'] = array_key_exists('node', getInstallConf('update')['update'] ?? []);
     $ustate = json_decode((string)(is_file($isite.'/storage/update/client/state.json') ? file_get_contents($isite.'/storage/update/client/state.json') : ''), true) ?: [];
     $umark = getInstallConf('update')['update'] ?? [];
@@ -501,7 +504,7 @@ function getInstallWho(PDO $pdo): array {
 # Every created type exports exactly what its profile ships: the same name, title, extension, sort, settings and fields, with the rules of the site in place of the empty ones
 function getInstallExports(array $who): array {
     $out = [];
-    foreach (IPROFS as $name) {
+    foreach (ISHIP as $name) {
         $page = getInstallReply($who['admin'], 'GET', 'admin.php?name=node&op=export&type='.$name);
         $data = json_decode($page['body'], true);
         $prof = getInstallProfile($name);
@@ -536,7 +539,8 @@ function getInstallTypeForm(array $prof, string $name, string $tok): array {
 # The constructor of the panel offers every shipped profile, and a type made from a profile under a new name keeps the roles, fields and extension settings of the profile
 function getInstallBuilder(PDO $pdo, array $who): array {
     $page = getInstallReply($who['admin'], 'GET', 'admin.php?name=node&op=type');
-    preg_match_all('#op=type&amp;profile=([a-z]+)"#', $page['body'], $hit);
+    preg_match('#<select[^>]*name="profile".*?</select>#s', $page['body'], $box);
+    preg_match_all('#<option value="([a-z]+)"#', $box[0] ?? '', $hit);
     $out = ['offer' => [$page['code'], $hit[1]]];
     foreach (['help' => 'desk', 'files' => 'soft'] as $prof => $name) {
         $form = getInstallReply($who['admin'], 'GET', 'admin.php?name=node&op=type&profile='.$prof);
@@ -569,9 +573,12 @@ function getInstallTypes(PDO $pdo, array $who): array {
             'field' => ['release' => '1.0.2', 'site' => 'https://example.com/']],
         'media' => ['asset' => [['role' => 'source', 'id' => '', 'title' => 'Probe clip']], 'aurl0' => 'https://example.com/probe.mp4',
             'field' => ['year' => '2024', 'director' => 'Probe Director']],
+        'portfolio' => ['field' => ['client' => 'Probe Client', 'year' => '2024']],
+        'board' => ['field' => ['price' => '1500', 'city' => 'Berlin']],
+        'reviews' => ['field' => ['stars' => '4']],
     ];
     $out = [];
-    foreach (IPROFS as $name) {
+    foreach (ISHIP as $name) {
         if ($name === 'help') continue;
         $list = getInstallReply($who['guest'], 'GET', 'index.php?name='.$name);
         $base = ['title' => 'Probe '.$name, 'intro' => 'Intro of '.$name, 'body' => 'Body of '.$name, 'comon' => '2'] + ($more[$name] ?? []);

@@ -258,7 +258,7 @@ Run, in parts (`getSetupParts()`), each its own POST:
   `insert.sql` alone; the last one writes the marks `points`, `ratings`, `fields`
   and `node` of `config/update.php`, so a failed statement leaves no mark
 - administrator: the core boots, the `_admins` row and the optional `_users` row
-  take the hash, then `addNodeProfiles()` creates the ten shipped types and the
+  take the hash, then `addNodeProfiles()` creates the shipped types and the
   starter news and removes the mark `node`
 - a part is marked busy in the session before it runs, and a request that meets a
   busy part fails the run instead of running it twice. A failed part sends the

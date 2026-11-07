@@ -1,0 +1,163 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "board",
+        "title": "_BOARD",
+        "intro": "",
+        "ext": "",
+        "sort": 130,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 25,
+                "alpha": false,
+                "show": [
+                    "category",
+                    "author",
+                    "date",
+                    "views"
+                ],
+                "views": [
+                    "cards",
+                    "compact"
+                ]
+            },
+            "view": {
+                "mode": "default",
+                "side": 2,
+                "top": 0
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": false,
+                "favorites": true,
+                "poll": false,
+                "home": false,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": true,
+                "related": false,
+                "tree": false
+            },
+            "assets": {
+                "cover": {
+                    "title": "_NODE_COVER",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 1,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "image",
+                    "active": true,
+                    "sort": 10
+                },
+                "gallery": {
+                    "title": "_ALBUM",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 10,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "gallery",
+                    "active": true,
+                    "sort": 20
+                }
+            },
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": {
+            "price": {
+                "title": "_NODE_PRICE",
+                "intro": "",
+                "type": "decimal",
+                "default": "",
+                "options": {
+                    "min": "0.00",
+                    "scale": 2
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 10
+            },
+            "city": {
+                "title": "_NODE_CITY",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 20
+            },
+            "phone": {
+                "title": "_NODE_PHONE",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 50
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 30
+            },
+            "email": {
+                "title": "_EMAIL",
+                "intro": "",
+                "type": "email",
+                "default": "",
+                "options": [],
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 40
+            }
+        },
+        "uploads": [],
+        "rating": []
+    }
+}

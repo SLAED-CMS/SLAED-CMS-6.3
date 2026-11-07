@@ -1,0 +1,88 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "reviews",
+        "title": "_REVIEWS",
+        "intro": "",
+        "ext": "",
+        "sort": 140,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 20,
+                "alpha": false,
+                "show": [
+                    "author",
+                    "date"
+                ],
+                "views": []
+            },
+            "view": {
+                "mode": "default",
+                "side": 2,
+                "top": 0
+            },
+            "form": [],
+            "workflow": {
+                "access": "all",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": false,
+                "comments": false,
+                "rating": false,
+                "favorites": false,
+                "poll": false,
+                "home": true,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": false,
+                "related": false,
+                "tree": false
+            },
+            "assets": [],
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": {
+            "stars": {
+                "title": "_NODE_SCORE",
+                "intro": "",
+                "type": "int",
+                "default": null,
+                "options": {
+                    "min": 1,
+                    "max": 5
+                },
+                "req": true,
+                "multi": false,
+                "active": true,
+                "sort": 10
+            }
+        },
+        "uploads": [],
+        "rating": []
+    }
+}

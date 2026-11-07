@@ -6,7 +6,7 @@
 
 # The large profile of Node from docs/NODE.md (Large profile): run by hand, never by PHPUnit or the commit hook
 # It creates its own disposable database on the server of config/db.php, installs the shipped schema and boots the real core on a scratch copy of the release configuration
-# It creates the ten shipped types through NodeService, then batch SQL fills 100000 materials, 200 categories, two extra categories and two relations per material
+# It creates the shipped types through NodeService, then batch SQL fills 100000 materials, twenty categories per type, two extra categories and two relations per material
 # Up to three resources per material are added where the type has roles, and every route budget of docs/NODE.md (Statement budgets) is warmed and repeated
 # The report gives the statements per scenario against the budget, the one against the largest page, p50 and p95 of the wall time and the average statement time
 # The report also gives the plans of the main statements with the rows each one really read
@@ -32,10 +32,10 @@ $pname = 'slaed_prof_'.bin2hex(random_bytes(4));
 # The table prefix of the disposable database
 const PPREF = 'prof';
 
-# The number of categories of every type, twenty per type make the two hundred of the profile
+# The number of categories of every type
 const PCATS = 20;
 
-# Budgets of docs/NODE.md (Statement budgets) as the largest statement count each scenario may reach; a list is held to its upper bound, because every shipped type has categories
+# Budgets of docs/NODE.md (Statement budgets) as the largest statement count each scenario may reach; a list is held to its upper bound, the one of a type with categories
 const PBUDGET = ['list' => 7, 'view' => 5, 'viewrel' => 6, 'attach' => 2, 'asset' => 2, 'download' => 4,
     'report' => 4, 'admin' => 3, 'edit' => 5, 'status' => 6, 'delete' => 5];
 
@@ -216,7 +216,7 @@ function getProfileWriter(bool $admin, ?NodeType $type = null): NodeService {
     return new NodeService($db, getProfileContext($admin), $fld, $pnt, $ext);
 }
 
-# The ten shipped profiles as types: each is imported through the writer of the main administrator and switched on, as the clean installation does it
+# The shipped profiles as types: each is imported through the writer of the main administrator and switched on, as the clean installation does it
 # Media, the type with the most fields and roles, then gets the system page limit of 100 through the same writer, so the largest page can be measured
 function addProfileTypes(): array {
     $out = [];

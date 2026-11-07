@@ -26,8 +26,9 @@ remaining modules alike.
 
 ### Replaced modules
 
-`modules/node/profiles/` holds ten type profiles in the `slaed.node` export format. A clean installation
-creates ten active types from them; an updated site gets none and creates types in the admin panel, from a
+`modules/node/profiles/` holds fourteen type profiles in the `slaed.node` export format: nine stand for removed
+modules, `docs`, `album`, `portfolio`, `board` and `reviews` for none. A clean installation
+creates fourteen active types from them; an updated site gets none and creates types in the admin panel, from a
 profile or from scratch. The 8.0 update imports no content of the removed modules
 (see [The 8.0 update](#the-80-update)); the separate script `update.php` carries it, see
 [Migration of the removed modules](#migration-of-the-removed-modules).
@@ -45,6 +46,10 @@ Settings of each profile are in [Shipped profiles](#shipped-profiles).
 | `files` | files | - | `files` | several resources, downloads, reports |
 | `media` | media | - | `media` | sources, player, metadata |
 | `docs` | - | - | `docs` | hierarchical documentation (`parent` relations) |
+| `album` | - | - | `default` | photo albums: a cover and a gallery of up to 100 images, tiles |
+| `portfolio` | - | - | `article` | projects of the site owner: client, year, address, services; no public form |
+| `board` | - | - | `default` | classified ads of users: price, city, phone, e-mail, moderated |
+| `reviews` | - | - | `default` | short reviews with a required score of 1 to 5, guests may post, moderated |
 
 ### What Node does not cover
 
@@ -244,7 +249,7 @@ bounded 1-50) of `config/scheduler.php`. A public page view never triggers a syn
 modules/node/
 ├── index.php            public entry of every type
 ├── lang/                de, en, fr, pl, ru, uk
-├── profiles/<name>.json the ten shipped profiles, format slaed.node, no PHP
+├── profiles/<name>.json the fourteen shipped profiles, format slaed.node, no PHP
 └── admin/
     ├── index.php        admin entry: materials, types, settings
     ├── lang/            de, en, fr, pl, ru, uk
@@ -255,7 +260,7 @@ modules/node/
 - `modules/node/admin/index.php` routes the admin ops for materials (`show`, `add`, `edit`, `status`,
   `delete`, `report`, `support`, `sync`), types (`types`, `type`, `typestatus`, `typedelete`, `clone`,
   `export`, `import`, `remains`), `config` and `info`.
-- `addNodeProfiles()` in `core/admin.php` creates the ten profile types for the first main administrator of a clean
+- `addNodeProfiles()` in `core/admin.php` creates a type of every profile file for the first main administrator of a clean
   installation, called by `setup.php` and by the recovery form of `admin/index.php`; the new-type form loads a profile by `op=type&profile=<name>`.
 - The module holds no `controllers`, `repositories`, `managers`, `factories`, `src` or `sql` directory.
   Controllers hold no SQL or business rules; the core holds no HTML, language strings or type names.
@@ -2055,13 +2060,14 @@ and calls `updateNodeType()` with the version the form carries.
 
 ### Shipped profiles
 
-`modules/node/profiles/<name>.json` holds ten type exports. A profile is copied into a new disabled type through
+`modules/node/profiles/<name>.json` holds fourteen type exports. A profile is copied into a new disabled type through
 `addNodeTypeImport()`; nothing reads it at runtime. Every profile carries full `settings` and `fields` and empty
 `uploads` and `rating`, so a type made from it takes the site's `uploads.all` and the default rating rule. A clean
 installation (`addNodeProfiles()` in `core/admin.php`, opened by the mark `node => new` of `config/update.php`)
-imports and activates all ten and adds a starter material to `news`; the 8.0 update creates no type.
+imports and activates all fourteen and adds a starter material to `news`; the 8.0 update creates no type.
 
-All ten profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off).
+All fourteen profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off)
+and `reviews` (`access all`: a guest may post).
 
 | Profile | Title | Sort | `view.mode` | `ext` | `list` (orders / order dir / limit / alpha / show) |
 |---|---|---|---|---|---|
@@ -2075,14 +2081,22 @@ All ten profiles share `workflow` = `access user`, no groups, both notices on, e
 | `files` | `_FILES` | 80 | `files` | - | all five / published desc / 25 / yes / all four |
 | `media` | `_MEDIA` | 90 | `media` | - | all five / published desc / 25 / yes / all four |
 | `docs` | `_DOCS` | 100 | `docs` | - | title, updated, views / title asc / 50 / yes / category, date, views |
+| `album` | `_ALBUM` | 110 | `default` | - | all five / published desc / 25 / no / all four |
+| `portfolio` | `_PORTFOLIO` | 120 | `article` | - | all five / published desc / 12 / no / category, date, views |
+| `board` | `_BOARD` | 130 | `default` | - | all five / published desc / 25 / no / all four |
+| `reviews` | `_REVIEWS` | 140 | `default` | - | all five / published desc / 20 / no / author, date |
 
-`list.views`: `news` offers `cards`, `compact` and `tiles`; `docs` `list` and `rail`; `faq` `accordion` and `list`; the
-other seven keep it empty and show the one view of their mode.
+`list.views`: `news` offers `cards`, `compact` and `tiles`; `docs` `list` and `rail`; `faq` `accordion` and `list`;
+`album` and `portfolio` `tiles` and `cards`; `board` `cards` and `compact`; the other six keep it empty and show the
+one view of their mode.
 
 | Profile | Features on | Integrations |
 |---|---|---|
 | `news` | categories, comments, rating, favorites, poll, home, pinned, submit, moderation, schedule, related | all four, `seo = news` |
-| `pages`, `faq`, `jokes`, `files`, `media` | as `news` without poll | all four, `seo = article` |
+| `pages`, `faq`, `jokes`, `files`, `media`, `album` | as `news` without poll | all four, `seo = article` |
+| `portfolio` | categories, favorites, home, pinned, schedule, related | all four, `seo = article` |
+| `board` | categories, comments, favorites, pinned, submit, moderation, schedule | all four, `seo = article` |
+| `reviews` | home, pinned, submit, moderation | all four, `seo = article` |
 | `links` | as `news` without poll | all four, `seo = website` |
 | `content` | categories, comments, rating, favorites, pinned, schedule, related | all four, `seo = article` |
 | `docs` | categories, favorites, related, tree | search, sitemap, blocks; `seo = article` |
@@ -2095,15 +2109,22 @@ other seven keep it empty and show the one view of their mode.
 | `files` | `cover` (image, image, 0/1, no, no, 10); `download` (download, all kinds, 1/10, yes, yes, 20) |
 | `links` | `cover` (image, image, 0/1, no, no, 10); `link` `_URL` (link, file, 1/1, yes, yes, 20) |
 | `media` | `poster` `_NODE_POSTER` (none, image, 0/1, no, no, 10); `source` `_NODE_PLAY` (player, audio+video, 1/10, yes, no, 20); `gallery` (gallery, image, 0/30, no, no, 30); `download` (download, all kinds, 0/10, yes, yes, 40) |
-| `jokes`, `content`, `docs`, `help` | none (editor attachments only) |
+| `album` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/100, no, no, 20) |
+| `portfolio` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/30, no, no, 20) |
+| `board` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/10, no, no, 20) |
+| `jokes`, `content`, `docs`, `help`, `reviews` | none (editor attachments only) |
 
 `cover` is titled `_NODE_COVER`. Fields: `files` has `release` (`_VERSION`, text, max 100, sort 10) and `site`
 (`_URL`, url, sort 20). `media` has twelve optional single fields, sort 10 to 120 in this order: `subtitle`
 (`_NODE_SUBTITLE`, text 100), `year` (`_NODE_YEAR`, int 1-9999), `director` (`_NODE_DIRECTOR`, text 100), `cast`
 (`_NODE_CAST`, text 255), `creator` (`_NODE_CREATOR`, text 100), `runtime` (`_NODE_RUNTIME`, text 100), `language`
 (`_LANGUAGE`, text 100), `notes` (`_NOTE`, textarea 262144), `format` (`_NODE_MFORMAT`, text 100), `quality`
-(`_NODE_QUALITY`, text 100), `filesize` (`_SIZE`, text 100), `release` (`_NODE_RELEASE`, text 100). The other
-profiles have no fields.
+(`_NODE_QUALITY`, text 100), `filesize` (`_SIZE`, text 100), `release` (`_NODE_RELEASE`, text 100). `portfolio` has
+four optional fields: `client` (`_NODE_CLIENT`, text 255), `year` (`_NODE_YEAR`, int 1-9999), `site` (`_URL`, url) and
+`services` (`_NODE_SERVICES`, text 255). `board` has four optional fields: `price` (`_NODE_PRICE`, decimal, scale 2,
+min 0.00), `city` (`_NODE_CITY`, text 100), `phone` (`_NODE_PHONE`, text 50) and `email` (`_EMAIL`, email); the phone
+and the address are public, as a classified ad needs them. `reviews` has one required field, `stars` (`_NODE_SCORE`,
+int 1-5): `score` is a column of `_nodes` and no field may take its name. The other profiles have no fields.
 
 In `help` a request is created `Published` and `NodeSupport` narrows every read to the owner and the moderators; its
 files are editor attachments. In `content` the body belongs to the source (`_node_sync.url`, `refresh`): the admin
@@ -3277,7 +3298,7 @@ marked `release` below belong to the group `composer test:fast` leaves out and `
 | `NodeIntegTest` | 14 | `route_probe.php integ` | rating, favorites, poll, home, search, RSS, sitemap, blocks |
 | `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
-| `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the ten profiles; panel and public walk |
+| `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the fourteen profiles; panel and public walk |
 | `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | 6.2 -> 8.0 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
 | `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup`; Config and Mails `release` | settings carry-over, newsletter, registry, both preflights |
 | `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields`, `release` | data update units |
@@ -3354,7 +3375,7 @@ budget.
 
 `php tools/node-profile.php [--rows=N] [--runs=N] [--out=<file>] [--keep]` runs by hand only. It creates its own
 database on the server of `config/db.php` (prefix `prof`), executes `table.sql`, boots the core on a scratch copy of
-the release configuration, imports and enables the ten shipped types through `NodeService::addNodeTypeImport()`
+the release configuration, imports and enables the shipped types through `NodeService::addNodeTypeImport()`
 (its built-in server answers the directory check with `403`), and fills by batch SQL: `--rows` materials
 (`1000..1000000`, default `100000`), 20 categories per type, two extra categories and two relations per material,
 up to three resources where the type has roles. `--runs` (`5..500`, default `30`) repeats each warmed scenario;

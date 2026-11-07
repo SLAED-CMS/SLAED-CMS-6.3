@@ -8,13 +8,16 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The ten shipped profiles of modules/node/profiles: slaed.node exports the clean installation of setup.php imports as active types, while an update creates no type
+# The fourteen shipped profiles of modules/node/profiles: slaed.node exports the clean installation of setup.php imports as active types, while an update creates no type
 final class NodeProfileTest extends TestCase
 {
     # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
     private static array $outs = [];
 
-    private const NAMES = ['content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages'];
+    private const NAMES = ['album', 'board', 'content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'portfolio', 'reviews'];
+
+    # Every shipped profile in the order of its sort, the ten that stand for the modules of 6.2 first
+    private const SORTED = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs', 'album', 'portfolio', 'board', 'reviews'];
 
     private static array $probe = [];
 
@@ -61,10 +64,10 @@ final class NodeProfileTest extends TestCase
         return array_map(fn($v) => [$v['mode'], $v['kinds'], $v['min'], $v['max'], $v['canlink'], $v['report'], $v['sort']], $prof['type']['settings']['assets']);
     }
 
-    # The ten files ship in the canonical export form: the exact envelope and keys, the name of the file, the canonical JSON of the export and empty rules
+    # The shipped files are in the canonical export form: the exact envelope and keys, the name of the file, the canonical JSON of the export and empty rules
     # The settings follow docs/NODE.md (Types), and a create fills the empty upload and rating rules with the rules of the site
     #[Test]
-    public function theTenProfilesShipInTheExportFormat(): void
+    public function theProfilesShipInTheExportFormat(): void
     {
         $files = array_map(fn($v) => basename($v, '.json'), glob(self::getRoot().'/modules/node/profiles/*') ?: []);
         $this->assertSame(self::NAMES, $files);
@@ -82,8 +85,8 @@ final class NodeProfileTest extends TestCase
             $this->assertSame($sects, array_keys($data['type']['settings']), $name);
             $this->assertSame([[], []], [$data['type']['settings']['form'], $data['type']['settings']['admin']], $name);
         }
-        $sorts = array_map(fn($v) => self::getProfile($v)['type']['sort'], ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs']);
-        $this->assertSame([10, 20, 30, 40, 50, 60, 70, 80, 90, 100], $sorts);
+        $sorts = array_map(fn($v) => self::getProfile($v)['type']['sort'], self::SORTED);
+        $this->assertSame(range(10, 140, 10), $sorts);
     }
 
     # Each profile carries the settings docs/NODE.md (Shipped profiles) approves: display mode, extension, SEO, the switches that differ, the roles and the fields
@@ -93,7 +96,8 @@ final class NodeProfileTest extends TestCase
         $want = [
             'news' => ['article', '', 'news'], 'pages' => ['article', '', 'article'], 'faq' => ['faq', '', 'article'], 'help' => ['support', 'support', 'website'],
             'jokes' => ['default', '', 'article'], 'content' => ['article', 'sync', 'article'], 'links' => ['default', '', 'website'], 'files' => ['files', '', 'article'],
-            'media' => ['media', '', 'article'], 'docs' => ['docs', '', 'article'],
+            'media' => ['media', '', 'article'], 'docs' => ['docs', '', 'article'], 'album' => ['default', '', 'article'], 'portfolio' => ['article', '', 'article'],
+            'board' => ['default', '', 'article'], 'reviews' => ['default', '', 'article'],
         ];
         $all = ['file', 'image', 'audio', 'video'];
         $cover = ['image', ['image'], 0, 1, false, false, 10];
@@ -104,6 +108,9 @@ final class NodeProfileTest extends TestCase
             'links' => ['cover' => $cover, 'link' => ['link', ['file'], 1, 1, true, true, 20]],
             'media' => ['poster' => ['none', ['image'], 0, 1, false, false, 10], 'source' => ['player', ['audio', 'video'], 1, 10, true, false, 20],
                 'gallery' => ['gallery', ['image'], 0, 30, false, false, 30], 'download' => ['download', $all, 0, 10, true, true, 40]],
+            'album' => ['cover' => $cover, 'gallery' => ['gallery', ['image'], 0, 100, false, false, 20]],
+            'portfolio' => ['cover' => $cover, 'gallery' => ['gallery', ['image'], 0, 30, false, false, 20]],
+            'board' => ['cover' => $cover, 'gallery' => ['gallery', ['image'], 0, 10, false, false, 20]],
         ];
         $on = [
             'news' => ['categories', 'comments', 'rating', 'favorites', 'poll', 'home', 'pinned', 'submit', 'moderation', 'schedule', 'related'],
@@ -112,8 +119,11 @@ final class NodeProfileTest extends TestCase
             'files' => ['categories', 'comments', 'rating', 'favorites', 'home', 'pinned', 'submit', 'moderation', 'schedule', 'related'],
             'docs' => ['categories', 'favorites', 'related', 'tree'],
             'help' => ['categories', 'comments', 'submit'],
+            'portfolio' => ['categories', 'favorites', 'home', 'pinned', 'schedule', 'related'],
+            'board' => ['categories', 'comments', 'favorites', 'pinned', 'submit', 'moderation', 'schedule'],
+            'reviews' => ['home', 'pinned', 'submit', 'moderation'],
         ];
-        $on += ['faq' => $on['pages'], 'jokes' => $on['pages'], 'links' => $on['files'], 'media' => $on['files']];
+        $on += ['faq' => $on['pages'], 'jokes' => $on['pages'], 'links' => $on['files'], 'media' => $on['files'], 'album' => $on['pages']];
         foreach ($want as $name => [$mode, $ext, $seo]) {
             $type = self::getProfile($name)['type'];
             $set = $type['settings'];
@@ -133,7 +143,14 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(['int', 1, 9999, null], [$media['year']['type'], $media['year']['options']['min'], $media['year']['options']['max'], $media['year']['default']]);
         $this->assertSame(['textarea', 262144], [$media['notes']['type'], $media['notes']['options']['max']]);
         foreach ($media as $one) $this->assertSame([false, false, true], [$one['req'], $one['multi'], $one['active']]);
-        foreach (array_diff(self::NAMES, ['files', 'media']) as $name) $this->assertSame([], self::getProfile($name)['type']['fields'], $name);
+        $kinds = fn(string $name): array => array_map(fn($v) => [$v['type'], $v['options'], $v['req']], self::getProfile($name)['type']['fields']);
+        $this->assertSame(['client' => ['text', ['max' => 255], false], 'year' => ['int', ['min' => 1, 'max' => 9999], false], 'site' => ['url', [], false],
+            'services' => ['text', ['max' => 255], false]], $kinds('portfolio'));
+        $this->assertSame(['price' => ['decimal', ['min' => '0.00', 'scale' => 2], false], 'city' => ['text', ['max' => 100], false], 'phone' => ['text', ['max' => 50], false],
+            'email' => ['email', [], false]], $kinds('board'));
+        $this->assertSame(['stars' => ['int', ['min' => 1, 'max' => 5], true]], $kinds('reviews'));
+        $this->assertSame('all', self::getProfile('reviews')['type']['settings']['workflow']['access'], 'A guest cannot leave a review');
+        foreach (array_diff(self::NAMES, ['files', 'media', 'portfolio', 'board', 'reviews']) as $name) $this->assertSame([], self::getProfile($name)['type']['fields'], $name);
     }
 
     # Every label constant of the profiles - type titles, role titles and field titles - is defined in the site language of all six locales
@@ -161,11 +178,11 @@ final class NodeProfileTest extends TestCase
     # The closing stop names the panel, deletes setup.php and the token, and the panel opens in the language of the first stop
     # The first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
     # The administrator part creates the administrator with a site account of the same password and turns every profile into an active type through the one import path
-    # The ten types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
+    # The fourteen types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
     # Every type, the starter news, the site account and the forum seed of insert.sql carry their first path, the seed in the order of the registry
     #[Test]
     #[Group('release')]
-    public function aCleanInstallationCreatesTheTenTypes(): void
+    public function aCleanInstallationCreatesTheShippedTypes(): void
     {
         $run = $this->getRuns()['setup'];
         $home = $run['guard'];
@@ -177,17 +194,17 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_merge(array_fill(0, $num - 1, true), [false]), array_column($parts, 1), 'Every part but the last announces another');
         $this->assertSame(100, $parts[$num - 1][0]);
         $this->assertSame(array_merge(array_fill(0, $num - 2, false), [true, false]), array_column($parts, 2), 'The marks came before both SQL files ran');
-        $this->assertSame([0, 10], [$parts[$num - 2][3], $parts[$num - 1][3]], 'A type was created before the administrator part');
+        $this->assertSame([0, 14], [$parts[$num - 2][3], $parts[$num - 1][3]], 'A type was created before the administrator part');
         $this->assertSame([true, false, true], $run['done'], 'The closing stop did not name the panel, delete the installer, or set the language');
         $this->assertSame([['Probe', 'probe@probe.test', 'ru', $home, 'Probe', 1], true], $run['account']);
         $want = [];
-        foreach (['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs'] as $i => $name) {
+        foreach (self::SORTED as $i => $name) {
             $want[] = [$name, '_'.strtoupper($name), ['help' => 'support', 'content' => 'sync'][$name] ?? '', 1, ($i + 1) * 10, 2];
         }
         $this->assertSame($want, $run['types']);
         $this->assertSame(array_fill_keys(self::NAMES, 2), $run['node']);
         $order = array_column($want, 0);
-        $this->assertSame(['uploads' => $order, 'ratings' => $order, 'fields' => ['files', 'media']], $run['areas']);
+        $this->assertSame(['uploads' => $order, 'ratings' => $order, 'fields' => ['board', 'files', 'media', 'portfolio', 'reviews']], $run['areas']);
         $this->assertSame(['content', 'docs', 'faq', 'files', 'help', 'links', 'news', 'stale'], $run['ghost']['names'], 'The shipped types changed');
         $this->assertSame([], $run['ghost']['left'], 'Types of the tree survived the first part of the run');
         $this->assertSame([false, false, false, false], $run['stale'], 'A type of an earlier installation came back with the profiles');
@@ -203,14 +220,14 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
             'comon' => 2]], $run['starter']);
         $want = [['user', 'users/probe']];
-        foreach (['content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages'] as $name) $want[] = ['type', $name];
-        array_splice($want, 10, 0, [['node', 'news/dobro-pozhalovat-v-slaed-cms']]);
+        foreach (self::NAMES as $name) $want[] = ['type', $name];
+        array_splice($want, array_search(['type', 'news'], $want, true) + 1, 0, [['node', 'news/dobro-pozhalovat-v-slaed-cms']]);
         $seed = ['cat' => ['kategoriya-foruma', 'demonstratsiya-foruma', 'ustarevshie-soobshcheniya'],
             'topic' => ['zashchita-i-bezopasnost', 'yazykovye-versii-statei', 'dobavlenie-pod-kategorii']];
         foreach ($seed as $kind => $list) foreach ($list as $name) $want[] = [$kind, 'forum/'.$name];
         $this->assertSame($want, array_map(fn(array $v): array => [$v[0], $v[1]], $run['routes']), 'The installation did not give its seed, types and accounts their paths');
         $this->assertSame(array_fill(0, count($want), 1), array_map('intval', array_column($run['routes'], 2)));
-        $this->assertSame([303, 1, 10], $run['again']);
+        $this->assertSame([303, 1, 14], $run['again']);
         $this->assertSame([2, false], $run['notice']);
     }
 
@@ -255,7 +272,7 @@ final class NodeProfileTest extends TestCase
     }
 
     # A profile the installation cannot finish - here a user file in uploads/node/jokes it refuses to take over - is named on the closing stop and in the site log with its step
-    # The other nine types and the starter news are created all the same, and the mark is gone
+    # The other thirteen types and the starter news are created all the same, and the mark is gone
     #[Test]
     #[Group('release')]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void
@@ -263,7 +280,7 @@ final class NodeProfileTest extends TestCase
         if (self::$fail === []) self::$fail = $this->getProbe('fail');
         $run = self::$fail['setup'];
         $this->assertSame([4, 5, 200, 6], array_slice($run['setup'], 0, 4));
-        $this->assertSame(['news', 'pages', 'faq', 'help', 'content', 'links', 'files', 'media', 'docs'], array_column($run['types'], 0));
+        $this->assertSame(array_values(array_diff(self::SORTED, ['jokes'])), array_column($run['types'], 0));
         $this->assertSame([3, true], $run['notice']);
         $this->assertFalse($run['mark']);
         $this->assertCount(1, $run['starter']);
@@ -273,7 +290,7 @@ final class NodeProfileTest extends TestCase
         $jour = array_filter($site, fn($v) => $v['msg'] === 'Node: a type operation was published');
         $kinds = array_count_values(array_column($jour, 'kind'));
         ksort($kinds);
-        $this->assertSame(['add' => 9, 'status' => 9], $kinds, 'Every created type is journaled by its import and its activation');
+        $this->assertSame(['add' => 13, 'status' => 13], $kinds, 'Every created type is journaled by its import and its activation');
         $site = array_values(array_diff_key($site, $jour));
         $this->assertCount(1, $site);
         $one = $site[0];
@@ -305,7 +322,8 @@ final class NodeProfileTest extends TestCase
             'files' => [['download', 'file', 'https://example.com/probe.zip']],
             'media' => [['source', 'video', 'https://example.com/probe.mp4']],
         ];
-        $fields = ['files' => '{"release":"1.0.2","site":"https://example.com/"}', 'media' => '{"director":"Probe Director","year":2024}'];
+        $fields = ['files' => '{"release":"1.0.2","site":"https://example.com/"}', 'media' => '{"director":"Probe Director","year":2024}',
+            'portfolio' => '{"client":"Probe Client","year":2024}', 'board' => '{"city":"Berlin","price":"1500.00"}', 'reviews' => '{"stars":4}'];
         foreach ($runs as $name => $run) {
             $this->assertSame([200, 200, true], $run['list'], $name);
             $this->assertSame([200, 303, true, 2, $name, $fields[$name] ?? '{}', $want[$name] ?? [], ''], $run['write'], $name);
@@ -341,7 +359,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([200, 303, $src + ['fails' => '2', 'error' => 'address']], $run['planned']);
     }
 
-    # The constructor of the panel offers the ten profiles, and a type made from a profile under a new name keeps its extension settings, roles and fields
+    # The constructor of the panel offers every shipped profile, and a type made from a profile under a new name keeps its extension settings, roles and fields
     #[Test]
     #[Group('release')]
     public function theConstructorOffersEveryProfile(): void
@@ -370,7 +388,7 @@ final class NodeProfileTest extends TestCase
     }
 
     # The installation writes no PHP or SQL error; the site log holds only the refusals the checks provoke and the failed checks of the local feed address
-    # The site log also holds the journal of the published type changes of the run, twenty of them the import and the activation of the ten profiles
+    # The site log also holds the journal of the published type changes of the run, twenty-eight of them the import and the activation of the fourteen profiles
     #[Test]
     #[Group('release')]
     public function theInstallationLogsOnlyWhatTheChecksProvoke(): void
@@ -388,6 +406,6 @@ final class NodeProfileTest extends TestCase
             $seen[$key] = ($seen[$key] ?? 0) + 1;
         }
         ksort($seen);
-        $this->assertSame(['403' => 2, '404' => 11, 'feed' => 3, 'journal' => 22], $seen);
+        $this->assertSame(['403' => 2, '404' => 15, 'feed' => 3, 'journal' => 30], $seen);
     }
 }

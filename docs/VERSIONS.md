@@ -14,6 +14,17 @@ waiting, for support the requests waiting) and the dial of the type: edit, categ
 turned on and off in the types of Node only. `getModuleLabel()` answers the title of a type, so a pin no longer shows
 the raw key, and the order of the menu takes as many keys as there are modules and types.
 
+### Four new Node profiles ship: a gallery, a portfolio, classifieds and reviews
+
+An audit of the shipped types against the modules sites use most (uCoz, WordPress, Drupal, sites of small firms) found
+four that a profile alone can make. `modules/node/profiles/` ships fourteen profiles, and a clean installation
+creates and activates every one: `album` (a cover and a gallery of up to 100 images, tiles), `portfolio` (client,
+year, address and services of a project, no public form), `board` (price, city, phone and e-mail of an ad, moderated)
+and `reviews` (a required score of 1 to 5, a guest may post, moderated). The score is the field `stars`, since `score`
+is a column of `_nodes`. The titles and the labels of the fields take nine constants in the six languages of `lang/`;
+`NodeProfileTest` and the installation probe check the fourteen through a real installation. Events, vacancies and a
+lifetime of a classified ad need the core and wait in their own plan.
+
 ## 2026-11-04
 
 ### The code is SLAED CMS 8.0.0
