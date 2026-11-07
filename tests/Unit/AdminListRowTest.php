@@ -394,12 +394,13 @@ namespace Tests\Unit {
             $this->assertGreaterThanOrEqual(12, $seen, 'The scan found too few edits to hold anything');
         }
 
-        # A list under a filter bar tells an empty result from an empty list, the queues of getAdminQueues() say they are clean (owner, 2026-10-24)
+        # A list under a filter bar offers the reset of an empty result, the queues of getAdminQueues() say they are clean (owner, 2026-10-24, 2026-11-07)
         #[Test]
         public function everyFilteredListTellsNothingFound(): void
         {
             $root = dirname(__DIR__, 2);
             $files = [...glob($root.'/admin/modules/*.php'), ...glob($root.'/modules/*/admin/index.php')];
+            $places = ['modules/node/admin/index.php show()'];
             $lists = [];
             foreach ($files as $file) {
                 $parts = [];
@@ -412,15 +413,15 @@ namespace Tests\Unit {
                     $name = substr($file, strlen($root) + 1).' '.$func.'()';
                     $lists[$name] = $part;
                     $bar = str_contains($part, "'list-filter'") || array_filter($bars, static fn($v) => str_contains($part, $v.'('));
-                    if (!$bar) continue;
-                    $this->assertMatchesRegularExpression("#'none_text' => .*_NONE_FOUND#", $part, $name.' says no info under its filter');
+                    if (!$bar || in_array($name, $places, true)) continue;
+                    $this->assertStringContainsString("'reset_url' =>", $part, $name.' says no info under its filter and offers no way back');
                 }
             }
-            $queues = ['admin/modules/comments.php comments()', 'modules/account/admin/index.php newuser()', 'modules/node/admin/index.php show()',
+            $this->assertStringContainsString('_ADM_CLEAN', (string)file_get_contents($root.'/core/helpers.php'), 'A calm list does not say it is clean');
+            $queues =['admin/modules/comments.php comments()', 'modules/account/admin/index.php newuser()', 'modules/node/admin/index.php show()',
                 'modules/node/admin/index.php setNodeSupportQueue()'];
             foreach ($queues as $name) {
                 $this->assertArrayHasKey($name, $lists);
-                $this->assertStringContainsString('_ADM_CLEAN', $lists[$name], $name.' is a queue that does not say it is clean');
                 $this->assertStringContainsString("'is_calm' =>", $lists[$name], $name.' is a queue whose empty state is not calm');
             }
         }

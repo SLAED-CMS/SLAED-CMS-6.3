@@ -270,7 +270,7 @@ function getSearchList(array $rows, int $anum, array $state): string {
         $cont .= getSearchLine($row, $state, $numb);
         $numb++;
     }
-    if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
+    if (!$anum) $cont .= $tpl->getHtmlFrag('empty', ['is_found' => true, 'act_url' => getSeoUrl(['name' => $conf['name']])]);
     $pref = ['mod' => $state['mod'], 'word' => urlencode($state['word'])];
     $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, $pref, $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],

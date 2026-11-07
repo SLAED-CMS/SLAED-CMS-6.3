@@ -67,7 +67,7 @@
         </div>
         {% endif %}
         {% else %}
-        <p class="sl-list-none{% if is_calm %} sl-list-calm{% endif %}">{{ none_text }}</p>
+        {% include 'fragments/empty.html' with none %}
         {% endif %}
       </div>
   {% if pane %}

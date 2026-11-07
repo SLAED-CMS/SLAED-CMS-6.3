@@ -134,7 +134,7 @@ function getSearchinvalid(array $list): array {
 
 function getSearchauditTable(array $list, string $view = 'enabled'): string {
     global $tpl;
-    if (!$list) return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+    if (!$list) return $tpl->getHtmlFrag('empty', []);
     $head = [
         ['content' => _MODUL, 'is_truncate' => true],
         ['content' => 'ID', 'is_truncate' => true],
@@ -310,7 +310,7 @@ function search(bool $top = false): void {
         'count' => $total,
         'limit' => $anum,
         'upto' => $upto,
-        'none_text' => ($clink !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($clink !== '') ? $afile.'.php?name=search'.($top ? '&op=toplist' : '') : '',
     ]);
     setFoot();
 }

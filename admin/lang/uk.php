@@ -1723,7 +1723,6 @@ define('_UPLOADS_DELETE','видалення');
 define('_UPLOADS_COMPRESS','архівування');
 define('_UPLOADS_EMPTY','Директорія порожня');
 define('_UPLOADS_EMPTYTXT','Тут поки немає ані файлів, ані піддиректорій.');
-define('_UPLOADS_NOFIND','Нічого не знайдено');
 define('_UPLOADS_NOFINDTXT','Жоден об’єкт цієї директорії не підходить під фільтр.');
 define('_UPLOADS_CRIT','Файл бере участь у роботі сайту: помилка в ньому зупиняє сайт.');
 define('_UPLOADS_VERSION','Версія');

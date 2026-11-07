@@ -454,7 +454,7 @@ final class FileManagerCatalogTest extends TestCase
     public function theListNamesTheStateItIsIn(): void
     {
         $part = $this->getFile('public/templates/admin/partials/file-browser-list.html');
-        foreach (['sl-skel', 'data-sl-fm-fail', 'data-sl-fm-real', 'sl-fm-empty'] as $mark) {
+        foreach (['sl-skel', 'data-sl-fm-fail', 'data-sl-fm-real', 'fragments/empty.html'] as $mark) {
             $this->assertStringContainsString($mark, $part, 'The list of the browser carries no '.$mark.', so one state of the list has nowhere to be shown');
         }
         $code = $this->getFile('public/templates/admin/assets/js/admin-ui.js');
@@ -462,7 +462,7 @@ final class FileManagerCatalogTest extends TestCase
             $this->assertStringContainsString($hook, $code, 'Nothing listens for '.$hook.', so the browser cannot tell a list on its way from one that never arrived');
         }
         $shell = $this->getBody('core/admin.php', 'getAdminFileShell');
-        foreach (['_UPLOADS_FAIL', '_UPLOADS_FAILTXT', '_RETRY', '_UPLOADS_EMPTY', '_UPLOADS_NOFIND'] as $word) {
+        foreach (['_UPLOADS_FAIL', '_UPLOADS_FAILTXT', '_RETRY', '_UPLOADS_EMPTY', '_UPLOADS_NOFINDTXT'] as $word) {
             $this->assertStringContainsString($word, $shell, 'The state of the list is drawn without '.$word.', so one of them speaks with the words of another');
         }
     }

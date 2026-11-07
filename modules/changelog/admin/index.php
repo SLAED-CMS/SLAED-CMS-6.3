@@ -81,7 +81,8 @@ function changelog(): void {
         'pages' => $pages,
         'count' => $total,
         'limit' => $limit,
-        'none_text' => ($error !== '') ? $error : ($keys ? _NONE_FOUND : _NO_INFO),
+        'none_text' => $error,
+        'reset_url' => ($error === '' && $keys) ? $afile.'.php?name=changelog' : '',
     ]);
     setFoot();
 }

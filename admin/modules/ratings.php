@@ -186,7 +186,7 @@ function votes(): void {
         'pages' => max(1, (int)ceil($list['total'] / $lim)),
         'count' => $list['total'],
         'limit' => $lim,
-        'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => $keep ? $afile.'.php?name=ratings&op=votes' : '',
     ]);
     setFoot();
 }

@@ -1723,7 +1723,6 @@ define('_UPLOADS_DELETE','usuwanie');
 define('_UPLOADS_COMPRESS','archiwizacja');
 define('_UPLOADS_EMPTY','Katalog jest pusty');
 define('_UPLOADS_EMPTYTXT','Nie ma tu jeszcze plików ani podkatalogów.');
-define('_UPLOADS_NOFIND','Nic nie znaleziono');
 define('_UPLOADS_NOFINDTXT','Żaden obiekt tego katalogu nie pasuje do filtru.');
 define('_UPLOADS_CRIT','Plik uczestniczy w pracy witryny: błąd w nim zatrzymuje witrynę.');
 define('_UPLOADS_VERSION','Wersja');

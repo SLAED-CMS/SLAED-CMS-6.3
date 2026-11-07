@@ -60,7 +60,7 @@ function groups(): void {
     foreach ($heads as $key => $head) {
         if ($steps[$key]) $cont .= $tpl->getHtmlPart('group-ladder', $head + ['steps' => $steps[$key]]);
     }
-    if (!$list) $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+    if (!$list) $cont .= $tpl->getHtmlFrag('empty', ['act_url' => $afile.'.php?name=groups&op=add']);
     echo $cont;
     setFoot();
 }
@@ -405,7 +405,7 @@ function getPointsJournal(string $note): string {
         'pages' => $pages,
         'count' => $count,
         'limit' => $lim,
-        'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => $keep ? $afile.'.php?name=groups&op=points' : '',
     ]);
 }
 

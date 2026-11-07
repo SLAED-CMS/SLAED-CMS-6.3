@@ -396,7 +396,6 @@ define('_FAVOR_FOLD','Klicken Sie auf den Kopf eines Regals, um seine Einträge 
 define('_FAVOR_FREE','Frei %1$s von %2$s');
 define('_FAVOR_SEEK','In den Favoriten suchen');
 define('_FAVOR_SEEKNOTE','Titel oder Modul');
-define('_FAVOR_NONE','Nichts gefunden. Löschen Sie die Eingabe oder wählen Sie oben ein Modul.');
 define('_FEEDBACK','Kontaktaufnahme');
 define('_FIELDS_REQ','Dieses Feld muss ausgefüllt werden.');
 define('_FIELDS_TYPE','Der Wert hat die falsche Struktur.');
@@ -660,7 +659,6 @@ define('_PRLIST','Nachrichtenliste');
 define('_PRMOVE','Gespeicherte Nachricht');
 define('_PRNEW','Neue Nachricht');
 define('_PRNEWMAIL','Wird Sie darauf hinweisen, dass Sie kam eine neue private Nachricht von Benutzer %1$s.<br><br>zum Lesen der Beiträge gehen Sie unter: %2$s<br><br><br>Sie erhalten diese Benachrichtigung, so wie Sie in Ihrem Konto, in dem angegeben wird Ihre E-Mail-Box, aktiviert Service «Benachrichtigung über die neuen privaten Nachrichten».<br><br>nicht Zu bekommen ähnliche Ankündigung in der Zukunft, deaktivieren Sie diesen Service in den Einstellungen des Profils.');
-define('_PRNOHIT','Keine Nachricht passt zu den Filtern');
 define('_PRNOLIMIT','Ohne Begrenzung');
 define('_PROLD','Nachricht gelesen');
 define('_PROUT','Ausgehende');

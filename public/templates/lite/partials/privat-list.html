@@ -13,11 +13,5 @@
   {% if bulk_html %}{{{ bulk_html }}}{% endif %}
 </div>
 {% else %}
-<div class="sl-pmf-blank">
-  <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
-  <b>{{ empty_title }}</b>
-  {% if found %}
-  <p>{{ found }}</p>
-  {% endif %}
-</div>
+{% include 'fragments/empty.html' with empty %}
 {% endif %}

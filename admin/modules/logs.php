@@ -153,7 +153,7 @@ function logview(): void {
             'pages' => $pages,
             'count' => $log['total'],
             'limit' => $lim,
-            'none_text' => ($event.$modul.$res.$levl.$ip.$from.$to !== '') ? _NONE_FOUND : _NO_INFO,
+            'reset_url' => ($event.$modul.$res.$levl.$ip.$from.$to !== '') ? $afile.'.php?name=logs&op=logview&file='.$file : '',
         ]);
         setFoot();
         return;
@@ -165,7 +165,7 @@ function logview(): void {
         $path = LOGS_DIR.'/'.$file.'.log';
         $content = (is_file($path) && is_readable($path)) ? file_get_contents($path) : false;
         if ($content === false) {
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('empty', []);
             echo $cont;
             setFoot();
             return;
@@ -178,7 +178,7 @@ function logview(): void {
             'text' => $content,
         ])]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('empty', []);
     }
     echo $cont;
     setFoot();
@@ -257,7 +257,7 @@ function logins(): void {
         'pages' => $pages,
         'count' => $log['total'],
         'limit' => $lim,
-        'none_text' => $filt ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => $filt ? $afile.'.php?name=logs&op=logins' : '',
     ]);
     setFoot();
 }

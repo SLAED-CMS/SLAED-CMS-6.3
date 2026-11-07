@@ -14,5 +14,5 @@
   </div>
 </div>
 {% else %}
-<div class="sl-profile-empty">{{ empty_text }}</div>
+{% include 'fragments/empty.html' with empty %}
 {% endif %}

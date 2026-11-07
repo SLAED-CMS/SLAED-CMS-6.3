@@ -292,7 +292,7 @@ function setNodeSupportQueue(NodeType $type): void {
         'pages' => max(1, (int)ceil($data['count'] / $lim)),
         'count' => $data['count'],
         'limit' => $lim,
-        'none_text' => $calm ? _ADM_CLEAN : _NONE_FOUND,
+        'reset_url' => $calm ? '' : $afile.'.php?name=node&type='.$type->name,
         'is_calm' => $calm,
     ]);
     setFoot();
@@ -381,7 +381,8 @@ function show(): void {
         'count' => $count,
         'limit' => $lim,
         'upto' => $upto,
-        'none_text' => $types ? (($state === NodeStatus::Pending) ? _ADM_CLEAN : (($name !== '') ? _NONE_FOUND : _NO_INFO)) : _NODE_NOTYPES,
+        'none_text' => $types ? '' : _NODE_NOTYPES,
+        'add_url' => ($types && in_array($state, [NodeStatus::Draft, NodeStatus::Published], true)) ? $afile.'.php?name=node&op=add'.(($name !== '') ? '&type='.$name : '') : '',
         'is_calm' => $types && $state === NodeStatus::Pending,
     ]);
     setFoot();

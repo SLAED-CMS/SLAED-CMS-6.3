@@ -114,7 +114,7 @@ function account(): void {
         'count' => $count,
         'limit' => $anum,
         'upto' => $upto,
-        'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($where !== '') ? $afile.'.php?name=account' : '',
     ]);
     setFoot();
 }
@@ -703,7 +703,7 @@ function newuser(): void {
         'count' => $count,
         'limit' => $anum,
         'upto' => $upto,
-        'none_text' => ($where !== '') ? _NONE_FOUND : _ADM_CLEAN,
+        'reset_url' => ($where !== '') ? $afile.'.php?name=account&op=newuser' : '',
         'is_calm' => $where === '',
     ]);
     setFoot();
@@ -1160,7 +1160,7 @@ function oauthlist(): void {
         'count' => $count,
         'limit' => $anum,
         'upto' => $upto,
-        'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($where !== '') ? $afile.'.php?name=account&op=oauthlist' : '',
     ]);
     setFoot();
 }
@@ -1289,7 +1289,7 @@ function favorites(): void {
         'count' => $total,
         'limit' => $limit,
         'upto' => $upto,
-        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($flt['where'] !== '') ? $afile.'.php?name=account&op=favorites' : '',
     ]);
     setFoot();
 }

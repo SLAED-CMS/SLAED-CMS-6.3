@@ -199,7 +199,8 @@ function voting(): void {
         'count' => $total,
         'limit' => $anum,
         'upto' => $upto,
-        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($flt['where'] !== '') ? $afile.'.php?name=voting' : '',
+        'add_url' => $afile.'.php?name=voting&op=add',
     ]);
     setFoot();
 }

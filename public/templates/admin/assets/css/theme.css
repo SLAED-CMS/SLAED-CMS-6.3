@@ -3667,9 +3667,56 @@ dialog.sl-editor-emoji-panel {
   text-align: center;
 }
 
+/* Empty state: a list, a search or a section with nothing to show, one face for the panel and the site */
+.sl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-8) var(--sl-space-7);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  text-align: center;
+}
+
+.sl-empty > .bi {
+  font-size: var(--sl-size-icon-lg);
+  color: var(--sl-text-subtle);
+}
+
+.sl-empty > b {
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-strong);
+}
+
+.sl-empty > p {
+  margin: 0;
+  max-width: var(--sl-empty-width);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-muted);
+}
+
+/* A block, a column or a tab holds a smaller one */
+.sl-empty-small {
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-6);
+}
+
+.sl-empty-small > .bi {
+  font-size: var(--sl-size-icon-md);
+}
+
 /* An empty queue is good news, said calmly */
-.sl-list-calm {
+.sl-empty-calm > .bi,
+.sl-empty-calm > b {
   color: var(--sl-success-strong);
+}
+
+/* A list that never arrived says so and offers the way back to it */
+.sl-empty.sl-is-fail > .bi {
+  color: var(--sl-danger);
 }
 
 /* The count holds the width of its widest figure, so the row beside it never moves */
@@ -5457,12 +5504,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 
   /* A block that stands still gets the box the light round its frame is drawn in */
-  :is(.sl-block-sidebar, .sl-fm-ops, .sl-fm-empty, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card) {
+  :is(.sl-block-sidebar, .sl-fm-ops, .sl-empty, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card) {
     position: relative;
   }
 
   /* Under the hand a light runs round the frame of every block of the panel, a turning cone cut to the line of the frame; the --sl-aurora-* tokens draw it, the layer exists only under the hand */
-  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-fm-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card)::before,
+  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card)::before,
   :root:not([data-sl-rail]) .sl-block-sidebar::before,
   .sl-metric::after {
     position: absolute;
@@ -5477,7 +5524,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     pointer-events: none;
   }
 
-  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-fm-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card):hover::before,
+  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card):hover::before,
   :root:not([data-sl-rail]) .sl-block-sidebar:hover::before,
   .sl-metric:hover::after {
     content: "";
@@ -10675,7 +10722,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 }
 
 .sl-fm-crumbs b,
-.sl-fm-empty b,
 .sl-fm-queue-cap b {
   font-weight: var(--sl-weight-normal);
   color: var(--sl-text);
@@ -11128,32 +11174,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   color: var(--sl-text-muted);
 }
 
-/* Empty directory and empty filter result: one block, different words */
-.sl-fm-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-8) var(--sl-space-7);
-  border: 1px dashed var(--sl-border-strong);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-surface);
-  text-align: center;
-}
-
-.sl-fm-empty .bi {
-  font-size: var(--sl-size-icon-lg);
-  color: var(--sl-text-muted);
-}
-
-
-.sl-fm-empty p {
-  margin: 0;
-  max-width: var(--sl-fm-empty-width);
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-normal);
-  color: var(--sl-text-muted);
-}
 
 /* Source editor of the system area: it takes the place of the list and the tree stays beside it */
 /* The source editor form is the canon column: only the body scrolls, and the code area takes its height */
@@ -11256,11 +11276,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   50% {
     opacity: var(--sl-fade-disabled);
   }
-}
-
-/* A list that never arrived says so and offers the way back to it; an empty directory and an empty filter are other states and carry other words */
-.sl-fm-empty.sl-is-fail .bi {
-  color: var(--sl-danger);
 }
 
 /* Upload panel: the drop target, the address of a remote file and the two buttons of the form, opened from the toolbar and closed with the next answer of the server */
@@ -12460,39 +12475,9 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin: var(--sl-space-4) 0 0;
 }
 
-/* The empty catalogue names its reason instead of saying nothing; the same block carries the empty filter and the list that never arrived */
-.sl-fm-win .sl-fm-empty {
-  align-items: center;
-  background: var(--sl-surface);
-  border: 1px dashed var(--sl-border-strong);
-  border-radius: var(--sl-radius-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-8) var(--sl-space-7);
-  text-align: center;
-}
-
-.sl-fm-win .sl-fm-empty .bi {
-  color: var(--sl-text-subtle);
-  font-size: var(--sl-size-icon-lg);
-}
-
-.sl-fm-win .sl-fm-empty b {
-  color: var(--sl-text-strong);
-  font-weight: var(--sl-weight-normal);
-}
-
-.sl-fm-win .sl-fm-empty p {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-normal);
-  margin: 0;
+/* The window of files keeps its own measure of the line under the title of an empty catalogue */
+.sl-fm-win .sl-empty > p {
   max-width: var(--sl-fm-empty-width);
-}
-
-.sl-fm-win .sl-fm-empty.sl-is-fail .bi {
-  color: var(--sl-danger);
 }
 
 /* The skeleton of the catalogue takes the shape of a tile, because tiles is what the compact catalogue shows and a row-shaped placeholder would jump when the answer lands */

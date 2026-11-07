@@ -1,0 +1,10 @@
+<div class="sl-empty{% if is_calm %} sl-empty-calm{% endif %}{% if is_small %} sl-empty-small{% endif %}">
+  <i class="bi bi-{% if icon_name %}{{ icon_name }}{% elseif is_calm %}check2-circle{% elseif is_found %}search{% else %}inbox{% endif %}" aria-hidden="true"></i>
+  <b>{% if title_text %}{{ title_text }}{% elseif is_calm %}{{ _ADM_CLEAN }}{% elseif is_found %}{{ _NONE_FOUND }}{% else %}{{ _NO_INFO }}{% endif %}</b>
+  {% if text %}
+  <p>{{ text }}</p>
+  {% endif %}
+  {% if act_url %}
+  <a class="sl-but" href="{{ act_url }}"{% if act_target %} hx-get="{{ act_url }}" hx-target="{{ act_target }}" hx-swap="innerHTML" hx-push-url="false"{% endif %}><i class="bi bi-{% if act_icon %}{{ act_icon }}{% elseif is_found %}arrow-counterclockwise{% else %}plus-lg{% endif %}" aria-hidden="true"></i> {% if act_text %}{{ act_text }}{% elseif is_found %}{{ _FRESET }}{% else %}{{ _ADD }}{% endif %}</a>
+  {% endif %}
+</div>

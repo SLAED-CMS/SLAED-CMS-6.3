@@ -730,6 +730,58 @@ a.sl-crumb:hover + .sl-crumb-sep {
   margin-bottom: var(--sl-space-4);
 }
 
+/* Empty state: a list, a search or a section with nothing to show, one face for the site and the panel */
+.sl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-8) var(--sl-space-7);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  text-align: center;
+}
+
+.sl-empty > .bi {
+  font-size: var(--sl-size-icon-lg);
+  color: var(--sl-text-subtle);
+}
+
+.sl-empty > b {
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-strong);
+}
+
+.sl-empty > p {
+  margin: 0;
+  max-width: var(--sl-empty-width);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-muted);
+}
+
+/* A block, a column or a tab holds a smaller one */
+.sl-empty-small {
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-6);
+}
+
+.sl-empty-small > .bi {
+  font-size: var(--sl-size-icon-md);
+}
+
+/* An empty queue is good news, said calmly */
+.sl-empty-calm > .bi,
+.sl-empty-calm > b {
+  color: var(--sl-success);
+}
+
+/* A list that never arrived says so and offers the way back to it */
+.sl-empty.sl-is-fail > .bi {
+  color: var(--sl-danger);
+}
+
 /* Alert: unified semantic notice shared with admin and parser callouts */
 .sl-alert {
   --sl-alert-c: var(--sl-info);
@@ -6164,7 +6216,7 @@ dialog.sl-editor-emoji-panel {
   .sl-pmf-mate,
   .sl-pmf-slot,
   .sl-profile-card,
-  .sl-profile-empty,
+  .sl-empty,
   .sl-profile-proof,
   .sl-preview,
   .sl-moder-mass,
@@ -6192,7 +6244,7 @@ dialog.sl-editor-emoji-panel {
   .sl-pmf-mate::before,
   .sl-pmf-slot::before,
   .sl-profile-card::before,
-  .sl-profile-empty::before,
+  .sl-empty::before,
   .sl-profile-proof::before,
   .sl-preview::before,
   .sl-moder-mass::before,
@@ -6257,7 +6309,7 @@ dialog.sl-editor-emoji-panel {
   .sl-pmf-mate:hover::before,
   .sl-pmf-slot:hover::before,
   .sl-profile-card:hover::before,
-  .sl-profile-empty:hover::before,
+  .sl-empty:hover::before,
   .sl-profile-proof:hover::before,
   .sl-preview:hover::before,
   .sl-moder-mass:hover::before,
@@ -11939,14 +11991,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-.sl-profile-empty {
-  padding: var(--sl-space-6);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-surface);
-  color: var(--sl-text-muted);
-}
-
 @keyframes sl-profile-auto-scroll {
   from {
     transform: translateY(0);
@@ -12929,39 +12973,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: var(--sl-space-4) 0 0;
 }
 
-/* The empty catalogue names its reason instead of saying nothing; the same block carries the empty filter and the list that never arrived */
-.sl-fm-win .sl-fm-empty {
-  align-items: center;
-  background: var(--sl-surface);
-  border: 1px dashed var(--sl-border-strong);
-  border-radius: var(--sl-radius-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-8) var(--sl-space-7);
-  text-align: center;
-}
-
-.sl-fm-win .sl-fm-empty .bi {
-  color: var(--sl-text-subtle);
-  font-size: var(--sl-size-icon-lg);
-}
-
-.sl-fm-win .sl-fm-empty b {
-  color: var(--sl-text-strong);
-  font-weight: var(--sl-weight-normal);
-}
-
-.sl-fm-win .sl-fm-empty p {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-normal);
-  margin: 0;
+/* The window of files keeps its own measure of the line under the title of an empty catalogue */
+.sl-fm-win .sl-empty > p {
   max-width: var(--sl-fm-empty-width);
-}
-
-.sl-fm-win .sl-fm-empty.sl-is-fail .bi {
-  color: var(--sl-danger);
 }
 
 /* The skeleton of the catalogue takes the shape of a tile, because tiles is what the compact catalogue shows and a row-shaped placeholder would jump when the answer lands */

@@ -544,7 +544,7 @@ components of their own and stand outside this contract.
 | `drop` | the row | `getTplPostAction()` of the delete, `id[]` holding the key of the row | the dial item with `later` `gone del`, the box `id[]` of the row and the action `del` of the foot; `later` `gone move` makes it the action `move` titled by the item |
 | `stat` | a cell | the status action with `later` `gone …` or `lamp …` and `is_on` | the lamp, a mark that is no control (`data-sl-lamp`, titled `_ACT` or `_DEACT`); its action is an item of the dial of the row, which a list that draws its dial itself ("Модули", "Типы материалов", "Категории", "Блоки") appends there; beside a `drop`, the actions `on` and `off` of the foot from the fields of a row turned off and on |
 | `upto` | the list | the greatest key of the list under its condition | the offer "Отметить все N" when the list has more than one page |
-| `none_text`, `is_calm` | the list | the text of the empty list, and whether empty is the calm state of a queue | `sl-list-none`, with `sl-list-calm` |
+| `none_text`, `is_calm`, `reset_url`, `add_url` | the list | a title of the empty list with a meaning of its own, whether empty is the calm state of a queue, the address of the list without its filter when a filter is set, the form of a new entry where an empty list offers one | `fragments/empty.html` (Empty State): `reset_url` makes it `is_found` with the reset, `add_url` the button "Добавить" |
 
 - **One row has a box only by its `drop`.** A list whose rows carry no `drop` has no box column and no foot. The key in
   `id[]` is the key of the row in its own list: an id, the name of a scheduler job, the file of a journal, the entry
@@ -579,10 +579,11 @@ components of their own and stand outside this contract.
   `Mail::getDeadScope()`, `NodeQuery::getNodeScope()`; the three lists of "Пользователи" read `getAccountScope()` of the
   account admin, "Поиск" `getSearchwhere()`. The highlight of the found text is `filterTextHighlight()` on the column
   searched.
-- **Empty says why.** An empty list under a condition of its filter says `_NONE_FOUND`, without one `_NO_INFO` (the
-  default of `none_text`). The queues of `getAdminQueues()` — comments waiting, new accounts, Node "Ждут проверки", the
-  default support queue — say `_ADM_CLEAN` with `is_calm`; the mail queue is a delivery journal and is not one of them.
-  A text with a meaning of its own stays: `_NODE_NOTYPES` for Node without types, `_ERROR` for "База данных".
+- **Empty says why.** An empty list under a condition of its filter passes `reset_url` and says `_NONE_FOUND`, without
+  one `_NO_INFO`; a type or a tab of a status is no condition. The queues of `getAdminQueues()` — comments waiting, new
+  accounts, Node "Ждут проверки", the default support queue — pass `is_calm` and say `_ADM_CLEAN`; the mail queue is a
+  delivery journal and is not one of them. A text with a meaning of its own stays in `none_text`: `_NODE_NOTYPES` for
+  Node without types, `_ERROR` for "База данных".
 - **What stays single.** A delete under a question — TRUNCATE and DROP of "База данных", an administrator, a Node type,
   the tables of a module — has no box, as has "Аннулировать" of a rating vote, which asks for a
   reason, and a campaign with mail in its queue. Short service lists — "Языки", "База данных", "Планировщик",
@@ -693,6 +694,41 @@ under the text to the right — the width of the alert decides, not that of the 
   "Комментарии", "Оптимизация" and "Ремонт" of "База данных", "Отметить все N" with the progress line `sl-alert-meter` (`--sl-d-run`), "Повторить" of a list that
   did not come, and "Отменить" of the toast of the panel. The toast of the site is a pill with `sl-toast-undo`, not an
   alert.
+
+## Empty State
+
+A list, a search, a section, a mailbox or a block with nothing to show draws one face on the site and in the panel: the
+fragment `empty` of both themes, `<div class="sl-empty">` with an icon, a title, an optional line under it and an
+optional button. An alert is a message about what happened — saved, refused, failed — and never stands for an empty
+place; a not-found that sends the reader away (a forum that does not exist, with its refresh) is such a message and
+stays an alert.
+
+| Key | Meaning | Default |
+|---|---|---|
+| `is_found` | the place is empty under a search or a filter the reader set | — |
+| `is_calm` | the empty place is the good state of a queue (the panel only) | — |
+| `is_small` | the place is a block, a column or a tab, not a page | — |
+| `title_text` | a title with a meaning of its own (`_NODE_NOTYPES`, `_NOCOMMENTS`, `_UPLOADS_EMPTY`) | `_ADM_CLEAN` calm, `_NONE_FOUND` found, `_NO_INFO` else |
+| `text` | one line under the title | none |
+| `icon_name` | a Bootstrap Icons name | `check2-circle` calm, `search` found, `inbox` else |
+| `act_url` | the button: the address without the filter for a found place, the form of a new entry for an empty one | none |
+| `act_text`, `act_icon` | the words and the icon of the button | `_FRESET` and `arrow-counterclockwise` found, `_ADD` and `plus-lg` else |
+| `act_target` | the id selector a part swaps into, for a button that answers with htmx and leaves the address | a plain link |
+
+- **Three kinds, one face.** Empty without a condition is `_NO_INFO`; a type, a tab of a status, a category or a
+  mailbox is a place and not a condition, so the trash of a Node type is empty, not "nothing found". Empty under a
+  search or a filter is `is_found` and offers the reset to the same place without its condition. The queues of the
+  panel are `is_calm` and offer nothing.
+- **The button is offered, never assumed.** "Добавить" stands only where the place has a form of a new entry and the
+  reader may use it — a status other than the working one, the trash, a journal or a queue has none; on the site
+  only a module with a public form of its own (a Node type under `checkNodeFlow()`).
+- **The panel list carries it itself.** `getTplAdminList()` draws the fragment in place of the rows from `none_text`,
+  `is_calm`, `reset_url` and `add_url` (table of the Admin List Contract). The file manager draws its error with the
+  same face and `sl-is-fail`, the red icon.
+- **Not an empty state.** "Нет информации" in a cell, a field or a figure of a card is the absence of a value and stays
+  text; the live filter of a picker — icons, emoji, the palette of the editor, the menu of the panel, the palette of
+  the layout screen — answers in its own line beside the field it filters, and the narrow panes of the layout screen
+  (its checks, its history, the pages a section copies to, its tree) keep their line `sl-list-none`.
 
 ## Panel Shell
 

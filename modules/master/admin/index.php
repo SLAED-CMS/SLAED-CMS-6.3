@@ -189,7 +189,7 @@ function getMasterSites(string $note): string {
         'pages' => $pages,
         'count' => $all,
         'limit' => $lim,
-        'none_text' => ($cond !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($cond !== '') ? $afile.'.php?name=master&tab=1' : '',
     ]);
 }
 
@@ -219,7 +219,7 @@ function getMasterStats(): string {
     $cont .= $rows ? getMasterTable([['content' => _MASTER_CHAN], ['content' => _VERSION], ['content' => 'PHP'], ['content' => _DATABASE],
         ['content' => _MASTER_COUNT, 'is_col_count' => true], ['content' => _MASTER_NOSOD, 'is_col_count' => true], ['content' => _MASTER_NOZIP, 'is_col_count' => true],
         ['content' => _MASTER_ERRS, 'is_col_count' => true], ['content' => _MASTER_FAILS, 'is_col_count' => true]], $rows)
-        : $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
+        : $tpl->getHtmlFrag('empty', []);
     $res = $db->getSqlQuery('SELECT failver, failstep, COUNT(*) AS num FROM '.PREFIX_DB.'_master_site WHERE failver <> \'\' GROUP BY failver, failstep'
         .' ORDER BY failver DESC, num DESC');
     $rows = [];

@@ -407,7 +407,7 @@ function forum(): void {
                         }
                     } else {
                         if ((int)$num > 1) setError(404);
-                        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+                        $cont .= $tpl->getHtmlFrag('empty', []);
                     }
                     $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$catid."'" : "pid = '0' AND cid = '".$catid."' AND time <= NOW() AND status != '0'";
                     $pnum = getTplPager([

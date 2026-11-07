@@ -176,7 +176,7 @@ function modules(): void {
         ],
         'rows' => $rows,
         'count' => count($rows),
-        'none_text' => ($mtype !== 2) ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($mtype !== 2) ? $afile.'.php?name=modules' : '',
     ]);
     setFoot();
 }

@@ -902,7 +902,7 @@ function replace(): void {
         'tab' => 4,
     ]);
     if ($pick === '') {
-        echo $cont.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+        echo $cont.$tpl->getHtmlFrag('empty', []);
         setFoot();
         return;
     }

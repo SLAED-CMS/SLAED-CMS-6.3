@@ -186,7 +186,7 @@ function getCommentList(int $cid, string $mod, int $page, int $full, ?string $ro
     $data = $com->getList($mod, $cid, $page ?: 1, $full);
     $pag = ['name' => $mod, 'op' => 'view', 'id' => $cid, 'route' => $route, 'page' => getVar('get', 'page', 'num')];
     $rows = ($data['total'] < 1)
-        ? $tpl->getHtmlFrag('alert', ['text' => _NOCOMMENTS, 'meta' => '', 'type' => 'info', 'is_warn' => false])
+        ? $tpl->getHtmlFrag('empty', ['is_small' => true, 'icon_name' => 'chat-left-text', 'title_text' => _NOCOMMENTS])
         : getCommentRows($data, $mod, $cid, getSiteToken(), $pag);
     $out = $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]);
     if ($data['total'] < 1) return $out;
@@ -992,9 +992,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
         getPrivatShown(($found !== '') ? $found : ($data['total'] ? sprintf(_PRSHOWN, $data['offset'] + 1, min($data['offset'] + $data['limit'], $data['total'])) : ''));
         return $tpl->getHtmlPart('privat-list', [
             'groups' => array_values($days),
-            'empty_title' => $seek ? (string)_PRNOHIT : (string)_NO_INFO,
-            'empty_icon' => $seek ? 'funnel' : 'inbox',
-            'found' => $found,
+            'empty' => $seek ? ['is_found' => true, 'act_url' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'typ' => $typ])] : [],
             'bulk_url' => HOME_PATH.'index.php?go=1&op=updatePrivatBox',
             'hidden_html' => $keys,
             'pager_html' => getTplPagerView($data['page'], $data['pages'], getPageSpan($conf['privat']), static fn(int $i): array => [
@@ -1339,7 +1337,7 @@ function getProfileLastView(int $uid): string {
     foreach ($mods as $mod => $inf) {
         if (!isset($lists[$mod])) continue;
         $tabs[] = $inf['title'];
-        $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
+        $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty' => ['is_small' => true]]);
     }
     return $tpl->getHtmlPart('account-profile-feed', [
         'head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY],
@@ -1498,8 +1496,9 @@ function getFavoriteList(int $obj = 0): string {
         ];
     }
     if (!$shelves) {
-        if ($obj) return '';
-        echo getCabinetNotes('', _NO_INFO, 0, true);
+        $none = $tpl->getHtmlFrag('empty', []);
+        if ($obj) return $none;
+        echo $none;
         return '';
     }
     uasort($shelves, static fn(array $a, array $b): int => $b['count'] <=> $a['count']);
@@ -1554,7 +1553,7 @@ function getFavoriteList(int $obj = 0): string {
         ],
         'seek_label' => _FAVOR_SEEK,
         'seek_note' => _FAVOR_SEEKNOTE,
-        'none_text' => _FAVOR_NONE,
+        'none' => ['is_found' => true, 'act_url' => getSeoUrl(['name' => 'account', 'op' => 'favorites'])],
         'fav_label' => _FAVORITES,
         'fold_note' => _FAVOR_FOLD,
         'show_label' => _SHOW,

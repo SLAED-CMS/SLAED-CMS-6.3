@@ -434,7 +434,9 @@ function getTplAdminList(array $data): string {
     $views = [];
     $kinds = ['standard' => [_ADM_STD, 'table'], 'full' => [_ADM_FULL, 'text-wrap'], 'compact' => [_ADM_DENSE, 'list'], 'cards' => [_ADM_CARDS, 'grid-3x2-gap']];
     foreach ($kinds as $key => [$title, $icon]) $views[] = ['key' => $key, 'title' => $title, 'icon_name' => $icon, 'is_now' => $key === $density];
-    $none = (string)($data['none_text'] ?? _NO_INFO);
+    $reset = (string)($data['reset_url'] ?? '');
+    $calm = !empty($data['is_calm']);
+    $none = (string)($data['none_text'] ?? '') ?: ($calm ? _ADM_CLEAN : (($reset !== '') ? _NONE_FOUND : _NO_INFO));
     $link = static fn(int $i): array => ['href' => $href.'num='.$i];
     $meta = ['count' => $count, 'limit' => $limit, 'is_list' => true];
     $range = ($limit > 0) ? sprintf(_PAGERANGE, ($page - 1) * $limit + 1, min($page * $limit, $count)) : '';
@@ -484,8 +486,7 @@ function getTplAdminList(array $data): string {
         ]) : '',
         'views' => $views,
         'keys' => ['is_list' => true, 'page_of' => ($pages > 1) ? sprintf(_NUMOF, $page, $pages) : ''],
-        'none_text' => $none,
-        'is_calm' => !empty($data['is_calm']),
+        'none' => ['title_text' => $none, 'is_calm' => $calm, 'is_found' => $reset !== '', 'act_url' => $calm ? '' : ($reset ?: (string)($data['add_url'] ?? ''))],
         'foot_html' => (string)($data['foot_html'] ?? ''),
         'said' => ($rows !== '') ? $said._OVERALL.' '.$count : $none,
     ]);

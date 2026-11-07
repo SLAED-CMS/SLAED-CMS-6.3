@@ -7,22 +7,15 @@
     <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
     <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
   </div>
-  <div class="sl-fm-empty sl-is-fail" data-sl-fm-fail hidden>
+  <div class="sl-empty sl-is-fail" data-sl-fm-fail hidden>
     <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     <b>{{ fail_title }}</b>
     <p>{{ fail_text }}</p>
     <button type="button" class="sl-but" data-sl-fm-go="self"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> {{ retry_text }}</button>
   </div>
   <div data-sl-fm-real>
-    {% if is_empty %}
-    <div class="sl-fm-empty">
-      <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
-      <b>{{ empty_title }}</b>
-      <p>{{ empty_text }}</p>
-      {% if reset_url %}
-      <a class="sl-but" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> {{ reset_text }}</a>
-      {% endif %}
-    </div>
+    {% if empty %}
+    {% include 'fragments/empty.html' with empty %}
     {% else %}
     <div class="sl-table-shell" data-sl-fm-view="list">
       <table class="sl-table-list-sort" data-sl-table-sort>

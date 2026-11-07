@@ -169,7 +169,8 @@ function newsletter(): void {
         ],
         'rows' => $list,
         'count' => count($list),
-        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($flt['where'] !== '') ? $afile.'.php?name=newsletter' : '',
+        'add_url' => $afile.'.php?name=newsletter&op=add',
     ]);
     setFoot();
 }
@@ -439,7 +440,7 @@ function queue(): void {
         'count' => $data['total'],
         'limit' => $data['limit'],
         'upto' => $data['upto'],
-        'none_text' => ($kind !== '' || $stat !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($kind !== '' || $stat !== '') ? $afile.'.php?name=newsletter&op=queue' : '',
     ]);
     setFoot();
 }
@@ -551,7 +552,7 @@ function dead(): void {
         'count' => $data['total'],
         'limit' => $data['limit'],
         'upto' => $data['upto'],
-        'none_text' => ($flt['phase'] !== '' || $flt['chng'] !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($flt['phase'] !== '' || $flt['chng'] !== '') ? $afile.'.php?name=newsletter&op=dead' : '',
     ]);
     setFoot();
 }

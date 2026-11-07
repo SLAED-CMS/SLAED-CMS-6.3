@@ -396,7 +396,6 @@ define('_FAVOR_FOLD','Cliquez sur l\'en-tête d\'une étagère pour replier ou d
 define('_FAVOR_FREE','Libre %1$s sur %2$s');
 define('_FAVOR_SEEK','Chercher dans les favoris');
 define('_FAVOR_SEEKNOTE','Titre ou module');
-define('_FAVOR_NONE','Rien trouvé. Effacez la requête ou choisissez un module ci-dessus.');
 define('_FEEDBACK','Feedback');
 define('_FIELDS_REQ','Ce champ doit être rempli.');
 define('_FIELDS_TYPE','La valeur a une structure incorrecte.');
@@ -660,7 +659,6 @@ define('_PRLIST','Liste des messages');
 define('_PRMOVE','Messages stockés');
 define('_PRNEW','Nouveau message');
 define('_PRNEWMAIL','Vous informer sur ce que Vous recevez un nouveau message privé de l\'utilisateur %1$s.<br><br>Pour la lecture de messages passez à l\'adresse suivante: %2$s<br><br><br>Vous avez reçu ce message de notification, de sorte que de votre compte spécifié boîte de Votre courrier électronique, activé le service «de Recevoir des notifications de nouveaux messages privés».<br><br>Pour ne plus recevoir ces notifications à l\'avenir, vous devez désactiver ce service dans les paramètres de votre profil.');
-define('_PRNOHIT','Aucun message ne correspond aux filtres');
 define('_PRNOLIMIT','Sans limite');
 define('_PROLD','Message lu');
 define('_PROUT','Sortant');

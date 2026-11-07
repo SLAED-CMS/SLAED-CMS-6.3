@@ -95,7 +95,7 @@ function privat(): void {
         'count' => $data['total'],
         'limit' => $data['limit'],
         'upto' => $data['upto'],
-        'none_text' => ($flt['status'] !== '' || $chng !== '') ? _NONE_FOUND : _NO_INFO,
+        'reset_url' => ($flt['status'] !== '' || $chng !== '') ? $afile.'.php?name=privat' : '',
     ]);
     setFoot();
 }

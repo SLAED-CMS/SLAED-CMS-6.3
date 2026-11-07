@@ -605,6 +605,7 @@
   --sl-emoji-max-height: 420px;
   --sl-emoji-grid-height: 292px;
   --sl-emoji-full-gap: 150px;
+  --sl-empty-width: 440px;
   --sl-fm-as-height: 30px;
   --sl-fm-body-height: 56vh;
   --sl-fm-busy-bg: color-mix(in srgb, var(--sl-bg) 74%, transparent);

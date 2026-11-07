@@ -133,7 +133,7 @@ function comments(): void {
         'count' => $data['total'],
         'limit' => $data['limit'],
         'upto' => $data['upto'],
-        'none_text' => ($flt['modul'] !== '' || $chng !== '') ? _NONE_FOUND : ($status ? _ADM_CLEAN : _NO_INFO),
+        'reset_url' => ($flt['modul'] !== '' || $chng !== '') ? $afile.'.php?name=comments'.($status ? '&status=1' : '') : '',
         'is_calm' => $status && $flt['modul'] === '' && $chng === '',
     ]);
     setFoot();

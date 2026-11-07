@@ -76,7 +76,7 @@ function users(): void {
         ]);
     } else {
         if ((int)$num > 1) setError(404);
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('empty', []);
     }
     echo $cont;
     setFoot();
@@ -166,7 +166,7 @@ function stats(): void {
                 ],
             ],
             'table_close' => [],
-            'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+            'empty' => [],
         ]);
         $cont .= $tpl->getHtmlPart('navi-lower', [
             'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
@@ -174,7 +174,7 @@ function stats(): void {
             'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'icon_name' => 'arrow-up', 'is_navi_lower' => true],
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('empty', []);
     }
     echo $cont;
     setFoot();

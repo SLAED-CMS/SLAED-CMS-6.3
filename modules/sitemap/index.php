@@ -17,9 +17,9 @@ function sitemap(): void {
     if (is_readable($path)) {
         $map = file_get_contents($path);
         $map = ($map !== false) ? trim($map) : '';
-        $cont .= ($map !== '') ? $tpl->getHtmlFrag('block-content', ['content' => $map]) : $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= ($map !== '') ? $tpl->getHtmlFrag('block-content', ['content' => $map]) : $tpl->getHtmlFrag('empty', []);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('empty', []);
     }
     echo $cont;
     setFoot();

@@ -825,7 +825,7 @@ function favorites(): void {
         ]);
         $list = getFavoriteList(1);
         echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES, 'is_level_one' => true]).getUserNav()
-            .getCabinetNotes('', ($list === '') ? _NO_INFO : '', 0)
+            .getCabinetNotes('', '', 0)
             .$tpl->getHtmlFrag('block-content', ['id' => 'repfavorliste', 'content' => $list]);
         setFoot();
     } else {
@@ -857,7 +857,7 @@ function logins(): void {
             ['primary_text' => $info['browser'].' / '.$info['os'], 'primary_title' => $agent],
         ]]);
     }
-    $cont = ($rows === '') ? getCabinetNotes('', _NO_INFO, 0) : $tpl->getHtmlFrag('table', [
+    $cont = ($rows === '') ? $tpl->getHtmlFrag('empty', []) : $tpl->getHtmlFrag('table', [
         'is_list' => true,
         'rows_html' => $rows,
         'headers' => [['text' => _DATE], ['text' => _STATUS], ['text' => _TYPE], ['text' => _IP], ['text' => _BROWSER]],
@@ -903,7 +903,7 @@ function materials(): void {
             ['content_html' => $renew],
         ]]);
     }
-    $cont = ($rows === '') ? getCabinetNotes('', _NO_INFO, 0) : $tpl->getHtmlFrag('table', [
+    $cont = ($rows === '') ? $tpl->getHtmlFrag('empty', []) : $tpl->getHtmlFrag('table', [
         'is_list' => true,
         'rows_html' => $rows,
         'headers' => [['text' => _TITLE], ['text' => _MODUL], ['text' => _DATE], ['text' => _ENDDATE], ['text' => _STATUS], ['text' => '']],

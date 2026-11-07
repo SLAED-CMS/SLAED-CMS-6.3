@@ -214,7 +214,7 @@ return [
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
         'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut', 'drift', 'drift-dot',
-        'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'entry', 'f-title', 'fav', 'feedback',
+        'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'empty', 'entry', 'f-title', 'fav', 'feedback',
         'field', 'figure', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
@@ -465,7 +465,7 @@ return [
             .'.sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio:has(input:checked), '
             .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-fm-win .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
         '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
-            .'.sl-profile-wide.sl-is-warn h3 i, .sl-fm-win .sl-fm-empty.sl-is-fail .bi, .sl-fm-win .sl-fm-job.sl-is-fail > .bi',
+            .'.sl-profile-wide.sl-is-warn h3 i, .sl-fm-win .sl-fm-job.sl-is-fail > .bi',
         '.sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, .sl-topic-hot .bi, .sl-topic-admin .bi',
         # A category tone and the tone a kept message wears are one colour under two names on purpose: a category of the catalogue and a state of a message
         # They are free to part without touching each other
@@ -515,8 +515,8 @@ return [
         '.sl-fm-thumb-zip, .sl-pager .sl-pager-keys > .sl-but-mini',
         # A selected tile beside a drop target under a dragged file: two states of the same panel that mean different things and are free to part
         '.sl-fm-cell[aria-selected="true"] .sl-fm-tile, .sl-fm-drop.sl-drag-over',
-        # The caption of the drop zone beside the caption of an empty list: two states of the panel, one inviting and one reporting
-        '.sl-fm-win .sl-fm-drop b, .sl-fm-win .sl-fm-empty b',
+        # The caption of the drop zone beside the title of an empty state: one inviting and one reporting
+        '.sl-fm-win .sl-fm-drop b, .sl-empty > b',
         # The note beside a queued file and the term of a property list: two faint labels in two panels of the window
         '.sl-fm-win .sl-fm-job-name small, .sl-fm-win .sl-fm-props dt, .sl-shot-side .sl-fm-props dt',
         # The caption over the queue beside the room the module has left: two readings of the same panel, and the second is a measurement rather than a heading

@@ -856,7 +856,7 @@ function getProbeFeedLegacy(int $uid): string {
     foreach (getProfileModules() as $mod => $inf) {
         if (!isset($lists[$mod])) continue;
         $tabs[] = $inf['title'];
-        $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
+        $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty' => ['is_small' => true]]);
     }
     return $tpl->getHtmlPart('account-profile-feed', [
         'head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY],

@@ -40,9 +40,9 @@ function changelog(): void {
     $error = (string)$loaded['error'];
 
     if (empty($commits)) {
-        $warnText = $error !== '' ? $error : _CHLOG_ERR_NO_COMMITS;
-        $warnType = $error !== '' ? 'warn' : 'info';
-        echo $head.$tpl->getHtmlFrag('alert', ['is_warn' => ($warnType !== 'info'), 'text' => $warnText]);
+        $seek = array_filter($filters, static fn($v): bool => $v !== '');
+        echo $head.(($error !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $error])
+            : $tpl->getHtmlFrag('empty', $seek ? ['is_found' => true, 'act_url' => getSeoUrl(['name' => $conf['name']])] : ['title_text' => _CHLOG_ERR_NO_COMMITS]));
         setFoot();
         return;
     }

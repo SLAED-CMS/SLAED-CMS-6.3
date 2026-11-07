@@ -3174,7 +3174,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         array_merge(['id' => $id], $qpars)
     );
     if ($db->getSqlRowCount($result) < 1) {
-        return $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        return $tpl->getHtmlFrag('empty', ['is_small' => true]);
     }
 
     [$modul, $title, $body, $answer, $end, $multi, $comm, $acomm, $typ, $route] = $db->getSqlRow($result);

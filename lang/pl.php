@@ -396,7 +396,6 @@ define('_FAVOR_FOLD','Kliknij nagłówek półki, aby zwinąć lub rozwinąć je
 define('_FAVOR_FREE','Wolne %1$s z %2$s');
 define('_FAVOR_SEEK','Szukaj w ulubionych');
 define('_FAVOR_SEEKNOTE','Tytuł lub moduł');
-define('_FAVOR_NONE','Nic nie znaleziono. Wyczyść zapytanie lub wybierz moduł powyżej.');
 define('_FEEDBACK','Feedback');
 define('_FIELDS_REQ','To pole musi zostać wypełnione.');
 define('_FIELDS_TYPE','Wartość ma nieprawidłową strukturę.');
@@ -660,7 +659,6 @@ define('_PRLIST','Lista wiadomości');
 define('_PRMOVE','Zapisaną wiadomość');
 define('_PRNEW','Nowa wiadomość');
 define('_PRNEWMAIL','Prosimy pamiętać o tym, że nadeszła nowa prywatna wiadomość od użytkownika %1$s.<br><br>Dla przeczytaniu wiadomości, przejdź do adresu: %2$s<br><br><br>Masz to powiadomienie, tak jak w koncie, w którym podany Twój adres e-mail, aktywowana usługa «otrzymuj powiadomienia o nowych prywatnych wiadomościach».<br><br>Aby nie otrzymać takie uwagi w przyszłości, należy wyłączyć tę usługę w ustawieniach profilu.');
-define('_PRNOHIT','Żadna wiadomość nie pasuje do filtrów');
 define('_PRNOLIMIT','Bez ograniczeń');
 define('_PROLD','Przeczytana wiadomość');
 define('_PROUT','Wychodzące');

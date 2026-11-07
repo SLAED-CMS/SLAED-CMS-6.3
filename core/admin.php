@@ -249,7 +249,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
         $cats[$cmod][] = ['id' => (int)$cid, 'title' => $title, 'intro' => $intro, 'img' => $img, 'lang' => $lang, 'parent' => (int)$parent, 'status' => (int)$status];
     }
     if (!$cats) {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('empty', ['act_url' => $afile.'.php?name=categories&op=add'.($modul ? '&modul='.$modul : '')]);
         if ($obj) return $cont;
         echo $cont;
         return '';
@@ -1475,12 +1475,8 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'props_html' => getAdminFileProps($pick),
         'edit_html' => ($pick === '') ? '' : getAdminFileEditor($edit),
         'list_html' => $tpl->getHtmlPart('file-browser-list', [
-            'is_empty' => $rows === '',
-            'empty_icon' => ($find === '' && !$lone) ? 'folder' : 'search',
-            'empty_title' => ($find === '' && !$lone) ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
-            'empty_text' => ($find === '' && !$lone) ? _UPLOADS_EMPTYTXT : _UPLOADS_NOFINDTXT,
-            'reset_url' => ($find === '' && !$lone) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir]),
-            'reset_text' => _FRESET,
+            'empty' => ($rows !== '') ? [] : (($find === '' && !$lone) ? ['icon_name' => 'folder', 'title_text' => _UPLOADS_EMPTY, 'text' => _UPLOADS_EMPTYTXT]
+                : ['is_found' => true, 'text' => _UPLOADS_NOFINDTXT, 'act_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir]), 'act_target' => '#slfmbody']),
             'fail_title' => _UPLOADS_FAIL,
             'fail_text' => _UPLOADS_FAILTXT,
             'retry_text' => _RETRY,

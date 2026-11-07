@@ -10,8 +10,8 @@
   </div>
   {% endfor %}
   {% if !shelves %}
-  <div class="sl-opt-tile sl-opt-w6">
-    <p>{{ none_text }}</p>
+  <div class="sl-opt-w6">
+    {% include 'fragments/empty.html' with none %}
   </div>
   {% endif %}
 </div>
