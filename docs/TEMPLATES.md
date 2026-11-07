@@ -797,8 +797,15 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
   come from a `ResizeObserver` and are kept until the next change (`setPulse()`, `setGuard()`).
 - **A loop sleeps off screen.** A `requestAnimationFrame` loop runs only while an `IntersectionObserver` sees its part
   and motion is not still; a part of the presentation off screen carries `data-sl-pres-off`, under which its animations
-  pause, and `setOffScreen()` pauses its SVG by `pauseAnimations()`. A canvas is cleared and drawn only after a step that
-  changed it (Phoenix, `setPhxPlay()`), and a picture that does not move is drawn once and kept (`setStill()`).
+  pause, and `setOffScreen()` pauses its SVG by `pauseAnimations()`. A part is a section and each scene and block of it
+  (`.sl-pres-scene`, a child of `.sl-pres-body` or of the hero), so the half of a tall section below the window stands
+  still while its head is read. A canvas is cleared and drawn only after a step that changed it (Phoenix,
+  `setPhxPlay()`), a line that reached its aim sleeps until the next step (`setPulse()`), and a picture that does not
+  move is drawn once and kept (`setStill()`).
+- **A running dash has a layer of its own.** An SVG whose dashes run by `stroke-dashoffset` is drawn again every frame,
+  and with it everything its box covers on the same layer: the wires of the block scene take `will-change: transform`,
+  GPU 119 → 61 % on the system screen. A layer under a part that stands on a half pixel pulls that part onto a layer as
+  well, where it rasters apart, so the map of the presentation keeps its wires in the scene.
 - **Nothing inherited per move.** A value written on every pointer move or frame is registered by `@property` with
   `inherits: false` and written on the element that reads it, never an inherited custom property on `body` or a scene:
   `--sl-d-pointer-x`, `--sl-d-pointer-y` of the pointer light, `--sl-d-gate-y`. A rule that reads such a value from its

@@ -614,7 +614,9 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
   `Performance.getMetrics`, frames from a `requestAnimationFrame` counter.
 - **The states.** `home-idle`, `home-pointer`, `home-nudge` (a pointer in a circle at the edge, entering no element),
   `home-scene` (one round of Phoenix in windows of 1.5 s by act), `pres-top`, `pres-quiet` (y 7200), `pres-pipeline`,
-  `pres-guard`, `pres-pointer`, `pres-nudge`, `pres-scroll` (a wheel of 40 px, 60 a second); `--states=a,b` limits a run.
+  `pres-guard`, `pres-system`, `pres-workbench`, `pres-runtime`, `pres-dev`, `pres-live`, `pres-dna`, `pres-archive`,
+  `pres-showcase`, `pres-voices`, `pres-pulse` (each section at its start), `pres-pointer`, `pres-nudge`, `pres-scroll`
+  (a wheel of 40 px, 60 a second); `--states=a,b` limits a run.
 - **Causes.** `--trace=<state>` names every animation the compositor refuses with its reason (`blink.animations`, opened
   before the load, since an animation names itself once at its start), the element counts of a restyle and the stack
   that forced a layout; `--profile=<state>` gives the hot functions.
@@ -622,7 +624,8 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
   and every poll with their first answer, pauses every loop at seven moments of its cycle and finishes every run that
   ends, and compares the crops per channel in both schemes, 16 of 255 at most; `--tones=` takes the cockpit through its
   states, `--crops=<dir>` keeps the PNGs. The parts: `cockpit`, `cockpit-stat`, `cockpit-mon`, `led` and `live` (with a
-  margin of 8 px, their ring lies outside the box), `hero`, `pipeline`, `guard`, `runtime`, `development`. A part
+  margin of 8 px, their ring lies outside the box), `hero`, `system` (the map), `blocks` (the block scene), `pipeline`,
+  `guard`, `runtime`, `development`. A part
   against itself differs by at most 1 of 255, with the mark of the cockpit state stilled, as its glyph rasters
   differently between two loads; `pipeline` differs by up to 26 of 255 in the light scheme between runs, the cause
   not found, so a crop of it past the tolerance is run again. A motion a script drives stands at one position in all
@@ -654,6 +657,12 @@ The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the 
 | The aurora a turning cone cut to the frame, its layer made only under the hand (left on every block at rest it cost 66 → 79 renderer on the top); on the presentation every framed block takes it, and every figure counts up from zero | panel, idle / pointer | 59 → 57 / 83 → 83 | 68 → 69 / 83 → 86 | 75 → 80 / 160 → 166 | 5 → 5 / 14 → 15 | 120 |
 | The same, with the halo of the lamp | presentation, top / pointer | 62 → 62 / 71 → 77 | 49 → 59 / 54 → 72 | 33 → 33 / 72 → 83 | 17 → 16 / 15 → 16 | 120 |
 | The aurora on the framed blocks of the panel, drawn by the `--sl-aurora-*` tokens (the pair holds the uncommitted panel CSS of another session too) | panel, idle / pointer | 68 → 63 / 87 → 91 | 81 → 79 / 87 → 98 | 95 → 91 / 165 → 203 | 5 → 5 / 14 → 17 | 120 / 120 → 116 |
+| The presentation pauses by scene and block, not by section; the dashes of the block scene on a layer of their own; the pulse strip sleeps once its line reached its aim (2026-11-07, 5 rounds) | presentation, system / development / guard / top | 50 → 48 / 51 → 35 / 82 → 78 / 65 → 63 | 119 → 61 / 17 → 16 / 55 → 53 / 62 → 61 | 29 → 29 / 37 → 34 / 69 → 61 / 29 → 28 | 2 → 2 / 17 → 11 / 26 → 22 / 14 → 14 | 120 |
+
+The layer of the block wires costs 14 layers more (the nodes above them follow onto layers) and about 9 MB of
+compositor resources, while the raster scratch of Skia falls from about 170 to 130 MB and the tile memory stays near
+95 MB (a memory dump of `memory-infra` on the system screen, two loads each); heap, nodes and listeners stand still over
+a minute on both sides.
 
 More frames drawn raise the GPU share, so a GPU figure that grows beside a frame rate that grows is no loss. The frame
 rate of the guard, 118 → 120, lies within the noise of a pair. Forms measured and not taken, as they change the
@@ -661,4 +670,12 @@ picture: the dots, the packet, the dashes and the bars of the presentation on `t
 past the gate on the guard screen), the scan of the cockpit on `transform` (with the screensaver
 off, both it and the live icon moved: renderer 69 → 15 %, style 114 → 5 ms/s; the line between two rows of pixels, up
 to 36 of 255), and the scan lines of the presentation on `transform` (top: renderer 59 → 38 %, layout 16 → 1 ms/s; up
-to 68 of 255).
+to 68 of 255), and the wires of the map of the presentation on a layer of their own (system: GPU 65 → 44 % past the
+block scene; the core above them then rasters on its half pixel apart, the logo and its ring up to 90 of 255, 158
+with a layer of its own). Measured and not taken, as it saved nothing: the end of the page read by the rail spy of
+`slaed.js` only near the last section (the forced layouts of a scroll gone, frames and layout unchanged, since the
+layout it forced was the one of that frame). Under the wheel the compositor draws about 100 frames a second while
+Chromium itself lets the main thread draw about 46, so `pres-scroll` reads near 60 frames whatever the page does; its
+cost is the raster of the tiles the scroll uncovers. On the top of the presentation the lamp of the cockpit, its comet
+and fourteen bars under the `drop-shadow`, holds two fifths of the main thread spent on layers (215 → 132 ms/s) and
+four fifths of the GPU spent on the render passes (205 → 44 ms/s, a trace with them still), an effect kept by decision.

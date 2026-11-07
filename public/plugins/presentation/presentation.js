@@ -335,7 +335,7 @@
         draw();
     }
 
-    // The pulse strip: nothing here is measured, so it says so by never standing still while it is seen; a reader who asked for no motion gets one still band; a frame reads no layout, the size comes from the observer
+    // The pulse strip: nothing here is measured, so it says so by never standing still while it is seen; a line that reached its aim sleeps until the next step, a reader who asked for no motion gets one still band, the size comes from the observer
     function setPulse(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var face = root.querySelector('canvas');
@@ -353,6 +353,7 @@
         var rect = root.getBoundingClientRect();
         var shown = true;
         var armed = false;
+        var rest = 0;
         var wake = function () {
             if (armed || !rect.width || !rect.height) return;
             armed = true;
@@ -373,7 +374,12 @@
                 aim.shift();
                 last = now;
             }
-            for (var k = 0; k < count; k++) cur[k] += (aim[k] - cur[k]) * 0.1;
+            var move = 0;
+            for (var k = 0; k < count; k++) {
+                var step = (aim[k] - cur[k]) * 0.1;
+                cur[k] += step;
+                move = Math.max(move, Math.abs(step));
+            }
             var pen = face.getContext('2d');
             pen.setTransform(dpr, 0, 0, dpr, 0, 0);
             pen.clearRect(0, 0, rect.width, rect.height);
@@ -400,7 +406,10 @@
             pen.globalAlpha = 0.22;
             pen.fill();
             pen.globalAlpha = 1;
-            if (shown && !window.isMotionStill()) wake();
+            if (!shown || window.isMotionStill()) return;
+            window.clearTimeout(rest);
+            if (move > 0.005) wake();
+            else rest = window.setTimeout(function () { if (shown) wake(); }, Math.max(0, 900 - (now - last)));
         };
         if (window.ResizeObserver) {
             new ResizeObserver(function () {
@@ -1092,24 +1101,25 @@
         });
     }
 
-    // A part off screen costs no frame: the CSS pauses what data-sl-pres-off marks, and SMIL, which no CSS reaches, is paused here and under still motion too
+    // A part off screen costs no frame: each section, scene and block is watched, the CSS pauses what data-sl-pres-off marks, and SMIL, which no CSS reaches, is paused here and under still motion too
     function setOffScreen() {
-        var list = document.querySelectorAll('.sl-pres-hero, .sl-pres-section');
+        var list = document.querySelectorAll('.sl-pres-hero, .sl-pres-section, .sl-pres-hero > *, .sl-pres-body > *, .sl-pres-scene');
         var setPaths = function (box) {
-            var off = box.hasAttribute('data-sl-pres-off') || window.isMotionStill();
+            var still = window.isMotionStill();
             var svgs = box.querySelectorAll('svg');
             for (var i = 0; i < svgs.length; i++) {
-                if (off) svgs[i].pauseAnimations();
+                if (still || svgs[i].closest('[data-sl-pres-off]')) svgs[i].pauseAnimations();
                 else svgs[i].unpauseAnimations();
             }
         };
         var setAll = function () {
             for (var i = 0; i < list.length; i++) setPaths(list[i]);
         };
-        // The arcs of a part first seen off screen ran before this script marked it, so they fill again from zero when it first comes into view
+        // The arcs of a part first seen off screen ran before this script marked it, so they fill again from zero when it first comes into view; an arc in a part still off waits for that part
         var setArcs = function (box) {
             var arcs = box.querySelectorAll('.sl-knob-val');
             for (var i = 0; i < arcs.length; i++) {
+                if (arcs[i].closest('[data-sl-pres-off]')) continue;
                 var runs = arcs[i].getAnimations();
                 for (var k = 0; k < runs.length; k++) {
                     if (runs[k].animationName !== 'sl-pres-arc') continue;

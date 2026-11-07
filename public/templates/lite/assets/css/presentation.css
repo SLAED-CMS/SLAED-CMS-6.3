@@ -215,6 +215,11 @@
   pointer-events: none;
 }
 
+/* The running dashes of the block scene repaint every frame on a layer of their own, not the scene under them; the map keeps its wires in the scene, as its core above them would raster half a pixel off */
+.sl-pres-blocks-stage > .sl-pres-wires {
+  will-change: transform;
+}
+
 .sl-pres-wires path {
   fill: none;
   stroke: var(--sl-pres-frame-border);
