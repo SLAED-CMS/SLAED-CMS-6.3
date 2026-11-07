@@ -1,5 +1,19 @@
 # Versions
 
+## 2026-11-07
+
+### The Node types stand in the panel as a group of their own
+
+The modules news, faq, files and the others are Node types since 8.0, and the home of the panel showed only the card
+"Материалы": a newcomer did not find "Новости". `getAdminSectionList()` now lists every type an administrator
+moderates after the site modules, keyed by its name and opening `name=node&type=<name>`, so the home, the menu, the
+pins, Ctrl+K and "Все разделы" of the site menu show them at once. They stand apart from the modules, a type being no
+module: the home has the panel "Типы материалов сайта, созданные в модуле «Материалы»" after the site modules, the menu
+the block "Типы материалов", "Все разделы" the third group. A card carries the key of the type, its queue (materials
+waiting, for support the requests waiting) and the dial of the type: edit, categories, site, help, pin; a type is
+turned on and off in the types of Node only. `getModuleLabel()` answers the title of a type, so a pin no longer shows
+the raw key, and the order of the menu takes as many keys as there are modules and types.
+
 ## 2026-11-04
 
 ### The code is SLAED CMS 8.0.0

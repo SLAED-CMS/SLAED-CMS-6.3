@@ -215,14 +215,15 @@ function getAdminQueueData(): void {
     ]);
 }
 
-# Answer "All sections" of the menu on the site: the sections this administrator may open in the two groups of the panel menu
+# Answer "All sections" of the menu on the site: the sections this administrator may open in the groups of the panel menu, the Node types last
 function getAdminSectionData(): void {
     $out = [];
     foreach (getAdminSectionList() as $key => $row) {
-        $grp = $row['is_panel'] ? 0 : 1;
-        $out[$grp] ??= ['title' => $row['is_panel'] ? _ADMIN : _MODULES, 'rows' => []];
+        $grp = $row['is_panel'] ? 0 : (isset($row['node']) ? 2 : 1);
+        $out[$grp] ??= ['title' => [_ADMIN, _MODULES, _ADM_TYPES][$grp], 'rows' => []];
         $out[$grp]['rows'][] = ['key' => $key, 'href' => $row['href'], 'label' => getModuleLabel($key), 'icon' => $row['icon']];
     }
+    ksort($out);
     header('Content-Type: application/json; charset=UTF-8');
     echo json_encode(array_values($out));
 }

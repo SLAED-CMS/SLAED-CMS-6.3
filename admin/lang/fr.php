@@ -113,6 +113,8 @@ define('_ADM_ROWSCAP','seulement jusqu\'à %s');
 define('_ADM_ROWSNEW','Désormais %s ligne par page dans toutes les listes du panneau|Désormais %s lignes par page dans toutes les listes du panneau');
 define('_ADM_ROWSALLN','Désormais toutes les lignes sur une page dans toutes les listes jusqu\'à %s lignes');
 define('_ADM_ROWSDEF','Retour au défaut du module : %s ligne par page|Retour au défaut du module : %s lignes par page');
+define('_ADM_TYPES','Types de contenus');
+define('_ADM_TYPESPANEL','Types de contenus du site créés dans le module « Contenus »');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT','Activer le rédacteur en chef du département de l\'information?');
 define('_ADMININFO','Notes administrateur');

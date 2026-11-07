@@ -1375,8 +1375,11 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
   for a logged administrator: the panel always prints it and hides it under `data-sl-dock-off`, the site neither prints
   it nor loads `dock.js` while `dock-site-off` is set. `getAdminSectionList()` is the
   one check of the sections an administrator may open, read by the menu and the home of the panel, the pins and "Все
-  разделы" (`go=5&op=getAdminSectionData`); `getAdminPageLink()` answers "Эта страница в панели". A module administrator
-  sees only the sections and queues of their own modules, without own links and without the watch.
+  разделы" (`go=5&op=getAdminSectionData`); `getAdminPageLink()` answers "Эта страница в панели". A Node type is a
+  section of its own, keyed by its name, opening `name=node&type=<name>` and carrying its queue; the home, the menu and
+  "Все разделы" show the types as a group "Типы материалов" after the site modules and apart from them, since a type is no module,
+  and a type is turned on and off only in the types of Node. A module
+  administrator sees only the sections and queues of their own modules and types, without own links and without the watch.
 - **The watch window** `#sl-stats` is printed by `getWindowSet()` on every page of a super administrator while
   sessions are on; its body is `getSessionStats()` (`go=5` in the panel, `go=1` on the site, with the token), asked on
   the first opening and polled every 10 s only while the window is open and seen. It shows the present of `_session`

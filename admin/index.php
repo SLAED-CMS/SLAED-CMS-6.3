@@ -19,13 +19,15 @@ function checkModuleConfig(string $name, int $typ): bool {
     return strpos((string)file_get_contents($file), "case 'config'") !== false;
 }
 
-# Build one dashboard card or sidebar row of a module; the open section is marked current, and the module node gets no site link, having no public route
-function getAdminMenu(string $name, array $mod, bool $open = false): string {
-    global $panel, $afile, $tpl;
-    $url = $afile.'.php?name='.$name;
+# Build one dashboard card or sidebar row of a section; a Node type opens its list and turns on in the types of Node, and the module node gets no site link
+function getAdminMenu(string $name, array $sec, bool $open = false): string {
+    global $panel, $afile, $tpl, $conf;
+    $type = $sec['node'] ?? null;
+    $mod = $conf['modules'][$name] ?? [];
+    $url = $type ? $afile.'.php?name=node&type='.$name : $afile.'.php?name='.$name;
     $title = getModuleLabel($name);
-    $icon = preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle';
-    $off = empty($mod['active']);
+    $icon = $sec['icon'];
+    $off = $type ? !$type->active : empty($mod['active']);
     $rows = array_filter(getAdminQueues(), static fn(array $row): bool => $row['mod'] === $name);
     $queue = $rows ? $name : '';
     $qnum = array_sum(array_column($rows, 'num'));
@@ -34,7 +36,13 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
     $pinned = in_array($name, explode('-', getCookies('pins')), true);
     $pin = ['pin' => $name, 'is_pinned' => $pinned, 'title' => $pinned ? _ADM_UNPIN : _ADM_PIN, 'icon_name' => $pinned ? 'pin-angle-fill' : 'pin-angle'];
     if (!isAdmin(true)) $dial[] = $pin;
-    if (isAdmin(true)) {
+    if (isAdmin(true) && $type) {
+        $dial[] = ['href' => $afile.'.php?name=node&op=type&type='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
+        if ($type->settings['features']['categories']) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
+        if (!$off) $dial[] = ['href' => getSeoUrl(['name' => $name]), 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
+        $dial[] = ['href' => $afile.'.php?name=node&op=info', 'title' => _MANUAL, 'icon_name' => 'info-circle'];
+        $dial[] = $pin;
+    } elseif (isAdmin(true)) {
         $typ = (int)($mod['type'] ?? 1);
         $dial[] = ['href' => $afile.'.php?name=modules&op=edit&mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
         if (checkModuleConfig($name, $typ)) $dial[] = ['href' => $url.'&op=config', 'title' => _PREFERENCES, 'icon_name' => 'gear'];
@@ -54,7 +62,7 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
             'title' => $title,
             'title_attr' => $ltitle,
             'icon_name' => $icon,
-            'subtitle' => $name.' · '.$who,
+            'subtitle' => $type ? $name : $name.' · '.$who,
             'is_off' => $off,
             'led_title' => $off ? _DEACT : _ACT,
             'dial' => $dial,
@@ -75,15 +83,17 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
     ]);
 }
 
-# Build the sidebar menu blocks of a module screen: the panel modules for a super-admin, then every site module this administrator may open, a row dragged only within its block
+# Build the sidebar menu blocks of a module screen: the panel modules for a super-admin, the site modules, the Node types, a row dragged only within its block
 function getAdminPanelBlocks(): string {
-    global $panel, $conf, $tpl, $name;
+    global $panel, $tpl, $name;
     if (!$panel) {
-        $cont = '';
+        $cont = $tcont = '';
         $block = '';
         $list = getAdminSectionList();
+        $kind = ($name === 'node') ? getVar('get', 'type', 'var', '') : '';
+        $cur = isset($list[$kind]) ? $kind : $name;
         if (isAdmin(true)) {
-            foreach ($list as $key => $row) if ($row['is_panel']) $cont .= getAdminMenu($key, $conf['modules'][$key], $key === $name);
+            foreach ($list as $key => $row) if ($row['is_panel']) $cont .= getAdminMenu($key, $row, $key === $cur);
             $block = $tpl->getHtmlPart('block-sidebar', [
                 'title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL, 'is_find' => true, 'is_drag' => true,
             ]);
@@ -91,12 +101,21 @@ function getAdminPanelBlocks(): string {
         }
         foreach ($list as $key => $row) {
             if ($row['is_panel']) continue;
-            $cont .= getAdminMenu($key, $conf['modules'][$key], $key === $name);
+            if (isset($row['node'])) {
+                $tcont .= getAdminMenu($key, $row, $key === $cur);
+                continue;
+            }
+            $cont .= getAdminMenu($key, $row, $key === $cur);
             getLang($key, true);
         }
         $block .= $tpl->getHtmlPart('block-sidebar', [
             'title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL, 'is_find' => true, 'is_drag' => true,
         ]);
+        if ($tcont !== '') {
+            $block .= $tpl->getHtmlPart('block-sidebar', [
+                'title' => _ADM_TYPES, 'icon_name' => 'collection', 'content_html' => $tcont, 'id' => '4', 'close' => _OPCL, 'is_find' => true, 'is_drag' => true,
+            ]);
+        }
         return $block;
     }
     return '';
@@ -136,7 +155,7 @@ function getAdminPanel(): void {
     if ($panel) {
         if (isAdmin(true)) {
             $items = [];
-            foreach (getAdminSectionList() as $name => $row) if ($row['is_panel']) $items[] = getAdminMenu($name, $conf['modules'][$name]);
+            foreach (getAdminSectionList() as $name => $row) if ($row['is_panel']) $items[] = getAdminMenu($name, $row);
             $content .= $tpl->getHtmlPart('dashboard-panel', [
                 'panel_id' => 'sl_panel_admin',
                 'title' => _MODADMINPANEL,
@@ -145,10 +164,14 @@ function getAdminPanel(): void {
                 'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $items)]),
             ]);
         }
-        $items = [];
+        $items = $types = [];
         foreach (getAdminSectionList() as $name => $row) {
             if ($row['is_panel']) continue;
-            $items[] = getAdminMenu($name, $conf['modules'][$name]);
+            if (isset($row['node'])) {
+                $types[] = getAdminMenu($name, $row);
+                continue;
+            }
+            $items[] = getAdminMenu($name, $row);
             getLang($name, true);
         }
         $content .= $tpl->getHtmlPart('dashboard-panel', [
@@ -158,6 +181,15 @@ function getAdminPanel(): void {
             'is_find' => true,
             'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $items)]),
         ]);
+        if ($types) {
+            $content .= $tpl->getHtmlPart('dashboard-panel', [
+                'panel_id' => 'sl_panel_node',
+                'title' => _ADM_TYPESPANEL,
+                'icon_name' => 'collection',
+                'is_find' => true,
+                'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $types)]),
+            ]);
+        }
     }
     echo $content;
     setFoot();
@@ -404,7 +436,7 @@ function setAdminOption(): void {
     $keys = in_array($key, ['pins', 'menu'], true) ? array_unique(array_filter(explode('-', $val))) : [];
     if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'rows', 'pins', 'menu', 'editor'], true)
         || ($key === 'editor' && (count($part) !== 4 || !Editor::isValidEditor($val, 'admin')))
-        || count($keys) > (($key === 'pins') ? 8 : count($conf['modules'])) || preg_grep('#[^a-z0-9_]#', $keys)) {
+        || count($keys) > (($key === 'pins') ? 8 : count($conf['modules']) + count($conf['node']['types'] ?? [])) || preg_grep('#[^a-z0-9_]#', $keys)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
         exit;

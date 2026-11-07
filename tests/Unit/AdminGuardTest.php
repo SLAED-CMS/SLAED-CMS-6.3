@@ -297,7 +297,7 @@ final class AdminGuardTest extends TestCase
     public function thePinsOfTheMenuAreHeldAtBothEnds(): void
     {
         $option = $this->getBody('admin/index.php', 'setAdminOption');
-        $check = "count(\$keys) > ((\$key === 'pins') ? 8 : count(\$conf['modules'])) || preg_grep('#[^a-z0-9_]#', \$keys)";
+        $check = "count(\$keys) > ((\$key === 'pins') ? 8 : count(\$conf['modules']) + count(\$conf['node']['types'] ?? [])) || preg_grep('#[^a-z0-9_]#', \$keys)";
         $this->assertStringContainsString($check, $option, 'The option stores a list of pins it never checked');
         $store = strpos($option, "setCookies(\$key, time() + 31536000, implode('-', \$keys))");
         $this->assertLessThan($store, strpos($option, 'http_response_code(400)'), 'The pins are stored before they are checked');

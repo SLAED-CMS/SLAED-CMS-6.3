@@ -3945,9 +3945,10 @@ function getConst(string $con): string {
     return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
 }
 
-# Return the name of a module from its config row
+# Return the name of a module from its config row, or of a Node type, which has no row there and stands in the panel as a module
 function getModuleLabel(string $mod): string {
     global $conf;
+    if (isset($conf['node']['types'][$mod])) return getModuleName($mod);
     $con = trim((string)($conf['modules'][$mod]['lang'] ?? ''));
     if ($con === '') return $mod;
     if ($con[0] === '_' && !defined($con)) getLang((($conf['modules'][$mod]['type'] ?? 1) == 0) ? 'admin' : $mod, defined('ADMIN_FILE'));
@@ -4340,7 +4341,7 @@ function getAdminQueues(): array {
             continue;
         }
         $label = getModuleName($name);
-        $rows[] = ['key' => $name, 'mod' => 'node', 'label' => $label, 'title' => $label, 'icon' => getIconName($name), 'href' => $href, 'num' => $num];
+        $rows[] = ['key' => $name, 'mod' => $name, 'label' => $label, 'title' => $label, 'icon' => getIconName($name), 'href' => $href, 'num' => $num];
     }
     usort($rows, static fn(array $one, array $two): int => $two['num'] <=> $one['num']);
     return $rows;
@@ -4405,7 +4406,7 @@ function getAdminBlockLinks(): array {
     return $out;
 }
 
-# The sections this administrator may open, by key: the panel modules for a super administrator, then the site modules with an admin part, each in the order of the cookie menu
+# The sections this administrator may open, by key: panel modules for a super administrator, site modules with an admin part, the Node types they moderate
 function getAdminSectionList(): array {
     global $conf, $afile;
     static $rows = null;
@@ -4418,6 +4419,13 @@ function getAdminSectionList(): array {
             if (($typ === 0) ? !isAdmin(true) : (!is_admin_modul($key) || !is_file(BASE_DIR.'/modules/'.$key.'/admin/index.php'))) continue;
             $rows[$key] = ['key' => $key, 'is_panel' => $typ === 0, 'href' => HOME_PATH.$afile.'.php?name='.$key,
                 'icon' => preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle'];
+        }
+    }
+    if (!empty($conf['node']['types'])) {
+        $ctx = getNodeContext();
+        foreach (getNodeTypeMap() as $key => $type) {
+            if (isset($rows[$key]) || (!$ctx->super && !in_array($key, $ctx->mods, true))) continue;
+            $rows[$key] = ['key' => $key, 'is_panel' => false, 'href' => HOME_PATH.$afile.'.php?name=node&type='.$key, 'icon' => getIconName($key), 'node' => $type];
         }
     }
     $seat = array_flip(explode('-', getCookies('menu')));

@@ -113,6 +113,8 @@ define('_ADM_ROWSCAP','only up to %s');
 define('_ADM_ROWSNEW','Now %s row per page in every list of the panel|Now %s rows per page in every list of the panel');
 define('_ADM_ROWSALLN','Now all rows on one page in every list up to %s rows');
 define('_ADM_ROWSDEF','Back to the default of the module: %s row per page|Back to the default of the module: %s rows per page');
+define('_ADM_TYPES','Content types');
+define('_ADM_TYPESPANEL','Site content types created in the Content module');
 define('_ADMINEMAIL','Administrator Email');
 define('_ADMINFOEDIT','Activate the editor of the Department of information?');
 define('_ADMININFO','Note of the manager');

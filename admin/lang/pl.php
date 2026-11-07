@@ -113,6 +113,8 @@ define('_ADM_ROWSCAP','tylko do %s');
 define('_ADM_ROWSNEW','Teraz po %s wierszu we wszystkich listach panelu|Teraz po %s wiersze we wszystkich listach panelu|Teraz po %s wierszy we wszystkich listach panelu');
 define('_ADM_ROWSALLN','Teraz wszystkie wiersze na jednej stronie we wszystkich listach do %s wierszy');
 define('_ADM_ROWSDEF','Znów domyślne modułu: po %s wierszu|Znów domyślne modułu: po %s wiersze|Znów domyślne modułu: po %s wierszy');
+define('_ADM_TYPES','Typy treści');
+define('_ADM_TYPESPANEL','Typy treści witryny utworzone w module „Treści”');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT','Aktywacja redaktor działu informacji?');
 define('_ADMININFO','Notatki admin');

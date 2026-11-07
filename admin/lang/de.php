@@ -113,6 +113,8 @@ define('_ADM_ROWSCAP','nur bis %s');
 define('_ADM_ROWSNEW','Jetzt %s Zeile pro Seite in allen Listen des Panels|Jetzt %s Zeilen pro Seite in allen Listen des Panels');
 define('_ADM_ROWSALLN','Jetzt alle Zeilen auf einer Seite in allen Listen bis %s Zeilen');
 define('_ADM_ROWSDEF','Wieder der Standard des Moduls: %s Zeile pro Seite|Wieder der Standard des Moduls: %s Zeilen pro Seite');
+define('_ADM_TYPES','Inhaltstypen');
+define('_ADM_TYPESPANEL','Inhaltstypen der Website aus dem Modul „Inhalte“');
 define('_ADMINEMAIL','Administrator E-Mail');
 define('_ADMINFOEDIT','Aktivieren Herausgeber mit der Abteilung für Informationen?');
 define('_ADMININFO','Notizen des Administrators');
