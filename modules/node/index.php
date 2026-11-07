@@ -28,8 +28,9 @@ function getNodeFault(NodeException $err): string {
         NodeException::LIMITED => sprintf(_CERROR5, $conf['node']['limits']['send']),
         default => _NODE_FAILED,
     };
-    if ($err->getCode() === NodeException::INVALID && preg_match('/: (?:ext\.(url|refresh)|assets\.([0-9]+)\.src)$/D', $err->getMessage(), $hit)) {
-        $text .= ' ('.(($hit[1] === '') ? _NODE_ASSETS.' '.(intval($hit[2]) + 1) : (($hit[1] === 'url') ? _NODE_SOURCE : _NODE_PERIOD)).')';
+    $labs = ['url' => _NODE_SOURCE, 'refresh' => _NODE_PERIOD, 'starts' => _NODE_STARTS, 'ends' => _NODE_ENDS, 'place' => _NODE_PLACE];
+    if ($err->getCode() === NodeException::INVALID && preg_match('/: (?:ext\.(url|refresh|starts|ends|place)|assets\.([0-9]+)\.src)$/D', $err->getMessage(), $hit)) {
+        $text .= ' ('.(($hit[1] === '') ? _NODE_ASSETS.' '.(intval($hit[2]) + 1) : $labs[$hit[1]]).')';
     }
     return $text;
 }
@@ -150,6 +151,13 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload =
         $src = ['url' => trim(getVar('post', 'source', 'raw', '')), 'refresh' => trim(getVar('post', 'refresh', 'raw', ''))];
         $ext = ['url' => $src['url'], 'refresh' => preg_match('/^(?:0|[1-9][0-9]{0,8})$/D', $src['refresh']) ? (int)$src['refresh'] : -1];
     }
+    $from = $till = null;
+    if ($type->ext === 'event') {
+        $src = ['starts' => trim(getVar('post', 'starts', 'raw', '')), 'ends' => trim(getVar('post', 'ends', 'raw', '')), 'place' => getVar('post', 'place', 'raw', '')];
+        $from = getNodeFormDate($src['starts']);
+        $till = getNodeFormDate($src['ends']);
+        $ext = ['starts' => is_string($from) ? $from : '', 'ends' => is_string($till) ? $till : '', 'place' => $src['place']];
+    }
     $cats = array_values(array_unique(array_filter(array_map('intval', getVar('post', 'cids[]', '', [])), fn(int $v): bool => $v > 0)));
     $main = getVar('post', 'cid', 'num', 0);
     if (!$main) $main = $cats[0] ?? 0;
@@ -164,7 +172,7 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload =
     [$assets, $show, $errs] = getNodeAssetPost($type, $old?->assets ?? [], $upload);
     $pub = $moder ? getNodeFormDate(getVar('post', 'pubdate', 'raw', '')) : null;
     $end = ($moder && $feat['schedule']) ? getNodeFormDate(getVar('post', 'expires', 'raw', '')) : null;
-    if ($pub === false || $end === false) $errs[] = _NODE_BADDATE;
+    if ($pub === false || $end === false || $from === false || $till === false) $errs[] = _NODE_BADDATE;
     $mode = CommentMode::tryFrom(getVar('post', 'comon', 'num', CommentMode::Open->value)) ?? CommentMode::Disabled;
     if (!$feat['comments']) $mode = CommentMode::Disabled;
     elseif (!$moder) $mode = CommentMode::Open;
@@ -297,6 +305,15 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
             'is_main' => $v['value_attr'] === $vals['cid'], 'is_checked' => $v['value_attr'] === $vals['cid'] || in_array($v['value_attr'], $vals['cids'], true)], $cats);
         $rows[] = ['label' => _CATEGORIES, 'label_id' => 'f-cids-label', 'field' => $tpl->getHtmlFrag('check-list', ['labelledby' => 'f-cids-label', 'items' => $boxes])];
     }
+    if ($type->ext === 'event') {
+        $date = fn(string $key): string => str_replace(' ', 'T', substr((string)($vals['ext'][$key] ?? ''), 0, 16));
+        foreach (['starts' => _NODE_STARTS, 'ends' => _NODE_ENDS] as $key => $label) {
+            $rows[] = ['label' => $label, 'for' => 'f-'.$key, 'field' => $tpl->getHtmlFrag('input', ['itype' => 'datetime-local', 'name_attr' => $key, 'input_id' => 'f-'.$key,
+                'value_attr' => $date($key), 'is_required' => $key === 'starts'])];
+        }
+        $rows[] = ['label' => _NODE_PLACE, 'for' => 'f-place', 'field' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'place', 'input_id' => 'f-place',
+            'value_attr' => $vals['ext']['place'] ?? '', 'maxlength_num' => 255])];
+    }
     $rows[] = ['label' => _NODE_INTRO, 'field' => getNodeEditor($type, 'intro', $vals['intro'], _NODE_INTRO), 'full' => true];
     if ($type->ext !== 'sync') {
         $rows[] = ['label' => _TEXT, 'field' => getNodeEditor($type, 'body', $vals['body'], _TEXT), 'full' => true];
@@ -344,9 +361,26 @@ function getNodeSupportLabels(): array {
     return $out;
 }
 
-# The data the extension prepared for one material with the labels of a support request; the state names come from the support maps of config/node.php
+# The data the extension prepared for one material with the labels of a support request or the leaf of an event; the state names come from the support maps of config/node.php
 function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): array {
     global $conf, $afile;
+    if ($type->ext === 'event' && $data !== []) {
+        $from = strtotime($data['starts']);
+        $till = ($data['ends'] === null) ? strtotime(substr($data['starts'], 0, 10).' +1 day') : strtotime($data['ends']);
+        $when = fn(string $val): string => format_time($val, _DATESTRING.((substr($val, 11, 5) === '00:00') ? '' : ' H:i'));
+        return $data + [
+            'starts_iso' => date('c', $from),
+            'starts_text' => $when($data['starts']),
+            'ends_text' => ($data['ends'] === null) ? '' : $when($data['ends']),
+            'day' => date('j', $from),
+            'month' => explode(',', _MONTHS)[date('n', $from) - 1] ?? '',
+            'time' => (date('H:i', $from) === '00:00') ? '' : date('H:i', $from),
+            'is_past' => $till <= time(),
+            'starts_label' => _NODE_STARTS,
+            'place_label' => _NODE_PLACE,
+            'past_label' => _NODE_ARCHIVE,
+        ];
+    }
     if ($type->ext !== 'support' || $data === []) return $data;
     $maps = $conf['node']['support'];
     $labs = getNodeSupportLabels();
@@ -510,18 +544,21 @@ function setNodeList(): void {
     $dir = getVar('get', 'dir', 'raw', '');
     $new = getVar('get', 'new', 'raw', '');
     $fav = getVar('get', 'fav', 'raw', '');
+    $arch = getVar('get', 'archive', 'raw', '');
     $part = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
     header('Vary: HX-Request');
     if ($let !== '' && !preg_match('/^[\p{L}\p{N}]$/Du', $let)) setNodeDeny(400);
     if ($sort !== '' && !in_array($sort, ['published', 'updated', 'title', 'views', 'rating'], true)) setNodeDeny(400);
     if ($dir !== '' && !in_array($dir, ['asc', 'desc'], true)) setNodeDeny(400);
-    if (!in_array($new, ['', '1'], true) || !in_array($fav, ['', '1'], true)) setNodeDeny(400);
+    if (!in_array($new, ['', '1'], true) || !in_array($fav, ['', '1'], true) || !in_array($arch, ['', '1'], true)) setNodeDeny(400);
     $page = '';
     try {
         $type = getNodeRoute();
         $priv = $type->ext === 'support';
+        $event = $type->ext === 'event';
         $uid = getNodeContext()->uid;
         if ($priv && $uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
+        if ($event ? ($sort !== '' || $dir !== '') : $arch !== '') setNodeDeny(400);
         $set = $type->settings['list'];
         if ($let !== '' && !$set['alpha']) setNodeDeny(400);
         if ($sort !== '' && $sort !== 'published' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
@@ -531,13 +568,15 @@ function setNodeList(): void {
         $way = $dir ?: getNodeSortWay($type, $key);
         $since = getUserLastVisit($uid);
         $mine = (($new !== '' && $since !== '') ? ['new' => 1] : []) + (($fav !== '' && $uid > 0) ? ['fav' => 1] : []);
-        $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []) + $mine;
+        $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []) + $mine
+            + (($arch !== '') ? ['archive' => 1] : []);
         $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
             + ['page' => $i])];
         $mode = $type->settings['view']['mode'];
         $views = $set['views'] ?: [NodeQuery::MODEVIEW[$mode]];
         $cats = getCategoryMap($type->name);
         $query = getNodeReader($type)->setNodeType($type);
+        if ($event) $query->setNodeArgs(['archive' => $arch !== '']);
         if ($cat && (!isset($cats[$cat]) || !$query->checkNodeCategory($type, $cat))) setNodeDeny(404);
         if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $pick = getVar('post', 'view', 'var', '');
@@ -564,7 +603,7 @@ function setNodeList(): void {
         $extm = $hand ? $hand->getNodeData($type, $list, 'list') : [];
         $card = ['list' => 'node/docs/card', 'accordion' => 'node/faq/card', 'tiles' => 'node/media/card'][$look]
             ?? ((NodeQuery::MODEVIEW[$mode] === 'cards') ? getNodeTplName('fragments', 'card', $type) : 'node/card');
-        $dated = in_array($look, ['cards', 'compact'], true) && $key === 'published';
+        $dated = in_array($look, ['cards', 'compact'], true) && ($event || $key === 'published');
         $months = explode(',', _MONTHS);
         $groups = [];
         $rail = [];
@@ -576,7 +615,7 @@ function setNodeList(): void {
                     'intro_html' => $view['intro_html'], 'is_first' => $rail === []];
                 continue;
             }
-            $when = $node->pubdate ?? $node->updated;
+            $when = $event ? ($extm[$node->id]['starts'] ?? $node->updated) : ($node->pubdate ?? $node->updated);
             $month = $dated ? substr($when, 0, 7) : '';
             if ($month !== $slot) $groups[] = ['label' => $dated ? $months[substr($when, 5, 2) - 1].' '.substr($when, 0, 4) : '', 'count' => 0, 'items_html' => ''];
             $slot = $month;
@@ -611,7 +650,7 @@ function setNodeList(): void {
             'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
         ]);
         $plain = $sort === '' && $dir === '' && $let === '' && $new === '' && $fav === '';
-        $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['page' => $num] : []);
+        $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['page' => $num] : []) + (($arch !== '') ? ['archive' => 1] : []);
         $seo = ['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
             'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
             'canon' => ($home && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
@@ -671,12 +710,13 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
     foreach ($look['all'] as $one) $cells[] = ['key' => $one, 'title' => $names[$one][0], 'icon_name' => $names[$one][1], 'is_now' => $one === $look['now']];
     $token = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('view'), 'input_attr' => '']);
     $url = static function (array $pars, string $one, string $dir) use ($set): string {
-        $pars = array_filter(array_replace(array_fill_keys(['name', 'cat', 'let', 'new', 'fav'], null), $pars), fn($v) => $v !== null);
+        $pars = array_filter(array_replace(array_fill_keys(['name', 'cat', 'let', 'new', 'fav', 'archive'], null), $pars), fn($v) => $v !== null);
         return getSeoUrl($pars + (($one === $set['order'] && $dir === $set['dir']) ? [] : ['order' => $one, 'dir' => $dir]));
     };
+    $event = $type->ext === 'event';
     $sorts = [];
     $named = '';
-    foreach (['published' => [_NEW, 'clock-history'], 'updated' => [_NODE_UPDATED, 'arrow-repeat'], 'title' => [_TITLE, 'sort-alpha-down'], 'views' => [_POP, 'eye'],
+    foreach ($event ? [] : ['published' => [_NEW, 'clock-history'], 'updated' => [_NODE_UPDATED, 'arrow-repeat'], 'title' => [_TITLE, 'sort-alpha-down'], 'views' => [_POP, 'eye'],
         'rating' => [_BEST, 'star']] as $one => [$label, $icon]) {
         if ($one !== 'published' && !in_array($one, $set['orders'], true)) continue;
         if ($one === $key) $named = $label;
@@ -689,7 +729,7 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
         $mine[] = ['href' => $url($on ? array_diff_key($base, [$flag => 0]) : $base + [$flag => 1], $key, $way), 'label' => $label, 'icon_name' => $icon,
             'count' => $nums[$flag] ?? 0, 'is_on' => $on];
     }
-    $narrow = count($base) > 1;
+    $narrow = count(array_diff_key($base, ['archive' => 0])) > 1;
     $clean = !$narrow && $key === $set['order'] && $way === $set['dir'];
     $feed = isset(getRssFeeds()[$type->name]) ? HOME_PATH.'index.php?go=rss&name='.$type->name.(isset($base['cat']) ? '&cat='.$base['cat'] : '') : '';
     $asc = $way === 'asc';
@@ -709,7 +749,7 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
         'lets_hint' => _NODE_LETHINT,
         'let_name' => ($wins['let'] !== '') ? sprintf(_NODE_ONLETTER, mb_strtoupper($wins['let'])) : _NODE_ABC,
         'is_let' => $wins['let'] !== '',
-        'sort_name' => $named,
+        'sort_name' => ($named !== '') ? $named : _SHOW,
         'sort_label' => _SORT,
         'show_label' => _SHOW,
         'sorts' => $sorts,
@@ -718,7 +758,10 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
         'is_fav' => isset($base['fav']),
         'new_label' => _NODE_SINCE,
         'fav_label' => _NODE_INFAV,
-        'dir_href' => $url($base, $key, $asc ? 'desc' : 'asc'),
+        'dir_href' => $event ? '' : $url($base, $key, $asc ? 'desc' : 'asc'),
+        'arch_href' => $event ? $url(isset($base['archive']) ? array_diff_key($base, ['archive' => 0]) : $base + ['archive' => 1], $key, $way) : '',
+        'arch_label' => _NODE_ARCHIVE,
+        'is_arch' => isset($base['archive']),
         'dir_label' => $asc ? _ASCENDING : _DESCENDING,
         'dir_title' => $asc ? _ASC : _DESC,
         'is_asc' => $asc,
@@ -886,7 +929,10 @@ function setNodeForm(): void {
             try {
                 if ($act === 'preview') {
                     $node = getNodeWriter($type)->getNodePreview($type, $input, $state);
-                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, $node, getNodeViewData($type, $node, 'view'), '')]);
+                    $one = ($type->ext === 'event') ? ['starts' => $input->ext['starts'], 'ends' => ($input->ext['ends'] === '') ? null : $input->ext['ends'],
+                        'place' => trim($input->ext['place'])] : [];
+                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, $node, getNodeViewData($type, $node, 'view'), '',
+                        getNodeExtVars($type, $node, $one))]);
                 } else {
                     $node = getNodeWriter($type)->addNode($type, $input, $state);
                     if ($state === NodeStatus::Pending && $type->settings['workflow']['notify']['pending']) {

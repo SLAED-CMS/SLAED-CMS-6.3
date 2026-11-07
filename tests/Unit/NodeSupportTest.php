@@ -211,7 +211,7 @@ final class NodeSupportTest extends TestCase
     {
         $root = self::getRoot();
         $load = (string)file_get_contents($root.'/core/classes/node/ext/load.php');
-        $this->assertStringContainsString("\$map = ['support' => ['support.php', 'NodeSupport'], ", $load);
+        $this->assertStringContainsString("'support' => ['support.php', 'NodeSupport'], ", $load);
         $code = (string)file_get_contents($root.'/core/classes/node/ext/support.php');
         $this->assertStringContainsString('final class NodeSupport implements NodeExtension', $code);
         $this->assertSame(0, preg_match('/(?:STATE|PRIO)_[A-Z]+/', $code), 'The class declares state or priority constants');
@@ -222,9 +222,9 @@ final class NodeSupportTest extends TestCase
             $this->assertStringContainsString($one, $code);
         }
         $this->assertSame(
-            13,
+            14,
             preg_match_all('/^    public function /m', $code),
-            'The class has other public methods than its constructor, the nine of the contract, its two commands and the total of its queue'
+            'The class has other public methods than its constructor, the ten of the contract, its two commands and the total of its queue'
         );
         $conf = (require $root.'/config/node.php')['node']['support'];
         $this->assertSame(['state' => ['staff' => 0, 'author' => 1, 'closed' => 2], 'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3]], $conf);

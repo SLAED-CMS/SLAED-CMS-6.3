@@ -188,7 +188,7 @@ final class NodeSyncTest extends TestCase
     {
         $root = self::getRoot();
         $load = (string)file_get_contents($root.'/core/classes/node/ext/load.php');
-        $this->assertStringContainsString("\$map = ['support' => ['support.php', 'NodeSupport'], 'sync' => ['sync.php', 'NodeSync']];", $load);
+        $this->assertStringContainsString("'sync' => ['sync.php', 'NodeSync']];", $load);
         $this->assertStringContainsString("return new NodeSync(\$db, \$context, new Feed(\$conf['rss'] ?? []));", $load);
         $code = (string)file_get_contents($root.'/core/classes/node/ext/sync.php');
         $this->assertStringContainsString('final class NodeSync implements NodeExtension', $code);
@@ -196,8 +196,8 @@ final class NodeSyncTest extends TestCase
         foreach (['public function updateNodeSync(int $id): array', 'public function updateNodeSyncList(int $limit): array'] as $one) {
             $this->assertStringContainsString($one, $code);
         }
-        $this->assertSame(12, preg_match_all('/^    public function /m', $code),
-            'The class has other public methods than its constructor, the nine of the contract and its two commands');
+        $this->assertSame(13, preg_match_all('/^    public function /m', $code),
+            'The class has other public methods than its constructor, the ten of the contract and its two commands');
         $this->assertSame(0, preg_match('/new NodeService|NodeService::|NodeService $/', $code), 'The extension depends on the writer of Node');
         $this->assertStringNotContainsString('syncbatch', $code, 'The network queue uses the batch of the global subsystems');
         $this->assertStringNotContainsString('curl_', $code, 'The extension carries its own transport');

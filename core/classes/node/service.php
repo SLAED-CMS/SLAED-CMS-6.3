@@ -761,7 +761,8 @@ final class NodeService {
         if (strlen($json) > self::JSONMAX) throw $this->getInvalid('fields');
         return [
             'cid' => $in->cid, 'cids' => $cids, 'aname' => $in->aname, 'title' => $title, 'intro' => $text['intro'], 'body' => $text['body'], 'fields' => $fields, 'field' => $json,
-            'poll' => $in->poll, 'home' => $in->home, 'comon' => $in->comon, 'pinned' => $in->pinned, 'pubdate' => $in->pubdate, 'expires' => $in->expires, 'pub' => null,
+            'poll' => $in->poll, 'home' => $in->home, 'comon' => $in->comon, 'pinned' => $in->pinned, 'pubdate' => $in->pubdate,
+            'expires' => ($old !== null && !$feat['schedule']) ? $old->expires : $in->expires, 'pub' => null,
             'rels' => $this->getRelData($type, $in->rels, $lims['syncbatch']), 'assets' => $this->getAssetData($type, $in->assets, $status, $old, $lims['maxassets']),
             'ext' => ($type->ext === '') ? [] : $this->ext->filterNodeData($type, $in->ext, $old),
         ];
@@ -890,15 +891,23 @@ final class NodeService {
         }
     }
 
-    # Check what the input refers to against current rows, locking inside a write; a hidden or scheduled target answers as missing
+    # The end of the shown time the lifetime of the type gives a moment, or null for a type without one; a database date has no zone, so it counts in UTC, past any clock change
+    private function getNodeEnd(NodeType $type, string $pub): ?string {
+        $days = $type->settings['workflow']['lifetime'];
+        return ($days > 0) ? (new DateTimeImmutable($pub, new DateTimeZone('UTC')))->modify('+'.$days.' days')->format('Y-m-d H:i:s') : null;
+    }
+
+    # Check what the input refers to against current rows, locking inside a write; a direct publication of a non-moderator gets the end of the lifetime
     private function checkNodeRefs(NodeType $type, array &$data, NodeStatus $status, string $now, ?Node $old, int $self, bool $lock): ?array {
         $tail = $lock ? ' FOR UPDATE' : '';
         $moder = $this->checkModer($type);
         $pub = $data['pubdate'];
         if ($pub !== null && strcmp($pub, $now) > 0 && !$type->settings['features']['schedule']) throw $this->getInvalid('pubdate');
         $pub ??= ($status === NodeStatus::Published) ? $now : null;
-        if ($data['expires'] !== null && strcmp($data['expires'], $pub ?? $now) <= 0) throw $this->getInvalid('expires');
+        $kept = $old !== null && !$type->settings['features']['schedule'];
+        if (!$kept && $data['expires'] !== null && strcmp($data['expires'], $pub ?? $now) <= 0) throw $this->getInvalid('expires');
         $data['pub'] = $pub;
+        if (!$moder && $old === null && $status === NodeStatus::Published && $data['expires'] === null) $data['expires'] = $this->getNodeEnd($type, $pub);
         $cats = array_values(array_filter(array_merge([$data['cid']], $data['cids'])));
         sort($cats);
         if ($cats) {
@@ -1276,9 +1285,10 @@ final class NodeService {
             $pub = $before->pubdate ?? (($status === NodeStatus::Published) ? $now : null);
             $gone = $before->expires !== null && strcmp($before->expires, $pub ?? $now) <= 0;
             if ($gone && in_array($status, [NodeStatus::Pending, NodeStatus::Published], true)) throw $this->getInvalid('expires');
-            $sql = 'UPDATE '.PREFIX_DB.'_nodes SET status = :status, published = :pub, version = version + 1, updated = :now WHERE id = :id AND version = :ver';
-            $this->getQueryRes($sql, ['status' => $status->value, 'pub' => $pub, 'now' => $now, 'id' => $id, 'ver' => $version]);
-            $vals = ['status' => $status->value, 'published' => $pub, 'version' => $version + 1, 'updated' => $now];
+            $end = ($before->status === NodeStatus::Pending && $status === NodeStatus::Published) ? ($before->expires ?? $this->getNodeEnd($type, $pub)) : $before->expires;
+            $sql = 'UPDATE '.PREFIX_DB.'_nodes SET status = :status, published = :pub, expires = :exp, version = version + 1, updated = :now WHERE id = :id AND version = :ver';
+            $this->getQueryRes($sql, ['status' => $status->value, 'pub' => $pub, 'exp' => $end, 'now' => $now, 'id' => $id, 'ver' => $version]);
+            $vals = ['status' => $status->value, 'published' => $pub, 'expires' => $end, 'version' => $version + 1, 'updated' => $now];
             $after = $this->getNodeModel(array_replace($row, $vals), $type, null);
             $this->ext?->updateNodeData($before, $after, null);
             $job = $row['jpub'];
@@ -1286,6 +1296,28 @@ final class NodeService {
             $after = $this->getNodeModel(array_replace($row, $vals, ['path' => $path ?? ($this->route->getRouteList('node', [$id])[$id] ?? null)]), $type, null);
             if ($before->status === NodeStatus::Pending && $status === NodeStatus::Published) $this->addNodePoint('moderate', $type, 'approve:'.$id, 0, $before->uid);
             return $after;
+        });
+    }
+
+    # Extend one published material of the signed-in author by the lifetime from the database clock, or from a publication still ahead; a repeat sets the same end, never a sum
+    public function updateNodeTerm(int $id): string {
+        if ($this->ctx->task || $this->ctx->uid < 1) throw $this->getDenied('Only a signed-in author extends a material');
+        $sql = 'SELECT n.tid, t.name FROM '.PREFIX_DB.'_nodes AS n INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE n.id = :id';
+        $row = ($id > 0 && $id <= self::MAXINT) ? $this->getQueryRes($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC) : false;
+        $type = $row ? $this->query->getNodeType($row['name']) : null;
+        if ($type === null || $type->id !== intval($row['tid'])) throw $this->getMissing('The material does not exist');
+        if ($type->settings['workflow']['lifetime'] < 1) throw $this->getInvalid('lifetime');
+        return $this->setNodeWrite($type, [], null, function () use ($type, $id): string {
+            $now = $this->getTypeLock($type);
+            $sql = 'SELECT uid, status, published, expires FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
+            $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $type->id])->fetch(PDO::FETCH_ASSOC);
+            if (!$row) throw $this->getMissing('The material does not exist');
+            if (intval($row['uid']) !== $this->ctx->uid) throw $this->getDenied('The context is not the author of the material');
+            if (intval($row['status']) !== NodeStatus::Published->value) throw $this->getInvalid('status');
+            if ($row['expires'] === null) throw $this->getInvalid('expires');
+            $end = $this->getNodeEnd($type, max($now, (string)$row['published']));
+            $this->getQueryRes('UPDATE '.PREFIX_DB.'_nodes SET expires = :exp, version = version + 1 WHERE id = :id', ['exp' => $end, 'id' => $id]);
+            return $end;
         });
     }
 

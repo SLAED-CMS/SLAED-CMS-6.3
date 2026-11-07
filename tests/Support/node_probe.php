@@ -84,14 +84,14 @@ final class ProbeHoldDb extends Database {
 const PROBEPREF = 'probe';
 
 # The Node tables of the fresh schema in the order they have to be created
-const PROBENODE = ['node_types', 'nodes', 'node_assets', 'node_categories', 'node_legacy', 'node_publish', 'node_relations', 'node_support', 'node_sync'];
+const PROBENODE = ['node_types', 'nodes', 'node_assets', 'node_categories', 'node_event', 'node_legacy', 'node_publish', 'node_relations', 'node_support', 'node_sync'];
 
 # Every name the closed map may load, and names a crafted or future request could ask for
 const PROBECLASS = [
     'Node', 'NodeAsset', 'NodeContext', 'NodeException', 'NodeExtension', 'NodeInput', 'NodeQuery', 'NodeRelation', 'NodeService', 'NodeStatus', 'NodeTarget', 'NodeType',
     'NodeTypeInput', 'NodeView',
 ];
-const PROBEFAKE = ['NodeSupport', 'NodeSync', '../../../config/db', 'ext/load', 'entity', 'NodeLoader'];
+const PROBEFAKE = ['NodeEvent', 'NodeSupport', 'NodeSync', '../../../config/db', 'ext/load', 'entity', 'NodeLoader'];
 
 $GLOBALS['pnames'] = [];
 
@@ -250,7 +250,7 @@ function getProbeTry(PDO $pdo, string $sql): string {
 # The rows one material still owns in every dependent table, relations counted from both ends
 function getProbeOwned(PDO $pdo, int $id): array {
     $out = [];
-    foreach (['node_assets', 'node_categories', 'node_legacy', 'node_publish', 'node_support', 'node_sync'] as $name) {
+    foreach (['node_assets', 'node_categories', 'node_event', 'node_legacy', 'node_publish', 'node_support', 'node_sync'] as $name) {
         $out[$name] = intval($pdo->query('SELECT COUNT(*) FROM `'.PROBEPREF.'_'.$name.'` WHERE nid = '.$id)->fetchColumn());
     }
     $out['node_relations'] = intval($pdo->query('SELECT COUNT(*) FROM `'.PROBEPREF.'_node_relations` WHERE nid = '.$id.' OR rid = '.$id)->fetchColumn());
@@ -290,12 +290,17 @@ function getProbeRules(PDO $pdo): array {
         'refresh' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_sync` (nid, url, refresh) VALUES (3, \'https://example.com/feed\', 299)'),
         'longest' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_sync` (nid, url, refresh) VALUES (3, \'https://example.com/feed\', 31536001)'),
         'synctwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_sync` (nid, url) VALUES (1, \'https://example.com/other\')'),
+        'event' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_event` (nid, starts) VALUES (1, \'2030-01-01 10:00:00\')'),
+        'evtwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_event` (nid, starts) VALUES (1, \'2030-01-02 10:00:00\')'),
+        'evorphan' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_event` (nid, starts) VALUES (99, \'2030-01-01 10:00:00\')'),
+        'evends' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_event` (nid, starts, ends) VALUES (2, \'2030-01-01 10:00:00\', \'2030-01-01 10:00:00\')'),
         'publish' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_publish` (nid, published, due) VALUES (1, \'2030-01-01 00:00:00\', 1893456000)'),
         'pubtwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_publish` (nid, published, due) VALUES (1, \'2031-01-01 00:00:00\', 1924992000)'),
         'defaults' => $pdo->query('SELECT status, version, comon, home, pinned, cid, uid, aname, ip, poll, published, expires FROM '.$pre.'nodes` WHERE id = 1')
             ->fetch(PDO::FETCH_ASSOC),
         'typedef' => $pdo->query('SELECT ext, active, sort, version FROM '.$pre.'node_types` WHERE id = 1')->fetch(PDO::FETCH_ASSOC),
         'supdef' => $pdo->query('SELECT aid, state, prio, version FROM '.$pre.'node_support` WHERE nid = 1')->fetch(PDO::FETCH_ASSOC),
+        'evdef' => $pdo->query('SELECT ends, place FROM '.$pre.'node_event` WHERE nid = 1')->fetch(PDO::FETCH_ASSOC),
         'syncdef' => $pdo->query('SELECT refresh, due, etag, modified, fails, error FROM '.$pre.'node_sync` WHERE nid = 1')->fetch(PDO::FETCH_ASSOC),
     ];
     $out['typedrop'] = getProbeTry($pdo, 'DELETE FROM '.$pre.'node_types` WHERE id = 1');
@@ -421,7 +426,7 @@ function getProbeNodeConf(int $stale): array {
                 'views' => []],
             'view' => ['mode' => 'default', 'side' => 2, 'top' => 0],
             'form' => [],
-            'workflow' => ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true]],
+            'workflow' => ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true], 'lifetime' => 0],
             'admin' => [],
             'features' => [],
             'assets' => [],
@@ -585,7 +590,10 @@ final class ProbeExtension implements NodeExtension {
     public function filterNodeData(NodeType $type, array $data, ?Node $node = null): array {
         return $data;
     }
-    public function getNodeScope(NodeType $type): array {
+    public function getNodeOrder(NodeType $type, ?array $args): array {
+        return [];
+    }
+    public function getNodeScope(NodeType $type, ?array $args): array {
         $join = 'INNER JOIN '.PREFIX_DB.'_users AS pu ON pu.id = n.uid AND pu.id = :owner';
         return ['join' => $join, 'where' => ':owner > 0 AND n.uid = :owner', 'params' => ['owner' => $this->ctx->uid]];
     }
@@ -610,7 +618,10 @@ final class ProbeOther implements NodeExtension {
     public function filterNodeData(NodeType $type, array $data, ?Node $node = null): array {
         return $data;
     }
-    public function getNodeScope(NodeType $type): array {
+    public function getNodeOrder(NodeType $type, ?array $args): array {
+        return [];
+    }
+    public function getNodeScope(NodeType $type, ?array $args): array {
         return ['join' => '', 'where' => '1 = 1', 'params' => []];
     }
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool {
@@ -812,6 +823,8 @@ function getProbeSettings(): array {
         'groups' => [$set(['workflow', 'access'], 'group'), ''],
         'publish' => [$set(['workflow'], ['access' => 'group', 'groups' => [1], 'publish' => [2]]), ''],
         'notify' => [$set(['workflow', 'notify', 'pending'], 'yes'), ''],
+        'lifetime' => [$set(['workflow', 'lifetime'], '30'), ''],
+        'lifelong' => [$set(['workflow', 'lifetime'], 3651), ''],
         'assetmode' => [$set(['assets', 'cover', 'mode'], 'banner'), ''],
         'assetkinds' => [$set(['assets', 'cover', 'kinds'], ['audio']), ''],
         'assetreport' => [$set(['assets', 'cover', 'report'], true), ''],
@@ -1836,7 +1849,10 @@ final class ProbeHook implements NodeExtension {
         self::$log[] = ['filter', $node?->id ?? 0];
         return $data;
     }
-    public function getNodeScope(NodeType $type): array {
+    public function getNodeOrder(NodeType $type, ?array $args): array {
+        return [];
+    }
+    public function getNodeScope(NodeType $type, ?array $args): array {
         return ['join' => '', 'where' => '1 = 1', 'params' => []];
     }
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool {
@@ -2872,7 +2888,68 @@ function getProbeMaterialRuns(): array {
     $out['cross'] = getProbeMatCross();
     $out['model'] = getProbeMatModel();
     $out['snap'] = getProbeMatSnap();
+    $out['term'] = getProbeMatTerm();
     $out['log'] = getProbeLog();
+    return $out;
+}
+
+# Lifetime: a direct publication of an author and an approval take the lifetime of the type, an own one of a moderator and a type without one none
+# An edit without schedule keeps the end, the author extends only an own published material, a repeat sets the end again, and only the author reads the expired one
+function getProbeMatTerm(): array {
+    $srv = getProbeService('boss');
+    $flow = ['access' => 'user', 'groups' => [], 'publish' => [2], 'notify' => ['pending' => false, 'result' => false], 'lifetime' => 30];
+    $input = getProbeInput(['title' => 'Ads', 'settings' => ['features' => getProbeFeatures(['submit', 'moderation']), 'workflow' => $flow]]);
+    $out = ['type' => getProbeCall(fn(): int => $srv->updateNodeTypeStatus('ads', true, $srv->addNodeType('ads', $input)->version)->version)];
+    [$ads, $news] = [getProbeMatType('ads'), getProbeMatType('news')];
+    $span = function (int $id): ?int {
+        $val = getProbeValue('SELECT TIMESTAMPDIFF(SECOND, published, expires) FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $id]);
+        return ($val === null) ? null : intval($val);
+    };
+    $end = fn(int $id): ?string => getProbeValue('SELECT expires FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $id]);
+    $past = fn(int $id) => $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET expires = NOW() - INTERVAL 1 DAY WHERE id = :id', ['id' => $id]);
+    $direct = getProbeWriter('boris')->addNode($ads, getProbeIn(['title' => 'Direct ad']), NodeStatus::Published);
+    $sub = getProbeWriter('anna')->addNode($ads, getProbeIn(['title' => 'Submitted ad']), NodeStatus::Pending);
+    $root = getProbeWriter('root');
+    $root->updateNodeStatus($sub->id, NodeStatus::Published, $sub->version);
+    $own = $root->addNode($ads, getProbeIn(['title' => 'Own ad']), NodeStatus::Published);
+    $plain = getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10, 'title' => 'Plain news']), NodeStatus::Published);
+    $out['span'] = ['direct' => $span($direct->id), 'approve' => $span($sub->id), 'own' => $span($own->id), 'plain' => $span($plain->id)];
+    $was = $end($direct->id);
+    $node = getProbeMatNode($direct->id, 'ads');
+    $out['edit'] = getProbeCall(fn(): bool => $root->updateNode($node->id, getProbeKeepIn($node, ['title' => 'Edited ad', 'expires' => null]), $node->version)->expires === $was);
+    $past($direct->id);
+    $was = $end($direct->id);
+    $node = getProbeMatNode($direct->id, 'ads');
+    $out['late'] = getProbeCall(fn(): bool => $root->updateNode($node->id, getProbeKeepIn($node, ['expires' => null]), $node->version)->expires === $was);
+    $out['hidden'] = getProbeQuery('guest')->getNode($direct->id, $ads) === null;
+    $gone = getProbeWriter('boris')->addNode($ads, getProbeIn(['title' => 'Gone ad']), NodeStatus::Published);
+    $past($gone->id);
+    $list = getProbeQuery('boris')->getNodeTermList(1, 10);
+    $out['list'] = [$list['total'], array_map(fn(array $v): array => [$v['id'], $v['type'], $v['live']], $list['rows'])];
+    $out['ids'] = ['direct' => $direct->id, 'gone' => $gone->id, 'sub' => $sub->id];
+    $out['anna'] = array_column(getProbeQuery('anna')->getNodeTermList(1, 10)['rows'], 'id');
+    $out['guestlist'] = getProbeCall(fn(): array => getProbeQuery('guest')->getNodeTermList(1, 10));
+    $ver = intval(getProbeValue('SELECT version FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $direct->id]));
+    $first = getProbeCall(fn(): string => getProbeWriter('boris')->updateNodeTerm($direct->id));
+    $once = $end($direct->id);
+    $out['renew'] = [$first['ok'] && $first['value'] === $once, intval(getProbeValue('SELECT TIMESTAMPDIFF(SECOND, NOW(), :e)', ['e' => $once])),
+        getProbeQuery('guest')->getNode($direct->id, $ads) !== null];
+    $out['repeat'] = getProbeCall(fn(): string => getProbeWriter('boris')->updateNodeTerm($direct->id));
+    $out['sum'] = intval(getProbeValue('SELECT TIMESTAMPDIFF(SECOND, :a, :b)', ['a' => $once, 'b' => $end($direct->id)]));
+    $out['version'] = intval(getProbeValue('SELECT version FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $direct->id])) - $ver;
+    $wait = getProbeWriter('anna')->addNode($ads, getProbeIn(['title' => 'Waiting ad']), NodeStatus::Pending);
+    $out['refused'] = [
+        'foreign' => getProbeCall(fn(): string => getProbeWriter('anna')->updateNodeTerm($direct->id)),
+        'guest' => getProbeCall(fn(): string => getProbeWriter('guest')->updateNodeTerm($direct->id)),
+        'plain' => getProbeCall(fn(): string => getProbeWriter('boris')->updateNodeTerm($plain->id)),
+        'pending' => getProbeCall(fn(): string => getProbeWriter('anna')->updateNodeTerm($wait->id)),
+        'own' => getProbeCall(fn(): string => getProbeWriter('root')->updateNodeTerm($own->id)),
+        'missing' => getProbeCall(fn(): string => getProbeWriter('boris')->updateNodeTerm(999999)),
+    ];
+    $out['untouched'] = $end($plain->id) === null && $end($wait->id) === null;
+    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET published = NOW() + INTERVAL 10 DAY WHERE id = :id', ['id' => $gone->id]);
+    getProbeWriter('boris')->updateNodeTerm($gone->id);
+    $out['ahead'] = $span($gone->id);
     return $out;
 }
 

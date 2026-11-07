@@ -316,6 +316,17 @@ CREATE TABLE `{prefix}_node_categories` (
   CONSTRAINT `{prefix}_fk_node_categories_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_node_event` (
+  `nid` INT UNSIGNED NOT NULL,
+  `starts` DATETIME NOT NULL,
+  `ends` DATETIME DEFAULT NULL,
+  `place` VARCHAR(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`nid`),
+  KEY `starts` (`starts`, `nid`),
+  CONSTRAINT `{prefix}_fk_node_event_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_chk_node_event_ends` CHECK (`ends` IS NULL OR `ends` > `starts`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_node_legacy` (
   `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `oid` INT UNSIGNED NOT NULL,

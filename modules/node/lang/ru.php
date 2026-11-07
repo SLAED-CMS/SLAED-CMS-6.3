@@ -6,6 +6,7 @@
 
 define('_NODE_ABC','Алфавит');
 define('_NODE_ADDED','Материал опубликован.');
+define('_NODE_ARCHIVE','Архив');
 define('_NODE_ASSETS','Файлы и ссылки');
 define('_NODE_ATTACH','Файлы');
 define('_NODE_BADDATE','Дата указана неверно: используйте вид ГГГГ-ММ-ДД ЧЧ:ММ.');
@@ -13,6 +14,7 @@ define('_NODE_BUSY','Материал тем временем изменён —
 define('_NODE_CATS','Дополнительные категории');
 define('_NODE_CLOSE','Закрыть обращение');
 define('_NODE_DLOADS','Скачиваний');
+define('_NODE_ENDS','Окончание');
 define('_NODE_FAILED','Материал не удалось сохранить. Повторите попытку позже.');
 define('_NODE_FEEDALL','Все: %s');
 define('_NODE_FILTERS','Отбор материалов');
@@ -34,6 +36,7 @@ define('_NODE_PENDING','Материал отправлен на проверк�
 define('_NODE_PERHINT','0 — только ручная проверка, иначе от 300 до 31536000.');
 define('_NODE_PERIOD','Период проверки, секунд');
 define('_NODE_PHIGH','Высокий');
+define('_NODE_PLACE','Место');
 define('_NODE_PLOW','Низкий');
 define('_NODE_PNORM','Обычный');
 define('_NODE_PURGE','Срочный');
@@ -45,6 +48,7 @@ define('_NODE_REPORTED','Спасибо, сообщение о неработа�
 define('_NODE_SINCE','С прошлого визита');
 define('_NODE_SOURCE','Источник текста (RSS или Atom)');
 define('_NODE_SSAVED','Состояние обращения сохранено.');
+define('_NODE_STARTS','Начало');
 define('_NODE_STATE','Состояние');
 define('_NODE_SUBCAT','Дополнительная');
 define('_NODE_UPDATED','Обновлённые');

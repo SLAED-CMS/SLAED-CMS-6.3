@@ -119,8 +119,13 @@ final class NodeSync implements NodeExtension {
     }
 
     # An external material is read by the rights of its type alone
-    public function getNodeScope(NodeType $type): array {
+    public function getNodeScope(NodeType $type, ?array $args): array {
         return ['join' => '', 'where' => '', 'params' => []];
+    }
+
+    # An external material keeps the order the type gives its list
+    public function getNodeOrder(NodeType $type, ?array $args): array {
+        return [];
     }
 
     # The extension forbids none of the closed actions

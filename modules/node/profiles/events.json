@@ -1,0 +1,104 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "events",
+        "title": "_EVENTS",
+        "intro": "",
+        "ext": "event",
+        "sort": 150,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 20,
+                "alpha": false,
+                "show": [
+                    "category",
+                    "author",
+                    "views"
+                ],
+                "views": []
+            },
+            "view": {
+                "mode": "event",
+                "side": 2,
+                "top": 0
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                },
+                "lifetime": 0
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": false,
+                "favorites": true,
+                "poll": false,
+                "home": true,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": false,
+                "related": false,
+                "tree": false
+            },
+            "assets": {
+                "cover": {
+                    "title": "_NODE_COVER",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 1,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "image",
+                    "active": true,
+                    "sort": 10
+                },
+                "gallery": {
+                    "title": "_ALBUM",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 20,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "gallery",
+                    "active": true,
+                    "sort": 20
+                }
+            },
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": [],
+        "uploads": [],
+        "rating": []
+    }
+}

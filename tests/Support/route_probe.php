@@ -11,12 +11,13 @@
 # The second argument support runs the comments of Node and the private requests of the support type instead of the base routes
 # Its child modes comments and ext boot the core on the same scratch configuration and database as one visitor and ask the comment subsystem and NodeSupport directly
 # The argument sync runs the external materials with two types of the extension sync; its child mode syncext asks NodeSync with a scripted transport
+# The argument event runs the events of one type of the extension event; its child mode eventext asks NodeEvent and the reader directly
 # The argument integ runs the integrations - rating, favorites, poll, search, RSS, blocks and their settings - and its child integext the sitemap
 # The argument guard runs the closed routes on the same integrations, and its child guardext asks the service for the right of polls
 # The argument intact runs the integrity checks on the same integrations: point corrections, the block save and vote annulments
 # The argument secure runs the public form on the same integrations: the upload right and limits, the write window, the captcha and the title in search
 # The argument tree runs the document tree on docs switched to the tree, and its child treeext counts the statements of the tree read of one view
-# The argument modes runs the display modes on five types; serve modes keeps a server with the same types up until the file stop appears
+# The argument modes runs the display modes on five types; serve modes or serve event keeps a server with those types up until the file stop appears
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
 # The argument head runs the routes, the notices, the theme header and the header of a list with its counts
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
@@ -37,7 +38,8 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext', 'pageext', 'pubext', 'restext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'eventext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext', 'pageext', 'pubext',
+    'restext'], true)) {
     $probework = $rwork.'/child';
     $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update', 'LAYOUT_DIR' => 'layout',
         'SITEMAP_DIR' => 'sitemap'];
@@ -47,7 +49,7 @@ if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 
     require_once __DIR__.'/probe_boot.php';
     if (($argv[2] ?? '') === 'comments') setRouteChild((string)($argv[3] ?? ''));
     require_once BASE_DIR.'/core/system.php';
-    $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
+    $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData', 'eventext' => 'getRouteEventData',
         'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'treeext' => 'getRouteTreeData',
         'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData', 'masterext' => 'getRouteMasterData', 'pageext' => 'getRoutePageData', 'pubext' => 'getRoutePublishData',
         'restext' => 'getRouteRestoreData'][$argv[2]];
@@ -733,7 +735,8 @@ function getRouteExtData(): array {
         $out['maps'][$key] = getRouteCall(fn() => $ext->filterNodeConfig(['mail' => true], $set, []));
     }
     $conf['node']['support'] = $keep;
-    $out['scope'] = [(new NodeSupport($db, $root))->getNodeScope($help), (new NodeSupport($db, $anna))->getNodeScope($help), (new NodeSupport($db, $guest))->getNodeScope($help)];
+    $out['scope'] = [(new NodeSupport($db, $root))->getNodeScope($help, null), (new NodeSupport($db, $anna))->getNodeScope($help, null),
+        (new NodeSupport($db, $guest))->getNodeScope($help, null)];
     $tgt = (new NodeQuery($db, $root, $fld))->getNodeTarget('help', (int)$db->getSqlQuery('SELECT MIN(id) FROM '.PREFIX_DB.'_nodes WHERE tid = 4')->fetchColumn());
     foreach (['comment', 'rate', 'favorite', 'asset', 'report', 'vote', 'Comment'] as $one) $out['actions'][$one] = getRouteCall(fn() => $ext->checkNodeAction($help, $tgt, $one));
     $out['data'] = getRouteCall(fn() => $ext->filterNodeData($help, ['x' => 1]));
@@ -1096,7 +1099,8 @@ function getRouteSyncData(): array {
         'long' => $data(['url' => 'https://example.com/'.str_repeat('a', 2100), 'refresh' => 600]),
         'anna' => getRouteCall(fn() => (new NodeSync($db, $anna, new Feed($conf['rss'], $send)))->filterNodeData($type, ['url' => 'https://example.com/f', 'refresh' => 600])),
     ];
-    $out['scope'] = [$ext->getNodeScope($type), getRouteCall(fn() => $ext->checkNodeAction($type, (new NodeQuery($db, $root, $fld))->getNodeTarget('content', $aid), 'comment')),
+    $out['scope'] = [$ext->getNodeScope($type, null),
+        getRouteCall(fn() => $ext->checkNodeAction($type, (new NodeQuery($db, $root, $fld))->getNodeTarget('content', $aid), 'comment')),
         getRouteCall(fn() => $ext->checkNodeAction($type, (new NodeQuery($db, $root, $fld))->getNodeTarget('content', $aid), 'vote'))];
     $node = (new NodeQuery($db, $root, $fld))->setNodeExtension($ext)->getNode($aid, $type);
     $out['data'] = [array_keys($ext->getNodeData($type, [$node], 'admin')[$aid] ?? []), $ext->getNodeData($type, [$node], 'view'),
@@ -4407,6 +4411,134 @@ function getRoutePublish(PDO $pdo, string $work): array {
     return $out;
 }
 
+# The type of the extension event for its own run: events, active, shown by its display mode, open to the public form of a member without moderation
+function addRouteEventTypes(PDO $pdo, string $work): void {
+    $pdo->exec('INSERT INTO '.RPREF.'_node_types (id, name, title, intro, ext, active, sort, version) VALUES (7, \'events\', \'Events\', \'\', \'event\', 1, 70, 1)');
+    $data = require $work.'/config/node.php';
+    $data['node']['types']['events'] = ['version' => 1, 'view' => ['mode' => 'event'], 'features' => getRouteFeatures(['submit'])];
+    setRouteFile($work.'/config/node.php', $data);
+    $data = require $work.'/config/uploads.php';
+    $data['uploads']['events'] = $data['uploads']['all'];
+    mkdir($work.'/uploads/node/events/thumb', 0777, true);
+    setRouteFile($work.'/config/uploads.php', $data);
+}
+
+# The positions of the titles in one page, -1 for a title the page does not show
+function getRouteSpots(string $html, array $titles): array {
+    $out = [];
+    foreach ($titles as $one) $out[$one] = preg_match('#<a href="[^"]*" title="'.preg_quote($one, '#').'">#', $html, $hit, PREG_OFFSET_CAPTURE) ? $hit[0][1] : -1;
+    return $out;
+}
+
+# The events over real HTTP: the forms of the panel and of a member write the start, the end and the place, a refused input stores nothing and names its field
+# The list shows the upcoming events nearest first and the archive the past ones newest first, with no sort of its own, and a past event keeps its page
+function getRouteEvent(PDO $pdo): array {
+    $pre = RPREF.'_';
+    $count = fn(): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = 7')->fetchColumn();
+    $idof = fn(string $title): int => (int)$pdo->query('SELECT id FROM '.$pre.'nodes WHERE title = '.$pdo->quote($title))->fetchColumn();
+    $row = fn(int $id): array => $pdo->query('SELECT starts, ends, place FROM '.$pre.'node_event WHERE nid = '.$id)->fetch(PDO::FETCH_ASSOC) ?: [];
+    $day = fn(int $days, string $time = '12:00'): string => date('Y-m-d', strtotime($days.' days')).'T'.$time;
+    $form = getRouteReply('root', 'GET', 'admin.php?name=node&op=add&type=events');
+    $tok = getRouteToken($form['body'], 'add');
+    $out = ['form' => [$form['code'], str_contains($form['body'], 'name="starts"'), str_contains($form['body'], 'name="ends"'), str_contains($form['body'], 'name="place"')]];
+    $base = ['name' => 'node', 'op' => 'add', 'type' => 'events', 'token' => $tok, 'status' => '2', 'intro' => 'Intro', 'body' => 'Body'];
+    $add = fn(string $title, string $from, string $till, string $place): array => getRouteReply('root', 'POST', 'admin.php', $base + ['title' => $title, 'starts' => $from,
+        'ends' => $till, 'place' => $place]);
+    $out['add'] = [];
+    foreach ([['Later', $day(5), '', 'Hall'], ['Soon', $day(2, '19:30'), $day(2, '22:00'), ' Club '], ['Running', $day(-2), $day(2), 'Park'],
+        ['Past', $day(-5), $day(-4), 'Old hall'], ['Old', $day(-9), '', '']] as [$title, $from, $till, $place]) $out['add'][] = $add($title, $from, $till, $place)['code'];
+    $out['row'] = [$row($idof('Soon')), ['starts' => str_replace('T', ' ', $day(2, '19:30')).':00', 'ends' => str_replace('T', ' ', $day(2, '22:00')).':00', 'place' => 'Club'],
+        array_key_exists('ends', $row($idof('Old'))) ? $row($idof('Old'))['ends'] : 'missing'];
+    $was = $count();
+    $back = $add('Backwards', $day(3, '20:00'), $day(3, '19:00'), '');
+    $label = preg_match('#<label[^>]*for="f-ends"[^>]*>\s*([^<]+?)\s*<#', $form['body'], $hit) ? html_entity_decode($hit[1]) : '';
+    $out['named'] = [$label !== '', str_contains(html_entity_decode($back['body']), '('.$label.')')];
+    $out['bad'] = [$back['code'], $add('No start', '', '', '')['code'], $add('Bad date', '2030-02-30T10:00', '', '')['code'],
+        $add('Long place', $day(3), '', str_repeat('x', 256))['code'], $add('Same end', $day(3, '20:00'), $day(3, '20:00'), '')['code'], $count() - $was];
+    $titles = ['Running', 'Soon', 'Later', 'Past', 'Old'];
+    $list = getRouteReply('', 'GET', 'index.php?name=events');
+    $flat = (string)preg_replace('/\s+/', ' ', $list['body']);
+    $out['list'] = [$list['code'], getRouteSpots($list['body'], $titles), substr_count($list['body'], 'class="sl-event-date"'),
+        str_contains($flat, 'data-sl-toggle-control="sl-node-sort"'), str_contains($flat, 'archive=1'), str_contains($flat, 'bi-sort-down'), str_contains($flat, 'Club')];
+    $arch = getRouteReply('', 'GET', 'index.php?name=events&archive=1');
+    $out['archive'] = [$arch['code'], getRouteSpots($arch['body'], $titles), str_contains((string)preg_replace('/\s+/', ' ', $arch['body']), 'sl-is-active"><a class="sl-but"'),
+        substr_count($arch['body'], 'bi-archive')];
+    $out['refuse'] = [getRouteReply('', 'GET', 'index.php?name=events&order=title')['code'], getRouteReply('', 'GET', 'index.php?name=events&dir=asc')['code'],
+        getRouteReply('', 'GET', 'index.php?name=events&archive=2')['code'], getRouteReply('', 'GET', 'index.php?name=news&archive=1')['code']];
+    $past = getRouteReply('', 'GET', 'index.php?name=events&op=view&id='.$idof('Past'));
+    $out['view'] = [$past['code'], str_contains($past['body'], 'Old hall'), str_contains($past['body'], 'class="sl-event-date"')];
+    $sid = $idof('Soon');
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$sid.'&type=events');
+    $post = ['name' => 'node', 'op' => 'edit', 'id' => (string)$sid, 'type' => 'events', 'token' => getRouteToken($page['body'], 'edit'), 'action' => 'save',
+        'version' => getRouteField($page['body'], 'version'), 'title' => 'Soon', 'intro' => 'Intro', 'body' => 'Body', 'starts' => $day(2, '19:30'), 'ends' => '',
+        'place' => 'Arena'];
+    $save = getRouteReply('root', 'POST', 'admin.php', $post);
+    $out['edit'] = [$page['code'], str_contains($page['body'], 'value="'.$day(2, '19:30').'"'), str_contains($page['body'], 'value="Club"'), $save['code'], $row($sid)];
+    $user = getRouteReply('anna', 'GET', 'index.php?name=events&op=add');
+    $utok = getRouteToken($user['body'], 'name="action"');
+    $done = getRouteReply('anna', 'POST', 'index.php?name=events&op=add', ['title' => 'Member event', 'intro' => 'Intro', 'body' => 'Body', 'starts' => $day(4, '18:00'),
+        'ends' => '', 'place' => 'Square', 'action' => 'submit', 'token' => $utok]);
+    $out['member'] = [$user['code'], str_contains($user['body'], 'name="starts"'), $done['code'], $row($idof('Member event'))['place'] ?? ''];
+    $out['ext'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($GLOBALS['rwork']).' eventext 2>&1'), true);
+    return $out;
+}
+
+# The child eventext asks NodeEvent and the reader directly: the input, the settings, the scope and order by the list arguments, the end of the day and the list budget
+function getRouteEventData(): array {
+    global $db, $fld;
+    require_once BASE_DIR.'/core/classes/node/ext/load.php';
+    $guest = new NodeContext(0, [], 0, [], false, false, '127.0.0.1', '');
+    $ext = getNodeExtension('event', $db, $guest);
+    $type = (new NodeQuery($db, $guest, $fld))->getNodeType('events');
+    $data = fn(array $one): array => getRouteCall(fn() => $ext->filterNodeData($type, $one + ['starts' => '2030-05-01 10:00:00', 'ends' => '', 'place' => '']));
+    $out = ['input' => [
+        'good' => $data(['ends' => '2030-05-01 12:00:00', 'place' => ' Hall ']),
+        'open' => $data(['ends' => null]),
+        'same' => $data(['ends' => '2030-05-01 10:00:00']),
+        'early' => $data(['starts' => '0999-05-01 10:00:00']),
+        'day' => $data(['starts' => '2030-02-30 10:00:00']),
+        'text' => $data(['starts' => 'tomorrow']),
+        'ctrl' => $data(['place' => "Hall\nB"]),
+        'wide' => $data(['place' => str_repeat('я', 255)])['ok'],
+        'long' => $data(['place' => str_repeat('я', 256)]),
+        'extra' => getRouteCall(fn() => $ext->filterNodeData($type, ['starts' => '2030-05-01 10:00:00', 'ends' => '', 'place' => '', 'x' => 1])),
+    ]];
+    $reader = new NodeQuery($db, $guest, $fld);
+    $set = $type->settings;
+    $out['config'] = [getRouteCall(fn() => $ext->filterNodeConfig([], $set, [])), getRouteCall(fn() => $ext->filterNodeConfig(['x' => 1], $set, [])),
+        getRouteCall(fn() => $reader->filterNodeSettings('event', ['view' => ['mode' => 'default'], 'features' => $set['features']], [])),
+        getRouteCall(fn() => $reader->filterNodeSettings('', ['view' => ['mode' => 'event'], 'features' => $set['features']], [])),
+        getRouteCall(fn() => $reader->filterNodeSettings('event', ['view' => ['mode' => 'event'], 'features' => $set['features']], []))['ok']];
+    $out['scope'] = [$ext->getNodeScope($type, null), $ext->getNodeOrder($type, null), $ext->getNodeScope($type, ['archive' => false])['join'] !== '',
+        $ext->getNodeOrder($type, ['archive' => false]), $ext->getNodeOrder($type, ['archive' => true]), getRouteCall(fn() => $ext->getNodeScope($type, ['archive' => 1])),
+        getRouteCall(fn() => $ext->getNodeOrder($type, ['old' => true]))];
+    $titles = function (bool $past) use ($db, $guest, $fld, $ext): array {
+        $query = new NodeQuery($db, $guest, $fld);
+        $query->setNodeType($query->getNodeType('events'))->setNodeExtension($ext)->setNodeArgs(['archive' => $past])->setNodePage(1, 10);
+        return array_map(fn(Node $v): string => $v->title, $query->getNodeList());
+    };
+    $oid = (int)$db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_nodes WHERE title = \'Old\'')->fetchColumn();
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_event SET starts = GREATEST(DATE(NOW()), NOW() - INTERVAL 1 HOUR), ends = NULL WHERE nid = :id', ['id' => $oid]);
+    $today = [in_array('Old', $titles(false), true), in_array('Old', $titles(true), true)];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_event SET starts = DATE(NOW()) - INTERVAL 1 SECOND, ends = NULL WHERE nid = :id', ['id' => $oid]);
+    $out['day'] = [$today, [in_array('Old', $titles(false), true), in_array('Old', $titles(true), true)]];
+    $query = new NodeQuery($db, $guest, $fld);
+    $num = $db->qnum;
+    $query->setNodeType($query->getNodeType('events'))->setNodeExtension($ext)->setNodeArgs(['archive' => false])->setNodePage(1, 10);
+    $list = $query->getNodeList();
+    $query->getNodeCount();
+    $ext->getNodeData($type, $list, 'list');
+    $out['budget'] = $db->qnum - $num;
+    $news = new NodeQuery($db, $guest, $fld);
+    $out['misuse'] = [
+        getRouteCall(fn() => $news->setNodeType($news->getNodeType('news'))->setNodeArgs(['archive' => false])->getNodeCount()),
+        getRouteCall(fn() => (new NodeQuery($db, $guest, $fld))->setNodeType($type)->setNodeExtension($ext)->setNodeArgs(['archive' => false])->setNodeOrder('title', 'asc')
+            ->getNodeList()),
+        getRouteCall(fn() => count((new NodeQuery($db, $guest, $fld))->setNodeType($type)->setNodeExtension($ext)->getNodeList())),
+    ];
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -4442,6 +4574,7 @@ try {
     addRouteConfig($rwork, $rbase, $rport);
     addRouteFiles($rwork);
     if (($argv[2] ?? '') === 'sync') addRouteSyncTypes($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'event' || ($argv[3] ?? '') === 'event') addRouteEventTypes($rpdo, $rwork);
     if (in_array($argv[2] ?? '', ['integ', 'guard', 'intact', 'secure'], true)) addRouteIntegTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'secure') addRouteSecureTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'tree') addRouteTreeTypes($rpdo, $rwork);
@@ -4472,6 +4605,8 @@ try {
         $report['runs']['support'] = getRouteSupport($rpdo);
     } elseif (($argv[2] ?? '') === 'sync') {
         $report['runs']['sync'] = getRouteSync($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'event') {
+        $report['runs']['event'] = getRouteEvent($rpdo);
     } elseif (($argv[2] ?? '') === 'integ') {
         $report['runs']['integ'] = getRouteInteg($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'guard') {

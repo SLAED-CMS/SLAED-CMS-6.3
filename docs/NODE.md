@@ -26,9 +26,9 @@ remaining modules alike.
 
 ### Replaced modules
 
-`modules/node/profiles/` holds fourteen type profiles in the `slaed.node` export format: nine stand for removed
-modules, `docs`, `album`, `portfolio`, `board` and `reviews` for none. A clean installation
-creates fourteen active types from them; an updated site gets none and creates types in the admin panel, from a
+`modules/node/profiles/` holds sixteen type profiles in the `slaed.node` export format: nine stand for removed
+modules, `docs`, `album`, `portfolio`, `board`, `reviews`, `events` and `jobs` for none. A clean installation
+creates sixteen active types from them; an updated site gets none and creates types in the admin panel, from a
 profile or from scratch. The 8.0 update imports no content of the removed modules
 (see [The 8.0 update](#the-80-update)); the separate script `update.php` carries it, see
 [Migration of the removed modules](#migration-of-the-removed-modules).
@@ -48,8 +48,10 @@ Settings of each profile are in [Shipped profiles](#shipped-profiles).
 | `docs` | - | - | `docs` | hierarchical documentation (`parent` relations) |
 | `album` | - | - | `default` | photo albums: a cover and a gallery of up to 100 images, tiles |
 | `portfolio` | - | - | `article` | projects of the site owner: client, year, address, services; no public form |
-| `board` | - | - | `default` | classified ads of users: price, city, phone, e-mail, moderated |
+| `board` | - | - | `default` | classified ads of users: price, city, phone, e-mail, moderated, an author's ad leaves after 30 days |
 | `reviews` | - | - | `default` | short reviews with a required score of 1 to 5, guests may post, moderated |
+| `events` | - | `event` | `event` | listing of events: start, end and place, upcoming first, archive, moderated |
+| `jobs` | - | - | `default` | vacancies: salary, city, employment, e-mail, address, moderated, an author's vacancy leaves after 30 days |
 
 ### What Node does not cover
 
@@ -169,7 +171,7 @@ storage/update/sql/table.sql  the only DDL of the Node tables
 | `entity.php`, `type.php`, `typeinput.php`, `input.php` | `Node`, `NodeType`, `NodeTypeInput`, `NodeInput` |
 | `relation.php`, `asset.php`, `target.php`, `context.php` | `NodeRelation`, `NodeAsset`, `NodeTarget`, `NodeContext` |
 | `status.php`, `exception.php` | `enum NodeStatus: int`, `NodeException extends RuntimeException` |
-| `extension.php` | `interface NodeExtension`, nine methods |
+| `extension.php` | `interface NodeExtension`, ten methods |
 | `query.php`, `service.php`, `view.php` | `NodeQuery` (all reads), `NodeService` (all writes), `NodeView` (template data) |
 | `ext/load.php` | `getNodeExtension()`, the closed extension factory |
 | `ext/support.php`, `ext/sync.php` | `NodeSupport`, `NodeSync`, both `implements NodeExtension` |
@@ -249,7 +251,7 @@ bounded 1-50) of `config/scheduler.php`. A public page view never triggers a syn
 modules/node/
 ├── index.php            public entry of every type
 ├── lang/                de, en, fr, pl, ru, uk
-├── profiles/<name>.json the fourteen shipped profiles, format slaed.node, no PHP
+├── profiles/<name>.json the sixteen shipped profiles, format slaed.node, no PHP
 └── admin/
     ├── index.php        admin entry: materials, types, settings
     ├── lang/            de, en, fr, pl, ru, uk
@@ -291,6 +293,7 @@ configuration inside the locked Closure mode of `setConfigFile()` and never writ
 | `_node_types` | registered types: identity, state, version |
 | `_nodes` | every material: main category, author, texts, fields, state, counters |
 | `_node_categories` | extra categories of a material |
+| `_node_event` | start, end and place of an `event` material |
 | `_node_legacy` | old address of a migrated material: removed module and old id |
 | `_node_relations` | directed relations between materials |
 | `_node_assets` | structured resources of a material |
@@ -709,6 +712,30 @@ Constraints: `{prefix}_fk_node_assets_node` (`nid` → `_nodes.id`, `ON UPDATE R
   columns are cleared in the same transaction. A report changes neither the material's state, `version` and
   `updated` nor `_node_assets.updated`; replacing the file clears the report and resets `hits`.
 
+### `_node_event`
+
+Used only by a type with the extension `event`. Material, title, text and state stay in `_nodes`; the table holds
+the start, the end and the place of the event, which the list of the type orders and splits by.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `nid` | `INT UNSIGNED NOT NULL` | material, the primary key |
+| `starts` | `DATETIME NOT NULL` | start |
+| `ends` | `DATETIME DEFAULT NULL` | end, `NULL` for none |
+| `place` | `VARCHAR(255) NOT NULL DEFAULT ''` | place as plain text |
+
+| Key | Columns | Serves |
+|---|---|---|
+| `PRIMARY` | `nid` | one event per material, the join of the list |
+| `starts` | `starts, nid` | events by start |
+
+Constraints: `{prefix}_fk_node_event_node` (`nid` → `_nodes.id`, `ON UPDATE RESTRICT ON DELETE CASCADE`),
+`{prefix}_chk_node_event_ends` (`ends IS NULL OR ends > starts`).
+
+- An event leaves the upcoming list when its end has passed, or without an end with the end of the day it starts
+  on: `COALESCE(ends, DATE(starts) + INTERVAL 1 DAY) > NOW()`.
+- `NodeEvent` hooks write the row in the material's transaction; the cascade is only a safety net.
+
 ### `_node_legacy`
 
 | Column | Type | Meaning |
@@ -1012,14 +1039,15 @@ Assets never expose `src`, `reported` or `ruid`. The modes and the exact keys ar
 
 ### Extensions in the core
 
-The interface (`filterNodeConfig`, `filterNodeData`, `getNodeScope`, `checkNodeAction`, `updateNodeAction`,
-`addNodeData`, `updateNodeData`, `deleteNodeData`, `getNodeData`) and the factory
-`getNodeExtension(string $key, Database $db, NodeContext $context): ?NodeExtension` (closed map `support`, `sync`;
-`''` gives `null`, an unknown key `INVALID`) are described with the extensions. Core guarantees: a reader or writer
-refuses an extension that is not exactly the factory class for `NodeType::$ext` (`INVALID extension`);
+The interface (`filterNodeConfig`, `filterNodeData`, `getNodeScope`, `getNodeOrder`, `checkNodeAction`,
+`updateNodeAction`, `addNodeData`, `updateNodeData`, `deleteNodeData`, `getNodeData`) and the factory
+`getNodeExtension(string $key, Database $db, NodeContext $context): ?NodeExtension` (closed map `event`, `support`,
+`sync`; `''` gives `null`, an unknown key `INVALID`) are described with the extensions. Core guarantees: a reader or
+writer refuses an extension that is not exactly the factory class for `NodeType::$ext` (`INVALID extension`);
 `getNodeScope()` must answer exactly `join`, `where`, `params`, and each bound value is renamed to a placeholder
 unique per branch and occurrence (`<branch>x<name>o<n>`); the scope narrows every read before counting and paging;
-write hooks run inside the `NodeService` transaction and roll back with it.
+the list arguments of `setNodeArgs()` reach the scope and `getNodeOrder()` of the list and its header counts alone,
+every other read passes `null`; write hooks run inside the `NodeService` transaction and roll back with it.
 
 ### NodeQuery
 
@@ -1085,6 +1113,7 @@ Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (ki
 
 ```php
 public function setNodeExtension(?NodeExtension $ext): self
+public function setNodeArgs(array $args): self
 public function getNode(int $id, NodeType $type): ?Node
 public function getNodeContent(int $id, NodeType $type): ?Node
 public function getNodeAsset(int $id, NodeType $type): ?NodeAsset
@@ -1128,6 +1157,7 @@ public function getNodeCount(): int
 public function getNodeCountList(): array
 public function getNodeLetters(): array
 public function getNodeOwnCount(string $since, int $uid): array
+public function getNodeTermList(int $page, int $limit): array
 ```
 
 Setters return the instance and check the shape of their value at once; whether the type settings allow a filter is
@@ -1137,6 +1167,7 @@ column name or SQL.
 | Setter | Contract |
 |---|---|
 | `setNodeType` | one type; a disabled one only for its moderator |
+| `setNodeArgs` | the list arguments of the request for the extension of the single selected type; a mixed selection or a standard type refuses them when the read runs (`INVALID args`) |
 | `setNodeTypes` | non-empty `NodeType[]`, no repeated ID, each readable; each branch uses the factory extension; an assigned `setNodeExtension()` is refused for a mixed set |
 | `setNodeCategory` | `cid >= 1`, main or extra category without duplicates; needs `features.categories`; an unreadable category yields nothing |
 | `setNodeLetter` | `''` or one Unicode letter or digit; needs `list.alpha`; escaped `LIKE`, table collation |
@@ -1159,6 +1190,10 @@ column name or SQL.
   asks it inside a category, where the stored counts of the type do not apply. `getNodeOwnCount()` counts in one
   statement what the selection published since `$since` holds and what of it the favorites of `$uid` hold, as `['new',
   'fav']`; an empty moment or account counts zero, and favorites count only where a type offers them.
+- `getNodeTermList()` is the one read of an expired material: one page of the `Published` materials the signed-in
+  context wrote in active types with `workflow.lifetime > 0`, shown and expired alike, newest first, as `['total',
+  'rows']` with `id`, `type`, `title`, `published`, `expires`, `live` and `path` per row; a guest, a page under 1 or a
+  size outside `limits.maxlist` is `INVALID term`. The selection setters do not apply to it.
 - A mixed selection compiles one branch per type with its own extension, joined by `UNION ALL`; one extension never
   weakens the rights of another type.
 - Order: pinned rows first where `features.pinned` is on; `published`, `updated`, `title` then `id`; `views` then
@@ -1215,6 +1250,7 @@ Counted by `$db->qnum` around the Node handler; `getNodeContext()`, Point and gl
 | `getNodeList()` | 1 page + at most one batch each for `cids`, `rels`, `assets` |
 | `getNodeCount()`, `getNodeCountList()`, `getNodeLetters()`, `getNodeOwnCount()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
 | `getNodeTally()` | 2, 3 with categories |
+| `getNodeTermList()` | 2, 1 when the author has none, 0 when no type has a lifetime, plus the type read of `getNodeTypeList()` |
 | `getNode()` | 4 |
 | `getNodeTargetList()` | type rows not yet known + 1 |
 | `getNodeTree()`, `getNodeSitemap()` | 1 per batch |
@@ -1298,6 +1334,7 @@ public function updateNode(int $id, NodeInput $input, int $version): Node
 public function updateNodeStatus(int $id, NodeStatus $status, int $version): Node
 public function getTextSource(int $id): ?array
 public function updateNodeText(int $id, string $field, string $text, int $version): Node
+public function updateNodeTerm(int $id): string
 public function deleteNode(int $id, int $version, Comment $com): void
 ```
 
@@ -1353,6 +1390,16 @@ role, fit the smaller `maxbytes`, match its kind and belong to the visitor (acco
   compensation of the author's `publish` (`reverse:<rid>`) → `_favorites` → `DELETE`. Sets, relations of both
   directions, the job and extension rows go by `ON DELETE CASCADE`; files stay. A failed compensation is `STORAGE`;
   only `Point::$valid = false` deletes without it and logs a warning.
+- `workflow.lifetime` sets `expires = published + lifetime` days on a direct `Published` create of a non-moderator
+  and on the move `Pending` → `Published`, each only while `expires` is empty; a create of a moderator keeps the end
+  it gives. `updateNode()` of a type without `features.schedule` keeps the stored `expires`, which the form cannot
+  carry, and does not check it against the publication date.
+- `updateNodeTerm()` lets the signed-in author of a `Published` material with an end extend it in a type with
+  `workflow.lifetime > 0`: under the type lock and the material `FOR UPDATE` it sets `expires` to the lifetime in
+  days after the database clock, or after `published` while that is still ahead, and moves the version, never `published` or `updated`, and answers the new end. A
+  repeat sets the end again instead of adding to it. A guest or a background context is `DENIED`, as is another
+  author; a type without a lifetime is `INVALID lifetime`, another state `INVALID status`, a material without an end
+  `INVALID expires`.
 - `getTextSource()` answers the stored material in every state with its type and `allow`, or `null`: the right of
   the quick edit decides who sees it, not the public read, so an author sees the text an edit sent back to
   moderation.
@@ -1776,7 +1823,7 @@ final readonly class NodeTypeInput {
   refuses is logged (`Node: the upload rule a removed module left is invalid, …`) and the new type gets the copy of
   `all` as every other new type does.
 - `title` (1-100) and `intro` (0-1000) are plain text or a defined language constant; `ext` is empty or a key of the
-  closed extension map (`support`, `sync`); `sort` is 0-4294967295.
+  closed extension map (`event`, `support`, `sync`); `sort` is 0-4294967295.
 
 ### Where settings live
 
@@ -1858,7 +1905,7 @@ of the mode is stored empty, so the list keeps following its mode.
 
 | Key | Type | Default | Rule |
 |---|---|---|---|
-| `mode` | string | `'default'` | one of `NodeQuery::MODES`: `default`, `article`, `docs`, `faq`, `files`, `media`, `support`; a type of the extension `support` takes `support` and no other type does |
+| `mode` | string | `'default'` | one of `NodeQuery::MODES`: `default`, `article`, `docs`, `faq`, `files`, `media`, `support`, `event`; a type of the extension `support` takes `support` and one of `event` takes `event`, and no other type takes either |
 | `side` | int | 2 | the side columns of the type's pages, the scale of `side` in `config/modules.php`: 0 both, 1 left, 2 right, 3 none |
 | `top` | int | 0 | the centre columns, the scale of `top`: 0 both, 1 above the content, 2 below it, 3 none |
 
@@ -1880,6 +1927,7 @@ The form is built from the fields and roles of the type, the admin screens from 
 | `publish` | list of int | `[]` | unique positive group ids whose members publish directly; subset of `groups` when `access = group` |
 | `notify.pending` | bool | true | admin notice (`addAdminMail`) for a new `Pending` material |
 | `notify.result` | bool | true | mail to the registered author when a moderator decides a `Pending` material |
+| `lifetime` | int | 0 | days an author's publication stays shown, `0` to `NodeQuery::LIFEMAX` (3650); `0` sets no end |
 
 The writer also checks that every id of `groups` and `publish` exists in `_groups`.
 
@@ -1984,6 +2032,7 @@ section. The key itself lives only in `_node_types.ext`.
 |---|---|---|
 | `support` | exactly `['mail' => bool]` | features `categories`, `comments`, `submit` on and all other nine off; `search`, `rss`, `sitemap`, `blocks` off; `workflow.access` `user` or `group`; no active role; `view.mode = support`; `support.state`/`support.prio` intact |
 | `sync` | `[]` | `features.submit` off |
+| `event` | `[]` | `view.mode = event`, held by the view rule |
 
 `ext` can change only while the type is disabled and has no material.
 
@@ -2060,14 +2109,15 @@ and calls `updateNodeType()` with the version the form carries.
 
 ### Shipped profiles
 
-`modules/node/profiles/<name>.json` holds fourteen type exports. A profile is copied into a new disabled type through
+`modules/node/profiles/<name>.json` holds sixteen type exports. A profile is copied into a new disabled type through
 `addNodeTypeImport()`; nothing reads it at runtime. Every profile carries full `settings` and `fields` and empty
 `uploads` and `rating`, so a type made from it takes the site's `uploads.all` and the default rating rule. A clean
 installation (`addNodeProfiles()` in `core/admin.php`, opened by the mark `node => new` of `config/update.php`)
-imports and activates all fourteen and adds a starter material to `news`; the 8.0 update creates no type.
+imports and activates all sixteen and adds a starter material to `news`; the 8.0 update creates no type.
 
-All fourteen profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off)
-and `reviews` (`access all`: a guest may post).
+All sixteen profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off)
+and `reviews` (`access all`: a guest may post). `workflow.lifetime` is 30 days in `board` and `jobs` and 0 in the
+others.
 
 | Profile | Title | Sort | `view.mode` | `ext` | `list` (orders / order dir / limit / alpha / show) |
 |---|---|---|---|---|---|
@@ -2085,17 +2135,21 @@ and `reviews` (`access all`: a guest may post).
 | `portfolio` | `_PORTFOLIO` | 120 | `article` | - | all five / published desc / 12 / no / category, date, views |
 | `board` | `_BOARD` | 130 | `default` | - | all five / published desc / 25 / no / all four |
 | `reviews` | `_REVIEWS` | 140 | `default` | - | all five / published desc / 20 / no / author, date |
+| `events` | `_EVENTS` | 150 | `event` | `event` | published / published desc / 20 / no / category, author, views |
+| `jobs` | `_JOBS` | 160 | `default` | - | all five / published desc / 25 / no / all four |
 
 `list.views`: `news` offers `cards`, `compact` and `tiles`; `docs` `list` and `rail`; `faq` `accordion` and `list`;
-`album` and `portfolio` `tiles` and `cards`; `board` `cards` and `compact`; the other six keep it empty and show the
-one view of their mode.
+`album` and `portfolio` `tiles` and `cards`; `board` and `jobs` `cards` and `compact`; the other nine keep it empty and
+show the one view of their mode. The list of `events` takes its order from the extension, so its `list.orders` and
+`order` decide nothing there.
 
 | Profile | Features on | Integrations |
 |---|---|---|
 | `news` | categories, comments, rating, favorites, poll, home, pinned, submit, moderation, schedule, related | all four, `seo = news` |
 | `pages`, `faq`, `jokes`, `files`, `media`, `album` | as `news` without poll | all four, `seo = article` |
 | `portfolio` | categories, favorites, home, pinned, schedule, related | all four, `seo = article` |
-| `board` | categories, comments, favorites, pinned, submit, moderation, schedule | all four, `seo = article` |
+| `board`, `jobs` | categories, comments, favorites, pinned, submit, moderation, schedule | all four, `seo = article` |
+| `events` | categories, comments, favorites, home, pinned, submit, moderation | all four, `seo = article` |
 | `reviews` | home, pinned, submit, moderation | all four, `seo = article` |
 | `links` | as `news` without poll | all four, `seo = website` |
 | `content` | categories, comments, rating, favorites, pinned, schedule, related | all four, `seo = article` |
@@ -2112,6 +2166,8 @@ one view of their mode.
 | `album` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/100, no, no, 20) |
 | `portfolio` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/30, no, no, 20) |
 | `board` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/10, no, no, 20) |
+| `events` | `cover` (image, image, 0/1, no, no, 10); `gallery` `_ALBUM` (gallery, image, 0/20, no, no, 20) |
+| `jobs` | `cover` (image, image, 0/1, no, no, 10) |
 | `jokes`, `content`, `docs`, `help`, `reviews` | none (editor attachments only) |
 
 `cover` is titled `_NODE_COVER`. Fields: `files` has `release` (`_VERSION`, text, max 100, sort 10) and `site`
@@ -2123,7 +2179,10 @@ one view of their mode.
 four optional fields: `client` (`_NODE_CLIENT`, text 255), `year` (`_NODE_YEAR`, int 1-9999), `site` (`_URL`, url) and
 `services` (`_NODE_SERVICES`, text 255). `board` has four optional fields: `price` (`_NODE_PRICE`, decimal, scale 2,
 min 0.00), `city` (`_NODE_CITY`, text 100), `phone` (`_NODE_PHONE`, text 50) and `email` (`_EMAIL`, email); the phone
-and the address are public, as a classified ad needs them. `reviews` has one required field, `stars` (`_NODE_SCORE`,
+and the address are public, as a classified ad needs them. `jobs` has five optional fields: `salary` (`_NODE_SALARY`,
+text 100), `city` (`_NODE_CITY`, text 100), `employment` (`_NODE_EMPLOY`, a single select of `full` `_NODE_FULLTIME`,
+`part` `_NODE_PARTTIME` and `remote` `_NODE_REMOTE`, sort 10 to 30), `email` (`_EMAIL`, email) and `site` (`_URL`,
+url). `reviews` has one required field, `stars` (`_NODE_SCORE`,
 int 1-5): `score` is a column of `_nodes` and no field may take its name. The other profiles have no fields.
 
 In `help` a request is created `Published` and `NodeSupport` narrows every read to the owner and the moderators; its
@@ -2148,6 +2207,8 @@ One UTF-8 JSON file `node-<name>.json`, at most 1 MiB:
 - The import checks the exact top keys, `format`, `version === 1`, the exact nine type keys and their native types,
   then runs the normal create path, so every setting, field, role, rule and extension is checked before any write.
   A non-empty name from the form replaces the name of the file. An import never overwrites an existing type.
+- The settings of the file are merged over `node.defaults` like any stored settings, so a file without a key added
+  later keeps `version` 1 and takes the default: one without `workflow.lifetime` imports with `0`.
 - No ids, state, record version, dates, materials, files, secrets or paths are exported.
 
 ### Configuration protocol
@@ -2248,7 +2309,7 @@ The addresses of a type follow `docs/ARCHITECTURE.md`, "Address Boundary"; `_rou
 
 | `op` | Methods | Parameters | Purpose |
 |---|---|---|---|
-| (empty) | GET, HEAD, POST | `cat`, `page`, `let`, `order`, `dir`, `new`, `fav`; POST `view`, `token` | list of the type or of one category; a POST is the view switch |
+| (empty) | GET, HEAD, POST | `cat`, `page`, `let`, `order`, `dir`, `new`, `fav`, `archive` (type of the extension `event`); POST `view`, `token` | list of the type or of one category; a POST is the view switch |
 | `view` | GET, HEAD | `id` (global `_nodes.id`) | full material |
 | `add` | GET, HEAD, POST | POST: `action` (`preview`/`submit`), `token`, form fields | public form, preview, submission |
 | `asset` | GET, HEAD | `id` (`_node_assets.id`) | one structured resource |
@@ -2526,6 +2587,7 @@ use it, so a mode overrides `list`, `view`, `card`, `block`, `tree` and each res
 | `files` | `fragments/node/files/card.html`, `partials/node/files/view.html` | card with direct download button, size and hits of the first `download`-mode resource; view shows resources above the text |
 | `media` | `fragments/node/media/card.html`, `partials/node/media/view.html` | tile grid of the common list; tile with cover, play icon, title and the `year` field (or the date); view shows player and gallery, then fields, then text; related as tiles |
 | `support` | `fragments/node/support/card.html`, `partials/node/support/view.html` | state chip; view adds state and priority chips, the owner's close/reopen form and the staff card link |
+| `event` | `fragments/node/event/card.html`, `partials/node/event/view.html` | the leaf `sl-event-date` of the start: month, day in display figures, hour; chips of the period and the place, and the archive chip of a past event |
 
 The cover of a card is the first image of the role `poster`, then of roles in mode `image` or `gallery`
 (`getNodeCover()`); the same cover becomes `og:image` of the full material. The mode decides the default view of a
@@ -2748,6 +2810,23 @@ the `favorites` feature and `checkNodeAction(..., 'favorite')`, the `_favorites`
 `getFavoriteList()` takes Node titles from `getNodeTitleMap()`, so unreadable materials drop out.
 `NodeService::deleteNode()` removes the material's favorites in its own transaction.
 
+### Author's materials
+
+The cabinet screen «Мои материалы» (`modules/account/index.php`, `op=materials`) lists the materials of the signed-in
+author in the types with `workflow.lifetime > 0`. `getUserNavItems()` (`core/user.php`) offers it only while an
+active type of `getNodeTypeMap()` has a lifetime, so a site without such a type never shows it.
+
+- The screen reads one page of 20 through `NodeQuery::getNodeTermList()`: title, type, publication date, end date,
+  the state «Виден» or «Скрыт» and the button «Продлить» for a row with an end. A shown material links to
+  its page; an expired one and one whose publication is still ahead are «Скрыт» and plain text. A guest gets the
+  login form, a page past the last one 404.
+- The button is a POST form `op=renew` with the material `id` and the token `account`. `renew()` calls
+  `NodeService::updateNodeTerm()` and answers a redirect back to the screen with the new end, or with `_ERROR` for
+  any refusal of the writer and `_TOKENMISS` for a missing or wrong token; a guest goes to the cabinet.
+- The end is set again on each press, never summed, so a double press keeps one lifetime ahead. The public read of
+  `NodeQuery` is unchanged: an expired material stays out of every list, page, block and feed until the author renews
+  it or a moderator changes its end.
+
 ### Polls
 
 `_nodes.poll` is the id of a shared `voting` poll, `0` for none. Only a moderator of a type with the `poll`
@@ -2873,7 +2952,7 @@ registered type, or a type named through its flag, answers `node/<type>`, a modu
 ## Extensions
 
 An extension adds behaviour that features, fields, resources and view modes cannot express. A type has at most
-one, named by `_node_types.ext`. Two exist: `support` (`NodeSupport`) and `sync` (`NodeSync`).
+one, named by `_node_types.ext`. Three exist: `event` (`NodeEvent`), `support` (`NodeSupport`) and `sync` (`NodeSync`).
 
 ### The contract
 
@@ -2883,7 +2962,8 @@ one, named by `_node_types.ext`. Two exist: `support` (`NodeSupport`) and `sync`
 interface NodeExtension {
     public function filterNodeConfig(array $config, array $settings, array $fields): array;
     public function filterNodeData(NodeType $type, array $data, ?Node $node = null): array;
-    public function getNodeScope(NodeType $type): array;
+    public function getNodeScope(NodeType $type, ?array $args): array;
+    public function getNodeOrder(NodeType $type, ?array $args): array;
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool;
     public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void;
     public function addNodeData(Node $node, array $data): void;
@@ -2897,7 +2977,8 @@ interface NodeExtension {
 |---|---|
 | `filterNodeConfig()` | Checks and canonicalizes `settings.ext` against the effective standard settings and checked fields; runs inside `NodeQuery::filterNodeSettings()` on every read and write of a type |
 | `filterNodeData()` | Checks and canonicalizes `NodeInput::$ext` before the transaction; `$node` is the stored material on change, `null` on create |
-| `getNodeScope()` | Exactly `['join' => string, 'where' => string, 'params' => array]` narrowing every read of the type (alias `n`), values only as parameters, applied before count and paging; other shapes are `INVALID scope` |
+| `getNodeScope()` | Exactly `['join' => string, 'where' => string, 'params' => array]` narrowing every read of the type (alias `n`), values only as parameters, applied before count and paging; other shapes are `INVALID scope`; `$args` is `null` except in the list of the type and its header counts |
+| `getNodeOrder()` | `[]` to keep the order of the type, or exactly `['expr' => 'alias.column', 'dir' => 'asc'\|'desc']` over the join of the scope with the same `$args`; the list projects it as `xord`, orders by it and `id` after the pinned rows, and refuses an explicit `setNodeOrder()` beside it (`INVALID order`); other shapes are `INVALID rank` |
 | `checkNodeAction()` | Only `comment`, `rate`, `favorite`, `asset`, `report` (others throw `INVALID`); may forbid, never allow what the core refused |
 | `updateNodeAction()` | Same names, after the real action, inside the owner's transaction; changes only extension rows; `$uid` is the acting user, never an approving moderator |
 | `addNodeData()`, `updateNodeData()`, `deleteNodeData()` | Change only extension rows inside the `NodeService` transaction; `$data = null` means a pure state change; delete runs before the `_nodes` row goes |
@@ -2913,9 +2994,10 @@ other irreversible work never runs inside these methods.
 function getNodeExtension(string $key, Database $db, NodeContext $context): ?NodeExtension;
 ```
 
-`core/classes/node/ext/load.php` holds the fixed map `'support' => ['support.php', 'NodeSupport']`,
-`'sync' => ['sync.php', 'NodeSync']`; a stored or requested key is looked up, never turned into a path or class.
-`''` returns `null`; an unknown key throws `NodeException::INVALID`. Constructors:
+`core/classes/node/ext/load.php` holds the fixed map `'event' => ['event.php', 'NodeEvent']`,
+`'support' => ['support.php', 'NodeSupport']`, `'sync' => ['sync.php', 'NodeSync']`; a stored or requested key is
+looked up, never turned into a path or class. `''` returns `null`; an unknown key throws `NodeException::INVALID`.
+Constructors: `NodeEvent::__construct(Database $db, NodeContext $context)`,
 `NodeSupport::__construct(Database $db, NodeContext $context)` and
 `NodeSync::__construct(Database $db, NodeContext $context, Feed $feed)` with `new Feed($conf['rss'] ?? [])`.
 
@@ -3030,6 +3112,28 @@ scheduler lock prevents parallel runs. A manual check is the administrative `POS
 extension `sync`, no URL from the request): success redirects to the edit form, failure is `502` with the safe
 code. Nothing syncs during a public request.
 
+### Event
+
+`NodeEvent` (`core/classes/node/ext/event.php`) makes its type a listing of events: each material carries one row of
+`_node_event` with its start, optional end and place, and the list of the type orders and splits by it.
+
+- `filterNodeConfig()`: `settings.ext` must be `[]`; the view rule ties the display mode `event` to this key both ways.
+- `filterNodeData()`: exactly `starts`, `ends`, `place` from whoever may write the material; `starts` a canonical
+  date and time from the year 1000, `ends` `''` or `null` for none or a canonical one after `starts`, `place` plain
+  UTF-8 without control characters, trimmed, at most 255 characters. Refusals name `ext.starts`, `ext.ends`,
+  `ext.place`, which the forms show beside the label of the field.
+- `getNodeScope()` and `getNodeOrder()` read the list arguments, exactly `['archive' => bool]`, any other array is
+  `INVALID args`. With `null` (a single material, a target, a block, a feed, the panel) the scope is empty and the
+  order is the type's own. In the list the scope joins `_node_event AS ne` and keeps the upcoming events,
+  `COALESCE(ne.ends, DATE(ne.starts) + INTERVAL 1 DAY) > NOW()`, or with the archive switch the past ones; the order
+  is `ne.starts` ascending, descending in the archive.
+- `checkNodeAction()` forbids nothing, `updateNodeAction()` does nothing.
+- `addNodeData()` inserts the row; `updateNodeData()` leaves it on `null` and otherwise writes it, creating a row a
+  material of the type lacks; `deleteNodeData()` deletes it; `getNodeData()` answers `starts`, `ends`, `place` for
+  every mode, as they are public parts of the material.
+- The list route reads `archive=1` for a type of the extension and answers 400 for any other value, for the switch on
+  a standard type and for `order` or `dir` on an event type. Its header offers the switch «Архив» instead of the sort
+  and the direction, and groups the cards by the month of the start.
 
 ## Security
 
@@ -3198,15 +3302,16 @@ theme, blocks and independent global subsystems are outside it, and the `NodeCon
 | State change | 6 | 7 when a `_node_publish` job is created or removed |
 | Physical delete | 6 statements on Node tables | Point and global cleanup measured apart |
 
-- A list reads type, page and count (`uname`, `ctitle` joined); extra categories, relations, related cards and
-  resources add one batch each; categories add the category-right prefetch (once per type and `NodeQuery`) and
-  the page's extra-category batch.
+- A list reads type, page and count (`uname`, `ctitle` joined); extra categories, relations, related cards,
+  resources and the rows of an extension (`getNodeData()`, four statements in all for an event type) add one batch
+  each; categories add the category-right prefetch (once per type and `NodeQuery`) and the page's extra-category batch.
 - The list header adds statements the table above was measured without: none for the counts of a stored entry of
-  `getNodeCountMap()`, else the two or three of `getNodeTally()` (always for a moderator); one `getNodeOwnCount()` for
-  a signed-in visitor; one `getNodeLetters()` in a category of a type with `list.alpha`; the read of `lastvis` once per
+  `getNodeCountMap()`, else the two or three of `getNodeTally()` (always for a moderator and for the list of an event
+  type, whose scope keeps its counts its own); one `getNodeOwnCount()` for a signed-in visitor; one `getNodeLetters()` in a category of a type with `list.alpha`; the read of `lastvis` once per
   session.
-- A view reads type, main row, extra categories, relations, resources, and related cards as the sixth; tree
-  batches read the index `tree (tid, status, id)`, independent of page size and depth.
+- A view reads type, main row, extra categories, relations, resources, and related cards as the sixth; a type with
+  an extension adds its `getNodeData()` batch; tree batches read the index `tree (tid, status, id)`, independent of
+  page size and depth.
 - `[attach]` uses `getNodeContent()`, never `getNode()`. `getNodeAsset()` is one joined statement; a write
   re-authorizes with one primary-key read before its counter or report update.
 - A delete reads head and type, locks type, material (version check) and resources, then runs one `DELETE`. A zero
@@ -3298,7 +3403,7 @@ marked `release` below belong to the group `composer test:fast` leaves out and `
 | `NodeIntegTest` | 14 | `route_probe.php integ` | rating, favorites, poll, home, search, RSS, sitemap, blocks |
 | `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
-| `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the fourteen profiles; panel and public walk |
+| `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the sixteen profiles; panel and public walk |
 | `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | 6.2 -> 8.0 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
 | `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup`; Config and Mails `release` | settings carry-over, newsletter, registry, both preflights |
 | `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields`, `release` | data update units |
@@ -3328,10 +3433,10 @@ stand's database, `config/`, `storage/` and `uploads/` are never written.
 - `route_probe.php <scratch> [mode]`: one database from `table.sql`, scratch configuration with the probe types,
   scratch uploads with release guards, the real `index.php` and `admin.php` behind `php -S` with
   `tests/Support/route_web.php` as router (visitor from the header `X-Probe-Who`, honoured only there). Modes:
-  none (lists, view, attach, admin), `support`, `sync`, `integ`, `guard`, `intact`, `secure`, `tree`, `modes`,
-  `seo`, `head`; children `view`, `comments`, `ext`, `syncext`, `integext`, `guardext`, `treeext`, `seoext` call
-  classes directly on the same database; `serve [modes]` keeps a server up until a file
-  `stop` appears in the scratch root.
+  none (lists, view, attach, admin), `support`, `sync`, `event`, `integ`, `guard`, `intact`, `secure`, `tree`, `modes`,
+  `seo`, `head`; children `view`, `comments`, `ext`, `syncext`, `eventext`, `integext`, `guardext`, `treeext`,
+  `seoext` call classes directly on the same database; `serve [modes | event]` keeps a server up until a file `stop` appears
+  in the scratch root.
 - `install_probe.php <scratch> [keep | fail | update <dump> <config-dir-or-revision> <prefix> [<snapshot>]]`
   serves a copy of the tracked tree (without `docs`, `tests`, `tools`) with two `php -S` instances, so the
   directory check of type activation reaches a free server. `keep` stays up until `stop`; `fail` plants a user
@@ -3378,7 +3483,9 @@ database on the server of `config/db.php` (prefix `prof`), executes `table.sql`,
 the release configuration, imports and enables the shipped types through `NodeService::addNodeTypeImport()`
 (its built-in server answers the directory check with `403`), and fills by batch SQL: `--rows` materials
 (`1000..1000000`, default `100000`), 20 categories per type, two extra categories and two relations per material,
-up to three resources where the type has roles. `--runs` (`5..500`, default `30`) repeats each warmed scenario;
+up to three resources where the type has roles, and the row of its extension for a material of `support`, `sync`
+and `event` (the starts of the events spread over 200 days back and 200 ahead, so the list and its archive both read
+rows). `--runs` (`5..500`, default `30`) repeats each warmed scenario;
 `--keep` leaves database and scratch.
 
 The report gives per scenario the Node statements against `PBUDGET` (the budget ceilings, with `view 5`,

@@ -30,6 +30,8 @@ define('_ACCOUNT_PERSON','Personal');
 define('_ACCOUNT_PRIVACY','Privacy and appearance');
 define('_ACCOUNT_PRIVHEAD','What others see and how the site looks to you');
 define('_ACCOUNT_PSMAILNOTE','They are visible in the cabinet without a letter.');
+define('_ACCOUNT_RENEW','Extend');
+define('_ACCOUNT_RENEWED','The display period is extended until %s.');
 define('_ACCOUNT_SAFE','Protected');
 define('_ACCOUNT_SECTIONS','Settings sections');
 define('_ACCOUNT_SETUPNOTE','Profile, avatar, password');

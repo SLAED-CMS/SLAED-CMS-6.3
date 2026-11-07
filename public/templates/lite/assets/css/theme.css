@@ -1192,6 +1192,38 @@ a.sl-crumb:hover + .sl-crumb-sep {
   transform: scale(1.1);
 }
 
+/* The date of an event stands as a leaf of a wall calendar left of its text: the month over the day in display figures and the hour under it */
+.sl-event-date {
+  float: left;
+  display: grid;
+  justify-items: center;
+  min-width: var(--sl-size-tile);
+  margin: 0 var(--sl-space-5) var(--sl-space-3) 0;
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border-radius: var(--sl-radius-3);
+  color: var(--sl-text);
+  background: var(--sl-ico-bg);
+  border: 1px solid var(--sl-ico-border);
+  line-height: var(--sl-line-tight);
+}
+
+.sl-event-month {
+  color: var(--sl-info);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-event-day {
+  font-size: var(--sl-font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-event-time {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
 /* Forms: unified field look shared by input, textarea and select */
 .sl-field {
   box-sizing: border-box;
@@ -2258,6 +2290,7 @@ button.sl-but-mini:hover,
 }
 
 .sl-node-compact .sl-card-image,
+.sl-node-compact .sl-event-date,
 .sl-node-compact .sl-meta-foot,
 .sl-node-compact .sl-entry-content img,
 .sl-node-compact .sl-img-placeholder,

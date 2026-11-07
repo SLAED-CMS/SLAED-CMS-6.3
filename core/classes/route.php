@@ -26,7 +26,7 @@ final class Route {
     # The operations of the switch of each module; any other prefix is a Node type with the operations of getNodeOps(), held by RouteRegistryTest
     private const OPS = [
         'node' => ['view', 'add', 'asset', 'report', 'support'],
-        'account' => ['newuser', 'finnewuser', 'privat', 'rss', 'favorites', 'logins', 'view', 'login', 'logout', 'edithome', 'savehome', 'passlost',
+        'account' => ['newuser', 'finnewuser', 'privat', 'rss', 'favorites', 'logins', 'materials', 'renew', 'view', 'login', 'logout', 'edithome', 'savehome', 'passlost',
             'passmail', 'activate', 'savepass', 'setavatar', 'oauth_init', 'oauth', 'oauth_finish', 'oauth_unlink', 'unsub'],
         'forum' => ['view', 'move', 'add', 'send', 'delete'],
         'recommend' => ['send'],

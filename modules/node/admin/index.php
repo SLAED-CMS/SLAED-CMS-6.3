@@ -89,7 +89,7 @@ function setNodeResultMail(NodeType $type, Node $node, NodeStatus $was): void {
     if (!addNodeMail([$mail], $node->title, $text)) Logger::addSite('error', 'Node: the result notice could not be queued', ['nid' => $node->id]);
 }
 
-# The sections of a stored material that differ from the values a refused form carried, named by their labels; the stored source of an external material is given beside it
+# The sections of a stored material that differ from the values a refused form carried, named by their labels; the stored data of a source or an event is given beside it
 function getNodeDiff(NodeType $type, Node $now, array $vals, array $ext = []): array {
     $was = getNodeFormVals($now, $ext);
     $out = [];
@@ -107,6 +107,10 @@ function getNodeDiff(NodeType $type, Node $now, array $vals, array $ext = []): a
     if ($vals['comon'] !== $was['comon']) $out[] = _COMMENTS;
     if ($type->ext === 'sync' && [trim((string)($vals['ext']['url'] ?? '')), (string)($vals['ext']['refresh'] ?? '')] !== [(string)($ext['url'] ?? ''),
         (string)($ext['refresh'] ?? '')]) $out[] = _NODE_SOURCE;
+    $cut = fn(string $key, mixed $v): string => ($key === 'place') ? trim((string)$v) : substr(str_replace('T', ' ', trim((string)$v)), 0, 16);
+    foreach (($type->ext === 'event') ? ['starts' => _NODE_STARTS, 'ends' => _NODE_ENDS, 'place' => _NODE_PLACE] : [] as $key => $label) {
+        if ($cut($key, $vals['ext'][$key] ?? '') !== $cut($key, $ext[$key] ?? '')) $out[] = $label;
+    }
     $fields = $vals['fields'];
     foreach ($type->fields as $key => $def) {
         if ($def['active'] && (string)json_encode($fields[$key] ?? null) !== (string)json_encode($was['fields'][$key] ?? null)) $out[] = getConst($def['title']);
@@ -440,8 +444,9 @@ function edit(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
     [$type, $node] = getNodeAdminItem(getVar('req', 'id', 'num', 0), getVar('req', 'type', 'var', ''));
-    $card = ($type->ext === 'sync') ? (getNodeHandler($type)->getNodeData($type, [$node], 'admin')[$node->id] ?? []) : [];
-    $ext = $card ? ['url' => $card['url'], 'refresh' => $card['refresh']] : [];
+    $data = in_array($type->ext, ['sync', 'event'], true) ? (getNodeHandler($type)->getNodeData($type, [$node], 'admin')[$node->id] ?? []) : [];
+    $card = ($type->ext === 'sync') ? $data : [];
+    $ext = $card ? ['url' => $card['url'], 'refresh' => $card['refresh']] : (($type->ext === 'event') ? $data : []);
     $vals = getNodeFormVals($node, $ext);
     $ver = $node->version;
     $errs = [];
@@ -784,7 +789,8 @@ function getNodeTypePost(?NodeType $old, ?array $prof): array {
                 'views']), 'views' => ($looks === [NodeQuery::MODEVIEW[$mode] ?? '']) ? [] : $looks],
         'view' => ['mode' => $mode, 'side' => $num('side', 2), 'top' => $num('top', 0)],
         'form' => [],
-        'workflow' => ['access' => $access, 'groups' => $gids, 'publish' => $pubs, 'notify' => ['pending' => $flag('notify_pending'), 'result' => $flag('notify_result')]],
+        'workflow' => ['access' => $access, 'groups' => $gids, 'publish' => $pubs, 'notify' => ['pending' => $flag('notify_pending'), 'result' => $flag('notify_result')],
+            'lifetime' => $num('lifetime', 0)],
         'admin' => [],
         'features' => $feats,
         'assets' => $roles,
@@ -882,6 +888,9 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         'f-publish-label')];
     $rows[] = ['label_html' => _NODE_NOTIFY, 'label_id' => 'f-notify-label', 'field_html' => $checks('f-notify-label', [$item('notify_pending', $flow['notify']['pending'],
         _NODE_NOTIFYP), $item('notify_result', $flow['notify']['result'], _NODE_NOTIFYR)])];
+    $rows[] = ['label_for' => 'f-lifetime', 'label_html' => _NODE_LIFETIME, 'hint_html' => $esc(_NODE_LIFEHINT), 'hint_id' => 'f-lifetime-hint',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'lifetime', 'input_id' => 'f-lifetime', 'value_attr' => $flow['lifetime'],
+        'describedby' => 'f-lifetime-hint', 'input_attr' => 'min="0" max="'.NodeQuery::LIFEMAX.'"'])];
     $rows[] = $flag('guestok', false, _NODE_GUESTOK, 'f-guestok-label');
     $tabs[] = [_NODE_FLOW, $rows];
     $blocks = '';

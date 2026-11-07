@@ -55,6 +55,8 @@ define('_NODE_INTEG','Intégrations');
 define('_NODE_JSON','Fichier de définition (JSON)');
 define('_NODE_KEEP','Continuer avec mes données');
 define('_NODE_KINDS','Genres');
+define('_NODE_LIFETIME','Durée d\'affichage, jours');
+define('_NODE_LIFEHINT','0 signifie sans limite. Le contenu d\'un auteur est retiré ce nombre de jours après sa publication ; l\'auteur le prolonge dans son espace');
 define('_NODE_LIMIT','Publications par page');
 define('_NODE_LIMITBAD','Les limites n\'ont pas été enregistrées : saisissez des nombres entiers, à partir de 0 pour les délais et de 1 pour le reste.');
 define('_NODE_LIMITNO','Le type %s ne tiendrait pas dans les nouvelles limites, rien n\'a été enregistré.');

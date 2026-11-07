@@ -41,6 +41,7 @@ return [
                     'pending' => true,
                     'result' => true,
                 ],
+                'lifetime' => 0,
             ],
             'admin' => [
             ],

@@ -4025,8 +4025,8 @@ function getIconName(string $con): string {
         'hub' => 'grid', 'image' => 'image', 'images' => 'images', 'items' => 'grid', 'keys' => 'key', 'language' => 'translate', 'logins' => 'box-arrow-in-right',
         'logout' => 'box-arrow-right', 'mail' => 'envelope-paper', 'messages' => 'envelope', 'module' => 'puzzle', 'modules' => 'gpu-card', 'oauth' => 'diagram-3',
         'password' => 'shield-plus', 'person' => 'person', 'personal' => 'person-lines-fill', 'privacy' => 'shield-lock',
-        'profile' => 'person-vcard', 'rating' => 'star-fill', 'read' => 'envelope-open', 'rss' => 'rss', 'save' => 'archive', 'search' => 'search',
-        'settings' => 'gear', 'site' => 'globe2', 'system' => 'pc-display', 'tags' => 'tags', 'unread' => 'envelope', 'unsave' => 'bookmark-dash',
+        'profile' => 'person-vcard', 'rating' => 'star-fill', 'read' => 'envelope-open', 'renew' => 'arrow-clockwise', 'rss' => 'rss', 'save' => 'archive', 'search' => 'search',
+        'settings' => 'gear', 'site' => 'globe2', 'system' => 'pc-display', 'tags' => 'tags', 'terms' => 'hourglass-split', 'unread' => 'envelope', 'unsave' => 'bookmark-dash',
         'visit' => 'clock-history', 'warn' => 'exclamation-triangle', 'work' => 'briefcase', 'write' => 'pencil-square',
     ];
     return $map[$con] ?? (trim((string)($conf['modules'][$con]['icon'] ?? '')) ?: 'puzzle');

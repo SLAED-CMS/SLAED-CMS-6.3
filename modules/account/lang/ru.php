@@ -30,6 +30,8 @@ define('_ACCOUNT_PERSON','Личное');
 define('_ACCOUNT_PRIVACY','Приватность и вид');
 define('_ACCOUNT_PRIVHEAD','Что видно другим и как сайт выглядит для вас');
 define('_ACCOUNT_PSMAILNOTE','В кабинете они видны и без письма.');
+define('_ACCOUNT_RENEW','Продлить');
+define('_ACCOUNT_RENEWED','Срок показа продлён до %s.');
 define('_ACCOUNT_SAFE','Защищено');
 define('_ACCOUNT_SECTIONS','Разделы настроек');
 define('_ACCOUNT_SETUPNOTE','Профиль, аватар, пароль');

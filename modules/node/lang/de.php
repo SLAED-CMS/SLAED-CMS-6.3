@@ -6,6 +6,7 @@
 
 define('_NODE_ABC','Alphabet');
 define('_NODE_ADDED','Der Beitrag wurde veröffentlicht.');
+define('_NODE_ARCHIVE','Archiv');
 define('_NODE_ASSETS','Dateien und Links');
 define('_NODE_ATTACH','Dateien');
 define('_NODE_BADDATE','Ein Datum ist ungültig, verwenden Sie die Form JJJJ-MM-TT HH:MM.');
@@ -13,6 +14,7 @@ define('_NODE_BUSY','Der Beitrag wurde inzwischen geändert, nichts wurde gespei
 define('_NODE_CATS','Weitere Kategorien');
 define('_NODE_CLOSE','Anfrage schließen');
 define('_NODE_DLOADS','Downloads');
+define('_NODE_ENDS','Ende');
 define('_NODE_FAILED','Der Beitrag konnte nicht gespeichert werden, bitte später erneut versuchen.');
 define('_NODE_FEEDALL','Alle: %s');
 define('_NODE_FILTERS','Beiträge auswählen');
@@ -34,6 +36,7 @@ define('_NODE_PENDING','Der Beitrag wurde dem Moderator zur Prüfung gesendet.')
 define('_NODE_PERHINT','0 - nur manuelle Prüfung, sonst von 300 bis 31536000');
 define('_NODE_PERIOD','Prüfintervall, Sekunden');
 define('_NODE_PHIGH','Hoch');
+define('_NODE_PLACE','Ort');
 define('_NODE_PLOW','Niedrig');
 define('_NODE_PNORM','Normal');
 define('_NODE_PURGE','Dringend');
@@ -45,6 +48,7 @@ define('_NODE_REPORTED','Danke, die Meldung zur Ressource ist eingegangen.');
 define('_NODE_SINCE','Seit dem letzten Besuch');
 define('_NODE_SOURCE','Quelle des Textes (RSS oder Atom)');
 define('_NODE_SSAVED','Der Status der Anfrage wurde gespeichert.');
+define('_NODE_STARTS','Beginn');
 define('_NODE_STATE','Status');
 define('_NODE_SUBCAT','Zusätzlich');
 define('_NODE_UPDATED','Aktualisierte');

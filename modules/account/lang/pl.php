@@ -30,6 +30,8 @@ define('_ACCOUNT_PERSON','Osobiste');
 define('_ACCOUNT_PRIVACY','Prywatność i wygląd');
 define('_ACCOUNT_PRIVHEAD','Co widzą inni i jak strona wygląda dla Ciebie');
 define('_ACCOUNT_PSMAILNOTE','W gabinecie są widoczne i bez listu.');
+define('_ACCOUNT_RENEW','Przedłuż');
+define('_ACCOUNT_RENEWED','Okres wyświetlania przedłużono do %s.');
 define('_ACCOUNT_SAFE','Chronione');
 define('_ACCOUNT_SECTIONS','Sekcje ustawień');
 define('_ACCOUNT_SETUPNOTE','Profil, awatar, hasło');

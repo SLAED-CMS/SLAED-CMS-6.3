@@ -78,11 +78,13 @@ final class NodeQueryTest extends TestCase
             'getNodeSitemap' => ['int after = 0', 'int limit = 500', 'array'],
             'getNodeTarget' => ['string type', 'int id', 'bool any = false', '?NodeTarget'],
             'getNodeTargetList' => ['array refs', 'bool any = false', 'array'],
+            'getNodeTermList' => ['int page', 'int limit', 'array'],
             'getTargetSize' => ['int'],
             'getNodeTree' => ['int after = 0', 'int limit = 500', 'array'],
             'getNodeType' => ['string name', '?NodeType'],
             'getNodeTypeExport' => ['string name', 'string'],
             'getNodeTypeList' => ['array'],
+            'setNodeArgs' => ['array args', 'self'],
             'setNodeAuthor' => ['int uid', 'self'],
             'setNodeCategory' => ['int cid', 'self'],
             'setNodeExtension' => ['?NodeExtension ext', 'self'],
@@ -159,7 +161,7 @@ final class NodeQueryTest extends TestCase
         $this->assertSame(['list', 'view', 'form', 'workflow', 'admin', 'features', 'assets', 'integrations', 'ext'], array_keys($set));
         $this->assertSame(['orders' => ['published', 'updated', 'title', 'views', 'rating'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false,
             'show' => ['category', 'author', 'date', 'views'], 'views' => []], $set['list']);
-        $flow = ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true]];
+        $flow = ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true], 'lifetime' => 0];
         $this->assertSame($flow, $set['workflow'], 'The defaults were not merged');
         $this->assertSame(['search' => true, 'rss' => true, 'sitemap' => true, 'blocks' => true, 'seo' => 'news'], $set['integrations']);
         $this->assertSame(['cover', 'gallery'], array_keys($set['assets']));
@@ -227,6 +229,7 @@ final class NodeQueryTest extends TestCase
             'feature as string' => ['feature', 'features.comments'], 'unknown integration' => ['integr', 'integrations'], 'page kind' => ['seo', 'integrations.seo'],
             'submit access' => ['access', 'workflow.access'], 'group access without groups' => ['groups', 'workflow.groups'],
             'publish outside groups' => ['publish', 'workflow.publish'], 'notice as string' => ['notify', 'workflow.notify'],
+            'lifetime as string' => ['lifetime', 'workflow.lifetime'], 'lifetime over ten years' => ['lifelong', 'workflow.lifetime'],
             'display mode' => ['assetmode', 'assets.cover.mode'], 'kinds outside the mode' => ['assetkinds', 'assets.cover.kinds'],
             'report without a report form' => ['assetreport', 'assets.cover.report'],
             'role max over maxassets' => ['assetmax', 'assets.cover.max'], 'role min over max' => ['assetmin', 'assets.cover.max'],

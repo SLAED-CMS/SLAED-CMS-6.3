@@ -163,10 +163,15 @@ final class NodeSupport implements NodeExtension {
     }
 
     # Narrow every read of the type: a moderator reads the whole queue, a registered visitor his own requests and a guest nothing
-    public function getNodeScope(NodeType $type): array {
+    public function getNodeScope(NodeType $type, ?array $args): array {
         if ($this->checkModer($type)) return ['join' => '', 'where' => '', 'params' => []];
         if ($this->ctx->uid > 0) return ['join' => '', 'where' => 'n.uid = :owner', 'params' => ['owner' => $this->ctx->uid]];
         return ['join' => '', 'where' => '1 = 0', 'params' => []];
+    }
+
+    # The queue keeps the order the type gives its list
+    public function getNodeOrder(NodeType $type, ?array $args): array {
+        return [];
     }
 
     # Forbid a new reply to a closed request or to one without its queue row; every other closed action is left to the switches of the type

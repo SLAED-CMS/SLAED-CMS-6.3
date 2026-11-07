@@ -55,6 +55,8 @@ define('_NODE_INTEG','Integrationen');
 define('_NODE_JSON','Definitionsdatei (JSON)');
 define('_NODE_KEEP','Mit meinen Daten fortfahren');
 define('_NODE_KINDS','Arten');
+define('_NODE_LIFETIME','Anzeigedauer, Tage');
+define('_NODE_LIFEHINT','0 bedeutet unbegrenzt. Ein Beitrag eines Autors wird so viele Tage nach der Veröffentlichung ausgeblendet; der Autor verlängert ihn im Benutzerbereich');
 define('_NODE_LIMIT','Beiträge pro Seite');
 define('_NODE_LIMITBAD','Die Grenzen wurden nicht gespeichert: geben Sie ganze Zahlen ein, für die Fristen ab 0, für die übrigen ab 1.');
 define('_NODE_LIMITNO','Der Typ %s würde nicht in die neuen Grenzen passen, nichts wurde gespeichert.');

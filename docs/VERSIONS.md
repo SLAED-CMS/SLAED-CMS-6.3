@@ -2,6 +2,40 @@
 
 ## 2026-11-07
 
+### Two more Node profiles ship: events and vacancies, and an ad leaves the site after thirty days
+
+`modules/node/profiles/` ships sixteen profiles, and a clean installation creates and activates every one. `events`
+takes the extension `event` and its display mode: a cover and a gallery of up to 20 images, the start, the end and the
+place of each event, the upcoming list with the archive beside it, categories, comments, favorites, the home page,
+pinning and moderated submissions. `jobs` carries salary, city, employment (a select of full-time, part-time and remote),
+e-mail and address, a cover for the logo and the switches of `board`. `board` and `jobs` take `workflow.lifetime` 30: an
+ad or a vacancy an author publishes leaves the list after thirty days and comes back with «Продлить» in «Мои
+материалы». The titles and the labels take seven constants in the six languages of `lang/`; `NodeProfileTest` and the
+installation probe check the sixteen through a real installation, an event written through the panel included.
+
+### A Node type can let an author's publication leave the site after a set time, and the author renews it
+
+A type takes the key `workflow.lifetime`, days from 0 to 3650, with the field «Срок показа, дней» in the form of the
+type; `0` keeps the old behaviour. With a lifetime, `NodeService` sets the end of a material when an author who is no
+moderator publishes it directly or when a moderator approves it from «На проверке», each only while no end is set; a
+moderator's own material keeps the end the moderator gives, and an edit of a type without scheduling leaves the stored
+end alone. The cabinet gets the screen «Мои материалы» (`op=materials`) while an active type has a lifetime: the
+author's materials of such types, shown and expired, with their end and the button «Продлить» (`op=renew`, POST with
+the token), which sets the end one lifetime after the press through `NodeService::updateNodeTerm()`. A profile file
+without the key imports with `0` and stays format version 1. `NodeServiceTest` checks the publication, the approval,
+the moderator's own material and the renewal, another author's material and a repeated press included.
+
+### A Node type can be a listing of events
+
+The extension `event` (`NodeEvent`) gives each material a start, an optional end and a place, stored in the new table
+`_node_event`; the panel form and the public form show the three fields. The list of such a type shows the upcoming
+events, the nearest first, an event staying upcoming until its end, or without one until the end of the day it starts;
+the switch «Архив» in the header replaces the sort and the direction and shows the past ones, the newest first. For
+this the interface `NodeExtension` gains `getNodeOrder()`, and `getNodeScope()` and `getNodeOrder()` receive the list
+arguments set by `NodeQuery::setNodeArgs()`; `support` and `sync` keep the order of the type. The display mode `event`
+of the lite theme draws the start as a calendar leaf and belongs to this extension alone. `NodeEventTest` checks the
+extension, the writes and reads through `NodeService` and `NodeQuery`, the routes and the statement budget of the list.
+
 ### The Node types stand in the panel as a group of their own
 
 The modules news, faq, files and the others are Node types since 8.0, and the home of the panel showed only the card

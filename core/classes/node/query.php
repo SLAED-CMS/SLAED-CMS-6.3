@@ -34,10 +34,14 @@ final class NodeQuery {
 
     # The closed views of a list, public for the list and the type form; an empty list of a type offers the one view of its display mode, given here
     public const VIEWS = ['cards', 'compact', 'list', 'accordion', 'tiles', 'rail'];
-    public const MODEVIEW = ['default' => 'cards', 'article' => 'cards', 'docs' => 'list', 'faq' => 'accordion', 'files' => 'cards', 'media' => 'tiles', 'support' => 'cards'];
+    public const MODEVIEW = ['default' => 'cards', 'article' => 'cards', 'docs' => 'list', 'faq' => 'accordion', 'files' => 'cards', 'media' => 'tiles', 'support' => 'cards',
+        'event' => 'cards'];
 
-    # The closed display modes of the view section; a theme overrides the templates of a mode it carries, and support belongs to the type of that extension alone
-    public const MODES = ['default', 'article', 'docs', 'faq', 'files', 'media', 'support'];
+    # The closed display modes of the view section; a theme overrides the templates of a mode it carries, and support and event each belong to the type of that extension alone
+    public const MODES = ['default', 'article', 'docs', 'faq', 'files', 'media', 'support', 'event'];
+
+    # The modes that exist for one extension each and that its type must show
+    private const EXTMODES = ['support', 'event'];
 
     # The closed switches of the features section
     private const FEATURES = ['categories', 'comments', 'rating', 'favorites', 'poll', 'home', 'pinned', 'submit', 'moderation', 'schedule', 'related', 'tree'];
@@ -48,6 +52,9 @@ final class NodeQuery {
 
     # Who may submit publicly
     private const ACCESS = ['all', 'user', 'group'];
+
+    # The longest lifetime of a publication in days, ten years
+    public const LIFEMAX = 3650;
 
     # The resource kinds, and the kinds each display mode of a role accepts; public, because the writer checks every stored resource against the same registry
     public const KINDS = ['file', 'image', 'audio', 'video'];
@@ -96,14 +103,18 @@ final class NodeQuery {
         'id', 'nid', 'kind', 'role', 'src', 'name', 'title', 'intro', 'mime', 'size', 'width', 'height', 'duration', 'hits', 'reported', 'ruid', 'sort', 'created', 'updated',
     ];
 
-    # How each kind of read applies the rules: the state, the dates, the category predicate with or without the language, and the list filters
+    # How each kind of read applies the rules: the state, the dates, the category predicate with or without the language, the list filters and the list arguments of the extension
     private const READS = [
-        'item' => ['state' => 'any', 'cats' => '', 'filter' => false],
-        'target' => ['state' => 'pub', 'cats' => '', 'filter' => false],
-        'site' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false],
-        'parent' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false],
-        'list' => ['state' => 'list', 'cats' => 'lang', 'filter' => true],
+        'item' => ['state' => 'any', 'cats' => '', 'filter' => false, 'args' => false],
+        'target' => ['state' => 'pub', 'cats' => '', 'filter' => false, 'args' => false],
+        'site' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false, 'args' => false],
+        'parent' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false, 'args' => false],
+        'tally' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false, 'args' => true],
+        'list' => ['state' => 'list', 'cats' => 'lang', 'filter' => true, 'args' => true],
     ];
+
+    # A column of the order an extension gives its list: one alias of its join and one column
+    private const RANK = '/^[a-z]{1,4}\.[a-z_]{1,30}$/D';
 
     # The two disjoint parts an ordered read splits every branch into: with pinned constant in each, an index holding pinned after type and state gives the rows in the sort order
     private const PINS = ['n.pinned <> 0', 'n.pinned = 0'];
@@ -112,6 +123,7 @@ final class NodeQuery {
     private NodeContext $ctx;
     private Field $fld;
     private ?NodeExtension $ext = null;
+    private ?array $args = null;
     private array $types = [];
     private ?array $held = null;
     private bool $whole = false;
@@ -236,17 +248,18 @@ final class NodeQuery {
             'views' => $rule['views']];
     }
 
-    # Check the view section: one display mode of the closed list, never a path, the support mode only for a type of the support extension, and the columns of its pages
+    # Check the view section: one display mode of the closed list, never a path, a mode of an extension exactly for a type of that extension, and the columns of its pages
     private function filterViewRule(mixed $rule, string $ext): array {
         if (!is_array($rule) || !$this->checkExactKeys($rule, ['mode', 'side', 'top'])) throw $this->getInvalid('view');
-        if (!in_array($rule['mode'], self::MODES, true) || ($rule['mode'] === 'support') !== ($ext === 'support')) throw $this->getInvalid('view.mode');
+        if (!in_array($rule['mode'], self::MODES, true)) throw $this->getInvalid('view.mode');
+        foreach (self::EXTMODES as $one) if (($rule['mode'] === $one) !== ($ext === $one)) throw $this->getInvalid('view.mode');
         foreach (['side', 'top'] as $key) if (!in_array($rule[$key], [0, 1, 2, 3], true)) throw $this->getInvalid('view.'.$key);
         return ['mode' => $rule['mode'], 'side' => $rule['side'], 'top' => $rule['top']];
     }
 
-    # Check the workflow section: who submits, the groups that submit and publish directly, and the two notices
+    # Check the workflow section: who submits, the groups that submit and publish directly, the two notices and the days an author's publication stays shown
     private function filterFlowRule(mixed $rule): array {
-        if (!is_array($rule) || !$this->checkExactKeys($rule, ['access', 'groups', 'publish', 'notify'])) throw $this->getInvalid('workflow');
+        if (!is_array($rule) || !$this->checkExactKeys($rule, ['access', 'groups', 'publish', 'notify', 'lifetime'])) throw $this->getInvalid('workflow');
         if (!in_array($rule['access'], self::ACCESS, true)) throw $this->getInvalid('workflow.access');
         if (!$this->checkIdList($rule['groups'])) throw $this->getInvalid('workflow.groups');
         if (!$this->checkIdList($rule['publish'])) throw $this->getInvalid('workflow.publish');
@@ -255,7 +268,9 @@ final class NodeQuery {
         $note = $rule['notify'];
         $good = is_array($note) && $this->checkExactKeys($note, ['pending', 'result']) && is_bool($note['pending']) && is_bool($note['result']);
         if (!$good) throw $this->getInvalid('workflow.notify');
-        return ['access' => $rule['access'], 'groups' => $rule['groups'], 'publish' => $rule['publish'], 'notify' => ['pending' => $note['pending'], 'result' => $note['result']]];
+        if (!is_int($rule['lifetime']) || $rule['lifetime'] < 0 || $rule['lifetime'] > self::LIFEMAX) throw $this->getInvalid('workflow.lifetime');
+        return ['access' => $rule['access'], 'groups' => $rule['groups'], 'publish' => $rule['publish'], 'notify' => ['pending' => $note['pending'], 'result' => $note['result']],
+            'lifetime' => $rule['lifetime']];
     }
 
     # Check the features section: exactly the twelve switches, each a native boolean
@@ -575,9 +590,9 @@ final class NodeQuery {
     }
 
     # Ask the extension for its trusted join and condition and give every occurrence of each bound value a name unique to the branch; a malformed answer is refused
-    private function getScopeSql(NodeType $type, ?NodeExtension $ext, string $key): array {
+    private function getScopeSql(NodeType $type, ?NodeExtension $ext, string $key, ?array $args = null): array {
         if ($ext === null) return ['', '', []];
-        $scope = $ext->getNodeScope($type);
+        $scope = $ext->getNodeScope($type, $args);
         if (!$this->checkExactKeys($scope, ['join', 'where', 'params']) || !is_string($scope['join']) || !is_string($scope['where']) || !is_array($scope['params'])) {
             throw $this->getInvalid('scope');
         }
@@ -679,7 +694,7 @@ final class NodeQuery {
         }
         if ($rule['filter']) $this->addFilterSql($type, $key, $cat, $where, $pars);
         if ($cond !== '') $where[] = $cond;
-        [$join, $scope, $more] = $this->getScopeSql($type, $ext, $key);
+        [$join, $scope, $more] = $this->getScopeSql($type, $ext, $key, $rule['args'] ? $this->args : null);
         if ($scope !== '') $where[] = '('.$scope.')';
         return ['type' => $type, 'join' => $join, 'where' => implode(' AND ', $where), 'pars' => $pars + $more];
     }
@@ -687,6 +702,7 @@ final class NodeQuery {
     # The selected types with the extension each one is read through: the assigned instance for a single type, the shared factory for a mixed selection
     private function getTypeSet(): array {
         if (!$this->list) throw $this->getInvalid('type');
+        if ($this->args !== null && (count($this->list) !== 1 || $this->list[0]->ext === '')) throw $this->getInvalid('args');
         if (count($this->list) === 1) return [[$this->list[0], $this->getOwnExt($this->list[0])]];
         if ($this->ext !== null) throw $this->getInvalid('extension');
         return array_map(fn(NodeType $v): array => [$v, $v->ext === '' ? null : $this->getFactoryExt($v->ext)], $this->list);
@@ -703,17 +719,30 @@ final class NodeQuery {
         return $out;
     }
 
+    # The column and direction the extension of a single type gives its list read with the list arguments, or an empty array; it leaves no sort key to the visitor
+    private function getExtOrder(): array {
+        if ($this->args === null || count($this->list) !== 1) return [];
+        $ext = $this->getOwnExt($this->list[0]);
+        $rank = $ext ? $ext->getNodeOrder($this->list[0], $this->args) : [];
+        if ($rank === []) return [];
+        $good = $this->checkExactKeys($rank, ['expr', 'dir']) && is_string($rank['expr']) && preg_match(self::RANK, $rank['expr']) && in_array($rank['dir'], ['asc', 'desc'], true);
+        if (!$good) throw $this->getInvalid('rank');
+        if ($this->order) throw $this->getInvalid('order');
+        return [$rank['expr'], strtoupper($rank['dir'])];
+    }
+
     # The order of the current selection; the publication date is open to every type, as every feed orders by it and every type indexes it, and list.orders limits only the rest
     private function getOrderSql(string $pre): string {
         $one = count($this->list) === 1 ? $this->list[0]->settings['list'] : null;
         [$key, $dir] = $this->order ?: ($one ? [$one['order'], $one['dir']] : ['published', 'desc']);
+        $rank = $this->getExtOrder();
         $pin = false;
         foreach ($this->list as $type) {
             if ($this->order && $key !== 'published' && !in_array($key, $type->settings['list']['orders'], true)) throw $this->getInvalid('order');
             $pin = $pin || $type->settings['features']['pinned'];
         }
         $dir = strtoupper($dir);
-        $cols = match ($key) {
+        $cols = $rank ? [['xord', $rank[1]], ['id', $rank[1]]] : match ($key) {
             'views' => [['views', $dir], ['published', 'DESC'], ['id', 'DESC']],
             'rating' => [['rnone', 'ASC'], ['ravg', $dir], ['ratings', $dir], ['published', 'DESC'], ['id', 'DESC']],
             default => [[$key, $dir], ['id', $dir]],
@@ -845,6 +874,12 @@ final class NodeQuery {
         return $this;
     }
 
+    # Hand the arguments of the list request to the extension of the single selected type; its scope and order read them in the list and its header counts alone
+    public function setNodeArgs(array $args): self {
+        $this->args = $args;
+        return $this;
+    }
+
     # Limit the selection to one type the context may read: an active type, or a disabled one for its moderator
     public function setNodeType(NodeType $type): self {
         if (!$type->active && !$this->checkModer($type)) throw $this->getInvalid('type');
@@ -954,10 +989,11 @@ final class NodeQuery {
             .' LEFT JOIN '.PREFIX_DB.'_routes AS ur ON ur.kind = \'user\' AND ur.oid = n.uid AND n.uid > 0 AND ur.cur = 1';
     }
 
-    # The select of one list part: the id and the sort keys with the order helpers, no text column, so the union of the parts stays a small table in memory
-    private function getListSelect(array $part): string {
+    # The select of one list part: the id and the sort keys with the order helpers and the column of the extension order, no text column, so the union stays small in memory
+    private function getListSelect(array $part, array $rank): string {
         return 'SELECT n.id, '.($part['type']->settings['features']['pinned'] ? 'n.pinned' : '0').' AS pin, n.published, n.updated, n.title, n.views, n.ratings,'
-            .' (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
+            .' (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg'.($rank ? ', '.$rank[0].' AS xord' : '').' FROM '.PREFIX_DB.'_nodes AS n'.$part['join']
+            .' WHERE '.$part['where'];
     }
 
     # Read one page of the selection; the parts of every branch are each cut to the page end through their index, then unioned and paged, and only that page reads full rows
@@ -966,10 +1002,12 @@ final class NodeQuery {
         $size = $this->getPageSize();
         $skip = ($this->page - 1) * $size;
         $ord = $this->getOrderSql('');
+        $rank = $this->getExtOrder();
         $field = $this->sets && array_filter($this->list, fn(NodeType $v): bool => $this->checkFieldUse($v));
         $pars = [];
         foreach ($parts as $part) $pars += $part['pars'];
-        $page = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn(array $v): string => '('.$this->getListSelect($v).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')', $parts))
+        $page = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn(array $v): string => '('.$this->getListSelect($v, $rank).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')',
+            $parts))
             .') AS q ORDER BY '.$this->getOrderSql('q.').' LIMIT '.$skip.', '.$size;
         $sql = 'SELECT '.self::COLS.', '.($field ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle, r.path, ur.path AS upath FROM ('.$page.') AS p'
             .' INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = p.id LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
@@ -1078,6 +1116,28 @@ final class NodeQuery {
         return $out;
     }
 
+    # One page of the published materials the signed-in context wrote in active types with a lifetime, shown and expired alike; only here an expired one is read
+    public function getNodeTermList(int $page, int $limit): array {
+        global $conf;
+        if ($this->ctx->uid < 1 || $page < 1 || $limit < 1 || $limit > ($this->getNodeLimits($conf['node'] ?? null)['maxlist'] ?? 0)) throw $this->getInvalid('term');
+        $names = [];
+        foreach ($this->getNodeTypeList() as $type) if ($type->active && $type->settings['workflow']['lifetime'] > 0) $names[$type->id] = $type->name;
+        if (!$names) return ['total' => 0, 'rows' => []];
+        $pars = ['uid' => $this->ctx->uid, 'st' => NodeStatus::Published->value];
+        $where = ' WHERE n.uid = :uid AND n.status = :st AND n.tid IN ('.$this->getInList(array_keys($names), 't', $pars).')';
+        $total = intval($this->getQueryRows('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_nodes AS n'.$where, $pars)[0]['num'] ?? 0);
+        if ($total === 0) return ['total' => 0, 'rows' => []];
+        $sql = 'SELECT n.id, n.tid, n.title, n.published, n.expires, (n.published <= NOW() AND (n.expires IS NULL OR n.expires > NOW())) AS live, r.path FROM '.PREFIX_DB
+            .'_nodes AS n LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'.$where.' ORDER BY n.published DESC, n.id DESC LIMIT '
+            .(($page - 1) * $limit).', '.$limit;
+        $rows = [];
+        foreach ($this->getQueryRows($sql, $pars) as $row) {
+            $rows[] = ['id' => intval($row['id']), 'type' => $names[intval($row['tid'])], 'title' => $row['title'], 'published' => $row['published'],
+                'expires' => $row['expires'], 'live' => intval($row['live']) === 1, 'path' => $row['path']];
+        }
+        return ['total' => $total, 'rows' => $rows];
+    }
+
     # The categories of a type the form offers the context; the writer checks the rights and the language again on save, so this list only narrows the form
     public function getNodePostCats(NodeType $type): array {
         $moder = $this->checkModer($type);
@@ -1102,7 +1162,7 @@ final class NodeQuery {
 
     # The readable set the counts of a type are shared by, the sorted categories the context reads; empty for a moderator or a scope of the extension, whose counts are its own
     public function getNodeReadSet(NodeType $type): string {
-        [$join, $cond] = $this->getScopeSql($type, $this->getOwnExt($type), 'z');
+        [$join, $cond] = $this->getScopeSql($type, $this->getOwnExt($type), 'z', $this->args);
         if ($this->checkModer($type) || $join !== '' || $cond !== '') return '';
         $ids = $this->getCatAllow($type, true);
         sort($ids);
@@ -1112,7 +1172,7 @@ final class NodeQuery {
     # Count what the list of a type reads without filters: the total, each main or extra category, each first sign of the title, and the next publication or expiry
     public function getNodeTally(NodeType $type): array {
         $ext = $this->getOwnExt($type);
-        $one = $this->getBranchSql($type, 'h', $ext, 'site');
+        $one = $this->getBranchSql($type, 'h', $ext, 'tally');
         $out = ['total' => 0, 'cats' => [], 'lets' => [], 'until' => 0];
         $sql = 'SELECT CAST(LEFT(n.title, 1) AS BINARY) AS sign, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes AS n'.$one['join'].' WHERE '.$one['where'].' GROUP BY sign';
         foreach ($this->getQueryRows($sql, $one['pars']) as $row) {
@@ -1123,7 +1183,7 @@ final class NodeQuery {
             $out['lets'][$sign] = ($out['lets'][$sign] ?? 0) + intval($row['num']);
         }
         if ($type->settings['features']['categories']) {
-            $two = $this->getBranchSql($type, 'k', $ext, 'site');
+            $two = $this->getBranchSql($type, 'k', $ext, 'tally');
             $sql = 'SELECT q.cid, COUNT(*) AS num FROM (SELECT n.id, n.cid FROM '.PREFIX_DB.'_nodes AS n'.$one['join'].' WHERE '.$one['where'].' AND n.cid > 0'
                 .' UNION SELECT n.id, nc.cid FROM '.PREFIX_DB.'_nodes AS n'.$two['join'].' INNER JOIN '.PREFIX_DB.'_node_categories AS nc ON nc.nid = n.id'
                 .' WHERE '.$two['where'].') AS q GROUP BY q.cid';

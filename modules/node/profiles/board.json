@@ -44,7 +44,8 @@
                 "notify": {
                     "pending": true,
                     "result": true
-                }
+                },
+                "lifetime": 30
             },
             "admin": [],
             "features": {

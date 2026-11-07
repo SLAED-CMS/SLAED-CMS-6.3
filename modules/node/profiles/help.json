@@ -35,7 +35,8 @@
                 "notify": {
                     "pending": false,
                     "result": false
-                }
+                },
+                "lifetime": 0
             },
             "admin": [],
             "features": {

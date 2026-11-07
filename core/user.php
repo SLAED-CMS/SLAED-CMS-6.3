@@ -323,6 +323,10 @@ function getUserNavItems(bool $home = false): array {
         $items[] = ['label' => $label, 'title' => ($type->intro !== '') ? getConst($type->intro) : $label, 'href' => getSeoUrl(['name' => $type->name]),
             'icon' => getIconName($type->name)];
     }
+    if (array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active && $v->settings['workflow']['lifetime'] > 0)) {
+        $items[] = ['label' => _ACCOUNT_MINE, 'title' => _ACCOUNT_MINE, 'href' => getSeoUrl(['name' => 'account', 'op' => 'materials']), 'icon' => getIconName('terms'),
+            'sub' => _ACCOUNT_MINENOTE];
+    }
     if ($conf['favorites']['favact']) {
         [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
         $items[] = [

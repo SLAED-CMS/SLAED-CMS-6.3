@@ -30,6 +30,8 @@ define('_ACCOUNT_PERSON','Personnel');
 define('_ACCOUNT_PRIVACY','Confidentialité et apparence');
 define('_ACCOUNT_PRIVHEAD','Ce que voient les autres et l\'apparence du site pour vous');
 define('_ACCOUNT_PSMAILNOTE','Ils restent visibles dans le cabinet sans courrier.');
+define('_ACCOUNT_RENEW','Prolonger');
+define('_ACCOUNT_RENEWED','La durée d\'affichage est prolongée jusqu\'au %s.');
 define('_ACCOUNT_SAFE','Protégé');
 define('_ACCOUNT_SECTIONS','Sections des paramètres');
 define('_ACCOUNT_SETUPNOTE','Profil, avatar, mot de passe');

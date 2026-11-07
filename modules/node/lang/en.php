@@ -6,6 +6,7 @@
 
 define('_NODE_ABC','Alphabet');
 define('_NODE_ADDED','The material has been published.');
+define('_NODE_ARCHIVE','Archive');
 define('_NODE_ASSETS','Files and links');
 define('_NODE_ATTACH','Files');
 define('_NODE_BADDATE','A date is not valid, use the form YYYY-MM-DD HH:MM.');
@@ -13,6 +14,7 @@ define('_NODE_BUSY','The material was changed in the meantime, nothing was saved
 define('_NODE_CATS','Additional categories');
 define('_NODE_CLOSE','Close the request');
 define('_NODE_DLOADS','Downloads');
+define('_NODE_ENDS','End');
 define('_NODE_FAILED','The material could not be saved, please try again later.');
 define('_NODE_FEEDALL','All: %s');
 define('_NODE_FILTERS','Filter materials');
@@ -34,6 +36,7 @@ define('_NODE_PENDING','The material has been sent to the moderator for review.'
 define('_NODE_PERHINT','0 - manual check only, otherwise from 300 to 31536000');
 define('_NODE_PERIOD','Check period, seconds');
 define('_NODE_PHIGH','High');
+define('_NODE_PLACE','Place');
 define('_NODE_PLOW','Low');
 define('_NODE_PNORM','Normal');
 define('_NODE_PURGE','Urgent');
@@ -45,6 +48,7 @@ define('_NODE_REPORTED','Thank you, the report about the resource has been recei
 define('_NODE_SINCE','Since the last visit');
 define('_NODE_SOURCE','Source of the text (RSS or Atom)');
 define('_NODE_SSAVED','The state of the request has been saved.');
+define('_NODE_STARTS','Start');
 define('_NODE_STATE','State');
 define('_NODE_SUBCAT','Additional');
 define('_NODE_UPDATED','Updated');

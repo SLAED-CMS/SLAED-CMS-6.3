@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# The contract of the special behaviour of one type: nine methods, reached only through the closed factory of core/classes/node/ext/load.php
+# The contract of the special behaviour of one type: ten methods, reached only through the closed factory of core/classes/node/ext/load.php
 interface NodeExtension {
 
     # Check the settings of the extension against the effective standard section of the type and its checked fields, and return them canonical
@@ -15,8 +15,11 @@ interface NodeExtension {
     # Check and canonicalize the extension input of a material before the writing transaction starts; the stored material is passed on change and null on create
     public function filterNodeData(NodeType $type, array $data, ?Node $node = null): array;
 
-    # Return the trusted join, where and params that narrow every public read of the type before counting and paging
-    public function getNodeScope(NodeType $type): array;
+    # Return the trusted join, where and params that narrow every read of the type before counting and paging; args are null outside the list of the type itself
+    public function getNodeScope(NodeType $type, ?array $args): array;
+
+    # Return the trusted column over the join of the scope and the direction the list of the type orders by, or an empty array to leave the order to the type
+    public function getNodeOrder(NodeType $type, ?array $args): array;
 
     # Forbid one of the closed actions on an already read target in addition to the core rules; it can never allow what the core refused
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool;

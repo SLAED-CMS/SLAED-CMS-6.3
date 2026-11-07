@@ -207,7 +207,7 @@ final class RequestWatchTest extends TestCase
             $this->assertStringNotContainsString("checkSiteToken(getVar('post', 'token'", $code, $name.' checks a body token by hand');
             $this->assertStringNotContainsString('checkForumPost', $code, $name.' keeps a token check of its own');
         }
-        $writes = ['forum' => 3, 'contact' => 1, 'recommend' => 1, 'account' => 9, 'node' => 3];
+        $writes = ['forum' => 3, 'contact' => 1, 'recommend' => 1, 'account' => 10, 'node' => 3];
         foreach ($writes as $name => $num) {
             $code = (string)file_get_contents($root.'/modules/'.$name.'/index.php');
             $this->assertSame($num, substr_count($code, "checkSitePost('".$name."')"), $name.' does not check each write in its own scope');

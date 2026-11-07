@@ -866,6 +866,65 @@ function logins(): void {
     setFoot();
 }
 
+function materials(): void {
+    global $conf, $tpl;
+    if (!is_user()) {
+        account();
+        return;
+    }
+    $page = max(1, getVar('get', 'page', 'num', 1));
+    $num = 20;
+    try {
+        $list = getNodeReader()->getNodeTermList($page, $num);
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'Node: the materials of an author cannot be read', ['code' => $err->getCode()]);
+        $list = ['total' => 0, 'rows' => []];
+    }
+    if ($page > 1 && !$list['rows']) setError(404);
+    setHead(['title' => _ACCOUNT_MINE]);
+    $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'renew'])
+        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]);
+    $rows = '';
+    foreach ($list['rows'] as $row) {
+        $link = ['text' => $row['title'], 'title' => $row['title'], 'href' => getSeoUrl(['name' => $row['type'], 'op' => 'view', 'id' => $row['id'], 'route' => $row['path']])];
+        $renew = ($row['expires'] === null) ? '' : $tpl->getHtmlFrag('post-button', [
+            'action' => getSeoUrl(['name' => $conf['name']]),
+            'hidden' => $hide.$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => $row['id']]),
+            'icon_name' => getIconName('renew'),
+            'title' => _ACCOUNT_RENEW,
+            'label' => _ACCOUNT_RENEW,
+        ]);
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
+            $row['live'] ? $link : ['text' => $row['title']],
+            ['text' => getModuleName($row['type'])],
+            ['text' => format_time($row['published'], _TIMESTRING)],
+            ['text' => ($row['expires'] === null) ? '' : format_time($row['expires'], _TIMESTRING)],
+            ['text' => $row['live'] ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN],
+            ['content_html' => $renew],
+        ]]);
+    }
+    $cont = ($rows === '') ? getCabinetNotes('', _NO_INFO, 0) : $tpl->getHtmlFrag('table', [
+        'is_list' => true,
+        'rows_html' => $rows,
+        'headers' => [['text' => _TITLE], ['text' => _MODUL], ['text' => _DATE], ['text' => _ENDDATE], ['text' => _STATUS], ['text' => '']],
+    ]).getTplPager(['count' => $list['total'], 'limit' => $num, 'mod' => $conf['name'], 'url_extra' => ['op' => 'materials']]);
+    echo $tpl->getHtmlFrag('title', ['title' => _ACCOUNT_MINE, 'is_level_one' => true]).getUserNav().$cont;
+    setFoot();
+}
+
+function renew(): void {
+    global $conf;
+    $back = getSeoUrl(['name' => $conf['name'], 'op' => 'materials']);
+    if (!is_user()) setRedirect(getSeoUrl(['name' => $conf['name']]));
+    if (!checkSitePost('account')) setRedirect($back, false, 302, _TOKENMISS, true);
+    try {
+        $end = getNodeWriter()->updateNodeTerm(getVar('post', 'id', 'num', 0));
+    } catch (NodeException) {
+        setRedirect($back, false, 302, _ERROR, true);
+    }
+    setRedirect($back, false, 302, sprintf(_ACCOUNT_RENEWED, format_time($end, _TIMESTRING)));
+}
+
 function passlost(): void {
     global $conf, $stop, $tpl;
     $code = getVar('get', 'code', 'text');
@@ -2027,6 +2086,8 @@ switch ($op) {
     case 'rss': rssfeed(); break;
     case 'favorites': favorites(); break;
     case 'logins': logins(); break;
+    case 'materials': materials(); break;
+    case 'renew': renew(); break;
     case 'view': view(); break;
     case 'login': login(); break;
     case 'logout': logout(); break;

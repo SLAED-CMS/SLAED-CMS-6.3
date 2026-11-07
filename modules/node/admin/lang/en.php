@@ -55,6 +55,8 @@ define('_NODE_INTEG','Integrations');
 define('_NODE_JSON','Definition file (JSON)');
 define('_NODE_KEEP','Continue with my data');
 define('_NODE_KINDS','Kinds');
+define('_NODE_LIFETIME','Display period, days');
+define('_NODE_LIFEHINT','0 means no period. A material of an author is taken down this many days after it is published; the author extends it in the cabinet');
 define('_NODE_LIMIT','Materials per page');
 define('_NODE_LIMITBAD','The limits were not saved: enter whole numbers, 0 or more for the periods and 1 or more for the rest.');
 define('_NODE_LIMITNO','The type %s would not fit into the new limits, nothing was saved.');

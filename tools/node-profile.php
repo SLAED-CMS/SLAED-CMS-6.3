@@ -253,7 +253,7 @@ function getProfileSlots(NodeType $type): array {
     return $out;
 }
 
-# Fill the database with batch statements: users, categories, materials of every state, extra categories, relations, resources and the rows of both extensions
+# Fill the database with batch statements: users, categories, materials of every state, extra categories, relations, resources and the rows of the three extensions
 function addProfileRows(PDO $pdo, array $types, int $rows): array {
     $pre = PPREF.'_';
     $per = intdiv($rows, count($types));
@@ -302,8 +302,11 @@ function addProfileRows(PDO $pdo, array $types, int $rows): array {
         .' INNER JOIN '.$pre.'node_types AS t ON t.id = n.tid AND t.ext = \'support\'');
     $pdo->exec('INSERT INTO '.$pre.'node_sync (nid, url, refresh) SELECT n.id, CONCAT(\'https://example.com/feed/\', n.id, \'.xml\'), 0 FROM '.$pre.'nodes AS n'
         .' INNER JOIN '.$pre.'node_types AS t ON t.id = n.tid AND t.ext = \'sync\'');
+    $pdo->exec('INSERT INTO '.$pre.'node_event (nid, starts, ends, place) SELECT n.id, NOW() - INTERVAL 200 DAY + INTERVAL n.id % 400 DAY,'
+        .' IF(n.id % 3 = 0, NOW() - INTERVAL 200 DAY + INTERVAL n.id % 400 DAY + INTERVAL 3 HOUR, NULL), CONCAT(\'Hall \', n.id % 20 + 1) FROM '.$pre.'nodes AS n'
+        .' INNER JOIN '.$pre.'node_types AS t ON t.id = n.tid AND t.ext = \'event\'');
     $out = [];
-    foreach (['users', 'categories', 'nodes', 'node_categories', 'node_relations', 'node_assets', 'node_support', 'node_sync'] as $one) {
+    foreach (['users', 'categories', 'nodes', 'node_categories', 'node_relations', 'node_assets', 'node_support', 'node_sync', 'node_event'] as $one) {
         $pdo->query('ANALYZE TABLE '.$pre.$one)->fetchAll();
         $out[$one] = (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.$one)->fetchColumn();
     }

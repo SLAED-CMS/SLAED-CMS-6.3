@@ -1,0 +1,64 @@
+<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-fullview">
+  <h1 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{{ title }}{% if fresh_html %} {{{ fresh_html }}}{% endif %}</h1>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      {% if is_comm %}
+      <li><a href="{{ href }}#comm" title="{{ comm_label }}" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comnum }}</a></li>
+      {% endif %}
+      {% if is_views %}
+      <li><span title="{{ views_label }}" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> {{ views }}</span></li>
+      {% endif %}
+      {% if is_author and author %}
+      <li><span title="{{ author_label }}" class="sl-chip sl-chip-info sl-post-icon">{% if ahref %}<a href="{{ ahref }}" title="{{ author }}" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> {{ author }}</a>{% else %}<i class="bi bi-person" aria-hidden="true"></i> {{ author }}{% endif %}</span></li>
+      {% endif %}
+      {% if is_live %}
+      <li class="sl-meta-actions">{% if share_url %}{% include 'fragments/share.html' %}{% endif %}{{{ user_html }}}{{{ moder_html }}}<a href="#node-{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a></li>
+      {% endif %}
+    </ul>
+    <ul>
+      {% if ext.starts_text %}
+      <li><time datetime="{{ ext.starts_iso }}" title="{{ ext.starts_label }}" class="sl-chip sl-chip-info"><i class="bi bi-calendar-event" aria-hidden="true"></i> {{ ext.starts_text }}{% if ext.ends_text %} – {{ ext.ends_text }}{% endif %}</time></li>
+      {% endif %}
+      {% if ext.place %}
+      <li><span title="{{ ext.place_label }}" class="sl-chip sl-chip-neutral"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ ext.place }}</span></li>
+      {% endif %}
+      {% if ext.is_past %}
+      <li><span class="sl-chip sl-chip-neutral"><i class="bi bi-archive" aria-hidden="true"></i> {{ ext.past_label }}</span></li>
+      {% endif %}
+      {% if is_category and chref %}
+      <li><a href="{{ chref }}" title="{{ ctitle }}" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> {{ ctitle }}</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  <div class="sl-entry-content">
+    {{{ poll_html }}}
+    {% if ext.day %}
+    <time datetime="{{ ext.starts_iso }}" title="{{ ext.starts_label }}" class="sl-event-date"><span class="sl-event-month">{{ ext.month }}</span><span class="sl-event-day">{{ ext.day }}</span>{% if ext.time %}<span class="sl-event-time">{{ ext.time }}</span>{% endif %}</time>
+    {% endif %}
+    {{{ intro_html }}}
+    {% if body_html %}{{{ body_html }}}{% endif %}
+    {% if fields_html %}
+    <div class="sl-section">
+      {{{ fields_html }}}
+    </div>
+    {% endif %}
+  </div>
+  {{{ assets_html }}}
+  {% if rating_html or files_html %}
+  <div class="sl-meta-foot">
+    {% if rating_html %}
+    <div class="sl-rate-box sl-pull-right">{{{ rating_html }}}</div>
+    {% endif %}
+    {{{ files_html }}}
+  </div>
+  {% endif %}
+  {{{ tree_html }}}
+  {% if rels_html %}
+  <section>
+    <h2 class="sl-related-title">{{ rels_label }}</h2>
+    <div class="sl-section">
+      {{{ rels_html }}}
+    </div>
+  </section>
+  {% endif %}
+</article>

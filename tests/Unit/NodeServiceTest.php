@@ -111,6 +111,7 @@ final class NodeServiceTest extends TestCase
             'updateNodePublishList' => ['int limit = 50', 'array'],
             'updateNodeRating' => ['int id', 'NodeType type', 'int score', 'int ratings', 'void'],
             'updateNodeStatus' => ['int id', 'NodeStatus status', 'int version', 'Node'],
+            'updateNodeTerm' => ['int id', 'string'],
             'updateNodeText' => ['int id', 'string field', 'string text', 'int version', 'Node'],
             'updateNodeType' => ['string name', 'NodeTypeInput input', 'int version', 'NodeType'],
             'updateNodeTypeStatus' => ['string name', 'bool active', 'int version', 'NodeType'],
@@ -787,5 +788,39 @@ final class NodeServiceTest extends TestCase
         if (!$run['snapshot']) $this->markTestSkipped('The server has no innodb_snapshot_isolation');
         $this->assertSame(['ok' => true, 'value' => null], $run['delete'], 'The delete failed on a comment edited before its lock');
         $this->assertSame([0, 0, [['delete', true]], true], $run['after'], 'The material, its comment or the extension row stayed, or the edit never ran');
+    }
+
+    # Lifetime: an author's direct publication and an approval end after the lifetime, a moderator's own and a type without one never; an edit without schedule keeps it
+    # Renewal: the author alone, of a published material with an end, from the clock of the database, a repeat setting the same end; only the author lists an expired one
+    #[Test]
+    public function theLifetimeEndsAnAuthorsMaterialAndTheAuthorExtendsIt(): void
+    {
+        $run = $this->getRuns()['term'];
+        $this->assertSame(['ok' => true, 'value' => 2], $run['type']);
+        $days = 30 * 86400;
+        $this->assertSame(['direct' => $days, 'approve' => $days, 'own' => null, 'plain' => null], $run['span']);
+        $this->assertSame(['ok' => true, 'value' => true], $run['edit'], 'An edit of a type without schedule changed the end');
+        $this->assertSame(['ok' => true, 'value' => true], $run['late'], 'An expired material of a type without schedule cannot be edited');
+        $this->assertTrue($run['hidden'], 'An expired material is shown to the public');
+        $ids = $run['ids'];
+        $this->assertSame([2, [[$ids['gone'], 'ads', false], [$ids['direct'], 'ads', false]]], $run['list'], 'The author does not list the own expired materials alone');
+        $this->assertSame([$ids['sub']], $run['anna'], 'An author lists a foreign or a pending material');
+        $this->assertSame(['ok' => false, 'code' => 3, 'class' => 'NodeException', 'msg' => 'Invalid node input: term'], $run['guestlist']);
+        [$same, $left, $shown] = $run['renew'];
+        $this->assertTrue($same, 'The answer of a renewal is not the stored end');
+        $this->assertGreaterThan($days - 60, $left, 'A renewal does not count the lifetime from now');
+        $this->assertLessThanOrEqual($days, $left);
+        $this->assertTrue($shown, 'A renewed material stays hidden');
+        $this->assertTrue($run['repeat']['ok']);
+        $this->assertLessThan(60, $run['sum'], 'A second renewal added the lifetime again');
+        $this->assertSame(2, $run['version'], 'Each renewal does not move the version once');
+        $this->assertRefused($run['refused']['foreign'], 2, 'The context is not the author of the material', 'foreign');
+        $this->assertRefused($run['refused']['guest'], 2, 'Only a signed-in author extends a material', 'guest');
+        $this->assertInvalid($run['refused']['plain'], 'lifetime', 'plain');
+        $this->assertInvalid($run['refused']['pending'], 'status', 'pending');
+        $this->assertRefused($run['refused']['own'], 2, 'Only a signed-in author extends a material', 'own');
+        $this->assertRefused($run['refused']['missing'], 1, 'The material does not exist', 'missing');
+        $this->assertTrue($run['untouched'], 'A refused renewal wrote an end');
+        $this->assertSame($days, $run['ahead'], 'A renewal before the publication ends earlier than the lifetime after it');
     }
 }

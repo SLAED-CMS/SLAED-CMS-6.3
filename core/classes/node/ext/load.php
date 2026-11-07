@@ -9,7 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Create the registered extension of a type key; the stored key is looked up in a closed map and never turned into a path
 function getNodeExtension(string $key, Database $db, NodeContext $context): ?NodeExtension {
     global $conf;
-    $map = ['support' => ['support.php', 'NodeSupport'], 'sync' => ['sync.php', 'NodeSync']];
+    $map = ['event' => ['event.php', 'NodeEvent'], 'support' => ['support.php', 'NodeSupport'], 'sync' => ['sync.php', 'NodeSync']];
     if ($key === '') return null;
     if (!isset($map[$key])) throw new NodeException('Unknown node extension key', NodeException::INVALID);
     [$file, $class] = $map[$key];

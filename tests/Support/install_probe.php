@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the clean installation of the release: it creates the fourteen shipped Node profiles, answered over real HTTP
+# CLI probe for the clean installation of the release: it creates the sixteen shipped Node profiles, answered over real HTTP
 # It copies the tracked tree without docs, tests and tools into scratch, creates one disposable MariaDB database, and serves the copy with two built-in servers
 # The installer and the panel run on the first, and the address the installer records points at the second
 # So the refusal of a type directory the panel asks for while it activates a type is answered by a server that is free
@@ -36,7 +36,7 @@ const IPASS = 'Probe-secret-17';
 const IPROFS = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs'];
 
 # Every shipped profile in the order of their sort, the ten of 6.2 first
-const ISHIP = [...IPROFS, 'album', 'portfolio', 'board', 'reviews'];
+const ISHIP = [...IPROFS, 'album', 'portfolio', 'board', 'reviews', 'events', 'jobs'];
 
 # Remove one scratch tree
 function deleteInstallTree(string $dir): void {
@@ -522,7 +522,8 @@ function getInstallTypeForm(array $prof, string $name, string $tok): array {
     $form = ['name' => 'node', 'op' => 'type', 'profile' => $prof['type']['name'], 'token' => $tok, 'tname' => $name, 'title' => $prof['type']['title'],
         'intro' => $prof['type']['intro'], 'ext' => $prof['type']['ext'], 'sort' => (string)$prof['type']['sort'], 'orders' => $set['list']['orders'],
         'order' => $set['list']['order'], 'dir' => $set['list']['dir'], 'limit' => (string)$set['list']['limit'], 'show' => $set['list']['show'],
-        'mode' => $set['view']['mode'], 'access' => [['all' => '0|0', 'user' => '1|0'][$flow['access']]], 'seo' => $set['integrations']['seo']];
+        'mode' => $set['view']['mode'], 'access' => [['all' => '0|0', 'user' => '1|0'][$flow['access']]], 'lifetime' => (string)$flow['lifetime'],
+        'seo' => $set['integrations']['seo']];
     if ($set['list']['alpha']) $form['alpha'] = '1';
     foreach ($flow['notify'] as $key => $on) if ($on) $form['notify_'.$key] = '1';
     foreach ($set['features'] as $key => $on) if ($on) $form['feat_'.$key] = '1';
@@ -564,7 +565,7 @@ function addInstallNode(array $who, string $type, array $form): array {
 }
 
 # Each type but help: the public list, a published material written through the panel with what its roles and fields demand, the stored row, its public page
-# A draft stays out of reach of the guest, and content stores its source instead of a body
+# A draft stays out of reach of the guest, content stores its source instead of a body, and an event carries the start that keeps it in the upcoming list
 function getInstallTypes(PDO $pdo, array $who): array {
     $more = [
         'content' => ['source' => 'http://127.0.0.1/feed.xml', 'refresh' => '300'],
@@ -576,6 +577,8 @@ function getInstallTypes(PDO $pdo, array $who): array {
         'portfolio' => ['field' => ['client' => 'Probe Client', 'year' => '2024']],
         'board' => ['field' => ['price' => '1500', 'city' => 'Berlin']],
         'reviews' => ['field' => ['stars' => '4']],
+        'events' => ['starts' => '2030-06-01T18:00', 'place' => 'Probe hall'],
+        'jobs' => ['field' => ['salary' => '3000 EUR', 'city' => 'Berlin', 'employment' => 'full']],
     ];
     $out = [];
     foreach (ISHIP as $name) {

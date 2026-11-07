@@ -6,6 +6,7 @@
 
 define('_NODE_ABC','Alfabet');
 define('_NODE_ADDED','Materiał został opublikowany.');
+define('_NODE_ARCHIVE','Archiwum');
 define('_NODE_ASSETS','Pliki i linki');
 define('_NODE_ATTACH','Pliki');
 define('_NODE_BADDATE','Data jest nieprawidłowa, użyj postaci RRRR-MM-DD GG:MM.');
@@ -13,6 +14,7 @@ define('_NODE_BUSY','Materiał został w międzyczasie zmieniony, nic nie zapisa
 define('_NODE_CATS','Dodatkowe kategorie');
 define('_NODE_CLOSE','Zamknij zgłoszenie');
 define('_NODE_DLOADS','Pobrania');
+define('_NODE_ENDS','Koniec');
 define('_NODE_FAILED','Nie udało się zapisać materiału, spróbuj ponownie później.');
 define('_NODE_FEEDALL','Wszystkie: %s');
 define('_NODE_FILTERS','Wybór materiałów');
@@ -34,6 +36,7 @@ define('_NODE_PENDING','Materiał został wysłany do moderatora do sprawdzenia.
 define('_NODE_PERHINT','0 - tylko ręczne sprawdzanie, w przeciwnym razie od 300 do 31536000');
 define('_NODE_PERIOD','Okres sprawdzania, sekundy');
 define('_NODE_PHIGH','Wysoki');
+define('_NODE_PLACE','Miejsce');
 define('_NODE_PLOW','Niski');
 define('_NODE_PNORM','Normalny');
 define('_NODE_PURGE','Pilny');
@@ -45,6 +48,7 @@ define('_NODE_REPORTED','Dziękujemy, zgłoszenie dotyczące zasobu zostało prz
 define('_NODE_SINCE','Od ostatniej wizyty');
 define('_NODE_SOURCE','Źródło tekstu (RSS lub Atom)');
 define('_NODE_SSAVED','Stan zgłoszenia został zapisany.');
+define('_NODE_STARTS','Początek');
 define('_NODE_STATE','Stan');
 define('_NODE_SUBCAT','Dodatkowa');
 define('_NODE_UPDATED','Zaktualizowane');

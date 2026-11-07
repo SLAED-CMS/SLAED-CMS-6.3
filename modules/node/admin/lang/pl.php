@@ -55,6 +55,8 @@ define('_NODE_INTEG','Integracje');
 define('_NODE_JSON','Plik definicji (JSON)');
 define('_NODE_KEEP','Kontynuuj z moimi danymi');
 define('_NODE_KINDS','Rodzaje');
+define('_NODE_LIFETIME','Okres wyświetlania, dni');
+define('_NODE_LIFEHINT','0 oznacza bez limitu. Materiał autora jest zdejmowany tyle dni po publikacji; autor przedłuża go w panelu użytkownika');
 define('_NODE_LIMIT','Materiałów na stronie');
 define('_NODE_LIMITBAD','Limity nie zostały zapisane: podaj liczby całkowite, dla terminów od 0, dla pozostałych od 1.');
 define('_NODE_LIMITNO','Typ %s nie zmieściłby się w nowych limitach, nic nie zapisano.');
