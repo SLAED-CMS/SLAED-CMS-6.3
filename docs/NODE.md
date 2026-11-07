@@ -3196,7 +3196,7 @@ theme, blocks and independent global subsystems are outside it, and the `NodeCon
 | Administrative list (`setNodeSets(false)`) | 3 | 3 |
 | Edit form | 5 | 5 |
 | State change | 6 | 7 when a `_node_publish` job is created or removed |
-| Physical delete | 5 statements on Node tables | Point and global cleanup measured apart |
+| Physical delete | 6 statements on Node tables | Point and global cleanup measured apart |
 
 - A list reads type, page and count (`uname`, `ctitle` joined); extra categories, relations, related cards and
   resources add one batch each; categories add the category-right prefetch (once per type and `NodeQuery`) and
@@ -3384,7 +3384,7 @@ up to three resources where the type has roles. `--runs` (`5..500`, default `30`
 The report gives per scenario the Node statements against `PBUDGET` (the budget ceilings, with `view 5`,
 `viewrel 6` plus tree batches, `status 6`; for `status` and `delete` only `_node*` statements count), p50, p95,
 average statement time and `EXPLAIN` plans with rows read (`Handler_read*`). It exits `1` when a scenario exceeds its budget, a Node
-table over 1000 rows is fully scanned, a list page reads more than `2 x page end x branches + 4 x page size +
+table over 1000 rows is fully scanned, a list page reads more than `2 x page end x branches + 6 x page size +
 2 x pinned rows + 3 x extra category links + 50` rows (a category count `3 x (materials + links) + 50`, the deadline
 `3 x timed and pinned rows + 50`), a category page or count misses `_nodes.cat` or `_node_categories.cat`, or the
 largest page (`media` at `limit = 100`) costs other statements than a page of one. Results with Xdebug loaded are

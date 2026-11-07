@@ -37,7 +37,7 @@ const PCATS = 20;
 
 # Budgets of docs/NODE.md (Statement budgets) as the largest statement count each scenario may reach; a list is held to its upper bound, the one of a type with categories
 const PBUDGET = ['list' => 7, 'view' => 5, 'viewrel' => 6, 'attach' => 2, 'asset' => 2, 'download' => 4,
-    'report' => 4, 'admin' => 3, 'edit' => 5, 'status' => 6, 'delete' => 5];
+    'report' => 4, 'admin' => 3, 'edit' => 5, 'status' => 6, 'delete' => 6];
 
 # Remove one scratch tree
 function deleteProfileTree(string $dir): void {
@@ -85,8 +85,7 @@ function setProfileFile(string $file, array $data): void {
     file_put_contents($file, "<?php\nreturn ".var_export($data, true).";\n");
 }
 
-# The scratch configuration: every source of the release as committed, the disposable database and the three update marks of a clean installation
-# The home of the site is the address of the guard server, so switching a type on meets a server that refuses its directory
+# The committed config less its types, as deleteSetupTypes() of setup.php drops them; the home is the guard server, which refuses a type directory
 function setProfileConfig(string $dir, int $port): void {
     global $pcred, $pname;
     mkdir($dir, 0777, true);
@@ -97,6 +96,13 @@ function setProfileConfig(string $dir, int $port): void {
         file_put_contents($dir.'/'.basename($one), (string)shell_exec('git -C '.escapeshellarg(BASE_DIR).' show '.escapeshellarg('HEAD:'.$one).$quiet));
     }
     if (!is_file($dir.'/global.php') || !is_file($dir.'/node.php')) throw new RuntimeException('The release configuration could not be read from git');
+    $pack = [];
+    foreach (['node', 'fields', 'uploads', 'ratings'] as $name) $pack[$name] = is_file($dir.'/'.$name.'.php') ? require $dir.'/'.$name.'.php' : [$name => []];
+    foreach (array_keys($pack['node']['node']['types'] ?? []) as $name) {
+        unset($pack['node']['node']['types'][$name], $pack['fields']['fields']['node'][$name], $pack['uploads']['uploads'][$name], $pack['ratings']['ratings']['node.'.$name]);
+    }
+    if (($pack['fields']['fields']['node'] ?? null) === []) unset($pack['fields']['fields']['node']);
+    foreach ($pack as $name => $data) setProfileFile($dir.'/'.$name.'.php', $data);
     setProfileFile($dir.'/db.php', ['db' => ['name' => $pname, 'prefix' => PPREF] + $pcred]);
     setProfileFile($dir.'/update.php', ['update' => ['points' => '8.0.0', 'ratings' => '8.0.0', 'fields' => '8.0.0']]);
     $glob = require $dir.'/global.php';
@@ -366,17 +372,14 @@ function getProfileKind(string $sql): string {
     return preg_match('/^SELECT (SUM\(q\.num\)|COUNT\(\*\)) AS num FROM /', $sql) ? 'count' : 'other';
 }
 
-# The reads a list statement may reach: every part of a page reads its rows up to the page end and hands them to the union
-# The rows of the page itself pass the page table, their full row and the two joined names; the pinned part sorts all pinned rows of the type
-# The extra category part reads all links of the category, a count the rows of the category
-# Each bound carries a fixed allowance for the lookups of the plan
+# The reads a list statement may reach; a page row passes six reads: the page table, its full row, two joined names and the two paths of getPathSql()
 function getProfileBound(PDO $pdo, array $plan, array $shape): ?int {
     $pre = PPREF.'_';
     $num = fn(string $sql): int => (int)$pdo->query($sql)->fetchColumn();
     $links = $shape['cid'] ? $num('SELECT COUNT(*) FROM '.$pre.'node_categories WHERE cid = '.$shape['cid']) : 0;
     $pins = $num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$shape['tid'].' AND status = 2 AND pinned <> 0');
     return match ($plan['kind']) {
-        'page' => 2 * $shape['end'] * $plan['parts'] + 4 * $shape['size'] + 2 * $pins + 3 * $links + 50,
+        'page' => 2 * $shape['end'] * $plan['parts'] + 6 * $shape['size'] + 2 * $pins + 3 * $links + 50,
         'count' => $shape['cid'] ? 3 * ($num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE cid = '.$shape['cid']) + $links) + 50 : null,
         default => null,
     };

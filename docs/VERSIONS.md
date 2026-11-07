@@ -25,6 +25,15 @@ is a column of `_nodes`. The titles and the labels of the fields take nine const
 `NodeProfileTest` and the installation probe check the fourteen through a real installation. Events, vacancies and a
 lifetime of a classified ad need the core and wait in their own plan.
 
+### The load profile of Node runs again
+
+`php tools/node-profile.php` stopped at `Invalid node input: name`: it copies the committed `config/`, whose `node.php`
+names the types of the stand, and the profiles met their names taken. It now drops those types with their areas first,
+as `deleteSetupTypes()` of `setup.php` does. Two of its limits had fallen behind the code: a delete costs six Node
+statements (the head and the type are two reads), and a row of a list page passes six reads since the two paths of
+`NodeQuery::getPathSql()` joined the page; the budget of `delete` and the bound of a page take them, here and in
+`docs/NODE.md`. The full run of 100000 materials in fourteen types passes without a failure.
+
 ## 2026-11-04
 
 ### The code is SLAED CMS 8.0.0

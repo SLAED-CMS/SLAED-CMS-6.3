@@ -279,7 +279,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # Delete: the stale and the foreign are refused; the physical delete takes every row of the material, compensates the publication once
-    # The delete leaves the file and a child as a root, and costs five Node statements besides Point
+    # The delete leaves the file and a child as a root, and costs six Node statements besides Point
     #[Test]
     public function aPhysicalDeleteTakesEveryRowAndCompensatesThePublication(): void
     {
