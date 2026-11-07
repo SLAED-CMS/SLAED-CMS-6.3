@@ -14,7 +14,7 @@ function users(): void {
     setHead(['title' => _TOPUSERS, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
         'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
-    $lim = 50;
+    $lim = getPageRows();
     $num = getVar('get', 'page', 'num', 1);
     $offset = (int)(($num - 1) * $lim);
     $count = ($num) ? $offset + 1 : 1;
@@ -66,7 +66,6 @@ function users(): void {
             'table_close' => [],
             'pager_html' => getTplPager([
                 'limit'     => $lim,
-                'maxpg'     => 5,
                 'table'     => '_users',
                 'field'     => 'id',
                 'mod'       => $conf['name'],

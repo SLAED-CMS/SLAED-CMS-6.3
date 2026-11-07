@@ -12,6 +12,7 @@ if (!defined('MODULE_FILE')) {
 require_once __DIR__.'/common.php';
 
 function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
+    global $conf;
     $keys = array_map('rawurlencode', array_filter([
         'author' => $filters['author'] ?? '',
         'file' => $filters['file'] ?? '',
@@ -20,7 +21,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
         'dateto' => $filters['until'] ?? ''
     ]));
 
-    $out = getPageNumbers($modname, $totcom, $totpage, $perpage, $keys, 10, $page, '', 'page');
+    $out = getPageNumbers($modname, $totcom, $totpage, $perpage, $keys, getPageSpan($conf['changelog'] ?? []), $page, '', 'page');
     return $out ?? '';
 }
 

@@ -174,7 +174,7 @@ function fileedit(): void {
         }
         $groups[] = $tpl->getHtmlPart('div', ['rows' => $rows]);
     }
-    $pager = getPageNumbers('', $total, $total_pages, $per_page, 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&', $total_pages, $page, '', 'page');
+    $pager = getPageNumbers('', $total, $total_pages, $per_page, 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&', 0, $page, '', 'page');
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_merge(

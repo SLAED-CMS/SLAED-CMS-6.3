@@ -154,7 +154,7 @@ function voting(): void {
     $flt = getVotingFilter();
     $res = $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_voting'.$flt['where'], $flt['pars']);
     [$total, $upto] = array_map('intval', $res->fetch(PDO::FETCH_NUM));
-    $anum = getListLimit((int)$conf['voting']['anum'], $total);
+    $anum = getListLimit($total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $sql = 'SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting'.$flt['where'].' ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum;
@@ -196,10 +196,8 @@ function voting(): void {
         'href' => $afile.'.php?'.$flt['base'].'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => (int)$conf['voting']['anump'],
         'count' => $total,
         'limit' => $anum,
-        'base' => (int)$conf['voting']['anum'],
         'upto' => $upto,
         'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -455,30 +453,7 @@ function config(): void {
                 'itype' => 'number', 'name_attr' => 'time', 'input_id' => 'f-time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true,
             ]),
         ],
-        [
-            'label_for' => 'f-num', 'label_html' => _C_33,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anum', 'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-nump', 'label_html' => _C_35,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anump', 'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true,
-            ]),
-        ],
+        ...getTplPagerFields($conf['voting']),
         [
             'label_for' => 'f-answ', 'label_html' => _VANSW,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -508,10 +483,7 @@ function configsave(): void {
     if (!$iswarn) {
         $cont = [
             'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
-            'num' => getVar('post', 'num', 'num', 10),
-            'anum' => getVar('post', 'anum', 'num', 10),
-            'nump' => getVar('post', 'nump', 'num', 10),
-            'anump' => getVar('post', 'anump', 'num', 10),
+            ...getPagerPost(),
             'answ' => getVar('post', 'answ', 'num', 10),
             'block' => getVar('post', 'block', 'num', 0),
         ];

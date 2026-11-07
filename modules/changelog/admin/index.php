@@ -20,7 +20,7 @@ function changelog(): void {
     $keys = array_filter(['word' => $word, 'author' => $flt['author'], 'file' => $flt['file'], 'datefrom' => $flt['since'], 'dateto' => $flt['until']], fn($v) => $v !== '');
     $stat = $config['showstat'] && $config['source'] !== 'github';
     $total = count($loaded['commits']);
-    $limit = getListLimit($config['perpage'], $total);
+    $limit = getListLimit($total);
     $pages = max(1, (int)ceil($total / $limit));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $rows = [];
@@ -81,7 +81,6 @@ function changelog(): void {
         'pages' => $pages,
         'count' => $total,
         'limit' => $limit,
-        'base' => $config['perpage'],
         'none_text' => ($error !== '') ? $error : ($keys ? _NONE_FOUND : _NO_INFO),
     ]);
     setFoot();
@@ -147,13 +146,7 @@ function config(): void {
                 'is_config' => true, 'input_attr' => ' min="10" max="'.CHLOG_MAX_LIMIT.'"',
             ]),
         ],
-        [
-            'label_for' => 'f-perpage', 'label_html' => _CHLOG_PER_PAGE,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number', 'name_attr' => 'perpage', 'input_id' => 'f-perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true,
-                'input_attr' => ' min="5" max="50"',
-            ]),
-        ],
+        ...getTplPagerFields($conf['changelog'] ?? []),
         [
             'label_for' => 'f-cachettl', 'label_html' => _CHLOG_CACHE_TTL,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -206,7 +199,7 @@ function configsave(): void {
             'ghtoken' => trim(getVar('post', 'ghtoken', 'text', '')),
         ] : array_intersect_key($conf['changelog'] ?? [], array_flip(['source', 'ghowner', 'ghrepo', 'ghtoken']))) + [
             'limit' => chlogClamp(getVar('post', 'limit', 'num', 50), 10, CHLOG_MAX_LIMIT),
-            'perpage' => chlogClamp(getVar('post', 'perpage', 'num', 10), 5, 50),
+            ...getPagerPost(),
             'cachettl' => chlogClamp(getVar('post', 'cachettl', 'num', 900), 0, 3600),
             'grpdate' => getVar('post', 'grpdate', 'num', 0),
             'showfile' => getVar('post', 'showfile', 'num', 0),

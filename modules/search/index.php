@@ -37,8 +37,8 @@ function getSearchState(): array {
         'num' => $num,
         'stop' => $stop,
         'lim' => (int)($conf['search']['slimit'] ?? 500),
-        'snum' => (int)($conf['search']['snum'] ?? 25),
-        'snump' => (int)($conf['search']['snump'] ?? 5),
+        'snum' => getPageRows($conf['search']),
+        'snump' => getPageSpan($conf['search']),
     ];
 }
 

@@ -24,7 +24,6 @@ define('_CHLOG_GH_OWNER','Propriétaire GitHub');
 define('_CHLOG_GH_REPO','Dépôt GitHub');
 define('_CHLOG_GH_TOKEN','Jeton GitHub');
 define('_CHLOG_LIMIT','Nombre de commits');
-define('_CHLOG_PER_PAGE','Par page');
 define('_CHLOG_GROUP_DATE','Grouper par date');
 define('_CHLOG_SHOW_FILES','Afficher les fichiers');
 define('_CHLOG_SHOW_STATS','Statistiques');

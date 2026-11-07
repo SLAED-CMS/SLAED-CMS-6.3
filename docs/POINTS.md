@@ -408,7 +408,7 @@ Tab `_POINTS` of the groups screen, ops `points` and `pointssave`.
   and its boolean is checked: false gives `_CONFIG_PENDING` when an interrupted configuration operation is pending
   (`getConfigJournal()`), otherwise `_ERROR_UP`. The redirect shows the values read back.
 - `getPointsJournal()` (only with the mark) lists `_points` with `_users.name`, ordered `created DESC, id DESC`,
-  50 rows per page unless the administrator chose another number (`getListLimit()`). Filters: `uid`, `act` (one of the
+  the general rows of the panel (`pager.arows`) unless the administrator chose another number (`getListLimit()`). Filters: `uid`, `act` (one of the
   configured actions), `day` (`YYYY-MM-DD`). The total is counted by `SELECT COUNT(*) FROM (SELECT 1 ... LIMIT 5000)`
   and the page number is clamped to the pages of that count, so the screen
   costs the same on a journal of any length; older rows are reached through the filters. Columns: id, date, user

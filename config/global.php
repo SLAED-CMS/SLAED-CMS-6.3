@@ -64,6 +64,12 @@ SLAED CMS - Support
 https://slaed.net
 support@slaed.net',
     'multilingual' => '1',
+    'pager' => [
+        'rows' => '15',
+        'span' => '8',
+        'arows' => '50',
+        'aspan' => '10',
+    ],
     'schema' => '<script type="application/ld+json">
 {
 	"@context": "https://schema.org",

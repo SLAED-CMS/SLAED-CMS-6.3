@@ -24,7 +24,6 @@ define('_CHLOG_GH_OWNER','GitHub owner');
 define('_CHLOG_GH_REPO','GitHub repository');
 define('_CHLOG_GH_TOKEN','GitHub token');
 define('_CHLOG_LIMIT','Кількість комітів');
-define('_CHLOG_PER_PAGE','На сторінку');
 define('_CHLOG_GROUP_DATE','Групувати за датою');
 define('_CHLOG_SHOW_FILES','Показувати файли');
 define('_CHLOG_SHOW_STATS','Статистика');

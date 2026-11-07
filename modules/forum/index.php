@@ -274,8 +274,7 @@ function forum(): void {
                     if ($conf['multilingual']) {
                         $lpars['locale'] = $locale;
                     }
-                    $listnum = (int)$conf['forum']['listnum'];
-                    if ($listnum < 1) $listnum = 1;
+                    $listnum = getPageRows($conf['forum'], 'listnum');
                     $ordern = (is_moder($conf['name'])) ? "WHERE s.pid = '0'" : "WHERE s.pid = '0' AND s.time <= NOW() AND s.status != '0'";
                     $num = getVar('req', 'page', 'num') ?: 1;
                     $offset = (int)(($num - 1) * $listnum);
@@ -413,7 +412,7 @@ function forum(): void {
                     $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$catid."'" : "pid = '0' AND cid = '".$catid."' AND time <= NOW() AND status != '0'";
                     $pnum = getTplPager([
                         'limit'     => $listnum,
-                        'maxpg'     => $conf['forum']['pnum'],
+                        'maxpg'     => getPageSpan($conf['forum']),
                         'table'     => '_forum',
                         'field'     => 'id',
                         'mod'       => $conf['name'],
@@ -488,7 +487,7 @@ function view(): void {
     $opars = ['id1' => $topic, 'id2' => $topic];
     [$numfor] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum '.$ordern, $opars));
     if ($topic && $numfor > 0) {
-        $fornum = max(1, (int)getUserNews($conf['forum']['num']));
+        $fornum = getPageRows($conf['forum']);
         $numpages = max(1, (int)ceil($numfor / $fornum));
         $num = (int)(getVar('req', 'page', 'num') ?: 1);
         $num = ($last && $conf['forum']['sort']) ? $numpages : $num;
@@ -683,7 +682,8 @@ function view(): void {
                 ])
                 : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOP, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true,
                     'icon_name' => 'reply', 'label' => _REPLY]);
-            $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]], $conf['forum']['pnum'], $num, '', 'page');
+            $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]],
+                getPageSpan($conf['forum']), $num, '', 'page');
             $favor = getFavoriteButton($topic, $conf['name']);
             $cont = $tpl->getHtmlFrag('forum-topic-view', [
                 'open' => true,
@@ -821,7 +821,8 @@ function view(): void {
                 ]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
-            $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]], $conf['forum']['pnum'], $num, '', 'page');
+            $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]],
+                getPageSpan($conf['forum']), $num, '', 'page');
             $cont .= $tpl->getHtmlFrag('forum-topic-view', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum]);
             if ($ismod) {
                 $selmm = tmoder(1)

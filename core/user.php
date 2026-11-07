@@ -190,7 +190,7 @@ function getCommentList(int $cid, string $mod, int $page, int $full, ?string $ro
         : getCommentRows($data, $mod, $cid, getSiteToken(), $pag);
     $out = $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]);
     if ($data['total'] < 1) return $out;
-    return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, $conf['comments']['nump'], $data['page'], '#comm', 'com');
+    return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, getPageSpan($conf['comments']), $data['page'], '#comm', 'com');
 }
 
 # Answer one further page of comments as fragments; a page beyond the last is refused, not clamped, as the clamp would answer the last page again and duplicate its rows
@@ -997,7 +997,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             'found' => $found,
             'bulk_url' => HOME_PATH.'index.php?go=1&op=updatePrivatBox',
             'hidden_html' => $keys,
-            'pager_html' => getTplPagerView($data['page'], $data['pages'], intval($conf['privat']['nump']), static fn(int $i): array => [
+            'pager_html' => getTplPagerView($data['page'], $data['pages'], getPageSpan($conf['privat']), static fn(int $i): array => [
                 'query' => HOME_PATH.'index.php?go=1&op=getPrivateMessageView&typ='.$typ.'&pnum='.$i.$pick['link'],
                 'target_id' => 'prlist',
             ], ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]),

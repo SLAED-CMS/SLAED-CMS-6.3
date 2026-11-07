@@ -259,7 +259,7 @@ function search(bool $top = false): void {
     $ordby = ($sets[$sort] ?? ($top ? 'hits' : 'time')).' '.(($order == 1) ? 'ASC' : 'DESC');
     $res = $db->getSqlQuery('SELECT COUNT('.($top ? 'DISTINCT word' : 'id').'), MAX(id) FROM '.PREFIX_DB.'_search'.$where, $pars);
     [$total, $upto] = array_map('intval', $res->fetch(PDO::FETCH_NUM));
-    $anum = getListLimit(intval($conf['search']['anum'] ?? 50), $total);
+    $anum = getListLimit($total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $limit = ' LIMIT '.(($num - 1) * $anum).', '.$anum;
@@ -307,10 +307,8 @@ function search(bool $top = false): void {
         'href' => $afile.'.php?name=search'.($top ? '&op=toplist' : '').'&sort='.$sort.'&order='.$order.$clink.'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => max(intval($conf['search']['anump'] ?? 10), 1),
         'count' => $total,
         'limit' => $anum,
-        'base' => intval($conf['search']['anum'] ?? 50),
         'upto' => $upto,
         'none_text' => ($clink !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -320,8 +318,6 @@ function search(bool $top = false): void {
 function config(): void {
     global $afile, $conf, $tpl;
     $allow = ['forum'];
-    $anum = intval($conf['search']['anum'] ?? 50);
-    $anump = intval($conf['search']['anump'] ?? 10);
     $audit = getSearchaudit();
     $elist = getSearchenabled($audit);
     $rlist = getSearchready($audit);
@@ -368,22 +364,7 @@ function config(): void {
                 'describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'slimit', 'input_id' => 'f-slimit', 'value_attr' => (string)$conf['search']['slimit'],
             ]),
         ],
-        [
-            'label_for' => 'f-snum', 'label_html' => _SEARCHNUM,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snum', 'input_id' => 'f-snum', 'value_attr' => (string)$conf['search']['snum']]),
-        ],
-        [
-            'label_for' => 'f-snump', 'label_html' => _C_35,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snump', 'input_id' => 'f-snump', 'value_attr' => (string)$conf['search']['snump']]),
-        ],
-        [
-            'label_for' => 'f-anum', 'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$anum]),
-        ],
-        [
-            'label_for' => 'f-anump', 'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$anump]),
-        ],
+        ...getTplPagerFields($conf['search']),
     ];
     $html = $tpl->getHtmlPart('box', ['title' => _PREFERENCES, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=save',
@@ -436,10 +417,7 @@ function save(): void {
             'mods' => $mods ? implode(',', $mods) : '0',
             'slet' => getVar('post', 'slet', 'num', 3),
             'slimit' => getVar('post', 'slimit', 'num', 500),
-            'snum' => getVar('post', 'snum', 'num', 25),
-            'snump' => getVar('post', 'snump', 'num', 5),
-            'anum' => getVar('post', 'anum', 'num', 50),
-            'anump' => getVar('post', 'anump', 'num', 10),
+            ...getPagerPost(),
         ]), 'integrations', $parts, getVar('post', 'ver[]', '', []));
         if ($fail !== '') [$iswarn, $text] = [true, $fail];
     }

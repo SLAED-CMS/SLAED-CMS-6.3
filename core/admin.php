@@ -1629,3 +1629,25 @@ function addFormMail(string $kind, string $email, string $title, array $vars): b
     return $email !== '' && $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $conf['sitename'].' - '.$title, 'body' => $body,
         'sender' => $conf['adminmail'], 'prio' => 3]);
 }
+
+# The two fields of a module's own pager on the site, rows and span: an empty field takes the general number, which its placeholder and hint show
+function getTplPagerFields(array $own): array {
+    global $conf, $tpl;
+    $rows = [];
+    foreach (['rows' => [_C_33, 100, 15], 'span' => [_C_35, 20, 8]] as $key => [$label, $max, $dft]) {
+        $gen = (string)max(1, intval($conf['pager'][$key] ?? $dft));
+        $ids = getFieldIds('f-'.$key);
+        $num = intval($own[$key] ?? 0);
+        $rows[] = ['label_for' => $ids['input'], 'label_html' => $label, 'hint_html' => sprintf(_PAGER_OWN, $gen), 'hint_id' => $ids['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $key, 'input_id' => $ids['input'], 'value_attr' => ($num > 0) ? (string)$num : '',
+                'placeholder_text' => $gen, 'input_attr' => 'min="1" max="'.$max.'"', 'describedby' => $ids['hint'], 'is_config' => true])];
+    }
+    return $rows;
+}
+
+# The own pager of a module from its posted form, rows and span; an empty or zero field stores an empty value, which takes the general number
+function getPagerPost(): array {
+    $rows = max(0, min(100, getVar('post', 'rows', 'num', 0)));
+    $span = max(0, min(20, getVar('post', 'span', 'num', 0)));
+    return ['rows' => $rows ? (string)$rows : '', 'span' => $span ? (string)$span : ''];
+}

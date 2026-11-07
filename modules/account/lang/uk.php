@@ -36,7 +36,7 @@ define('_ACCOUNT_SAFE','Захищено');
 define('_ACCOUNT_SECTIONS','Розділи налаштувань');
 define('_ACCOUNT_SETUPNOTE','Профіль, аватар, пароль');
 define('_ACCOUNT_SHOWN','Видно');
-define('_ACCOUNT_STORYNOTE','Скільки записів показувати у списках новин і статей.');
+define('_ACCOUNT_STORYNOTE','Скільки записів показувати на сторінці у списках сайту.');
 define('_ACCOUNT_SYSTEM','Система');
 define('_ACCOUNT_THEMENOTE','Як сайт виглядає особисто для вас. На інших користувачів вибір не впливає.');
 define('_ACCOUNT_UNDO','Скасувати');

@@ -61,7 +61,7 @@ function account(): void {
     $chng = trim(getVar('get', 'chng'));
     [$from, $where, $pars, $order] = getAccountScope('');
     [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(u.id), MAX(u.id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
-    $anum = getListLimit((int)$conf['users']['anum'], $count);
+    $anum = getListLimit($count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name FROM '.$from
@@ -111,10 +111,8 @@ function account(): void {
         'href' => $afile.'.php?'.$back.'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => (int)$conf['users']['anump'],
         'count' => $count,
         'limit' => $anum,
-        'base' => (int)$conf['users']['anum'],
         'upto' => $upto,
         'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -663,7 +661,7 @@ function newuser(): void {
     $chng = trim(getVar('get', 'chng'));
     [$from, $where, $pars, $order] = getAccountScope('newuser');
     [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
-    $anum = getListLimit((int)$conf['users']['anum'], $count);
+    $anum = getListLimit($count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT id, name, email, regdate, code FROM '.$from.$where.' ORDER BY '.$order.' LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
@@ -702,10 +700,8 @@ function newuser(): void {
         'href' => $afile.'.php?'.$back.'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => (int)$conf['users']['anump'],
         'count' => $count,
         'limit' => $anum,
-        'base' => (int)$conf['users']['anum'],
         'upto' => $upto,
         'none_text' => ($where !== '') ? _NONE_FOUND : _ADM_CLEAN,
         'is_calm' => $where === '',
@@ -894,28 +890,6 @@ function config(): void {
             ]),
         ],
         [
-            'label_for' => 'f-anum',
-            'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'anum',
-                'input_id' => 'f-anum',
-                'value_attr' => (string)$conf['users']['anum'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anump',
-            'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'anump',
-                'input_id' => 'f-anump',
-                'value_attr' => (string)$conf['users']['anump'],
-                'is_config' => true,
-            ]),
-        ],
-        [
             'label_for' => 'f-minpass',
             'label_html' => _PASSWDLEN,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'minpass', 'selectid' => 'f-minpass', 'options_html' => $minpassopts, 'is_config' => true]),
@@ -1069,8 +1043,6 @@ function save(): void {
             'awidth' => getVar('post', 'awidth', 'num', 100),
             'aheight' => getVar('post', 'aheight', 'num', 100),
             'user_t' => getVar('post', 'user', 'num', 30) * 86400,
-            'anum' => getVar('post', 'anum', 'num', 50),
-            'anump' => getVar('post', 'anump', 'num', 10),
             'minpass' => getVar('post', 'minpass', 'num'),
             'enter' => getVar('post', 'enter', 'num'),
             'aupload' => getVar('post', 'aupload', 'num'),
@@ -1142,7 +1114,7 @@ function oauthlist(): void {
     $chng = trim(getVar('get', 'chng'));
     [$from, $where, $pars, $order] = getAccountScope('oauthlist');
     [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(o.id), MAX(o.id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
-    $anum = getListLimit((int)$conf['users']['anum'], $count);
+    $anum = getListLimit($count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT o.id, o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name FROM '.$from.$where.' ORDER BY '.$order
@@ -1185,10 +1157,8 @@ function oauthlist(): void {
         'href' => $afile.'.php?'.$back.'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => (int)$conf['users']['anump'],
         'count' => $count,
         'limit' => $anum,
-        'base' => (int)$conf['users']['anum'],
         'upto' => $upto,
         'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -1267,7 +1237,7 @@ function favorites(): void {
     $chng = $flt['chng'];
     $res = $db->getSqlQuery('SELECT COUNT(f.id), MAX(f.id) FROM '.$flt['from'].$flt['where'], $flt['pars']);
     [$total, $upto] = array_map('intval', $res->fetch(PDO::FETCH_NUM));
-    $limit = getListLimit(intval($conf['favorites']['anum']), $total);
+    $limit = getListLimit($total);
     $pages = max(1, (int)ceil($total / $limit));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $sql = 'SELECT f.id, f.fid, f.modul, u.name, f.time FROM '.$flt['from'].$flt['where'].' ORDER BY f.id DESC';
@@ -1316,10 +1286,8 @@ function favorites(): void {
         'href' => $afile.'.php?'.$flt['base'].'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => intval($conf['favorites']['anump']),
         'count' => $total,
         'limit' => $limit,
-        'base' => intval($conf['favorites']['anum']),
         'upto' => $upto,
         'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -1332,50 +1300,6 @@ function favconf(): void {
     $cont = getTplAdminTabs(getAccountTabs() + ['tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $rows = [
-        [
-            'label_for' => 'f-num',
-            'label_html' => _C_33,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'num',
-                'input_id' => 'f-num',
-                'value_attr' => (string)$conf['favorites']['num'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anum',
-            'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'anum',
-                'input_id' => 'f-anum',
-                'value_attr' => (string)$conf['favorites']['anum'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-nump',
-            'label_html' => _C_35,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'nump',
-                'input_id' => 'f-nump',
-                'value_attr' => (string)$conf['favorites']['nump'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anump',
-            'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'anump',
-                'input_id' => 'f-anump',
-                'value_attr' => (string)$conf['favorites']['anump'],
-                'is_config' => true,
-            ]),
-        ],
         [
             'label_for' => 'f-favorites',
             'label_html' => _FAVOR_UMAX,
@@ -1416,10 +1340,6 @@ function favsave(): void {
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
-            'num' => getVar('post', 'num', 'num', 15),
-            'anum' => getVar('post', 'anum', 'num', 15),
-            'nump' => getVar('post', 'nump', 'num', 5),
-            'anump' => getVar('post', 'anump', 'num', 5),
             'favorites' => getVar('post', 'favorites', 'num'),
             'favact' => getVar('post', 'favact', 'num')
         ];

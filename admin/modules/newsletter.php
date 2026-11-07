@@ -438,7 +438,6 @@ function queue(): void {
         'pages' => $data['pages'],
         'count' => $data['total'],
         'limit' => $data['limit'],
-        'base' => $data['base'],
         'upto' => $data['upto'],
         'none_text' => ($kind !== '' || $stat !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -551,7 +550,6 @@ function dead(): void {
         'pages' => $data['pages'],
         'count' => $data['total'],
         'limit' => $data['limit'],
-        'base' => $data['base'],
         'upto' => $data['upto'],
         'none_text' => ($flt['phase'] !== '' || $flt['chng'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);

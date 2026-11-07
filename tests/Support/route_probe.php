@@ -1318,7 +1318,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $out['where'] = [$box('docs'), $box('node'), $bound['code'], (string)$pdo->query('SELECT which FROM '.$pre.'blocks WHERE id = 51')->fetchColumn()];
     $conf = getRouteReply('root', 'GET', 'admin.php?name=search&op=config');
     $save = getRouteReply('root', 'POST', 'admin.php?name=search&op=save', ['token' => getRouteToken($conf['body'], 'ver[docs]'), 'asearch' => '1', 'search[]' => 'forum',
-        'ntype[]' => 'news', 'ver[news]' => '1', 'ver[docs]' => '1', 'slet' => '3', 'slimit' => '500', 'snum' => '1', 'snump' => '5', 'anum' => '50', 'anump' => '10']);
+        'ntype[]' => 'news', 'ver[news]' => '1', 'ver[docs]' => '1', 'slet' => '3', 'slimit' => '500', 'rows' => '1', 'span' => '5']);
     $node = require $work.'/config/node.php';
     $out['toggle'] = [(bool)preg_match('#name="ntype\[\]"\s+value="news"#', $conf['body']), $save['code'], $node['node']['types']['docs']['integrations']['search'] ?? null,
         (int)$pdo->query('SELECT version FROM '.$pre.'node_types WHERE name = \'docs\'')->fetchColumn(), str_contains($find('', 'word=intro+of'), 'Doc one')];
@@ -3026,7 +3026,7 @@ function addRouteSecretConf(PDO $pdo, string $work): void {
     $data['oauth']['microsoft'] = array_replace($data['oauth']['microsoft'], ['clientid' => 'probe-mid', 'secret' => 'probe-mkey-old']);
     setRouteFile($work.'/config/oauth.php', $data);
     setRouteFile($work.'/config/changelog.php', ['changelog' => ['source' => 'local', 'ghowner' => 'probe', 'ghrepo' => 'probe', 'ghtoken' => 'probe-ghtoken-old', 'limit' => '50',
-        'perpage' => '10', 'cachettl' => '900', 'grpdate' => '0', 'showfile' => '0', 'showstat' => '0', 'exporten' => '0']]);
+        'rows' => '', 'span' => '', 'cachettl' => '900', 'grpdate' => '0', 'showfile' => '0', 'showstat' => '0', 'exporten' => '0']]);
     if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
     $pdo->exec('UPDATE '.RPREF.'_admins SET modules = \'account,changelog\' WHERE id = 3');
 }
@@ -3040,23 +3040,23 @@ function getRouteSecrets(string $work): array {
     $log = getRouteReply('boss', 'GET', 'admin.php?name=changelog&op=config');
     $sec = getRouteReply('boss', 'GET', 'admin.php?name=security&op=oauthkeys');
     $out = ['boss' => ['account' => [$acc['code'], $seen($acc)], 'changelog' => [$log['code'], $seen($log)], 'security' => $seen($sec)]];
-    $pairs = getRoutePairs(getRouteInputs($acc['body'], 'save'), ['anum' => '51']);
+    $pairs = getRoutePairs(getRouteInputs($acc['body'], 'save'), ['user' => '31']);
     $save = getRouteReply('boss', 'POST', 'admin.php', $pairs + ['rules' => '', 'name' => 'account', 'op' => 'save', 'gsecret' => 'probe-stolen', 'oactive' => '1']);
     $deny = getRouteReply('boss', 'POST', 'admin.php', ['name' => 'security', 'op' => 'oauthsave', 'token' => (string)($pairs['token'] ?? ''), 'gsecret' => 'probe-stolen']);
     $mark = 'name=changelog&amp;op=configsave';
-    $form = ['token' => getRouteToken($log['body'], $mark), 'source' => 'github', 'ghowner' => 'probe-foreign', 'ghrepo' => 'probe-foreign', 'limit' => '50', 'perpage' => '11',
+    $form = ['token' => getRouteToken($log['body'], $mark), 'source' => 'github', 'ghowner' => 'probe-foreign', 'ghrepo' => 'probe-foreign', 'limit' => '50', 'rows' => '11',
         'cachettl' => '900', 'ghtoken' => 'probe-stolen'];
     $chlog = getRouteReply('boss', 'POST', 'admin.php?name=changelog&op=configsave', $form);
     $text = $file('changelog');
     $own = getRouteReply('boss', 'POST', 'admin.php?name=changelog&op=configsave',
-        ['perpage' => '12'] + array_diff_key($form, array_flip(['source', 'ghowner', 'ghrepo', 'ghtoken'])));
+        ['rows' => '12'] + array_diff_key($form, array_flip(['source', 'ghowner', 'ghrepo', 'ghtoken'])));
     $kept = $file('changelog');
     $out['write'] = ['codes' => [$save['code'], $chlog['code'], $own['code']], 'denied' => str_contains($deny['body'], 'probe-gkey-old'),
-        'users' => str_contains($file('users'), "'anum' => '51'"),
+        'users' => str_contains($file('users'), "'user_t' => '2678400'"),
         'oauth' => [str_contains($file('oauth'), 'probe-gkey-old'), str_contains($file('oauth'), 'probe-stolen')],
-        'token' => [str_contains($text, 'probe-ghtoken-old'), str_contains($text, 'probe-stolen'), str_contains($text, "'perpage' => '11'")],
+        'token' => [str_contains($text, 'probe-ghtoken-old'), str_contains($text, 'probe-stolen'), str_contains($text, "'rows' => '11'")],
         'place' => [str_contains($text, "'source' => 'local'"), str_contains($text, 'probe-foreign')],
-        'own' => [str_contains($kept, "'perpage' => '12'"), str_contains($kept, 'probe-ghtoken-old'), str_contains($kept, "'source' => 'local'")]];
+        'own' => [str_contains($kept, "'rows' => '12'"), str_contains($kept, 'probe-ghtoken-old'), str_contains($kept, "'source' => 'local'")]];
     $page = getRouteReply('root', 'GET', 'admin.php?name=security&op=oauthkeys');
     $pairs = getRoutePairs(getRouteInputs($page['body'], 'oauthsave'), ['gsecret' => 'probe-gkey-new']);
     $none = getRouteReply('root', 'POST', 'admin.php', array_diff_key($pairs, ['token' => 1]));

@@ -130,10 +130,8 @@ function comments(): void {
         'href' => $afile.'.php?'.$flt['cur'].'&',
         'page' => $data['page'],
         'pages' => $data['pages'],
-        'maxpg' => (int)($conf['comments']['anump'] ?? 8),
         'count' => $data['total'],
         'limit' => $data['limit'],
-        'base' => $data['base'],
         'upto' => $data['upto'],
         'none_text' => ($flt['modul'] !== '' || $chng !== '') ? _NONE_FOUND : ($status ? _ADM_CLEAN : _NO_INFO),
         'is_calm' => $status && $flt['modul'] === '' && $chng === '',
@@ -215,11 +213,7 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $rows = [
-        [
-            'label_for' => 'f-num',
-            'label_html' => _C_33,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['comments']['num']]),
-        ],
+        ...getTplPagerFields($conf['comments']),
         [
             'label_for' => 'f-reps',
             'label_html' => _COMMENTS_REPS,
@@ -229,21 +223,6 @@ function config(): void {
                 'input_id' => 'f-reps',
                 'value_attr' => (string)($conf['comments']['reps'] ?? 5),
             ]),
-        ],
-        [
-            'label_for' => 'f-anum',
-            'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['comments']['anum']]),
-        ],
-        [
-            'label_for' => 'f-nump',
-            'label_html' => _C_35,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['comments']['nump']]),
-        ],
-        [
-            'label_for' => 'f-anump',
-            'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['comments']['anump']]),
         ],
         [
             'label_for' => 'f-letter',
@@ -392,11 +371,8 @@ function save(): void {
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
-            'num' => getVar('post', 'num', 'num', 15),
+            ...getPagerPost(),
             'reps' => getVar('post', 'reps', 'num', 5),
-            'anum' => getVar('post', 'anum', 'num', 15),
-            'nump' => getVar('post', 'nump', 'num', 5),
-            'anump' => getVar('post', 'anump', 'num', 5),
             'letter' => getVar('post', 'letter', 'num', 50),
             'edit' => getVar('post', 'edit', 'num', 600) * 60,
             'send' => getVar('post', 'send', 'num', 30),

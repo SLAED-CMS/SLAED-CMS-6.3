@@ -7,17 +7,15 @@
 return [
     'privat' => [
         'act' => '1',
-        'anum' => '50',
-        'anump' => '10',
         'himself' => '0',
         'letter' => '100',
         'messin' => '250',
         'messsav' => '250',
         'newmail' => '1',
-        'num' => '15',
-        'nump' => '5',
         'profil' => '1',
+        'rows' => '',
         'send' => '60',
+        'span' => '5',
         'web' => '1',
     ],
 ];

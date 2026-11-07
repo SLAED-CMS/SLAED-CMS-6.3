@@ -15,11 +15,12 @@ function voting(): void {
         ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')"
         : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     $num = getVar('get', 'page', 'num', 1);
-    $offset = (int)(($num - 1) * $conf['voting']['num']);
+    $lim = getPageRows($conf['voting']);
+    $offset = (int)(($num - 1) * $lim);
     setHead(['title' => _VOTING, 'kind' => 'collection']);
     $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]);
     $result = $db->getSqlQuery('SELECT v.id, v.title, v.answer, v.time, v.enddate, v.comments, v.acomm, v.typ, r.path FROM '.PREFIX_DB.'_voting AS v'
-        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1 WHERE '.$onum.' ORDER BY v.id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1 WHERE '.$onum.' ORDER BY v.id DESC LIMIT '.$offset.', '.$lim);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
         $ismoder = is_moder($conf['name']);
@@ -76,8 +77,8 @@ function voting(): void {
             ],
         ]);
         $cont .= getTplPager([
-            'limit'     => $conf['voting']['num'],
-            'maxpg'     => $conf['voting']['nump'],
+            'limit'     => $lim,
+            'maxpg'     => getPageSpan($conf['voting']),
             'table'     => '_voting',
             'field'     => 'id',
             'mod'       => $conf['name'],

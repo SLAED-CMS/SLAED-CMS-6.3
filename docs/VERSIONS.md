@@ -2,6 +2,22 @@
 
 ## 2026-11-07
 
+### Rows per page and page numbers come from one place: the general settings, with an own number of a module where it needs one
+
+`config/global.php` takes the section `pager`: `rows` 15 and `span` 8 for the lists of the site, `arows` 50 and `aspan`
+10 for the panel, four fields of «Конфигурации». Every list of the panel takes `arows` through `getListLimit()` and the
+rows chip, and `aspan` through `getPageSpan()`; the keys `anum` and `anump` of comments, privat, search, voting, users
+and favorites, the `base` and `maxpg` of `getTplAdminList()` and the numbers written into groups, logs, ratings,
+master, newsletter and the Node lists leave. A list of the site takes `getPageRows()`: the own `rows` of its module,
+else the general one; comments, privat, search, voting, forum and changelog keep the two fields `rows` and `span` in
+their settings, empty for the general number (`getTplPagerFields()`, `getPagerPost()`), and ship empty but the five
+numbers of the private messages and the 50 topics of the forum (`listnum`). `num`, `nump`, `snum`, `snump`, `pnum` and
+`perpage` leave; `favorites.num` and `favorites.nump`, read by nothing, leave with them. The members list, the logins
+and «Мои материалы» of the cabinet take the general numbers in place of 50 and 20. The own number of a visitor
+(«Количество публикаций на страницу», 3–20) now caps every list of the site, the Node lists included, as its hint says;
+a Node type keeps its own `list.limit`. The pager of the language editor shows the general window in place of every
+page.
+
 ### Two more Node profiles ship: events and vacancies, and an ad leaves the site after thirty days
 
 `modules/node/profiles/` ships sixteen profiles, and a clean installation creates and activates every one. `events`

@@ -491,13 +491,13 @@ class Mail {
 
     # Read one page of the queue for the panel by kind and status; one predicate builds the page and the count, so list, pager and filter describe one set
     public function getList(array $filt): array {
-        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'base' => 20, 'upto' => 0];
+        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'upto' => 0];
         if (!$this->db instanceof Database) return $out;
         [, $where, $pars] = $this->getQueueScope($filt);
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num, MAX(id) AS top FROM '.PREFIX_DB.'_mail'.$where, $pars));
         $out['total'] = intval($row['num'] ?? 0);
         $out['upto'] = intval($row['top'] ?? 0);
-        $out['limit'] = $lim = getListLimit($out['base'], $out['total']);
+        $out['limit'] = $lim = getListLimit($out['total']);
         $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
         $out['page'] = max(1, min($out['pages'], intval($filt['page'] ?? 1)));
         $sql = 'SELECT id, kind, email, title, ref, prio, tries, status, hold, camp, phase, code, error, time, ntime FROM '.PREFIX_DB.'_mail'.$where
@@ -543,13 +543,13 @@ class Mail {
 
     # List the addresses the registry holds, newest verdict first and paged like the queue, so an operator can see why an address stopped receiving mailings
     public function getDeadList(array $filt): array {
-        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'base' => 20, 'upto' => 0];
+        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'upto' => 0];
         if (!$this->db instanceof Database) return $out;
         [, $where, $pars] = $this->getDeadScope($filt);
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num, MAX(id) AS top FROM '.PREFIX_DB.'_maildead'.$where, $pars));
         $out['total'] = intval($row['num'] ?? 0);
         $out['upto'] = intval($row['top'] ?? 0);
-        $out['limit'] = $lim = getListLimit($out['base'], $out['total']);
+        $out['limit'] = $lim = getListLimit($out['total']);
         $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
         $out['page'] = max(1, min($out['pages'], intval($filt['page'] ?? 1)));
         $sql = 'SELECT id, email, fails, phase, code, time FROM '.PREFIX_DB.'_maildead'.$where.' ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;

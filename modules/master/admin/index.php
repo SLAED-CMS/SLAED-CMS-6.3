@@ -140,7 +140,7 @@ function getMasterSites(string $note): string {
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
     $res = $db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_master_site'.$cond, $args);
     $all = intval(($res ? $db->getSqlRow($res) : [0])[0] ?? 0);
-    $lim = getListLimit(50, $all);
+    $lim = getListLimit($all);
     $pages = max(1, (int)ceil($all / $lim));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT sid, host, ver, chan, kseq, php, db, dbver, ext, ep, es, failver, failstep, failed, added, seen FROM '.PREFIX_DB.'_master_site'.$cond
@@ -189,7 +189,6 @@ function getMasterSites(string $note): string {
         'pages' => $pages,
         'count' => $all,
         'limit' => $lim,
-        'base' => 50,
         'none_text' => ($cond !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
 }
@@ -244,7 +243,7 @@ function getMasterNoteList(string $head, string $note): string {
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]], $rows);
     $res = $db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_master_note');
     $all = intval(($res ? $db->getSqlRow($res) : [0])[0] ?? 0);
-    $lim = getListLimit(50, $all);
+    $lim = getListLimit($all);
     $pages = max(1, (int)ceil($all / $lim));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT id, sid, ver, level, until, active, body FROM '.PREFIX_DB.'_master_note ORDER BY id DESC LIMIT '.$lim.' OFFSET '.(($num - 1) * $lim));
@@ -278,7 +277,6 @@ function getMasterNoteList(string $head, string $note): string {
         'pages' => $pages,
         'count' => $all,
         'limit' => $lim,
-        'base' => 50,
     ]);
 }
 

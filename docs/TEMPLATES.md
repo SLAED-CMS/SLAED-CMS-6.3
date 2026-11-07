@@ -598,8 +598,8 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 |---|---|
 | `head`, `rows` | the columns and the rows by meaning; the canon writes the name of each column into `label` of its cells, which the cards read on a phone |
 | `href` | the address of a page without `num`, ending in `&`; both pagers and the rows chip append to it |
-| `count`, `page`, `pages`, `maxpg` | the rows under the filter and the pager window |
-| `limit`, `base` | the rows of this page from `getListLimit()` and the list's own number; `base` brings the rows chip |
+| `count`, `page`, `pages` | the rows under the filter and the pages; the window is the general `pager.aspan` through `getPageSpan()` |
+| `limit` | the rows of this page from `getListLimit()`; a limit brings the rows chip on the general number `pager.arows` |
 | `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`logs-logins`, `newsletter-dead`) |
 | `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note above the table, a form under it that has to live inside `#sl-list` (the ban lists) |
 | `pane` | the window round the list: the keys of `pane-cap.html` and `tiles_html` above the table (the tables of "База данных") |
@@ -628,8 +628,9 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 
 **Rows per page.** One number of rows for every list of the panel, chosen on the list itself. The cookie
 `$conf['user_c'].'-rows'` goes through op `option` (key `rows`): `10`, `25`, `50`, `100`, `250`, `all` or an own integer
-5–1000; anything else deletes it, and without it a list keeps its own number.
-`getListLimit(int $base, int|Closure $total): int` in `core/helpers.php` is the one source: it answers `$base` outside
+5–1000; anything else deletes it, and without it a list takes the general number `pager.arows` of `config/global.php`
+(«Конфигурации», 50 shipped). No list of the panel has a number of its own.
+`getListLimit(int|Closure $total): int` in `core/helpers.php` is the one source: it answers the general number outside
 the panel, the chosen number inside it, and `LIST_MAX` (1000, `core/system.php`) for "all" only while the filter holds
 at most `LIST_MAX` rows — `$total` is the count or a closure called only then. In the panel the readers of Node
 (`getPageSize()` of `NodeQuery`), the support queue (`getNodeSupportList()`) and the rating votes
@@ -994,8 +995,14 @@ for the swapped part:
 current page, the first and the last outside it, the dots where numbers are skipped. Callers reach it through
 `getTplPager()` (counts by a query or takes `count`) and `getPageNumbers()` (known counters); the private messages of
 the site and the panel, the Node lists of the site and the panel, the panel comments and the newsletter call it
-directly with a link builder of their own, the private messages with their htmx target. Which numbers the window selects is the callers'
-business; the face is the stand `public/demo/pg-09-final.html`, in the panel `pg-14-admin.html`.
+directly with a link builder of their own, the private messages with their htmx target. The window is never the caller's business: the site
+takes `getPageSpan($conf[<module>])`, the own `span` of the module or the general `pager.span` (8 shipped), the panel the
+general `pager.aspan` (10 shipped); `getTplPager()` and `getPageNumbers()` take the same when no span is passed. The rows
+of a site list come from `getPageRows($conf[<module>], $key = 'rows')`: the own number of the module, or the general
+`pager.rows` (15 shipped), capped by the visitor's own number of the cabinet (`getUserNews()`, 3–20, while
+`users.news` is on). A Node type keeps its own `list.limit`, capped the same way. The panel form of a module draws its two
+own fields with `getTplPagerFields()` and reads them with `getPagerPost()` (`core/admin.php`): an empty field stores `''`
+and takes the general number, shown as its placeholder; the face is the stand `public/demo/pg-09-final.html`, in the panel `pg-14-admin.html`.
 
 | Fragment | Prints |
 |---|---|

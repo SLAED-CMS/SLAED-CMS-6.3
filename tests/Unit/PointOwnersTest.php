@@ -167,7 +167,7 @@ final class PointOwnersTest extends TestCase
     public function theJournalCountStopsAtFiveThousandRows(): void
     {
         $body = $this->getBody('admin/modules/groups.php', 'getPointsJournal');
-        $this->assertStringContainsString("\$lim = getListLimit(50, \$count);", $body);
+        $this->assertStringContainsString('$lim = getListLimit($count);', $body);
         $this->assertStringContainsString("\$num = min(\$pages, max(1, getVar('get', 'num', 'num', 1)));", $body);
         $this->assertStringContainsString("'SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.\$cond.' LIMIT 5000) AS q'", $body);
         $this->assertStringNotContainsString("'SELECT COUNT(*) FROM '.PREFIX_DB.'_points", $body, 'No count over the whole journal remains');

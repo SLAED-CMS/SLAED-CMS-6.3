@@ -92,10 +92,8 @@ function privat(): void {
         'href' => $afile.'.php?'.$flt['base'].'&',
         'page' => $data['page'],
         'pages' => $data['pages'],
-        'maxpg' => intval($conf['privat']['anump']),
         'count' => $data['total'],
         'limit' => $data['limit'],
-        'base' => $data['base'],
         'upto' => $data['upto'],
         'none_text' => ($flt['status'] !== '' || $chng !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
@@ -108,50 +106,7 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&op=config', 'name=privat&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $rows = [
-        [
-            'label_for' => 'f-num',
-            'label_html' => _C_33,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'num',
-                'input_id' => 'f-num',
-                'value_attr' => (string)$conf['privat']['num'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anum',
-            'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'anum',
-                'input_id' => 'f-anum',
-                'value_attr' => (string)$conf['privat']['anum'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-nump',
-            'label_html' => _C_35,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'nump',
-                'input_id' => 'f-nump',
-                'value_attr' => (string)$conf['privat']['nump'],
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-anump',
-            'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'anump',
-                'input_id' => 'f-anump',
-                'value_attr' => (string)$conf['privat']['anump'],
-                'is_config' => true,
-            ]),
-        ],
+        ...getTplPagerFields($conf['privat']),
         [
             'label_for' => 'f-letter',
             'label_html' => _COMLETTER,
@@ -279,10 +234,7 @@ function save(): void {
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $cont = [
-            'num' => getVar('post', 'num', 'num', 50),
-            'anum' => getVar('post', 'anum', 'num', 50),
-            'nump' => getVar('post', 'nump', 'num', 10),
-            'anump' => getVar('post', 'anump', 'num', 10),
+            ...getPagerPost(),
             'letter' => getVar('post', 'letter', 'num', 100),
             'send' => getVar('post', 'send', 'num', 60),
             'messin' => getVar('post', 'messin', 'num', 250),

@@ -840,7 +840,7 @@ function logins(): void {
         return;
     }
     $page = max(1, getVar('get', 'page', 'num', 1));
-    $num = 20;
+    $num = getPageRows();
     $log = getLoginLog(['uid' => intval($user[0]), 'admin' => 0], $page, $num);
     if ($page > 1 && !$log['rows']) setError(404);
     setHead(['title' => _ACCOUNT_LOGINS]);
@@ -873,7 +873,7 @@ function materials(): void {
         return;
     }
     $page = max(1, getVar('get', 'page', 'num', 1));
-    $num = 20;
+    $num = getPageRows();
     try {
         $list = getNodeReader()->getNodeTermList($page, $num);
     } catch (NodeException $err) {

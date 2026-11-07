@@ -93,7 +93,7 @@ function logview(): void {
         $num = max(1, getVar('get', 'num', 'num', 1));
         $filt = array_filter(['level' => $levl ?: $levs[0], 'ip' => $ip, 'from' => $from, 'to' => $to, 'event' => $isadm ? ($event === '' ? 'action' : $event) : '',
             'modul' => $modul, 'result' => $res], static fn($v) => $v !== '' && $v !== 'all');
-        $lim = getListLimit(50, fn(): int => Logger::getEntries($chans[$file], $filt, 1, 0)['total']);
+        $lim = getListLimit(fn(): int => Logger::getEntries($chans[$file], $filt, 1, 0)['total']);
         $log = Logger::getEntries($chans[$file], $filt, $num, $lim);
         $pages = max(1, (int)ceil($log['total'] / $lim));
         $num = min($num, $pages);
@@ -151,10 +151,8 @@ function logview(): void {
             'href' => $afile.'.php?'.$link,
             'page' => $num,
             'pages' => $pages,
-            'maxpg' => 10,
             'count' => $log['total'],
             'limit' => $lim,
-            'base' => 50,
             'none_text' => ($event.$modul.$res.$levl.$ip.$from.$to !== '') ? _NONE_FOUND : _NO_INFO,
         ]);
         setFoot();
@@ -209,7 +207,7 @@ function logins(): void {
         'from' => ($from !== '') ? $from.' 00:00:00' : '',
         'to' => ($to !== '') ? date('Y-m-d', strtotime($to.' +1 day')).' 00:00:00' : '',
     ], static fn($v) => $v !== null && $v !== '');
-    $lim = getListLimit(50, fn(): int => getLoginLog($filt, 1, 0)['total']);
+    $lim = getListLimit(fn(): int => getLoginLog($filt, 1, 0)['total']);
     $log = getLoginLog($filt, $num, $lim);
     $pages = max(1, (int)ceil($log['total'] / $lim));
     $num = min($num, $pages);
@@ -257,10 +255,8 @@ function logins(): void {
         'href' => $afile.'.php?'.$link,
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => 10,
         'count' => $log['total'],
         'limit' => $lim,
-        'base' => 50,
         'none_text' => $filt ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();

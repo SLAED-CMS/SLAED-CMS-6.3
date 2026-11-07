@@ -204,9 +204,9 @@ class Comment {
 
     # Return one page of the discussion of a target: roots are paginated, each with its branch, and the count, roots and replies all read one resolved scope
     public function getList(string $mod, int $id, int $page, int $full = 0): array {
-        if (!$this->checkTargetView($mod, $id)) return $this->getPager(0, $page, intval($this->conf['num'] ?? 15)) + ['rows' => []];
+        if (!$this->checkTargetView($mod, $id)) return $this->getPager(0, $page, getPageRows($this->conf)) + ['rows' => []];
         [$cte, $pars] = $this->getKeepCte($mod, $id);
-        $out = $this->getPager($this->getTotal('keep WHERE pid = 0', $pars, $cte.' '), $page, intval($this->conf['num'] ?? 15));
+        $out = $this->getPager($this->getTotal('keep WHERE pid = 0', $pars, $cte.' '), $page, getPageRows($this->conf));
         $out['rows'] = [];
         if ($out['total'] < 1) return $out;
         $dir = $out['isasc'] ? 'ASC' : 'DESC';
@@ -256,13 +256,12 @@ class Comment {
         return $out;
     }
 
-    # Return one page of the moderation list, narrowed by state, by module and by one of the five search fields, with the module's own number of rows as base
+    # Return one page of the moderation list, narrowed by state, by module and by one of the five search fields, the rows by the general number of the panel
     public function getAdminList(CommentStatus $stat, string $mod, int $find, string $term, int $page): array {
         [$from, $where, $pars] = $this->getAdminScope($stat, $mod, $find, $term);
         $join = $from.' '.$where;
         $total = $this->getTotal($join, $pars);
-        $base = intval($this->conf['anum'] ?? 25);
-        $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base];
+        $out = $this->getPager($total, $page, getListLimit($total));
         $out['rows'] = [];
         $out['upto'] = 0;
         if ($out['total'] < 1) return $out;
@@ -397,7 +396,7 @@ class Comment {
         $from = $tab.' AS c JOIN keep AS k ON k.id = c.id WHERE k.pid = 0'
             .' AND (c.time, c.id) '.(!empty($this->conf['sort']) ? '<=' : '>=').' (:rtim, :rrid)';
         $seen = $this->getTotal($from, $pars, $cte.' ');
-        $size = intval($this->conf['num'] ?? 15);
+        $size = getPageRows($this->conf);
         return ($seen > 0 && $size > 0) ? (int)ceil($seen / $size) : 1;
     }
 

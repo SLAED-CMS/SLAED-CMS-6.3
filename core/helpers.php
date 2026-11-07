@@ -208,8 +208,8 @@ function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, arr
 # Build a pager from a table COUNT query, or from the count the caller already holds, reading the current page from the request
 function getTplPager(array $data = []): string {
     global $db, $afile;
-    $limit = (int)($data['limit'] ?? 10);
-    $maxpg = (int)($data['maxpg'] ?? 10);
+    $limit = (int)($data['limit'] ?? getPageRows());
+    $maxpg = (int)($data['maxpg'] ?? getPageSpan());
     $table = $data['table'] ?? '';
     $field = $data['field'] ?? 'id';
     $where = $data['where'] ?? '';
@@ -306,9 +306,25 @@ function getTplAdminTabs(array $data = []): string {
     ]);
 }
 
-# The rows of one panel list page from the cookie rows, else the list's own number; "all" holds while the filter fits in LIST_MAX, and a closure counts it only then
-function getListLimit(int $base, int|Closure $total): int {
-    $base = max(1, $base);
+# The rows of one site list: the module's own number under $key, else the general one of the site, capped by the visitor's own number from the cabinet
+function getPageRows(array $own = [], string $key = 'rows'): int {
+    global $conf;
+    $num = intval($own[$key] ?? 0);
+    return getUserNews(($num > 0) ? $num : max(1, intval($conf['pager']['rows'] ?? 15)));
+}
+
+# The page numbers of one pager: the panel takes its general span, the site the module's own span, else the general one of the site
+function getPageSpan(array $own = []): int {
+    global $conf;
+    if (defined('ADMIN_FILE')) return max(1, intval($conf['pager']['aspan'] ?? 10));
+    $num = intval($own['span'] ?? 0);
+    return ($num > 0) ? $num : max(1, intval($conf['pager']['span'] ?? 8));
+}
+
+# The rows of one panel list page from the cookie rows, else the general number of the panel; "all" holds while the filter fits in LIST_MAX, and a closure counts it only then
+function getListLimit(int|Closure $total): int {
+    global $conf;
+    $base = max(1, intval($conf['pager']['arows'] ?? 50));
     if (!defined('ADMIN_FILE')) return $base;
     $pick = getCookies('rows');
     if ($pick === 'all') return ((is_int($total) ? $total : $total()) <= LIST_MAX) ? LIST_MAX : $base;
@@ -336,16 +352,16 @@ function getTplLongCell(string $text, string $label): array {
     return ['prefix_html' => $tpl->getHtmlFrag('popover', ['tip_text' => $text, 'tip_label' => _DETAILS.': '.$label])];
 }
 
-# Render one panel list of the canon from the meaning of its rows; the foot sends one field group per action, and an own number in base brings the rows chip
+# Render one panel list of the canon from the meaning of its rows; the foot sends one field group per action, and a limit brings the rows chip on the general number
 function getTplAdminList(array $data): string {
-    global $afile, $tpl;
+    global $afile, $tpl, $conf;
     $href = (string)($data['href'] ?? '');
     $count = intval($data['count'] ?? 0);
     $limit = intval($data['limit'] ?? 0);
-    $base = intval($data['base'] ?? 0);
+    $base = max(1, intval($conf['pager']['arows'] ?? 50));
     $page = max(1, intval($data['page'] ?? 1));
     $pages = intval($data['pages'] ?? 1);
-    $maxpg = intval($data['maxpg'] ?? 8);
+    $maxpg = getPageSpan();
     $list = array_values((array)($data['rows'] ?? []));
     $form = 'sl-list-pick';
     $check = array_filter($list, static fn(array $row): bool => !empty($row['drop'])) !== [];
@@ -425,7 +441,7 @@ function getTplAdminList(array $data): string {
     $said = ($range !== '') ? $range.' · ' : '';
     $wide = number_format($count, 0, '', ' ');
     $per = [];
-    if ($base > 0 && $limit > 0) {
+    if ($limit > 0) {
         $fmt = static fn(int $num): string => number_format($num, 0, '', ' ');
         $pick = getCookies('rows');
         $all = $pick === 'all' && $count <= LIST_MAX;
@@ -1586,12 +1602,13 @@ function getModuleNavi(array $p): string {
     ]);
 }
 
-# Render page numbers from known counters: the site takes the keys of its page as an array and the number as page, the panel a query prefix and num
-function getPageNumbers(string $mod, int $count, int $pages, int $limit, array|string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = ''): string {
+# Render page numbers from known counters: the site takes the keys of its page as an array and the number as page, the panel a query prefix and num; no span takes the general one
+function getPageNumbers(string $mod, int $count, int $pages, int $limit, array|string $url = '', int $maxpg = 0, int $num = 0, string $anchor = '', string $n = ''): string {
     global $afile;
     $site = !defined('ADMIN_FILE');
     $n = $n ?: ($site ? 'page' : 'num');
     $num = $num ?: getVar('get', $n, 'num', 1);
+    $maxpg = $maxpg ?: getPageSpan();
     $url = is_array($url) ? $url : html_entity_decode($url, ENT_QUOTES, 'UTF-8');
     $target = static function(int $i) use ($mod, $url, $n, $anchor, $afile, $site): array {
         $href = $site ? getSeoUrl(['name' => $mod] + (is_array($url) ? $url : []) + [$n => $i]).$anchor : HOME_PATH.$afile.'.php?'.$url.$n.'='.$i.$anchor;

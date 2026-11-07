@@ -594,9 +594,10 @@ function setNodeList(): void {
         if (isset($mine['fav'])) $query->setNodeFavorite($uid);
         if ($sort !== '' || $dir !== '') $query->setNodeOrder($key, $way);
         $count = $query->getNodeCount();
-        $pages = max(1, (int)ceil($count / $set['limit']));
+        $size = getUserNews($set['limit']);
+        $pages = max(1, (int)ceil($count / $size));
         if ($num > $pages) setNodeDeny(404);
-        $query->setNodePage($num, $set['limit']);
+        $query->setNodePage($num, $size);
         if (($sort !== '' || $dir !== '') && $key === $set['order'] && $way === $set['dir']) setRedirect(getSeoUrl($base + ['page' => $num]), false, 301);
         $list = $count ? $query->getNodeList() : [];
         $hand = $list ? getNodeHandler($type) : null;
@@ -644,7 +645,7 @@ function setNodeList(): void {
             'is_tiles' => $look === 'tiles',
             'date_label' => _DATE,
             'read_label' => _READMORE,
-            'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),
+            'pager_html' => getTplPagerView($num, $pages, getPageSpan(), $link, ['count' => $count, 'limit' => $size]),
             'more_href' => ($look !== 'rail' && $num < $pages) ? $link($num + 1)['href'] : '',
             'more_label' => _NODE_MORE,
             'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],

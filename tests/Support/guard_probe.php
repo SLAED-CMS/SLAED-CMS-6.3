@@ -258,11 +258,16 @@ try {
         };
         foreach (['', '10', '25', '250', '5', '1000', '4', '1001', '07', '-5', '1e3', 'abc', 'all'] as $one) {
             $pcook = ['rows' => $one];
-            $pdone['data']['limit'][$one] = [getListLimit(25, 300), getListLimit(25, 1000), getListLimit(25, 1001), getListLimit(0, 300)];
+            $conf = ['pager' => ['arows' => '25']];
+            $prow = [getListLimit(300), getListLimit(1000), getListLimit(1001)];
+            $conf = ['pager' => ['arows' => '0']];
+            $prow[] = getListLimit(300);
+            $pdone['data']['limit'][$one] = $prow;
         }
+        $conf = ['pager' => ['arows' => '25']];
         foreach (['', '50', 'all'] as $one) {
             $pcook = ['rows' => $one];
-            $pdone['data']['lazy'][$one] = [getListLimit(25, $pcount), $pcall];
+            $pdone['data']['lazy'][$one] = [getListLimit($pcount), $pcall];
         }
         if ($pname !== '') {
             setProbeLift($psite.'/admin/index.php', 'setAdminOption', $pwork.'/lift_option.php');

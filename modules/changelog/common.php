@@ -64,7 +64,7 @@ function chlogGetConfig(array $conf): array {
         'repo' => trim((string)($cfg['ghrepo'] ?? '')),
         'token' => trim((string)($cfg['ghtoken'] ?? '')),
         'limit' => chlogClamp((int)($cfg['limit'] ?? 50), 10, CHLOG_MAX_LIMIT),
-        'perpage' => chlogClamp((int)($cfg['perpage'] ?? 10), 1, 50),
+        'perpage' => getPageRows($cfg),
         'grpdate' => !empty($cfg['grpdate']),
         'showfile' => !empty($cfg['showfile']),
         'showstat' => !empty($cfg['showstat']),

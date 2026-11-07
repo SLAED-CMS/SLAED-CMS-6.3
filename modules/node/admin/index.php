@@ -234,9 +234,8 @@ function setNodeSupportQueue(NodeType $type): void {
     $aid = getNodeSupportFilter('aid', null);
     $prio = getNodeSupportFilter('prio', null);
     $num = max(1, getVar('get', 'num', 'num', 1));
-    $base = $type->settings['list']['limit'];
     try {
-        $lim = getListLimit($base, fn(): int => $hand->getNodeSupportCount($type, $state, $aid, $prio));
+        $lim = getListLimit(fn(): int => $hand->getNodeSupportCount($type, $state, $aid, $prio));
         $data = $hand->getNodeSupportList($type, $num, $lim, $state, $aid, $prio);
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeFault($err));
@@ -293,7 +292,6 @@ function setNodeSupportQueue(NodeType $type): void {
         'pages' => max(1, (int)ceil($data['count'] / $lim)),
         'count' => $data['count'],
         'limit' => $lim,
-        'base' => $base,
         'none_text' => $calm ? _ADM_CLEAN : _NONE_FOUND,
         'is_calm' => $calm,
     ]);
@@ -340,7 +338,7 @@ function show(): void {
         else $query->setNodeTypes($pick);
         $query->setNodeStatus($state)->setNodeSets(false)->setNodePage($num, $base);
         $count = $query->getNodeCount();
-        $lim = getListLimit($base, $count);
+        $lim = getListLimit($count);
         $num = min($num, max(1, (int)ceil($count / $lim)));
         $query->setNodePage($num, $lim);
         $upto = ($count > $lim) ? $query->getNodeScope()[2] : 0;
@@ -382,7 +380,6 @@ function show(): void {
         'pages' => max(1, (int)ceil($count / $lim)),
         'count' => $count,
         'limit' => $lim,
-        'base' => $base,
         'upto' => $upto,
         'none_text' => $types ? (($state === NodeStatus::Pending) ? _ADM_CLEAN : (($name !== '') ? _NONE_FOUND : _NO_INFO)) : _NODE_NOTYPES,
         'is_calm' => $types && $state === NodeStatus::Pending,

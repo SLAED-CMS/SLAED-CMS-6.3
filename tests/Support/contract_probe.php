@@ -87,8 +87,8 @@ function getProbeComment(): array {
 function getProbeCommentRead(): array {
     global $db, $com, $conf;
     $sort = !empty($conf['comments']['sort']) ? 'ASC' : 'DESC';
-    $lnum = intval($conf['comments']['num'] ?? 15);
-    $anum = intval($conf['comments']['anum'] ?? 25);
+    $lnum = getPageRows($conf['comments']);
+    $anum = max(1, intval($conf['pager']['arows'] ?? 50));
     $out = ['wired' => ($com instanceof Comment)];
     $bare = 'modul NOT IN (SELECT name FROM '.PREFIX_DB.'_node_types)';
     $free = 'uid NOT IN (SELECT uid FROM '.PREFIX_DB.'_comment WHERE modul IN (SELECT name FROM '.PREFIX_DB.'_node_types))';

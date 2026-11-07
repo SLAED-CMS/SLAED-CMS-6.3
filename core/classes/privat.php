@@ -322,7 +322,7 @@ final class Privat {
         [$where, $pars, $join] = $this->getPickWhere($box, $pick);
         $pars['uid'] = $uid;
         $link = $this->getMateJoin($box);
-        $out = $this->getPager(($uid < 1) ? 0 : $this->getTotal($where, $pars, $join ? $link : ''), $page, intval($this->conf['num'] ?? 25));
+        $out = $this->getPager(($uid < 1) ? 0 : $this->getTotal($where, $pars, $join ? $link : ''), $page, getPageRows($this->conf));
         if ($uid < 1 || $out['total'] < 1) return $out;
         $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar, r.path'
             .' FROM '.PREFIX_DB.'_privat AS p'.$link.' WHERE '.$where
@@ -398,8 +398,7 @@ final class Privat {
         [$from, $where, $pars] = $this->getAdminScope($state, $find, $term);
         $top = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(p.id) AS num, MAX(p.id) AS top FROM '.$from.$where, $pars));
         $total = intval($top['num'] ?? 0);
-        $base = intval($this->conf['anum'] ?? 50);
-        $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base, 'upto' => 0];
+        $out = $this->getPager($total, $page, getListLimit($total)) + ['upto' => 0];
         if ($out['total'] < 1) return $out;
         $out['upto'] = intval($top['top'] ?? 0);
         $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, p.ip, i.name AS namein, o.name AS nameout FROM '.$from.$where

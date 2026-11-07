@@ -7,11 +7,9 @@
 return [
     'voting' => [
         'answ' => '25',
-        'anum' => '50',
-        'anump' => '10',
         'block' => '2',
-        'num' => '15',
-        'nump' => '5',
+        'rows' => '',
+        'span' => '',
         'voting_t' => '2592000',
     ],
 ];

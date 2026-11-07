@@ -117,7 +117,7 @@ function getProbeIds(array $out): array {
 function getProbeBoxes(): array {
     setProbeSeed();
     $prv = getProbeMail();
-    $page = getProbeMail(['num' => 1]);
+    $page = getProbeMail(['rows' => 1]);
     $none = $prv->getMessageList(0, PrivatBox::Inbox);
     $one = $page->getMessageList(2, PrivatBox::Inbox);
     $room = getProbeMail(['messin' => 4, 'messsav' => 0]);

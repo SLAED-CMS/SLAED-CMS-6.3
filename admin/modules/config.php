@@ -442,6 +442,17 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
+    foreach (['rows' => [_C_33, 1, 100], 'span' => [_C_35, 1, 20], 'arows' => [_C_34, 5, LIST_MAX], 'aspan' => [_C_36, 1, 20]] as $key => [$label, $min, $max]) {
+        $rows[] = ['label_for' => 'f-pager-'.$key, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'number',
+            'name_attr' => 'pager_'.$key,
+            'input_id' => 'f-pager-'.$key,
+            'value_attr' => (string)($conf['pager'][$key] ?? ''),
+            'input_attr' => 'min="'.$min.'" max="'.$max.'"',
+            'is_required' => true,
+            'is_config' => true,
+        ])];
+    }
     $rows[] = [
         'label_html' => _SESSION,
         'label_id' => $labid = getFieldIds('', 'session')['label'],
@@ -820,6 +831,12 @@ function save(): void {
             'syntax' => getVar('post', 'syntax', 'num'),
             'variables' => $xvariables,
             'admcol' => getVar('post', 'admcol', 'num', 6),
+            'pager' => [
+                'rows' => (string)max(1, min(100, getVar('post', 'pager_rows', 'num', 15))),
+                'span' => (string)max(1, min(20, getVar('post', 'pager_span', 'num', 8))),
+                'arows' => (string)max(5, min(LIST_MAX, getVar('post', 'pager_arows', 'num', 50))),
+                'aspan' => (string)max(1, min(20, getVar('post', 'pager_aspan', 'num', 10))),
+            ],
             'session' => getVar('post', 'session', 'num'),
             'live_u' => getVar('post', 'live_u', 'num'),
             'db_t' => getVar('post', 'db_t', 'num'),

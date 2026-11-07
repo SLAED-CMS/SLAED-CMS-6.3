@@ -352,7 +352,7 @@ function getPointsJournal(string $note): string {
     if ($day !== '') [$where[], $pars['from'], $pars['to']] = ['p.created >= :from AND p.created < :to', $day.' 00:00:00', date('Y-m-d', strtotime($day.' +1 day')).' 00:00:00'];
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
     $count = intval($db->getSqlQuery('SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.$cond.' LIMIT 5000) AS q', $pars)->fetchColumn());
-    $lim = getListLimit(50, $count);
+    $lim = getListLimit($count);
     $pages = max(1, (int)ceil($count / $lim));
     $num = min($pages, max(1, getVar('get', 'num', 'num', 1)));
     $sql = 'SELECT p.id, p.uid, u.name, p.action, p.scope, p.source, p.points, p.note, p.created FROM '.PREFIX_DB.'_points AS p'
@@ -403,10 +403,8 @@ function getPointsJournal(string $note): string {
         'href' => $afile.'.php?name=groups&op=points'.($keep ? '&'.http_build_query($keep) : '').'&',
         'page' => $num,
         'pages' => $pages,
-        'maxpg' => 10,
         'count' => $count,
         'limit' => $lim,
-        'base' => 50,
         'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
     ]);
 }
