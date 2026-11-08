@@ -120,7 +120,7 @@ function getCampSearch(array $flt): string {
 }
 
 function newsletter(): void {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $afile;
     $flt = getCampFilter();
     parse_str($flt['base'], $keep);
     $note = (intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) !== 1) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLNOJOB]) : '';

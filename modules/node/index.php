@@ -648,7 +648,8 @@ function setNodeList(): void {
             'pager_html' => getTplPagerView($num, $pages, getPageSpan(), $link, ['count' => $count, 'limit' => $size]),
             'more_href' => ($look !== 'rail' && $num < $pages) ? $link($num + 1)['href'] : '',
             'more_label' => _NODE_MORE,
-            'empty' => ($let !== '' || $mine) ? ['is_found' => true, 'act_url' => getSeoUrl(['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + (($arch !== '') ? ['archive' => 1] : []))]
+            'empty' => ($let !== '' || $mine)
+                ? ['is_found' => true, 'act_url' => getSeoUrl(['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + (($arch !== '') ? ['archive' => 1] : []))]
                 : ['act_url' => ($arch === '' && checkNodeFlow($type)) ? getSeoUrl(['name' => $type->name, 'op' => 'add']) : ''],
         ]);
         $plain = $sort === '' && $dir === '' && $let === '' && $new === '' && $fav === '';
