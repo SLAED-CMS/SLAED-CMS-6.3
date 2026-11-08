@@ -25,7 +25,7 @@ function users(): void {
             $con = explode('|', (string)($conf['rating']['account'] ?? '0|0|0'));
             $rate = !empty($con[1]);
             $head = (is_moder($conf['name'])) ? _IP : _REG;
-            $sort = $rate ? _RATING : _LOCALITYLANG;
+            $sort = $rate ? _RATING : _USERS_FROM;
         $rows = [];
         while ($row = $db->getSqlRow($result)) {
             [$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total, $path] = $row;
@@ -162,7 +162,7 @@ function stats(): void {
                     ['text' => _DESCRIPTION],
                     ['text' => _POINTS],
                     ['text' => _TU_USERSCOUNT],
-                    ['text' => cutstr(_SPEC, 4, 1)],
+                    ['text' => _SPEC],
                 ],
             ],
             'table_close' => [],

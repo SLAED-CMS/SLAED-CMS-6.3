@@ -123,3 +123,4 @@ define('_NODE_TYPES','Типи');
 define('_NODE_USEFUL','Корисна');
 define('_NODE_VIEWDEF','Вигляд за замовчуванням');
 define('_NODE_VIEWS','Дозволені вигляди списку');
+define('_NODE_LOOK','Вигляд');

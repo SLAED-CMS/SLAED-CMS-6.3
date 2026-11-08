@@ -2,6 +2,25 @@
 
 ## 2026-11-08
 
+### Tables and section heads are one series on the site and in the panel
+
+- **The head of a section** carries one or two filter fields beside the title once its column is 960px wide, and any
+  filter of three fields or more in a bar under the tabs, its fields in aligned columns of a label and a control.
+- **An action of a whole section** is a tab that posts its token: the synchronisation of «Форум» is the first.
+- **A column title is one word** in every list of the site and the panel; the cut forms («Ик.», «Сод.», «Сообщ.») are
+  gone. Status and error columns show an icon in the head and one of four tones in the cell — the green check, the
+  clock, the grey dashed circle of off, the red cross — with its word in the tip, and sort by the tone; the options
+  column shows a gear. A centred title stands over the middle of its values and clear of its sort mark, a title too
+  long for its column ends in an ellipsis with the whole title in its tip.
+- **A record names its module honestly:** a Node type is «Материалы - Новости», another module its name alone, never
+  its key (`getModuleTitle()`).
+- **Breaking:** `partials/module-head.html` draws the filter after the tabs, not inside the title; a theme of its own
+  that overrides the partial keeps the old place. The language constants `_ADIR`, `_VIEW` and `_POINTS_SCOPE` are gone,
+  and the values of `_SWORD`, `_SEARCHFIELDS`, `_FIELDS_KEY`, `_POINTS_LIMIT`, `_POINTS_PERIOD` and `_TVIEWS` are one
+  word. The tokens `--sl-col-check-width`, `--sl-col-actions-width`, `--sl-col-date-width`, `--sl-col-count-width` and
+  `--sl-col-status-width` of `admin` hold new values; `.sl-status-inactive` is the grey dashed circle, not the red
+  cross, which is `.sl-status-fail` now.
+
 ### No loader of three dots is left in either theme
 
 - **A list of the panel** that loads dims its rows and says `aria-busy`, with no mark over the table; the tabs,

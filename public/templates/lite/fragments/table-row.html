@@ -1,8 +1,10 @@
 <tr class="{% if row_class %}{{ row_class }}{% else %}sl-table-row{% if is_hidden %} sl-hidden{% endif %}{% endif %}"{% if id %} id="{{ id }}"{% endif %}>
   {% if cells %}
   {% for cell in cells %}
-  <td class="{% if cell.class %}{{ cell.class }}{% else %}sl-table-cell{% if cell.is_col_check %} sl-col-check{% endif %}{% if cell.is_num %} sl-table-col-num{% endif %}{% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}{% if cell.is_forum_user %} sl-fl-col-user{% endif %}{% if cell.is_truncate %} sl-cell-ellipsis{% endif %}{% endif %}"{% if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}>
-    {% if cell.href %}
+  <td class="{% if cell.class %}{{ cell.class }}{% else %}sl-table-cell{% if cell.is_col_check %} sl-col-check{% endif %}{% if cell.is_num %} sl-table-col-num{% endif %}{% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}{% if cell.is_forum_user %} sl-fl-col-user{% endif %}{% if cell.is_truncate %} sl-cell-ellipsis{% endif %}{% endif %}"{% if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}{% if cell.stat %} data-sort="{% if cell.stat.is_fail %}1{% elseif cell.stat.is_wait %}2{% elseif cell.stat.is_on %}4{% else %}3{% endif %}"{% endif %}>
+    {% if cell.stat %}
+    <span class="{% if cell.stat.is_fail %}sl-status-fail{% elseif cell.stat.is_wait %}sl-status-wait{% elseif cell.stat.is_on %}sl-status-active{% else %}sl-status-inactive{% endif %}" role="img" title="{{ cell.stat.text }}" aria-label="{{ cell.stat.text }}"></span>
+    {% elseif cell.href %}
     <a href="{{ cell.href }}" title="{{ cell.title }}" class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_faq_link %}sl-chip sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}">
       {% if cell.is_faq_link %}
       <i class="bi bi-question-circle" aria-hidden="true"></i>

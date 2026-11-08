@@ -73,6 +73,7 @@ function logview(): void {
         $levs = array_slice(['debug', 'info', 'notice', 'warning', 'error', 'critical'], $file === 'error_file' ? 4 : 0);
         $events = ['' => _SEC_ACTS, 'login' => _SEC_LOGINS, 'all' => _ALL];
         $results = ['done' => _SEC_DONE, 'refused' => _SEC_REFUSED, 'open' => _SEC_OPEN, 'ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
+        $tones = ['done' => 'is_on', 'ok' => 'is_on', 'open' => 'is_wait', 'refused' => 'is_fail', 'password' => 'is_fail', 'blocked' => 'is_fail'];
         $words = ['add' => _ADD, 'save' => _SAVE, 'delete' => _DELETE, 'status' => _STATUS, 'updateAdminBlockOrder' => _SORTORDER, 'updateAdminCategoryOrder' => _SORTORDER];
         $mods = [];
         foreach (array_keys($conf['modules']) as $key) $mods[$key] = str_starts_with($name = getModuleLabel($key), '_') ? $key : $name;
@@ -128,7 +129,8 @@ function logview(): void {
                 $cells[] = ['has_content_text' => true, 'content_text' => $mods[$row['modul'] ?? ''] ?? (string)($row['modul'] ?? '')];
                 $cells[] = ['has_content_text' => true, 'content_text' => $login ? _SEC_ENTRY : ($words[$op] ?? $op)];
                 $cells[] = ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $tid ? '#'.$tid.($more > 0 ? ' +'.$more : '') : ''];
-                $cells[] = ['has_content_text' => true, 'content_text' => $results[$row['result'] ?? ''] ?? (string)($row['result'] ?? '')];
+                $code = (string)($row['result'] ?? '');
+                $cells[] = ['is_col_status' => true] + (($code === '') ? [] : ['stat' => ['text' => $results[$code] ?? $code, ($tones[$code] ?? 'is_off') => true]]);
             } else {
                 $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['msg']] + getTplLongCell((string)$row['msg'], _MESSAGE);
             }
@@ -136,7 +138,7 @@ function logview(): void {
             $rows[] = ['cells' => $cells];
         }
         $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true],
-            ['content' => _STATUS]] : [['content' => _MESSAGE, 'is_truncate' => true]];
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true]] : [['content' => _MESSAGE, 'is_truncate' => true]];
         $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head, [['content' => _IP, 'is_col_date' => true]]);
         $link = 'name=logs&op=logview&file='.$file.($event !== '' ? '&event='.$event : '').($modul !== '' ? '&modul='.$modul : '').($res !== '' ? '&res='.$res : '')
             .($levl !== '' ? '&level='.$levl : '').($ip !== '' ? '&ip='.urlencode($ip) : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
@@ -188,6 +190,7 @@ function logins(): void {
     global $afile, $tabset, $tpl;
     $sides = ['admin' => _ADMIN, 'site' => _USER];
     $results = ['ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
+    $tones = ['ok' => 'is_on', 'password' => 'is_fail', 'blocked' => 'is_fail'];
     $ways = ['login' => _PASSWORD, 'oauth' => _ACCOUNT_LOGOAUTH];
     $uid = getVar('get', 'uid', 'num', 0);
     $side = getVar('get', 'side', 'word', '');
@@ -223,7 +226,7 @@ function logins(): void {
         'hidden' => [['nameattr' => 'name', 'valueattr' => 'logs'], ['nameattr' => 'op', 'valueattr' => 'logins']],
         'fields' => [
             ['field_id' => 'sl-login-uid', 'label' => _ACCOUNT.' '._ID, 'name_attr' => 'uid', 'itype' => 'number', 'value' => $uid ? (string)$uid : '', 'is_count' => true],
-            $pick('side', _ADMIN.' / '._USER, $sides, $side), $pick('res', _STATUS, $results, $res), $pick('way', _TYPE, $ways, $way),
+            $pick('side', _SEC_ROLE, $sides, $side), $pick('res', _STATUS, $results, $res), $pick('way', _TYPE, $ways, $way),
             ['field_id' => 'sl-login-from', 'label' => _DATEFROM, 'name_attr' => 'from', 'itype' => 'date', 'value' => $from],
             ['field_id' => 'sl-login-to', 'label' => _DATETO, 'name_attr' => 'to', 'itype' => 'date', 'value' => $to],
         ],
@@ -237,7 +240,7 @@ function logins(): void {
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))]
                 + getTplLongCell(trim((string)$row['name'].' #'.intval($row['uid'])), _ACCOUNT),
             ['has_content_text' => true, 'content_text' => $row['admin'] ? _ADMIN : _USER],
-            ['has_content_text' => true, 'content_text' => $results[$row['result']] ?? (string)$row['result']],
+            ['is_col_status' => true, 'stat' => ['text' => $results[$row['result']] ?? (string)$row['result'], ($tones[$row['result']] ?? 'is_off') => true]],
             ['has_content_text' => true, 'content_text' => $ways[$row['way']] ?? (string)$row['way']],
             ['content_html' => Geoip::getIpHtml((string)$row['ip'])],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $info['browser'].' / '.$info['os']] + getTplLongCell($agent, _BROWSER),
@@ -249,8 +252,8 @@ function logins(): void {
     echo getTplAdminList([
         'head_html' => getTplAdminTabs($tabset + ['tab' => 1, 'part' => [0, 1], 'subtitle_html' => $form]),
         'key' => 'logs-logins',
-        'head' => [['content' => _DATE, 'is_col_date' => true], ['content' => _ACCOUNT, 'is_truncate' => true], ['content' => _ADMIN.' / '._USER], ['content' => _STATUS],
-            ['content' => _TYPE], ['content' => _IP], ['content' => _BROWSER, 'is_truncate' => true]],
+        'head' => [['content' => _DATE, 'is_col_date' => true], ['content' => _ACCOUNT, 'is_truncate' => true], ['content' => _SEC_ROLE],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _TYPE], ['content' => _IP], ['content' => _BROWSER, 'is_truncate' => true]],
         'rows' => $rows,
         'href' => $afile.'.php?'.$link,
         'page' => $num,

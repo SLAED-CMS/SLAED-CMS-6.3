@@ -15,4 +15,4 @@ define('_FO_9','Wy&#347;wietla dat&#281; ostatniej edycji do wiadomo&#347;ci?');
 define('_SYNCH','Synchronizacja');
 define('_SYNCHOK','Sumy forum zgadzają się z jego tematami i wiadomościami.');
 define('_SYNCHFIX','Naprawiono. Fora: %d, tematy: %d.');
-define('_SYNCHINF','Przycisk Synchronizacja na karcie głównej przelicza tematy i posty wszystkich forów i wyznacza ostatnie wiadomości. Uruchom go po usunięciu lub przeniesieniu tematów lub postów.');
+define('_SYNCHINF','Karta Synchronizacja przelicza tematy i posty wszystkich forów i wyznacza ostatnie wiadomości. Uruchom ją po usunięciu lub przeniesieniu tematów lub postów.');

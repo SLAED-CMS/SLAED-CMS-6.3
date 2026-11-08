@@ -16,7 +16,7 @@ function getSearchModList(string $keep = ''): array {
 
 function getSearchmodsOpts(string $cmod = '', string $keep = ''): array {
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']];
-    foreach (getSearchModList($keep) as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod), 'is_selected' => $cmod === $mod];
+    foreach (getSearchModList($keep) as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleTitle($mod), 'is_selected' => $cmod === $mod];
     return $opts;
 }
 
@@ -239,7 +239,7 @@ function getSearchsum(string $where, array $pars): string {
         'SELECT modul, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where.' GROUP BY modul ORDER BY hits DESC, modul ASC LIMIT 1',
         $pars
     )) ?? ['', 0];
-    $mlab = $mod ? getModuleName($mod) : _ALL;
+    $mlab = $mod ? getModuleTitle($mod) : _ALL;
     return $tpl->getHtmlFrag('metric-list', ['items' => [
         ['label' => _SEARCHTOTAL, 'value' => filterDecimal(intval($hits), 0), 'icon' => 'search'],
         ['label' => _SEARCHUNIQUE, 'value' => filterDecimal(intval($uniq), 0), 'icon' => 'fingerprint'],
@@ -274,7 +274,7 @@ function search(bool $top = false): void {
     while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
         $word = (string)$word;
         $mod = trim((string)$mod);
-        $mlab = ($mod ? getModuleName($mod) : _ALL) ?: $mod;
+        $mlab = $mod ? getModuleTitle($mod) : _ALL;
         $hword = filterTextHighlight(htmlspecialchars($word, ENT_QUOTES, 'UTF-8'), $find);
         $drop = ['name' => 'search', 'op' => 'drop', 'id[]' => $id, 'sort' => $sort, 'order' => $order, 'num' => $num, 'find' => $find, 'fmod' => $fmod]
             + ($top ? ['top' => 1] : []);

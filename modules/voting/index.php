@@ -71,8 +71,8 @@ function voting(): void {
             'rows_html' => $rows,
             'headers' => [
                 ['text' => _TITLE],
-                ['text' => cutstr(_COMMENTS, 4, 1), 'is_forum_stat' => true],
-                ['text' => cutstr(_VOTES, 3, 1), 'is_forum_stat' => true],
+                ['text' => _COMMENTS, 'is_forum_stat' => true],
+                ['text' => _VOTING_VOTES, 'is_forum_stat' => true],
                 ['text' => _ID, 'is_num' => true],
             ],
         ]);

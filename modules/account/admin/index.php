@@ -1210,7 +1210,7 @@ function getFavoritesSearch(array $flt): string {
     global $afile, $db, $tpl;
     $mods = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $flt['modul'] === '']];
     foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_favorites ORDER BY modul')) ?: [] as $row) {
-        $mods[] = ['value_attr' => (string)$row['modul'], 'label_text' => getModuleName((string)$row['modul']), 'is_selected' => $flt['modul'] === $row['modul']];
+        $mods[] = ['value_attr' => (string)$row['modul'], 'label_text' => getModuleTitle((string)$row['modul']), 'is_selected' => $flt['modul'] === $row['modul']];
     }
     $finds = [];
     foreach ([1 => _ID, 2 => _POSTEDBY] as $key => $label) $finds[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $flt['search'] === $key];
@@ -1264,7 +1264,7 @@ function favorites(): void {
             'drop' => getTplPostAction(['op' => 'favdrop', 'id[]' => $id] + $keep, 'trash', _ONDELETE), 'cells' => [
             ['is_col_id' => true, 'content_html' => ($flt['search'] === 1) ? filterTextHighlight((string)$id, $chng) : (string)$id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($mod)],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleTitle($mod)],
             ['is_col_author' => true, 'content_html' => $uname ? (($flt['search'] === 2) ? filterTextHighlight($who, $chng) : $who) : _ANONYM],
             ['is_col_date' => true, 'moment' => $time],
             ['is_col_actions' => true, 'dial' => [['href' => 'index.php?name='.$mod.'&op=view&id='.$fid.'#'.$fid, 'icon_name' => 'eye', 'title' => _MVIEW]]],

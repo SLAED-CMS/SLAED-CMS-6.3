@@ -40,7 +40,7 @@ function getVotingModuleSelect(string $modul = ''): string {
     foreach (getVotingModList($modul) as $val) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
-            'label_text' => getModuleName($val),
+            'label_text' => getModuleTitle($val),
             'is_selected' => $modul === $val,
         ]);
     }
@@ -124,7 +124,7 @@ function getVotingSearch(array $flt): string {
     };
     $mods = ['-' => _NONE];
     foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_voting WHERE modul != \'\' ORDER BY modul')) ?: [] as $row) {
-        $mods[$row['modul']] = getModuleName((string)$row['modul']);
+        $mods[$row['modul']] = getModuleTitle((string)$row['modul']);
     }
     $fields = [
         ['field_id' => 'sl-vot-mod', 'label' => _MODUL, 'name_attr' => 'modul', 'options' => $opts($mods, $flt['modul']), 'is_now' => true],
@@ -164,8 +164,8 @@ function voting(): void {
     $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true]];
     if ($multi) $head[] = ['content' => _LANGUAGE, 'class_name' => 'sl-col-lang'];
     $head[] = ['content' => _MODUL, 'class_name' => 'sl-col-module'];
-    $head[] = ['content' => _ENDDATE, 'is_col_date' => true];
-    $head[] = ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true];
+    $head[] = ['content' => _ENDS, 'is_col_date' => true];
+    $head[] = ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true];
     $head[] = ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true];
     $rows = [];
     while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
@@ -178,9 +178,9 @@ function voting(): void {
                 'text_html' => filterTextHighlight(htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng'])],
         ];
         if ($multi) $cells[] = ['class_name' => 'sl-col-lang', 'content_html' => getLangName((!$lang) ? _ALL : $lang)];
-        $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
+        $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleTitle($modul) : _NONE];
         $cells[] = ['is_col_date' => true, 'moment' => $enddate];
-        $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $live ? '1' : '0')];
+        $cells[] = ['is_col_status' => true, 'stat' => ['is_on' => (bool)$live]];
         $cells[] = ['is_col_actions' => true, 'dial' => $items];
         $rows[] = ['name' => cutstr((string)$title, 60), 'details' => [
             ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],

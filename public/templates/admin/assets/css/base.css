@@ -337,16 +337,16 @@
   /* The tint reads the chip's own colour, so one declaration serves every tone the chip is painted in */
   --sl-chip-bg: color-mix(in srgb, currentColor 13%, transparent);
   --sl-col-id-width: 42px;
-  --sl-col-check-width: 36px;
+  --sl-col-check-width: var(--sl-size-icon-xs);
   --sl-col-author-width: 100px;
-  --sl-col-status-width: 80px;
-  --sl-col-actions-width: 72px;
+  --sl-col-status-width: 96px;
+  --sl-col-actions-width: var(--sl-size-icon-lg);
   /* The release badge of the screensaver: a warm pill, the glow of a glint and the light that runs over it, white in both modes */
   --sl-phx-badge-bg: linear-gradient(to right, var(--sl-warning-strong), var(--sl-danger));
   --sl-phx-badge-shadow: 0 0 18px color-mix(in srgb, var(--sl-warning) var(--sl-knob-mix), transparent);
   --sl-phx-shine-bg: linear-gradient(100deg, transparent 30%, #fff 50%, transparent 70%);
-  --sl-col-date-width: 150px;
-  --sl-col-count-width: 64px;
+  --sl-col-date-width: 128px;
+  --sl-col-count-width: 88px;
   --sl-col-sent-width: 144px;
   --sl-col-ip-width: 150px;
   --sl-col-ip-height: 24px;

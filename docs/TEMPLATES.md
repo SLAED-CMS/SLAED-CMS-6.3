@@ -605,10 +605,39 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note or the tiles of a summary above the table (Panel Window), a form under it that has to live inside `#sl-list` (the ban lists) |
 | `is_fixed` | the fixed table layout |
 
+- **The filter has one place.** `partials/module-head.html` draws `subtitle_html` and `find` in one block after the
+  tabs, so the order of the focus follows the bar. A filter of three fields or more always stands in the bar under the tabs; one or two fields, the settings find
+  or a button stand beside the title in one line once the content column `sl-admin-content-inner`, the container the
+  head measures, is 960px wide, their controls at their own width and giving way before the line would break, and in
+  the bar under it. The bar lays its fields in aligned columns of a label and a control: three across, four as two by
+  two, two under 900px of the column, one under 560px; the button closes the first line, a link stands under it. The
+  place is decided by the count of `sl-filter-field` in CSS, never by a flag of the module.
+- **An action of a section is a tab.** A whole-section action that changes state and has no page of its own (the
+  synchronisation of "Форум") stands in the tabs, never as a lone button in the head: `post` of `getTplAdminTabs()`
+  maps the index of the tab to the scope of its token, the tab carries `data-sl-post`, `slaed.js` posts it, and the
+  handler checks `checkAdminPost()` and returns to its list with a flash. `setTplAdminInfoPage()` passes `post` on.
+- **A column title is one word.** No title of a list on the site or in the panel carries two words, a slash or a cut
+  form (`cutstr()` of a constant): where the constant of a form says more, the head takes a one-word constant of its own.
+- **A record names its module honestly.** A list, a filter or a group that says which module a record belongs to
+  takes `getModuleTitle()`: a Node type is the module and its type («Материалы - Новости»), never a module of its own, and
+  any other module its name alone, never its key.
+- **A status has four tones.** The cell key `stat` of `fragments/table-cells.html` (and of `table-row.html` of lite) draws
+  one icon: `is_on` the green check, `is_wait` the clock, `is_fail` the red cross, none of them the grey dashed circle
+  of off; `text` is its tip and its name for a screen reader, `_ACT`/`_DEACT` without it. The cell sorts by the tone
+  through `data-sort`, and the lamp of a row turned in place (`admin-ui.js`) keeps it. A head with `is_head_status` or
+  `is_head_error`, and the head of the options `is_col_actions` (the gear of its dial), shows its icon instead of
+  the word, which stays in its tip and for a screen reader. In the fixed layout a status or an error column is as wide
+  as its icon, the options keep the width of the dial; a column of a status or an error is sortable.
+- **A centred column keeps its title over its values.** The cells of `sl-col-id`, `-status`, `-date`, `-count`, `-sent`
+  and of a last column that is not the options or the boxes have equal sides, and in a sortable table a lane for the
+  mark on the right of the title and of every cell alike, so both centre in the same width. A sortable title stands
+  clear of its mark in every state of the sort; one too long for its column ends in an ellipsis, and `slaed.js` puts
+  the whole title in its tip when the pointer comes. In the fixed layout a column is as wide as its token, so a token
+  holds the longest title of its kind in Russian; a longer one in another language is cut, not laid under the mark.
 - **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; a select with `is_now` sends the
   form on the pick through `admin-ui.js`, and a filter whose every field is such a select shows its OK button only to
   a browser without scripts (`@media (scripting: enabled)` in `theme.css`). `link_url`
-  with `link_text` draws a plain link beside its button, which leaves the list for a page of its own (the settings of
+  with `link_text` draws a plain link beside its button, under it in the bar, which leaves the list for a page of its own (the settings of
   "Фавориты"); the tabs that change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
   and both pagers stand whenever there is more than one page, the filter applied by the server. The key tip "i"
   (`fragments/pager-keys.html`, scope `keys`) stands once per list, after the view switch, with pages or without; the

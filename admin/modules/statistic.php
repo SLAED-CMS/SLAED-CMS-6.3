@@ -184,7 +184,7 @@ function getStatTable(array $data): array {
     return [
         'can_pick' => true,
         'pick' => $data['is_pick'] ? $data['at'] : -1,
-        'cols' => [_DATE, _UNIQUE, _HITS, _HOME, _REFERERS, _BOTSOPT, _AUDIENCE, _USERS, _GENERATION, _ADM_QUERIES, _ADM_PHPMEM],
+        'cols' => [_DATE, _UNIQUE, _HITS, _HOME, _REFERERS, _BOTSOPT, _AUDIENCE, _USERS, _GENERATION, _ADM_QUERIES, _ADM_MEMORY],
         'total' => [
             'label' => _STATISTIC_TOTAL,
             'cells' => [

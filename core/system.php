@@ -4012,6 +4012,14 @@ function getModuleName(string $con): string {
     return $map[$con] ?? ((intval($conf['modules'][$con]['type'] ?? 0) === 1) ? getModuleLabel($con) : $con);
 }
 
+# The module a record belongs to as a list names it: a Node type is the module Node and its type, never a module of its own; another module its name, never its key
+function getModuleTitle(string $mod): string {
+    global $conf;
+    if (isset($conf['node']['types'][$mod])) return getModuleName('node').' - '.getModuleName($mod);
+    $name = trim(getModuleName($mod));
+    return ($name !== '') ? $name : $mod;
+}
+
 # Resolve a module or concept key to its Bootstrap Icons glyph from the one icon map; an unnamed module takes the icon of its config, puzzle stands for the unknown
 function getIconName(string $con): string {
     global $conf;

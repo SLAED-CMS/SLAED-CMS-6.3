@@ -22,6 +22,7 @@ define('_FMODCW','Voir pour la lecture et la publication');
 define('_ISCAN','pouvez');
 define('_ISNEWPOST','Il ya des nouveaux messages');
 define('_LASTMESSAGE','Dernier message');
+define('_FORUM_LAST','Dernier');
 define('_NEWTOPIC','Ouvrir un nouveau sujet');
 define('_NONEWPOST','Pas de nouveaux messages');
 define('_NOTCAN','ne pouvez pas');

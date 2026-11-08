@@ -335,6 +335,13 @@
         ).getTime();
     }
 
+    // A column title cut by its ellipsis shows its whole text in a tip, decided when the pointer comes, so a later font or width cannot leave it stale
+    document.addEventListener('mouseover', function (event) {
+        var cell = event.target.closest ? event.target.closest('thead th') : null;
+        if (!cell || cell.title) return;
+        if (cell.scrollWidth > cell.clientWidth) cell.title = cell.textContent.trim();
+    });
+
     function setTableSortState(table) {
         if (!table || !table.tHead) return;
         var head = table.tHead.rows;

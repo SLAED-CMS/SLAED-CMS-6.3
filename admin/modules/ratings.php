@@ -112,7 +112,7 @@ function save(): void {
 function votes(): void {
     global $afile, $tpl;
     $names = ['account' => getModuleName('account'), 'forum' => getModuleName('forum')];
-    foreach (array_keys(getNodeTypeMap()) as $name) $names['node.'.$name] = getModuleName($name);
+    foreach (array_keys(getNodeTypeMap()) as $name) $names['node.'.$name] = getModuleTitle($name);
     $scope = getVar('get', 'scope', 'raw', '');
     $scope = (is_string($scope) && isset($names[$scope])) ? $scope : '';
     $mid = $scope !== '' ? getVar('get', 'mid', 'num', 0) : 0;
@@ -152,7 +152,7 @@ function votes(): void {
             ['has_content_text' => true, 'content_text' => $row['scope'].' #'.$row['mid']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $row['actor']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['value']],
-            ['is_truncate' => true, 'has_content_text' => true, 'title_text' => $state, 'content_text' => $state],
+            ['is_col_status' => true, 'stat' => ($state === '') ? ['is_on' => true] : ['text' => _RATINGS_DONE.' '.$state]],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]];
     }
@@ -177,7 +177,7 @@ function votes(): void {
             ['content' => _RATINGS_TARGET],
             ['content' => _RATINGS_ACTOR, 'is_truncate' => true],
             ['content' => _VALUE, 'is_col_count' => true],
-            ['content' => _STATUS, 'is_truncate' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,

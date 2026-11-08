@@ -15,4 +15,4 @@ define('_FO_9','Zeigen das Datum der letzten Bearbeitung f&#252;r Nachrichten?')
 define('_SYNCH','Synchronisieren');
 define('_SYNCHOK','Die Forumssummen stimmen mit den Themen und Beiträgen überein.');
 define('_SYNCHFIX','Repariert. Foren: %d, Themen: %d.');
-define('_SYNCHINF','Die Schaltfläche Synchronisieren auf der Startseite zählt die Themen und Beiträge aller Foren neu und bestimmt die letzten Beiträge. Führen Sie sie nach dem Löschen oder Verschieben von Themen oder Beiträgen aus.');
+define('_SYNCHINF','Der Reiter Synchronisieren zählt die Themen und Beiträge aller Foren neu und bestimmt die letzten Beiträge. Führen Sie ihn nach dem Löschen oder Verschieben von Themen oder Beiträgen aus.');

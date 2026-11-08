@@ -46,7 +46,7 @@ function lang(): void {
         ['has_content_text' => true, 'content_text' => _SYSTEM],
         ['has_content_text' => true, 'content_text' => _ALL],
         ['has_content_text' => true, 'content_text' => _MVALL],
-        ['is_col_status' => true, 'content_html' => ad_status('', 1)],
+        ['is_col_status' => true, 'stat' => ['is_on' => true]],
         ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
             ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN],
             ['href' => $afile.'.php?name=lang&op=fileedit', 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL, 'is_edit' => true],
@@ -68,7 +68,7 @@ function lang(): void {
             ['is_truncate' => true, 'title_text' => getModuleName($one), 'has_content_text' => true, 'content_text' => getModuleName($one)],
             ['is_truncate' => true, 'title_text' => $one, 'has_content_text' => true, 'content_text' => $one],
             ['has_content_text' => true, 'content_text' => $who_view[$one] ?? _MVALL],
-            ['is_col_status' => true, 'content_html' => ad_status('', empty($modbase[$one]) ? 0 : 1)],
+            ['is_col_status' => true, 'stat' => ['is_on' => !empty($modbase[$one])]],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
         ]];
     }
@@ -81,8 +81,8 @@ function lang(): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _NAME, 'is_truncate' => true],
             ['content' => _MODUL, 'is_truncate' => true],
-            ['content' => _VIEW],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _ACCESS],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,

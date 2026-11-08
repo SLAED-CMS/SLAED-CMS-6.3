@@ -26,7 +26,7 @@ function getCommentsFilter(string $src = 'get'): array {
 function getCommentsSearch(array $flt, bool $part): string {
     global $afile, $tpl;
     $mods = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $flt['modul'] === '']];
-    foreach ($flt['mods'] as $one) $mods[] = ['value_attr' => $one, 'label_text' => getModuleName($one).' - '.$one, 'is_selected' => $flt['modul'] === $one];
+    foreach ($flt['mods'] as $one) $mods[] = ['value_attr' => $one, 'label_text' => getModuleTitle($one), 'is_selected' => $flt['modul'] === $one];
     $finds = [];
     foreach ([1 => _ID, 2 => _COMMENT, 3 => _POSTEDBY, 4 => _MODUL, 5 => _IP] as $key => $label) {
         $finds[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $flt['search'] === $key];
@@ -79,8 +79,7 @@ function comments(): void {
         $ip = $val['ip'];
         $stat = $val['status'];
         $nick = $val['nick'];
-        $modname = trim((string)getModuleName($cmod));
-        $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
+        $modlabel = getModuleTitle($cmod);
         $post = $nick ? filterTextHighlight(user_info($nick, null), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
         $comment = trim(strip_tags((string)$prs->filterContent($val['body'], true, $cmod, 0, 'breaks')));
         $comment = cutstr($comment, 120);
@@ -123,7 +122,7 @@ function comments(): void {
             ['content' => _MODUL, 'is_truncate' => true],
             ['content' => _POSTEDBY, 'is_col_author' => true],
             ['content' => _DATE, 'is_col_date' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
@@ -154,8 +153,7 @@ function edit(): void {
     $cmod = (string)($row['modul'] ?? '');
     $nick = (string)($row['nick'] ?? '');
     $ip = (string)($row['ip'] ?? '');
-    $modname = trim((string)getModuleName($cmod));
-    $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
+    $modlabel = getModuleTitle($cmod);
     $post = $nick ? user_info($nick, null) : htmlspecialchars(($row['name'] ?? '') ?: _ANONYM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
     $rows = [

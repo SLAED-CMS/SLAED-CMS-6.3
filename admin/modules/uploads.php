@@ -496,9 +496,7 @@ function config(): void {
     foreach ($mods as $val) {
         if ($val != '') {
             $rul = getUploadRuleData($val);
-            $type = $types[$val] ?? null;
-            $modn = $type ? ((str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title) : '';
-            $modn = $type ? htmlspecialchars($modn, ENT_QUOTES, 'UTF-8') : getModuleName($val);
+            $modn = htmlspecialchars(getModuleTitle($val), ENT_QUOTES, 'UTF-8');
             $fids = getFieldIds('', 'ftype');
             $tfld = $tpl->getHtmlFrag('input', [
                 'itype' => 'text',

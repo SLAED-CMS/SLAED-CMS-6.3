@@ -369,6 +369,62 @@ h1.sl-title {
   white-space: nowrap;
 }
 
+/* Status icons: the vocabulary of the panel, four tones - done or on, waiting, off, failed - their words in the tip */
+.sl-status-active,
+.sl-status-inactive,
+.sl-status-wait,
+.sl-status-fail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+  font-size: var(--sl-size-icon-sm);
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.sl-status-active::before,
+.sl-status-inactive::before,
+.sl-status-wait::before,
+.sl-status-fail::before {
+  font-family: "bootstrap-icons";
+  font-weight: var(--sl-weight-normal);
+  line-height: 1;
+}
+
+.sl-status-active {
+  color: var(--sl-success);
+}
+
+.sl-status-active::before {
+  content: "\f26a";
+}
+
+.sl-status-inactive {
+  color: var(--sl-text-muted);
+}
+
+.sl-status-inactive::before {
+  content: "\f2e5";
+}
+
+.sl-status-wait {
+  color: var(--sl-warning);
+}
+
+.sl-status-wait::before {
+  content: "\f291";
+}
+
+.sl-status-fail {
+  color: var(--sl-danger);
+}
+
+.sl-status-fail::before {
+  content: "\f622";
+}
+
 .sl-col-check {
   width: var(--sl-col-check-width);
   text-align: center;
@@ -7661,6 +7717,12 @@ td.sl-fl-col-stat {
   padding-right: 0;
   padding-left: 0;
   white-space: nowrap;
+}
+
+/* A sortable count title keeps the lane of its mark on both sides, so it stands over the middle of its chips and clear of the mark */
+th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
+  padding-right: var(--sl-space-8);
+  padding-left: var(--sl-space-8);
 }
 
 .sl-fl-col-content h4,

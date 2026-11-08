@@ -98,7 +98,7 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
         $irows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         $num++;
     }
-    $head = [['content' => _FIELDS_KEY, 'nosort' => 1], ['content' => _TITLE, 'nosort' => 1], ['content' => _POSITION, 'nosort' => 1], ['content' => _ACTIVATE2, 'nosort' => 1]];
+    $head = [['content' => _FIELDS_KEY, 'nosort' => 1], ['content' => _TITLE, 'nosort' => 1], ['content' => _POSITION, 'nosort' => 1], ['content' => _FIELDS_ON, 'nosort' => 1]];
     $pick = $tpl->getHtmlFrag('select', ['name_attr' => $base.'[type]', 'selectid' => $fid.'type', 'options_html' => $types, 'is_config' => true]);
     $grid = $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $irows, 'is_wrapless' => true]);
     $lead = $line('name', _FIELDS_KEY, $name, ['is_readonly' => $kept, 'maxlength_num' => 32]);

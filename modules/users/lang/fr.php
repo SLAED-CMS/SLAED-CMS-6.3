@@ -7,3 +7,4 @@
 define('_TU_RULES','R&#232;gles');
 define('_TU_STATS','Statistiques');
 define('_TU_USERSCOUNT','Membres');
+define('_USERS_FROM','Origine');

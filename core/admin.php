@@ -256,7 +256,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     }
     $rows = [];
     foreach ($cats as $cmod => $list) {
-        $rows[] = getAdminGroupRow(getModuleName($cmod), 'categories-'.$cmod, 7);
+        $rows[] = getAdminGroupRow(getModuleTitle($cmod), 'categories-'.$cmod, 7);
         $kids = [];
         foreach ($list as $cat) $kids[$cat['parent']] = ($kids[$cat['parent']] ?? 0) + 1;
         $nums = [];
@@ -341,10 +341,10 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
         'head' => [
             ['content' => _ID],
             ['content' => _CATEGORY],
-            ['content' => cutstr(_CONTENT, 3, 1)],
-            ['content' => cutstr(_ICON, 2, 1)],
+            ['content' => _NODE],
+            ['content' => _ICON],
             ['content' => _POSITION],
-            ['content' => _STATUS],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
@@ -553,9 +553,9 @@ function getAdminBlockList(): string {
             ['content' => _ID],
             ['content' => _TITLE],
             ['content' => _TYPE],
-            ['content' => _VIEW],
+            ['content' => _ACCESS],
             ['content' => _POSITION],
-            ['content' => _STATUS],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),

@@ -6,16 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-# Render GeoIP status label
-function getGeoipBadge(bool $found): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('inline-badge', [
-        'is_success' => $found,
-        'is_danger' => !$found,
-        'label' => $found ? _FOUND : _NOTFOUND,
-    ]);
-}
-
 # Render one GeoIP database status row
 function getGeoipFileRow(string $label, string $file): string {
     global $tpl;
@@ -25,7 +15,7 @@ function getGeoipFileRow(string $label, string $file): string {
     return $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
             ['content_html' => $label],
-            ['is_col_status' => true, 'content_html' => getGeoipBadge((bool)$info['found'])],
+            ['is_col_status' => true, 'stat' => ['text' => $info['found'] ? _FOUND : _NOTFOUND, 'is_on' => (bool)$info['found'], 'is_fail' => !$info['found']]],
             ['content_html' => $size],
             ['content_html' => $date],
             ['content_html' => (string)$info['path']],
@@ -111,11 +101,11 @@ function getGeoipPanel(): string {
         ],
     ];
     $head = [
-        ['content' => _DATABASE],
-        ['content' => _STATUS],
+        ['content' => _GEOIP_BASE],
+        ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
         ['content' => _SIZE],
         ['content' => _DATE],
-        ['content' => _ADIR],
+        ['content' => _GEOIP_PATH],
     ];
     $body = getGeoipFileRow(_GEOIP_COUNTRYDB, (string)($conf['geoip_country'] ?? 'storage/geoip/country.mmdb'));
     $body .= getGeoipFileRow(_GEOIP_ASNDB, (string)($conf['geoip_asn'] ?? 'storage/geoip/asn.mmdb'));

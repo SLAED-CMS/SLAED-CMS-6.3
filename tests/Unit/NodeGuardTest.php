@@ -44,9 +44,9 @@ final class NodeGuardTest extends TestCase
         $this->assertSame([true, false, true, false, true, false], $this->getRun()['search']);
     }
 
-    # The forum list only reads; the counters of a drifted forum are repaired by the posted synchronization and not by a view of the list
+    # The forum list only reads; the counters of a drifted forum are repaired by the synchronization its tab posts and not by a view of the list
     #[Test]
-    public function theForumListReadsAndTheButtonRepairs(): void
+    public function theForumListReadsAndTheTabRepairs(): void
     {
         $this->assertSame([12, 303, 0], $this->getRun()['forum'], 'A view of the forum list rewrote the counters, or the posted synchronization did not');
     }

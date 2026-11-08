@@ -395,7 +395,7 @@ function getPointsJournal(string $note): string {
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _USER, 'is_truncate' => true],
             ['content' => _TYPE],
-            ['content' => _POINTS_SCOPE.' / '._POINTS_SOURCE, 'is_truncate' => true],
+            ['content' => _POINTS_SOURCE, 'is_truncate' => true],
             ['content' => _POINTS, 'is_col_count' => true],
             ['content' => _NOTE, 'is_truncate' => true],
         ],

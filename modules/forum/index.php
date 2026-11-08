@@ -152,8 +152,8 @@ function forum(): void {
                             'heading' => $heading,
                             'col_forum' => _FORUM,
                             'col_topics' => _NEWTOPICS,
-                            'col_messages' => cutstr(_MESSAGES, 5, 1),
-                            'col_last' => _LASTMESSAGE,
+                            'col_messages' => _MESSAGES,
+                            'col_last' => _FORUM_LAST,
                         ]);
                     } else {
                         $cont = '';
@@ -207,8 +207,8 @@ function forum(): void {
                         'heading' => $heading,
                         'col_forum' => _FORUM,
                         'col_topics' => _NEWTOPICS,
-                        'col_messages' => cutstr(_MESSAGES, 5, 1),
-                        'col_last' => _LASTMESSAGE,
+                        'col_messages' => _MESSAGES,
+                        'col_last' => _FORUM_LAST,
                     ]);
                     foreach ($rows as $valb) {
                         if ($val[0] == $valb[4] && is_acess($valb[10])) {
@@ -321,8 +321,8 @@ function forum(): void {
                             'col_topics' => _NEWTOPICS,
                             'col_posts' => _POSTS,
                             'col_poster' => _POSTER,
-                            'col_views' => cutstr(_TVIEWS, 5, 1),
-                            'col_last' => _LASTMESSAGE,
+                            'col_views' => _TVIEWS,
+                            'col_last' => _FORUM_LAST,
                         ]);
                         while ([
                             $id,

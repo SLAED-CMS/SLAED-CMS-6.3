@@ -28,18 +28,13 @@ function getSqltable(array $items): string {
     foreach ($items as $row) {
         $sql = cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160);
         $tab = ($row['table'] !== '') ? (string)$row['table'] : _NO;
-        $status = $tpl->getHtmlFrag('inline-badge', [
-            'is_success' => $row['ok'],
-            'is_danger' => !$row['ok'],
-            'label' => $row['ok'] ? _OK : _ERROR.' - '.$row['error'],
-        ]);
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)(int)$row['num']],
                 ['has_content_text' => true, 'content_text' => (string)$row['type']],
                 ['has_content_text' => true, 'content_text' => $tab],
                 ['has_content_text' => true, 'content_text' => $sql],
-                ['content_html' => $status],
+                ['is_col_status' => true, 'stat' => ['text' => $row['ok'] ? _OK : _ERROR.' - '.$row['error'], 'is_on' => (bool)$row['ok'], 'is_fail' => !$row['ok']]],
             ],
         ])]);
     }
@@ -50,7 +45,7 @@ function getSqltable(array $items): string {
             ['content' => _TYPE],
             ['content' => _TABLE],
             ['content' => _DB_SQL, 'nosort' => true],
-            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
         ],
         'rows_html' => implode('', $rows),
         'is_wrapless' => true,
@@ -114,8 +109,8 @@ function database(string $run = ''): void {
     }
     $marks = ($type !== '') ? (array)($_SESSION[$keep] ?? []) : [];
     if ($type !== '') unset($_SESSION[$keep]);
-    $words = ['done' => [($type === 'repair') ? _OK : _OPTIMIZED, 'is_success'], 'same' => [_ALREADYOPTIMIZED, 'is_danger'], 'fail' => [_ERROR, 'is_danger'],
-        'none' => [_NO, 'is_muted']];
+    $words = ['done' => [($type === 'repair') ? _OK : _OPTIMIZED, 'is_on'], 'same' => [_ALREADYOPTIMIZED, 'is_off'], 'fail' => [_ERROR, 'is_fail'],
+        'none' => [_NO, 'is_off']];
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
     $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL], 'tab' => ['' => 0, 'optimize' => 1, 'repair' => 2][$type],
         'part' => [0, 1, 2]]);
@@ -149,12 +144,12 @@ function database(string $run = ''): void {
             ? $tpl->getHtmlFrag('inline-badge', ['is_muted' => !$tabfree, 'label' => filterSize($tabfree)])
             : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
         $mark = $words[$marks[$name] ?? ''] ?? [];
-        $stattag = $mark ? $tpl->getHtmlFrag('inline-badge', [$mark[1] => true, 'label' => $mark[0]]) : '';
+        $stattag = ['is_col_status' => true] + ($mark ? ['stat' => ['text' => $mark[0], $mark[1] => true]] : []);
         if ($type === '') {
-            $stattag = $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
+            $stattag = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
                 getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
                 getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 2], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
-            ]]);
+            ]])];
         }
         $rows[] = ['name' => $name, 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => count($rows) + 1],
@@ -165,7 +160,7 @@ function database(string $run = ''): void {
             ['is_col_date' => true, 'moment' => $info['Create_time']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize($tabsize)],
             ['is_col_count' => true, 'content_html' => $freetag],
-            ['is_col_actions' => true, 'content_html' => $stattag],
+            $stattag,
         ]];
     }
     $tiles = $tpl->getHtmlFrag('metric-list', ['items' => [
@@ -194,7 +189,7 @@ function database(string $run = ''): void {
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _SIZE, 'is_col_count' => true],
             ['content' => _DBFREE, 'is_col_count' => true, 'nosort' => true],
-            ['content' => ($type !== '') ? _STATUS : _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+            ($type !== '') ? ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true] : ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
         'count' => count($rows),

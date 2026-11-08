@@ -22,6 +22,7 @@ define('_FMODCW','Відкрити для читання і публікації
 define('_ISCAN','можете');
 define('_ISNEWPOST','Є нові повідомлення');
 define('_LASTMESSAGE','Останнє повідомлення');
+define('_FORUM_LAST','Останнє');
 define('_NEWTOPIC','Відкрити нову тему');
 define('_NONEWPOST','Немає нових повідомлень');
 define('_NOTCAN','не можете');
@@ -42,6 +43,6 @@ define('_TOPICP','Запрограмована тема');
 define('_TOPICREPLY','Відповісти на тему');
 define('_TPOP','Популярна тема');
 define('_TPOPN','Популярна тема має нові повідомлення');
-define('_TVIEWS','Переглядів');
+define('_TVIEWS','Перегляди');
 define('_WARNPF','Публікація на форумі відключена!');
 define('_REPLY','Відповісти');

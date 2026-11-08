@@ -55,12 +55,12 @@ function privat(): void {
     foreach ($data['rows'] as $one) {
         $id = $one['id'];
         $title = $one['title'];
-        [$icon, $tone, $note] = match ($one['state']) {
-            'delin' => ['envelope-x-fill', 'danger', (string)_PRIVAT_DELIN],
-            'delout' => ['send-x-fill', 'danger', (string)_PRIVAT_DELOUT],
-            'saved' => ['bookmark-fill', 'accent', (string)_PRMOVE],
-            'read' => ['envelope-open-fill', 'success', (string)_PROLD],
-            default => ['envelope-fill', 'warning', (string)_PROUTNEW],
+        [$tone, $note] = match ($one['state']) {
+            'delin' => ['is_off', (string)_PRIVAT_DELIN],
+            'delout' => ['is_off', (string)_PRIVAT_DELOUT],
+            'saved' => ['is_on', (string)_PRMOVE],
+            'read' => ['is_on', (string)_PROLD],
+            default => ['is_wait', (string)_PROUTNEW],
         };
         $tip = [['value' => $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $id])], ['label' => _STATUS, 'value' => $note]];
         if ($one['ip'] !== '') $tip[] = ['label' => _IP, 'value' => $mark(Geoip::getIpHtml($one['ip']), 5)];
@@ -71,7 +71,7 @@ function privat(): void {
             ['is_col_author' => true, 'content_html' => ($one['nameout'] !== '') ? $mark(user_info($one['nameout'], null), 3) : _ANONYM],
             ['is_col_author' => true, 'content_html' => ($one['namein'] !== '') ? $mark(user_info($one['namein'], null), 4) : _ANONYM],
             ['is_col_date' => true, 'moment' => $one['time']],
-            ['is_col_status' => true, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $icon, 'title_text' => $note, 'color_attr' => 'var(--sl-'.$tone.')'])],
+            ['is_col_status' => true, 'stat' => ['text' => $note, $tone => true]],
             ['is_col_actions' => true, 'dial' => []],
         ]];
     }
@@ -85,7 +85,7 @@ function privat(): void {
             ['content' => _PRSE, 'is_col_author' => true],
             ['content' => _PRRE, 'is_col_author' => true],
             ['content' => _DATE, 'is_col_date' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,

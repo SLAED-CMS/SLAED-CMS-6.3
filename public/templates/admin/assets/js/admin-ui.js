@@ -2828,6 +2828,7 @@
         var word = getLaterWord('led', on ? 'on' : 'off');
         mark.classList.toggle('sl-status-active', on);
         mark.classList.toggle('sl-status-inactive', !on);
+        mark.closest('td').setAttribute('data-sort', on ? '4' : '3');
         mark.title = word;
         mark.setAttribute('aria-label', word);
         if (btn) btn.title = getLaterWord('turn', on ? 'off' : 'on');

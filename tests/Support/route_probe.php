@@ -1540,7 +1540,8 @@ function getRouteGuard(PDO $pdo, string $work): array {
     $out['poll'] = [$gone['code'], (int)getRouteCol($pdo, 102, 'poll'), $count('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = 7')];
     $forum = getRouteReply('root', 'GET', 'admin.php?name=forum')['body'];
     $drift = $count('SELECT topics + posts FROM '.$pre.'categories WHERE id = 70');
-    $synced = getRouteReply('root', 'POST', 'admin.php', ['name' => 'forum', 'op' => 'sync', 'token' => getRouteToken($forum, 'sync')]);
+    $tab = preg_match('#op=sync"[^>]*data-sl-post="([^"]+)"#', $forum, $hit) ? $hit[1] : '';
+    $synced = getRouteReply('root', 'POST', 'admin.php', ['name' => 'forum', 'op' => 'sync', 'token' => $tab]);
     $out['forum'] = [$drift, $synced['code'], $count('SELECT topics + posts FROM '.$pre.'categories WHERE id = 70')];
     $data = require $work.'/config/global.php';
     setRouteFile($work.'/config/global.php', array_replace($data, ['multilingual' => '1']));

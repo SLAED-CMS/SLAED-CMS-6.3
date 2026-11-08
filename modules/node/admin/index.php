@@ -354,7 +354,8 @@ function show(): void {
                 ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $node->id],
                 ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $node->title, 'has_content_text' => true, 'content_text' => $node->title],
                 ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($type->name)],
-                ['has_content_text' => true, 'content_text' => getNodeStateLabel($node->status)],
+                ['is_col_status' => true, 'stat' => ['text' => getNodeStateLabel($node->status), 'is_on' => $node->status === NodeStatus::Published,
+                    'is_wait' => $node->status === NodeStatus::Pending]],
                 ['is_col_date' => true, 'moment' => $node->pubdate],
                 ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $who],
                 ['is_col_actions' => true, 'dial' => $dial],
@@ -369,7 +370,7 @@ function show(): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _TYPE, 'is_truncate' => true],
-            ['content' => _STATUS],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _POSTEDBY, 'is_col_author' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
@@ -677,11 +678,11 @@ function types(): void {
         'key' => 'node-types',
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
-            ['content' => _NODE_NAME],
+            ['content' => _ADDRESS],
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
-            ['content' => _NODE_MODE],
+            ['content' => _NODE_LOOK],
             ['content' => _VERSION],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
@@ -1026,7 +1027,7 @@ function type(): void {
         foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
             $one = basename($file, '.json');
             $label = getConst((string)(getNodeProfile($one)['type']['title'] ?? ''));
-            $popts[] = ['value_attr' => $one, 'label_text' => ($label !== '') ? $label.' - '.$one : $one, 'is_selected' => $one === $pname];
+            $popts[] = ['value_attr' => $one, 'label_text' => ($label !== '') ? $label : $one, 'is_selected' => $one === $pname];
         }
         $head = $tpl->getHtmlFrag('list-filter', [
             'action_url' => $afile.'.php',

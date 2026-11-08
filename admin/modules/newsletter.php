@@ -132,6 +132,7 @@ function newsletter(): void {
     foreach ($db->getSqlRows($db->getSqlQuery($sql, $flt['pars'])) ?: [] as $camp) {
         $id = intval($camp['id']);
         $num = intval($camp['send']) + intval($camp['fails']);
+        $cst = intval($camp['status']);
         $rate = ($num > 0) ? round(intval($camp['fails']) * 100 / $num, 1) : 0;
         $span = ($camp['endtime'] > $camp['time']) ? strtotime((string)$camp['endtime']) - strtotime((string)$camp['time']) : 0;
         $list[] = ['name' => (string)$camp['title'], 'details' => [
@@ -148,7 +149,7 @@ function newsletter(): void {
                 : ['has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']]),
             ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $camp['send'].' '._NLUSER],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['fails'].' ('.$rate.'%)'],
-            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getCampState(intval($camp['status']))],
+            ['is_col_status' => true, 'stat' => ['text' => getCampState($cst), 'is_on' => $cst === 6, 'is_wait' => in_array($cst, [1, 2, 3, 4, 5], true)]],
             ['is_col_actions' => true, 'dial' => getCampActions($camp)],
         ]];
     }
@@ -160,11 +161,11 @@ function newsletter(): void {
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE, 'is_truncate' => true],
-            ['content' => _NLWHERE, 'is_truncate' => true],
+            ['content' => _NLRECIP, 'is_truncate' => true],
             ['content' => _NLPROGRESS, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
             ['content' => _NLEND, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
             ['content' => _NLFAILS, 'is_col_count' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $list,
@@ -402,6 +403,7 @@ function queue(): void {
     $rows = [];
     foreach ($data['rows'] as $row) {
         $note = trim((string)$row['phase'].' '.$row['code'].' '.$row['error']);
+        $qst = intval($row['status']);
         $rows[] = ['name' => '#'.$row['id'], 'drop' => getTplPostAction(['name' => 'newsletter', 'op' => 'drop', 'id[]' => $row['id'], 'back' => $back], 'trash', _ONDELETE),
             'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
@@ -410,8 +412,8 @@ function queue(): void {
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['title']] + getTplLongCell((string)$row['title'], _TITLE),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['tries']],
             ['is_col_date' => true, 'moment' => $row['time']],
-            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getQueueState($row)],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $note] + getTplLongCell($note, _ERROR),
+            ['is_col_status' => true, 'stat' => ['text' => getQueueState($row), 'is_on' => $qst === 1, 'is_fail' => $qst === 2, 'is_wait' => $qst === 0]],
+            ['is_col_status' => true] + (($note === '') ? [] : ['stat' => ['text' => $note, 'is_fail' => true]]),
             ['is_col_actions' => true, 'dial' => getQueueActions($row, $back)],
         ]];
     }
@@ -426,10 +428,10 @@ function queue(): void {
             ['content' => _MODUL],
             ['content' => _EMAIL, 'is_truncate' => true],
             ['content' => _TITLE, 'is_truncate' => true],
-            ['content' => _MAIL_TRIES, 'is_col_count' => true],
+            ['content' => _MAIL_TRY, 'is_col_count' => true],
             ['content' => _DATE, 'is_col_date' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-            ['content' => _ERROR, 'is_truncate' => true, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
+            ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
@@ -526,7 +528,7 @@ function dead(): void {
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
             ['is_truncate' => true, 'text_html' => $mail] + getTplLongCell((string)$row['email'], _EMAIL),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $note] + getTplLongCell($note, _ERROR),
+            ['is_col_status' => true] + (($note === '') ? [] : ['stat' => ['text' => $note, 'is_fail' => true]]),
             ['is_col_date' => true, 'moment' => $row['time']],
             ['is_col_actions' => true, 'dial' => []],
         ]];
@@ -540,7 +542,7 @@ function dead(): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _EMAIL, 'is_truncate' => true],
             ['content' => _MAIL_FAILS, 'is_col_count' => true],
-            ['content' => _ERROR, 'is_truncate' => true, 'nosort' => true],
+            ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],

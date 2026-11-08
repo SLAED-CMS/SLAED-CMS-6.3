@@ -60,15 +60,15 @@ function forum(): void {
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$topics],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$posts],
-            ['is_col_status' => true, 'attr' => 'data-sort="'.intval($state).'"', 'stat' => ['is_on' => intval($state) === 1]],
+            ['is_col_status' => true, 'stat' => ['is_on' => intval($state) === 1]],
         ]];
     }
     echo getTplAdminList([
         'head_html' => getTplAdminTabs([
-            'ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'],
-            'tabs' => [_HOME, _PREFERENCES, _MANUAL],
+            'ops' => ['name=forum', 'name=forum&op=sync', 'name=forum&op=config', 'name=forum&op=info'],
+            'tabs' => [_HOME, _SYNCH, _PREFERENCES, _MANUAL],
+            'post' => [1 => 'forum'],
             'part' => [0],
-            'subtitle_html' => getTplPostButton(['name' => 'forum', 'op' => 'sync'], 'arrow-repeat', _SYNCH),
         ]),
         'is_fixed' => true,
         'head' => [
@@ -76,7 +76,7 @@ function forum(): void {
             ['content' => _FORUM, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _NEWTOPICS, 'is_col_count' => true],
             ['content' => _MESSAGES, 'is_col_count' => true],
-            ['content' => _STATUS, 'is_col_status' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
         ],
         'rows' => $rows,
         'count' => count($rows),
@@ -87,7 +87,8 @@ function forum(): void {
 function config(): void {
     global $afile, $conf, $db, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&op=sync', 'name=forum&op=config', 'name=forum&op=info'], 'tabs' => [_HOME, _SYNCH, _PREFERENCES, _MANUAL],
+        'post' => [1 => 'forum'], 'tab' => 2]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sortopts =
@@ -258,8 +259,9 @@ function sync(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
+        'ops' => ['name=forum', 'name=forum&op=sync', 'name=forum&op=config', 'name=forum&op=info'],
+        'tabs' => [_HOME, _SYNCH, _PREFERENCES, _MANUAL],
+        'post' => [1 => 'forum'],
     ]);
 }
 

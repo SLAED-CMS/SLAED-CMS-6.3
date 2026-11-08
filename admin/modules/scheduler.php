@@ -22,10 +22,10 @@ function scheduler(): void {
     if (!$conf['security']['log_d']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARNLOG.' '.$wargo('filescan').'.']);
     $head = [
         ['content' => _TITLE],
-        ['content' => _SCHEDULER_NEXTRUN, 'is_col_date' => true],
+        ['content' => _SCHEDULER_NEXT, 'is_col_date' => true],
         ['content' => _SCHEDULER_RESULT, 'is_col_status' => true],
         ['content' => _SCHEDULER_PRIO, 'is_col_count' => true],
-        ['content' => _STATUS, 'is_col_status' => true],
+        ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
     ];
     $rows = [];
@@ -44,6 +44,15 @@ function scheduler(): void {
                 'crashed' => _SCHEDULER_CRASH,
                 'disabled' => _SCHEDULER_OFF,
                 default => _SCHEDULER_IDLE,
+            },
+        };
+        $tone = match (true) {
+            $held => 'is_wait',
+            !empty($state['running']) => 'is_fail',
+            default => match ($state['last_status'] ?? 'idle') {
+                'success' => 'is_on',
+                'failed', 'crashed' => 'is_fail',
+                default => 'is_off',
             },
         };
         $run = (int)($state['last_run'] ?? 0);
@@ -86,9 +95,9 @@ function scheduler(): void {
         $rows[] = ['name' => (string)$title, 'details' => $tips, 'drop' => $drop, 'cells' => [
             ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
             ['is_col_date' => true, 'moment' => $next, 'has_content_text' => true, 'content_text' => _NO],
-            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
+            ['is_col_status' => true, 'stat' => ['text' => _SCHEDULER_RESULT.': '.$stat, $tone => true]],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
-            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => ((int)$isactive === 1) ? _YES : _NO],
+            ['is_col_status' => true, 'stat' => ['is_on' => (int)$isactive === 1]],
             ['is_col_actions' => true, 'dial' => $acts],
         ]];
     }

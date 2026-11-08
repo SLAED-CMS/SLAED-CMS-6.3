@@ -39,7 +39,7 @@ function changelog(): void {
         $del = array_sum(array_map('intval', array_column($files, 'deleted')));
         $subj = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $rows[] = ['name' => $title, 'details' => $tip, 'cells' => [
-            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => (string)($one['hash'] ?? '')],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($one['hash'] ?? '')],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'content_html' => ($word !== '') ? filterTextHighlight($subj, $word) : $subj],
             ['is_col_author' => true, 'title_text' => (string)($one['email'] ?? ''), 'has_content_text' => true, 'content_text' => (string)($one['author'] ?? '')],
             ...($stat ? [
@@ -69,7 +69,7 @@ function changelog(): void {
         'note_html' => checkPerms(CONFIG_DIR.'/changelog.php'),
         'is_fixed' => true,
         'head' => [
-            ['content' => _CHLOG_COMMIT, 'is_col_id' => true],
+            ['content' => _CHLOG_COMMIT, 'is_col_count' => true],
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _CHLOG_AUTHOR, 'is_col_author' => true],
             ...($stat ? [['content' => _CHLOG_CHANGES], ['content' => _CHLOG_FILES, 'is_col_count' => true]] : []),

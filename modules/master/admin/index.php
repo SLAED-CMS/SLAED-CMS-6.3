@@ -104,7 +104,8 @@ function getMasterReleases(string $head, string $note): string {
         $acts[] = ['href' => $afile.'.php?name=master&op=share&ver='.$ver, 'icon_name' => 'percent', 'title' => _MASTER_SHARE];
         $rows[] = ['name' => $ver, 'cells' => [
             ['has_content_text' => true, 'content_text' => $ver],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $state] + getTplLongCell($state, _STATUS),
+            ['is_col_status' => true, 'stat' => ['text' => $state, 'is_on' => $row['state'] === 'stable', 'is_wait' => in_array($row['state'], ['beta', 'wait'], true),
+                'is_fail' => $row['state'] === 'pause' && $row['pauseby'] === 'auto']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['share'].' %'],
             ['is_col_date' => true, 'moment' => $row['accepted'], 'has_content_text' => true, 'content_text' => '-'],
             ['is_col_date' => true, 'moment' => $row['changed'], 'has_content_text' => true, 'content_text' => '-'],
@@ -117,7 +118,7 @@ function getMasterReleases(string $head, string $note): string {
         'head_html' => $head,
         'note_html' => $note,
         'is_fixed' => true,
-        'head' => [['content' => _VERSION], ['content' => _STATUS, 'is_truncate' => true], ['content' => _MASTER_SHARE, 'is_col_count' => true],
+        'head' => [['content' => _VERSION], ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _MASTER_SHARE, 'is_col_count' => true],
             ['content' => _MASTER_ACCEPTED, 'is_col_date' => true], ['content' => _MASTER_CHANGED, 'is_col_date' => true], ['content' => _MASTER_EXPIRES, 'is_col_date' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
         'rows' => $rows,
@@ -259,7 +260,7 @@ function getMasterNoteList(string $head, string $note): string {
             ['has_content_text' => true, 'content_text' => ($row['ver'] !== '') ? $row['ver'] : _ALL],
             ['is_col_date' => true, 'moment' => $row['until'], 'has_content_text' => true, 'content_text' => _MASTER_NOEND],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)($data['ru'] ?? '')] + getTplLongCell((string)($data['ru'] ?? ''), _TEXT),
-            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $row['active'] ? _YES : _NO],
+            ['is_col_status' => true, 'stat' => ['is_on' => (bool)$row['active']]],
             ['is_col_actions' => true, 'content_html' => $acts ? $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts]) : ''],
         ]];
     }
@@ -269,7 +270,7 @@ function getMasterNoteList(string $head, string $note): string {
         'is_fixed' => true,
         'head' => [['content' => _ID, 'is_col_id' => true], ['content' => _MASTER_LEVEL], ['content' => _MASTER_TO, 'is_truncate' => true],
             ['content' => _MASTER_RANGE], ['content' => _MASTER_UNTIL, 'is_col_date' => true], ['content' => _TEXT, 'is_truncate' => true],
-            ['content' => _STATUS, 'is_col_status' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
         'rows' => $rows,
         'href' => $afile.'.php?name=master&tab=3&',
         'key' => 'master-notes',

@@ -15,4 +15,4 @@ define('_FO_9','Afficher la derni&#232;re date de modification pour les messages
 define('_SYNCH','Synchronisation');
 define('_SYNCHOK','Les totaux du forum correspondent à ses sujets et messages.');
 define('_SYNCHFIX','Réparé. Forums : %d, sujets : %d.');
-define('_SYNCHINF','Le bouton Synchronisation de l’onglet d’accueil recompte les sujets et les messages de tous les forums et détermine les derniers messages. Lancez-le après la suppression ou le déplacement de sujets ou de messages.');
+define('_SYNCHINF','L’onglet Synchronisation recompte les sujets et les messages de tous les forums et détermine les derniers messages. Lancez-le après la suppression ou le déplacement de sujets ou de messages.');

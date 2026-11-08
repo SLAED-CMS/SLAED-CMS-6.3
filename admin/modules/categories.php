@@ -14,7 +14,7 @@ function categories(): void {
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
     $opts = [['value_attr' => '', 'label_text' => _ALLMODULES, 'is_selected' => $modul === '']];
-    foreach (getCategoryModules() as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod).' - '.$mod, 'is_selected' => $mod === $modul];
+    foreach (getCategoryModules() as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleTitle($mod), 'is_selected' => $mod === $modul];
     $subtitle = $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
         'label' => _CATEGORIES,

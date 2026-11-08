@@ -123,3 +123,4 @@ define('_NODE_TYPES','Typen');
 define('_NODE_USEFUL','Hilfreich');
 define('_NODE_VIEWDEF','Standardansicht');
 define('_NODE_VIEWS','Erlaubte Listenansichten');
+define('_NODE_LOOK','Ansicht');

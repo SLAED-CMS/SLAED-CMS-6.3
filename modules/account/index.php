@@ -657,7 +657,7 @@ function profil(): void {
                     'chip_icon' => $conf['modules'][$fmod]['icon'] ?? 'folder',
                     'title' => cutstr($ftitle, 60),
                     'href' => getSeoUrl(['name' => $fmod, 'op' => 'view', 'id' => $fid, 'route' => (($fmod === 'forum') ? $tops : $paths)[$fid] ?? null]),
-                    'mod' => getModuleName($fmod),
+                    'mod' => getModuleTitle($fmod),
                 ];
             }
         }
@@ -860,7 +860,7 @@ function logins(): void {
         $info = getAgentInfo($agent, 0);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
             ['text' => format_time((string)$row['time'], _TIMESTRING)],
-            ['text' => $res[$row['result']] ?? (string)$row['result']],
+            ['stat' => ['text' => $res[$row['result']] ?? (string)$row['result'], 'is_on' => $row['result'] === 'ok', 'is_fail' => $row['result'] !== 'ok']],
             ['text' => ($row['way'] === 'oauth') ? _ACCOUNT_LOGOAUTH : _PASSWORD],
             ['text' => (string)$row['ip']],
             ['primary_text' => $info['browser'].' / '.$info['os'], 'primary_title' => $agent],
@@ -869,7 +869,7 @@ function logins(): void {
     $cont = ($rows === '') ? $tpl->getHtmlFrag('empty', []) : $tpl->getHtmlFrag('table', [
         'is_list' => true,
         'rows_html' => $rows,
-        'headers' => [['text' => _DATE], ['text' => _STATUS], ['text' => _TYPE], ['text' => _IP], ['text' => _BROWSER]],
+        'headers' => [['text' => _DATE], ['text' => _STATUS, 'is_head_status' => true], ['text' => _TYPE], ['text' => _IP], ['text' => _BROWSER]],
     ]).getTplPager(['count' => $log['total'], 'limit' => $num, 'mod' => $conf['name'], 'url_extra' => ['op' => 'logins']]);
     echo $tpl->getHtmlFrag('title', ['title' => _ACCOUNT_LOGINS, 'is_level_one' => true]).getUserNav().$cont;
     setFoot();
@@ -905,17 +905,17 @@ function materials(): void {
         ]);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
             $row['live'] ? $link : ['text' => $row['title']],
-            ['text' => getModuleName($row['type'])],
+            ['text' => getModuleTitle($row['type'])],
             ['text' => format_time($row['published'], _TIMESTRING)],
             ['text' => ($row['expires'] === null) ? '' : format_time($row['expires'], _TIMESTRING)],
-            ['text' => $row['live'] ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN],
+            ['stat' => ['text' => $row['live'] ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN, 'is_on' => (bool)$row['live']]],
             ['content_html' => $renew],
         ]]);
     }
     $cont = ($rows === '') ? $tpl->getHtmlFrag('empty', []) : $tpl->getHtmlFrag('table', [
         'is_list' => true,
         'rows_html' => $rows,
-        'headers' => [['text' => _TITLE], ['text' => _MODUL], ['text' => _DATE], ['text' => _ENDDATE], ['text' => _STATUS], ['text' => '']],
+        'headers' => [['text' => _TITLE], ['text' => _MODUL], ['text' => _DATE], ['text' => _ENDS], ['text' => _STATUS, 'is_head_status' => true], ['text' => '']],
     ]).getTplPager(['count' => $list['total'], 'limit' => $num, 'mod' => $conf['name'], 'url_extra' => ['op' => 'materials']]);
     echo $tpl->getHtmlFrag('title', ['title' => _ACCOUNT_MINE, 'is_level_one' => true]).getUserNav().$cont;
     setFoot();

@@ -245,7 +245,7 @@ function getTplPager(array $data = []): string {
     return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
 }
 
-# Render one full admin module header with title, icon, tabs and a settings find; the title and a later open tab name the browser tab
+# Render one admin module header; the title and a later open tab name the browser tab, and a tab named in post is an action slaed.js posts with its token
 function getTplAdminTabs(array $data = []): string {
     global $afile, $conf, $tpl, $adminvars;
     $title = _ADMINMENU;
@@ -264,13 +264,15 @@ function getTplAdminTabs(array $data = []): string {
         $tabs = $data['tabs'] ?? [];
         $active = (int)($data['tab'] ?? 0);
         $part = (array)($data['part'] ?? []);
+        $post = (array)($data['post'] ?? []);
         foreach ($tabs as $idx => $label) {
             $href = HOME_PATH.$afile.'.php?'.($ops[$idx] ?? '');
             $links[] = [
                 'href' => $href,
-                'hx_get' => in_array($idx, $part, true) ? $href : '',
+                'hx_get' => (in_array($idx, $part, true) && !isset($post[$idx])) ? $href : '',
                 'is_active' => $idx === $active,
                 'label' => $label,
+                'link_attr' => isset($post[$idx]) ? 'data-sl-post="'.getSiteToken((string)$post[$idx]).'"' : '',
                 'title' => $label,
             ];
         }
@@ -598,6 +600,7 @@ function setTplAdminInfoPage(array $data = []): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
+        'post' => (array)($data['post'] ?? []),
         'subtitle_html' => (string)($data['subtitle_html'] ?? ''),
         'tabs' => $tabs,
         'tab' => $tab,
@@ -1547,7 +1550,7 @@ function getCategoryModules(): array {
 function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false): string {
     global $afile, $tpl;
     $opts = [];
-    foreach (getCategoryModules() as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod).' - '.$mod, 'is_selected' => $sel == $mod];
+    foreach (getCategoryModules() as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleTitle($mod), 'is_selected' => $sel == $mod];
     if ($auto) {
         return $tpl->getHtmlFrag('list-filter', [
             'action_url' => $afile.'.php',
