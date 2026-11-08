@@ -81,12 +81,11 @@ function sitemap(): void {
         $asize += $size;
         $urls += $n;
     }
-    $cont .= $tpl->getHtmlFrag('pane', ['title' => _SITEMAP, 'icon' => 'diagram-3', 'meta' => $conf['homeurl'].'/'.$file,
-        'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('metric-list', ['items' => [
         ['label' => _FILE_M, 'value' => filterDecimal($f, 0), 'icon' => 'files'],
         ['label' => _FILE_S, 'value' => filterSize($asize), 'icon' => 'hdd'],
         ['label' => _URLS, 'value' => filterDecimal($urls, 0), 'icon' => 'link-45deg'],
-    ]]).($items ? $tpl->getHtmlFrag('kv-list', ['items' => $items]) : '')]);
+    ]]).$tpl->getHtmlFrag('kv-list', ['items' => array_merge([['label' => _ADDRESS, 'text' => $conf['homeurl'].'/'.$file]], $items)])]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

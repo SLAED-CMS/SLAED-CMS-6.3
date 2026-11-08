@@ -310,7 +310,7 @@ function activate(): void {
 }
 
 function view(): void {
-    global $db, $conf, $afile, $tpl, $com, $pnt;
+    global $db, $conf, $afile, $tpl, $com, $pnt, $prs, $fld;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_moder('account')) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
@@ -415,7 +415,16 @@ function view(): void {
                 $birth = _NO_INFO;
             }
             $rating = getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1);
-            $field = ($field) ? getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]) : '';
+            $vals = json_decode((string)$field, true);
+            $xrows = [];
+            $xtext = '';
+            foreach (is_array($vals) ? $fld->getFieldView($prs, getFieldRules($conf['name']), $vals, $conf['name']) : [] as $one) {
+                if ($one['type'] === 'textarea') {
+                    $xtext .= $tpl->getHtmlFrag('field-value', ['label' => $one['label_text'], 'value_html' => $one['value_html'], 'value_text' => $one['value_text']]);
+                } else {
+                    $xrows[] = $mkrow('card-text', $one['label_text'], $one['value_text']);
+                }
+            }
             $lvl = getUserLevelData((int)$point, (string)$gcolor, (string)$grank);
             $rgroup = $lvl['groups'];
             $grank = $lvl['rank'];
@@ -451,6 +460,7 @@ function view(): void {
                     $mkrow('browser-chrome', _BROWSER, $agentv, '', $adm),
                 ]],
             ];
+            if ($xrows) $panels[] = ['title' => _ACCOUNT_FIELDS, 'icon' => getIconName('fields'), 'rows' => $xrows];
             $hub = [];
             $parts = [];
             $params = [];
@@ -563,8 +573,7 @@ function view(): void {
                 'tags' => $tags,
                 'groups_head' => ['icon' => getIconName('groups'), 'title' => _USER_GROUPS],
                 'group_chips' => $chips,
-                'has_field' => !empty($field),
-                'field' => $field,
+                'field_html' => $xtext,
                 'has_warn_list' => $wnum > 0,
                 'warn_head' => ['icon' => getIconName('warn'), 'title' => _UWARNS],
                 'warn_html' => $warnhtml,

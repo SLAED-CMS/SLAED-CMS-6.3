@@ -466,7 +466,6 @@ function getTplAdminList(array $data): string {
     return $tpl->getHtmlPart('admin-list', [
         'head_html' => (string)($data['head_html'] ?? ''),
         'note_html' => (string)($data['note_html'] ?? ''),
-        'pane' => (array)($data['pane'] ?? []),
         'top_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['is_top' => true, 'rows' => $per ? $per + ['id' => 'sl-rows-top'] : []]) : '',
         'pager_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['rows' => $per ? $per + ['id' => 'sl-rows-end', 'is_up' => true] : []]) : '',
         'is_list' => true,
@@ -1282,7 +1281,7 @@ function getTplPostVals(array $hide, string $target): string {
     return 'hx-post="admin.php" hx-vals="'.$vals.'" hx-target="'.$target.'" hx-swap="innerHTML" hx-push-url="false"';
 }
 
-# Build one standalone admin button that submits a POST form; $attr carries form behaviour, $look 'act' or 'danger' draws it as the action of an alert
+# Build one standalone admin button that submits a POST form; $look 'act' or 'danger' is the action of an alert, 'main', 'check' or 'risk' the weight of a button
 function getTplPostButton(array $hide, string $icon, string $label, string $attr = '', string $look = ''): string {
     global $afile, $tpl;
     $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
@@ -1297,8 +1296,11 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
         'title' => $label,
         'label' => $label,
         'form_attr' => $attr,
-        'is_act' => $look !== '',
+        'is_act' => in_array($look, ['act', 'danger'], true),
         'is_danger' => $look === 'danger',
+        'is_main' => $look === 'main',
+        'is_check' => $look === 'check',
+        'is_risk' => $look === 'risk',
     ]);
 }
 

@@ -59,10 +59,10 @@ function getMonitorView(array $snap, array $facts): array {
         'age' => ($snap['sampled_at'] > 0) ? max(time() - $snap['sampled_at'], 0) : 0,
         'meta' => sprintf(_MONITOR_WINDOW, $at ? max(1, (int)round(($at[count($at) - 1] - $at[0]) / 60)) : 0),
         'tiles' => [
-            getMonitorTile(_MONITOR_UP, 'up', 'cloud-upload-fill', $up, 'KB/s', 1),
-            getMonitorTile(_MONITOR_DOWN, 'down', 'cloud-download-fill', $down, 'KB/s', 1),
-            getMonitorTile('CPU', 'cpu', 'cpu-fill', $snap['sys_hist_cpu'], '%', 0),
-            getMonitorTile('RAM', 'ram', 'motherboard-fill', $snap['sys_hist_ram'], '%', 0),
+            getMonitorTile(_MONITOR_UP, 'up', 'cloud-upload', $up, 'KB/s', 1),
+            getMonitorTile(_MONITOR_DOWN, 'down', 'cloud-download', $down, 'KB/s', 1),
+            getMonitorTile('CPU', 'cpu', 'cpu', $snap['sys_hist_cpu'], '%', 0),
+            getMonitorTile('RAM', 'ram', 'motherboard', $snap['sys_hist_ram'], '%', 0),
         ],
         'live' => [
             'label' => _MONITOR_TRAFFIC,

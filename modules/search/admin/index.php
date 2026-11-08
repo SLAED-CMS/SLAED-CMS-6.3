@@ -240,13 +240,13 @@ function getSearchsum(string $where, array $pars): string {
         $pars
     )) ?? ['', 0];
     $mlab = $mod ? getModuleName($mod) : _ALL;
-    return $tpl->getHtmlFrag('pane', ['title' => _SEARCH, 'icon' => 'search', 'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => [
+    return $tpl->getHtmlFrag('metric-list', ['items' => [
         ['label' => _SEARCHTOTAL, 'value' => filterDecimal(intval($hits), 0), 'icon' => 'search'],
         ['label' => _SEARCHUNIQUE, 'value' => filterDecimal(intval($uniq), 0), 'icon' => 'fingerprint'],
-        ['label' => _SEARCHLAST, 'value' => $last ? format_time((string)$last, _TIMESTRING) : _NO_INFO],
+        ['label' => _SEARCHLAST, 'value' => $last ? format_time((string)$last) : _NO_INFO, 'note' => $last ? format_time((string)$last, 'H:i:s') : ''],
         ['label' => _SEARCHTOP, 'value' => $word ?: _NO_INFO, 'note' => filterDecimal(intval($best), 0), 'icon' => 'trophy'],
         ['label' => _SEARCHTOPMOD, 'value' => $mlab ?: _NO_INFO, 'note' => filterDecimal(intval($mhit), 0), 'icon' => 'grid'],
-    ]])]);
+    ]]);
 }
 
 # The search log or, for the top, its words, counted by the same filter its rows are read by and drawn by the list canon

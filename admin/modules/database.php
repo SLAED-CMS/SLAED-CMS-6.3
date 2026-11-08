@@ -169,9 +169,10 @@ function database(string $run = ''): void {
         ]];
     }
     $tiles = $tpl->getHtmlFrag('metric-list', ['items' => [
+        ['label' => _DB_TABLES, 'value' => filterDecimal(count($rows), 0), 'icon' => 'table'],
         ['label' => _ROWS, 'value' => filterDecimal($allrows, 0), 'icon' => 'list-ol'],
-        ['label' => _TOTALSPACE, 'value' => filterSize($total), 'icon' => 'database'],
-        ['label' => _TOTALFREE, 'value' => filterSize($sumfree), 'icon' => 'recycle'],
+        ['label' => _DB_TOTAL, 'value' => filterSize($total), 'icon' => 'database'],
+        ['label' => _DBFREE, 'value' => filterSize($sumfree), 'icon' => 'recycle'],
     ]]);
     $note = match ($type) {
         'optimize' => $tpl->getHtmlFrag('alert', ['is_warn' => true,
@@ -183,8 +184,7 @@ function database(string $run = ''): void {
     setHead();
     echo getTplAdminList([
         'head_html' => $head,
-        'note_html' => $note,
-        'pane' => ['title' => ['' => _DATABASE, 'optimize' => _OPTIMIZE, 'repair' => _REPAIR][$type], 'icon' => 'database', 'meta' => $conf['db']['name'], 'tiles_html' => $tiles],
+        'note_html' => $note.$tiles,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TABLE],

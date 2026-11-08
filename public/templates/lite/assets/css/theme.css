@@ -777,6 +777,13 @@ a.sl-crumb:hover + .sl-crumb-sep {
   color: var(--sl-success);
 }
 
+/* Nothing picked in a column that already has its frame: the same face without a frame of its own, in the middle of the column */
+.sl-empty-pane {
+  justify-content: center;
+  border: 0;
+  background: none;
+}
+
 /* A list that never arrived says so and offers the way back to it */
 .sl-empty.sl-is-fail > .bi {
   color: var(--sl-danger);
@@ -1900,6 +1907,26 @@ button.sl-but-mini:hover,
   align-items: start;
   margin-bottom: var(--sl-space-4);
   width: 100%;
+}
+
+/* A read-only value row is a fact, as on a page of the panel: a rule between two rows, the caption muted, a short value weighed */
+.sl-value-row {
+  margin-bottom: 0;
+  padding: var(--sl-space-3) 0;
+}
+
+.sl-value-row + .sl-value-row {
+  border-top: 1px solid var(--sl-border-subtle);
+}
+
+.sl-value-label {
+  color: var(--sl-text-muted);
+}
+
+/* A text area of a field arrives as parser output, and its paragraphs keep the weight of a text */
+.sl-value-text:not(:has(> :is(p, ul, ol, pre, table, blockquote, div))) {
+  font-weight: var(--sl-weight-semibold);
+  color: var(--sl-text-strong);
 }
 
 /* A direct row draws its parent's tracks through subgrid, or keeps a quarter without it; the selector carries no weight */
@@ -11870,31 +11897,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-pmf-reply .toastui-editor-defaultUI { border-radius: var(--sl-radius-1); }
 
-/* Three different empty states share one shape: what is missing, and what the reader can do about it */
-.sl-pmf-blank {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: var(--sl-space-4);
+/* The reading column of the mailbox keeps its height and its measure for the empty state of nothing picked */
+.sl-duo-main .sl-empty-pane {
   min-height: var(--sl-pmf-pane-height);
-  padding: var(--sl-space-9);
-  text-align: center;
 }
 
-.sl-pmf-blank i {
-  color: var(--sl-text-subtle);
-  font-size: var(--sl-size-icon-xl);
-}
-
-.sl-pmf-blank b {
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-h4);
-}
-
-.sl-pmf-blank p {
+.sl-duo-main .sl-empty-pane > p {
   max-width: var(--sl-pmf-blank-width);
-  margin: 0;
-  color: var(--sl-text-muted);
 }
 
 /* Tablet: the list column gives up width the reading pane needs more than it does */

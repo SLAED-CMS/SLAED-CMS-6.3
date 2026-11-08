@@ -383,8 +383,8 @@ function setMonExt(el) {
 }
 
 /* The series of the live chart: key, name, unit, decimals, and the icon the live page gives it */
-const MON_SERIES = [['up', 'Исходящий', 'KB/s', 1, 'cloud-upload-fill'], ['down', 'Входящий', 'KB/s', 1, 'cloud-download-fill'],
-  ['cpu', 'CPU', '%', 0, 'cpu-fill'], ['ram', 'RAM', '%', 0, 'motherboard-fill']];
+const MON_SERIES = [['up', 'Исходящий', 'KB/s', 1, 'cloud-upload'], ['down', 'Входящий', 'KB/s', 1, 'cloud-download'],
+  ['cpu', 'CPU', '%', 0, 'cpu'], ['ram', 'RAM', '%', 0, 'motherboard']];
 
 /* The live chart: the theme's chart of the monitor (sl-chart-*), CPU and RAM in percent, the network on its own scale;
    over it a tile a series, the figure of now with the peak and the mean of the window, the dot of the series its key.

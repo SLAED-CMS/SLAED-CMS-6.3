@@ -1,11 +1,5 @@
 {% if is_blank %}
-<div class="sl-pmf-blank">
-  <i class="bi bi-{{ blank_icon }}" aria-hidden="true"></i>
-  <b>{{ blank_title }}</b>
-  {% if blank_text %}
-  <p>{{ blank_text }}</p>
-  {% endif %}
-</div>
+{% include 'fragments/empty.html' with blank %}
 {% else %}
 {% if is_reply or acts or is_wipe %}
 <div class="sl-pmf-acts">

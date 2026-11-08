@@ -419,8 +419,7 @@ function queue(): void {
     echo getTplAdminList([
         'head_html' => getCampTabs(2, getQueueSearch($kind, $stat)),
         'key' => 'newsletter-queue',
-        'note_html' => getQueueAlarm().$tpl->getHtmlFrag('pane', ['title' => _NLQUEUE, 'icon' => 'envelope-paper',
-            'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => $items])]),
+        'note_html' => getQueueAlarm().$tpl->getHtmlFrag('metric-list', ['items' => $items]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],

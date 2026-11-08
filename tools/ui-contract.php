@@ -702,6 +702,9 @@ return [
         '.sl-value-row' =>
             'both read-only rows put the caption left and the value right; the panel builds the pair out of a flex box whose caption carries the width, '
             .'the site out of two grid tracks. Both collapse to one track on a narrow screen, and the panel row did not until it was given a name of its own',
+        '.sl-value-label' =>
+            'both captions are muted; the panel caption carries the width and the top padding of its flex row, the site caption sits in a grid track '
+            .'that gives it both',
         '.sl-session-action' =>
             'the site gives the action its own vertical room inside the grid cell; in the panel the row already has it',
         '.sl-knob' =>
@@ -825,6 +828,9 @@ return [
             'the hint is a control in the panel and a modifier on the site, which the .sl-tip rules already answer for: the panel draws the glyph itself and gives '
             .'the whole thing a nav element, the site wraps the glyph in its own span so the hint can sit on whatever element carries it. The note under the panel '
             .'hint has no producer on the site',
+        'fragments/post-button.html' =>
+            'a post button of the panel weighs by its role - the next step, a check that changes nothing, a step that cannot be undone - as the buttons of an '
+            .'update and its rollback do; the site posts only the actions of an alert and of the dial, has no step of that weight and no red button to draw it',
         'fragments/select.html' =>
             'the panel select renders its options from an array as well as from ready markup, and names the context it sits in - config, search sort, search order, '
             .'save action; the site takes ready markup only and gives every select the one sl-field class. Two class maps and two option contracts, and no producer '

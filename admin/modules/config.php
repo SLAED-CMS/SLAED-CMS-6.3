@@ -708,8 +708,8 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $items = [['label' => _DIR, 'text' => 'storage/cache']];
-    foreach ($dirs as $dk => $dv) $items[] = ['label' => $dk, 'text' => filterDecimal($dv, 0)];
+    $items = [];
+    foreach ($dirs as $dk => $dv) $items[] = ['label' => ($dk === '.') ? 'storage/cache' : 'storage/cache/'.$dk, 'text' => filterDecimal($dv, 0)];
     if (empty($conf['scheduler']['jobs']['cachegc']['active'])) $items[] = ['label' => _SCHEDULER.' cachegc', 'text' => _SCHEDULER_OFF, 'is_flag' => true];
     $html = $tpl->getHtmlFrag('metric-list', ['items' => [
         ['label' => _FILE_M, 'value' => filterDecimal($cnt, 0), 'icon' => 'files'],

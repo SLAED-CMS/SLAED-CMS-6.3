@@ -1,4 +1,4 @@
-<div class="sl-empty{% if is_calm %} sl-empty-calm{% endif %}{% if is_small %} sl-empty-small{% endif %}">
+<div class="sl-empty{% if is_calm %} sl-empty-calm{% endif %}{% if is_small %} sl-empty-small{% endif %}{% if is_pane %} sl-empty-pane{% endif %}">
   <i class="bi bi-{% if icon_name %}{{ icon_name }}{% elseif is_calm %}check2-circle{% elseif is_found %}search{% else %}inbox{% endif %}" aria-hidden="true"></i>
   <b>{% if title_text %}{{ title_text }}{% elseif is_calm %}{{ _ADM_CLEAN }}{% elseif is_found %}{{ _NONE_FOUND }}{% else %}{{ _NO_INFO }}{% endif %}</b>
   {% if text %}

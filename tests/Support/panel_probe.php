@@ -24,6 +24,5 @@ echo json_encode([
     'meter_tiny' => getTplMeter('L', 1, 100000),
     'meter_tone' => getTplMeter('L', 8, 4, '', 'ok'),
     'meter_row' => getTplMeter('L', 1, 4, '', 'ok', '1 / 4', true),
-    'list_pane' => getTplAdminList($plist + ['pane' => ['title' => 'T<', 'icon' => 'database', 'meta' => 'M', 'tiles_html' => '<p id="tiles"></p>']]),
     'list_bare' => getTplAdminList($plist),
 ], JSON_UNESCAPED_UNICODE);

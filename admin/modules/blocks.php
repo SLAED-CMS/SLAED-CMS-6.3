@@ -344,14 +344,14 @@ function getBlockCodeForm(string $bf, string $flag, string $text, string $ver, s
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
     $dir = BASE_DIR.'/blocks';
     $path = BASE_DIR.'/blocks/'.$bf;
-    $cont .= checkPerms($dir).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$path]);
+    $cont .= checkPerms($dir);
     if (file_exists($path)) $cont .= checkPerms($path).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
     if ($note !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $note]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
     $rows = [[
         'label_html' => _FILENAME,
         'has_field_text' => true,
-        'field_text' => $bf,
+        'field_text' => 'blocks/'.$bf,
     ], [
         'label_html' => _CONTENT,
         'field_html' => Editor::getCode([
@@ -459,14 +459,8 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'status' => $active, 'refresh' => $refresh,
         'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which, 'param' => $param,
     ] = array_replace($row, $sent);
-    if ($url != '') {
-        $type = '('._BLOCKRSS.')';
-    } elseif ($bfile != '') {
-        $type = '('._BLOCKFILE.')';
-    } else {
-        $type = '('._BLOCKHTML.')';
-    }
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$title.' '.$type]);
+    $kind = ($url != '') ? _BLOCKRSS : (($bfile != '') ? _BLOCKFILE : _BLOCKHTML);
+    $cont .= $tpl->getHtmlFrag('kv-list', ['items' => [['label' => _BLOCK, 'text' => $title, 'chip' => $kind, 'tone' => 'neutral']]]);
     $rows = [[
         'label_for' => 'f-title',
         'label_html' => _TITLE, 'hint_html' => _ADDCONST, 'hint_id' => $hntid = getFieldIds('f-title')['hint'],

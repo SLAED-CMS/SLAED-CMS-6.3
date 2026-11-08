@@ -602,8 +602,7 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `count`, `page`, `pages` | the rows under the filter and the pages; the window is the general `pager.aspan` through `getPageSpan()` |
 | `limit` | the rows of this page from `getListLimit()`; a limit brings the rows chip on the general number `pager.arows` |
 | `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`logs-logins`, `newsletter-dead`) |
-| `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note above the table, a form under it that has to live inside `#sl-list` (the ban lists) |
-| `pane` | the window round the list: the keys of `pane-cap.html` and `tiles_html` above the table (the tables of "База данных") |
+| `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note or the tiles of a summary above the table (Panel Window), a form under it that has to live inside `#sl-list` (the ban lists) |
 | `is_fixed` | the fixed table layout |
 
 - **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; a select with `is_now` sends the
@@ -695,6 +694,76 @@ under the text to the right — the width of the alert decides, not that of the 
   did not come, and "Отменить" of the toast of the panel. The toast of the site is a pill with `sl-toast-undo`, not an
   alert.
 
+## Panel Window
+
+The window `fragments/pane.html` — a frame with the cap of `pane-cap.html`: an icon or the three lamps, the title in
+capitals, a value on the right — is an instrument among several on one screen, a board: "Мониторинг" and
+"Статистика". A page that shows one thing under its tabs draws no window: the head of the page already names it, so
+a cap would repeat the title the reader has just read.
+
+- **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
+  ("Очередь" of "Почта", "Поиск", "База данных") and above a form or a file into the page ("Карта сайта") with no
+  frame round them.
+- **A value of the cap moves into the content.** A value that says something goes into a row of `kv-list` (the
+  address of the sitemap); a value that repeats a row below it (the version of "Обновления") or that the reader
+  already knows (the name of the database) goes. A `note` only qualifies the figure above it (the hits of the top
+  query, the time of the last one); a figure of its own stands in a tile of its own with a label.
+- **Sections of one page are boxes.** Blocks of one task that appear one after another — the state, "Загрузить
+  архив", "Установка" of "Обновления" — are `partials/box.html` with `title`, a line of heading and no frame; the first
+  block, which the head of the page names, has no title.
+
+## Button Weight
+
+A button of the panel weighs by its role, in four colours and nowhere else:
+
+| Weight | Class | Role | Where |
+|---|---|---|---|
+| main | `sl-but-blue` | the one next step of a screen; the submit of a form by default | "Скачать", then "Установить" of "Обновления", "Проверить" there when nothing else waits; "Вперед" and "Установить" of `setup.php` |
+| check | `sl-but-green` | a check that changes nothing | "Проверить установку", "Проверить целостность", "Проверить парсинг" of a query, the test mail, "Проверить" of the database step of `setup.php` |
+| risk | `sl-but-red` | a step that cannot be undone | "Вернуть предыдущую версию" of "Обновления" and its rescue code, the discard of the layout screen |
+| plain | `sl-but` | everything else: an alternative path, a picker that opens, a routine step | "Загрузить архив", the icon picker, the edit of a field of the layout screen |
+
+- **One blue a screen.** A screen whose next step stands elsewhere — the form "Установка" under the state of
+  "Обновления" — keeps the other buttons out of blue; green is never the next step and never a success, which the
+  messages and the chips say.
+- **A module names the weight, never the class.** `getTplPostButton()` takes `$look` `'main'`, `'check'` or
+  `'risk'`; `post-button.html` turns the flags `is_main`, `is_check`, `is_risk` into the classes. A submit of
+  `button.html` takes `is_green`, `is_danger` or `is_plain`.
+- **The buttons of one row stand in a line.** A field of `div-row.html` holding post buttons lays them out in a
+  wrapping line with the main one first; the submit of a form stays centred in `sl-div-actions`.
+
+## Facts Of A Page
+
+What a page of the panel tells, not asks, is one of four kinds, and each kind has one face:
+
+| Kind | Face | Example |
+|---|---|---|
+| a fact, a name and a short value | a row of `kv-list` | the version and the channel of "Обновления", the files of a folder of the cache |
+| the state of a fact | a chip in the same row, `chip` with `tone` | "Не завершилась" of the last check, "Файлы целы" of the integrity |
+| what happened or needs a hand, with its reason | an alert under the list | the reason of a check that did not finish, a site not installed from an archive |
+| a figure of a summary | a tile of `metric-list` | the files and the size of the cache, the rows of the database |
+
+- **A value is a value, never a sentence.** The row holds the time, the number or the name; the state beside it is a
+  chip of two or three words (`tone` `success`, `warn`, `danger` or `neutral`, the classes `sl-chip-*` of the panel);
+  the sentence that explains it is an alert placed after the list, in the same box. A row without a chip says that
+  nothing needs saying.
+- **A fact is never an alert.** "Блок: <its title>" over a form and a path the page works on are rows of `kv-list`
+  or of the form; an alert keeps to the message — saved, refused, failed, needs a hand — and to the permanent note of
+  a page ("Перетащите значок…", the help of a dump), which stays a blue alert by the owner's decision.
+- **The list has no heading row.** A list of folders names each folder in full (`storage/cache/data`); a row that
+  only announces the rows below it does not stand among them.
+- **A page lines its facts up with its form.** On a page — a box, a tab, a form — `kv-list` takes the columns of the
+  rows of `div.html`: the label in the first half, the value from the start of the second, the same padding and rule,
+  so the facts and the fields under them read as one table. In a window of a board (`fragments/pane.html`, the
+  "Мониторинг") the list keeps its narrow form: the value to the right, a dashed rule, the small text.
+- **The site speaks the same way.** The theme `lite` draws a fact of a page — an extra field of a material, a post of
+  the forum, the preview — with `fragments/field-value.html`: the tracks of its form row, a rule between two rows,
+  the caption muted and a short value weighed, while the paragraphs of a text area keep the weight of a text. A card
+  of facts — the panels of the public profile, the extra fields among them — is the window: `sl-profile-info-row`
+  with its icon, the value to the right; a text area of the profile does not fit one line and stands under the cards
+  as `field-value` rows in a wide panel. The state of a fact is a chip there too (online, a past event), and the
+  meta strip under the title of a material (date, author, category, views) stays a strip of chips.
+
 ## Empty State
 
 A list, a search, a section, a mailbox or a block with nothing to show draws one face on the site and in the panel: the
@@ -708,6 +777,7 @@ stays an alert.
 | `is_found` | the place is empty under a search or a filter the reader set | — |
 | `is_calm` | the empty place is the good state of a queue (the panel only) | — |
 | `is_small` | the place is a block, a column or a tab, not a page | — |
+| `is_pane` | nothing is picked in a column that has a frame of its own: the same face without its frame, in the middle of the column | — |
 | `title_text` | a title with a meaning of its own (`_NODE_NOTYPES`, `_NOCOMMENTS`, `_UPLOADS_EMPTY`) | `_ADM_CLEAN` calm, `_NONE_FOUND` found, `_NO_INFO` else |
 | `text` | one line under the title | none |
 | `icon_name` | a Bootstrap Icons name | `check2-circle` calm, `search` found, `inbox` else |
@@ -722,9 +792,15 @@ stays an alert.
 - **The button is offered, never assumed.** "Добавить" stands only where the place has a form of a new entry and the
   reader may use it — a status other than the working one, the trash, a journal or a queue has none; on the site
   only a module with a public form of its own (a Node type under `checkNodeFlow()`).
+- **Nothing picked is the same face.** A column that shows what the reader picks — the letter of the mailbox
+  (`_PRPICK`), the properties of a file (`_ENOFILE`) — draws the fragment with `is_pane`, a title of its own and an
+  icon of what is to be picked; the column is the frame, so the fragment brings none.
 - **The panel list carries it itself.** `getTplAdminList()` draws the fragment in place of the rows from `none_text`,
-  `is_calm`, `reset_url` and `add_url` (table of the Admin List Contract). The file manager draws its error with the
-  same face and `sl-is-fail`, the red icon.
+  `is_calm`, `reset_url` and `add_url` (table of the Admin List Contract).
+- **The file manager is one series.** The page "Файлы" and the window of an editor draw the same three states — an
+  empty catalogue, an empty filter, a list that never arrived (`sl-is-fail`, the red icon) — with one set of words,
+  `_EDITOR_EMPTY`, `_NONE_FOUND`, `_EDITOR_FAIL` and their lines, and the button `sl-but` with its icon; the window
+  fills its slots from `filemanager.js`, the page from the fragment.
 - **Not an empty state.** "Нет информации" in a cell, a field or a figure of a card is the absence of a value and stays
   text; the live filter of a picker — icons, emoji, the palette of the editor, the menu of the panel, the palette of
   the layout screen — answers in its own line beside the field it filters, and the narrow panes of the layout screen
@@ -870,7 +946,7 @@ holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter(
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
 | A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon` or three lamps without it, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list enters a window by the key `pane` of `getTplAdminList()` and draws the same cap |
 | A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir`, `arrow`, `delta_tip`, `icon`, `is_good`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text |
-| Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good` |
+| Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good`; `chip` with `tone` after the text (section "Facts Of A Page") |
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
 | A meter | `meter.html`, `.sl-meter`, drawn by `getTplMeter()` | a share of a real limit with the role `meter` and `--sl-d-part`; `is_row` is the form inside a table row |
 | The extensions | `ext.html`, `.sl-ext` | `groups`: `label`, `have_text`, `is_short`, `chips` (`name`, `is_ok`, `is_lost`, `is_off`, `state_text`), `notes` |
@@ -1053,7 +1129,7 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
 | `is_far`, `is_near` | `pager-link` | a number more than one away from the current page, or its neighbour; never the first or the last. The fragment prints `sl-pager-far` and `sl-pager-near` |
 | `is_nav`, `rel`, `icon_name`, `key_name` | `pager-link` | an arrow: `rel="prev"` or `rel="next"`, its chevron, and `aria-keyshortcuts` with `ArrowLeft` or `ArrowRight` |
 | `is_dots` | `pager-link` | the muted cell `&hellip;` |
-| `page_label`, `page_of`, `overall`, `count` | `pager` | "Страница 3 из 10" and "Всего 97" |
+| `page_label`, `page_of`, `overall`, `count` | `pager` | "3 из 10" and "Всего 97"; the word "Страница" of `page_label` is printed for screen readers only, so the page line fits the row of its pager |
 | `range_from`, `range_to`, `range_text` | `pager` | "Показаны 21–30", only when the caller names `limit` and `count` |
 
 - **The rail is the segmented switch.** The numbers are the `sl-seg-run` of `sl-seg sl-seg-pager` with

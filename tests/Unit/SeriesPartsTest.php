@@ -154,9 +154,10 @@ final class SeriesPartsTest extends TestCase
             ['label' => 'Mute', 'text' => 'none', 'is_mute' => true],
             ['label' => 'Good', 'text' => 'fine', 'is_good' => true],
             ['label' => 'Long', 'text' => '<script>x</script>', 'is_long' => true, 'tip_label' => 'Open<'],
+            ['label' => 'State', 'text' => '01.01.2026', 'chip' => 'Failed<', 'tone' => 'danger'],
         ]]);
         $rows = $doc->querySelectorAll('dl.sl-kv-list > .sl-kv');
-        $this->assertCount(7, $rows);
+        $this->assertCount(8, $rows);
         $this->assertSame('L<', $rows[0]->querySelector('dt')->textContent);
         $this->assertSame('plain<', $rows[0]->querySelector('dd')->textContent);
         $this->assertNotNull($rows[1]->querySelector('.bi-database'));
@@ -170,6 +171,9 @@ final class SeriesPartsTest extends TestCase
         $this->assertSame('<script>x</script>', $rows[6]->querySelector('.sl-long-text')->textContent);
         $this->assertSame('<script>x</script>', $rows[6]->querySelector('.sl-tip > .sl-float-panel')->textContent);
         $this->assertSame('Open<', $rows[6]->querySelector('.sl-tip > button')->getAttribute('aria-label'));
+        $this->assertSame('01.01.2026Failed<', $rows[7]->querySelector('dd')->textContent);
+        $this->assertSame('Failed<', $rows[7]->querySelector('dd > .sl-chip.sl-chip-danger')->textContent);
+        $this->assertNull($rows[0]->querySelector('.sl-chip'));
     }
 
     #[Test]

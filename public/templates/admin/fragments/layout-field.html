@@ -14,5 +14,5 @@
 {% if kind_find %}
 {{{ select_html }}}<span class="sl-lay-own"><input type="search" name="find" value="" placeholder="{{ find_text }}" aria-label="{{ find_text }}" autocomplete="off" hx-get="{{ find_url }}" hx-include="#{{ select_id }}" hx-target="#{{ select_id }}" hx-swap="innerHTML" hx-push-url="false" hx-trigger="input changed delay:400ms, search" data-sl-lay-seek></span>
 {% endif %}
-{% if kind_edit %} <button type="button" class="sl-but-green" data-sl-lay-edit="{{ edit_key }}" data-sl-lay-num="{{ edit_num }}" aria-haspopup="dialog"><i class="bi bi-{{ edit_icon }}" aria-hidden="true"></i>{{ edit_text }}</button>{% endif %}
+{% if kind_edit %} <button type="button" class="sl-but" data-sl-lay-edit="{{ edit_key }}" data-sl-lay-num="{{ edit_num }}" aria-haspopup="dialog"><i class="bi bi-{{ edit_icon }}" aria-hidden="true"></i>{{ edit_text }}</button>{% endif %}
 {% if kind_back %} <button type="button" class="sl-but-mini sl-is-muted sl-lay-live" data-sl-lay-act="field-back" data-sl-lay-arg="{{ back_arg }}"{% if is_same %} hidden{% endif %} title="{{ back_text }}" aria-label="{{ back_text }}: {{ label }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>{% endif %}

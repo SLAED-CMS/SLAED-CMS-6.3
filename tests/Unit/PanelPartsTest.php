@@ -106,16 +106,11 @@ final class PanelPartsTest extends TestCase
     }
 
     #[Test]
-    public function aListStandsInsideItsWindowUnderItsTiles(): void
+    public function aListDrawsNoWindowAndItsSummaryStandsAboveTheTable(): void
     {
-        $doc = self::getDoc(self::$data['list_pane']);
-        $this->assertSame('T<', $doc->querySelector('#sl-list > section.sl-pane h2.sl-pane-title')->textContent);
-        $this->assertNotNull($doc->querySelector('#head + #note + section.sl-pane > .sl-pane-cap > i.bi-database'));
-        $this->assertSame('M', $doc->querySelector('.sl-pane-meta')->textContent);
-        $this->assertNotNull($doc->querySelector('.sl-pane > .sl-pane-body > #tiles + .sl-table-shell table'));
-        $bare = self::getDoc(self::$data['list_bare']);
-        $this->assertNull($bare->querySelector('.sl-pane'));
-        $this->assertNotNull($bare->querySelector('#sl-list > .sl-table-shell table'));
+        $doc = self::getDoc(self::$data['list_bare']);
+        $this->assertNull($doc->querySelector('.sl-pane'), 'A window belongs to a board, never round a list (docs/TEMPLATES.md, Panel Window)');
+        $this->assertNotNull($doc->querySelector('#sl-list > #head + #note + .sl-table-shell table'));
     }
 
     #[Test]

@@ -1,12 +1,6 @@
 <div id="sl-list" hx-target="this" hx-swap="outerHTML show:none" hx-history-elt hx-history="false" hx-headers='{"X-SL-Part": "1"}' data-sl-list>
   {{{ head_html }}}
   {{{ note_html }}}
-  {% if pane %}
-  <section class="sl-pane">
-    {% include 'fragments/pane-cap.html' with pane %}
-    <div class="sl-pane-body">
-      {{{ pane.tiles_html }}}
-  {% endif %}
       <div class="sl-box sl-table-shell" data-sl-list-said="{{ said }}">
         {% if is_sweep %}
         <div class="sl-alert sl-alert-info sl-list-note" data-sl-allpages data-sl-allpages-num="{{ count }}" data-sl-allpages-upto="{{ bulk.upto }}" hidden>
@@ -70,9 +64,5 @@
         {% include 'fragments/empty.html' with none %}
         {% endif %}
       </div>
-  {% if pane %}
-    </div>
-  </section>
-  {% endif %}
   {{{ foot_html }}}
 </div>

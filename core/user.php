@@ -1108,9 +1108,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
     return $tpl->getHtmlPart('privat-view', [
         'token' => $tok,
         'is_blank' => true,
-        'blank_icon' => 'envelope-open',
-        'blank_title' => (string)_PRPICK,
-        'blank_text' => (string)_PRPICKT,
+        'blank' => ['is_pane' => true, 'icon_name' => 'envelope-open', 'title_text' => _PRPICK, 'text' => _PRPICKT],
     ]);
 }
 

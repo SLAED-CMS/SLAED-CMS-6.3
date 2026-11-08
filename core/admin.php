@@ -1211,7 +1211,8 @@ function getAdminFileProps(string $path): string {
     global $afile, $tpl;
     $man = getAdminFileManager();
     $one = ($path === '') ? [] : $man->getFileData($path);
-    if ($one === []) return $tpl->getHtmlFrag('file-browser-props', ['cap_text' => _UPLOADS_PROPS, 'hint_text' => _NO_INFO]);
+    if ($one === []) return $tpl->getHtmlFrag('file-browser-props', ['cap_text' => _UPLOADS_PROPS,
+        'empty' => ['is_pane' => true, 'is_small' => true, 'icon_name' => 'file-earmark', 'title_text' => _ENOFILE]]);
     [$icon, $tone] = getAdminFileIcon($one['kind']);
     $body = empty($one['editable']) ? [] : $man->getFileBody($one['path']);
     $rows = [
@@ -1475,10 +1476,10 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'props_html' => getAdminFileProps($pick),
         'edit_html' => ($pick === '') ? '' : getAdminFileEditor($edit),
         'list_html' => $tpl->getHtmlPart('file-browser-list', [
-            'empty' => ($rows !== '') ? [] : (($find === '' && !$lone) ? ['icon_name' => 'folder', 'title_text' => _UPLOADS_EMPTY, 'text' => _UPLOADS_EMPTYTXT]
-                : ['is_found' => true, 'text' => _UPLOADS_NOFINDTXT, 'act_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir]), 'act_target' => '#slfmbody']),
-            'fail_title' => _UPLOADS_FAIL,
-            'fail_text' => _UPLOADS_FAILTXT,
+            'empty' => ($rows !== '') ? [] : (($find === '' && !$lone) ? ['icon_name' => 'folder', 'title_text' => _EDITOR_EMPTY, 'text' => _EDITOR_EMPTYWHY]
+                : ['is_found' => true, 'text' => _EDITOR_NONEWHY, 'act_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir]), 'act_target' => '#slfmbody']),
+            'fail_title' => _EDITOR_FAIL,
+            'fail_text' => _EDITOR_FAILWHY,
             'retry_text' => _RETRY,
             'can_mark' => $mark,
             'mark_all_text' => _UPLOADS_MARKALL,

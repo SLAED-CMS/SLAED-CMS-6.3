@@ -856,7 +856,7 @@ button[type="submit"].sl-but-back {
   box-shadow: var(--sl-solid-shadow);
 }
 
-/* Reserved: danger-action button variant (delete, reset, uninstall); no permanent emitter yet by design */
+/* A button weighs by its role: blue the one next step of a screen, green a check that changes nothing, red the step that cannot be undone, grey the rest */
 .sl-but-red {
   color: var(--sl-solid-text);
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
@@ -3646,7 +3646,12 @@ dialog.sl-editor-emoji-panel {
   padding: 0;
 }
 
-/* The page line stands in the row of its pager, centred between the side group of the pager and what closes the row */
+/* The page line stands in the row of its pager, centred between the side group of the pager and what closes the row;
+   when it drops under the row, the steps centre too, so both lines share one axis */
+:is(.sl-list-head, .sl-list-bottom) .sl-pager {
+  justify-content: center;
+}
+
 :is(.sl-list-head, .sl-list-bottom) .sl-pager-info {
   margin-inline: auto;
 }
@@ -3712,6 +3717,13 @@ dialog.sl-editor-emoji-panel {
 .sl-empty-calm > .bi,
 .sl-empty-calm > b {
   color: var(--sl-success-strong);
+}
+
+/* Nothing picked in a column that already has its frame: the same face without a frame of its own, in the middle of the column */
+.sl-empty-pane {
+  justify-content: center;
+  border: 0;
+  background: none;
 }
 
 /* A list that never arrived says so and offers the way back to it */
@@ -4823,7 +4835,7 @@ dialog.sl-editor-emoji-panel {
   min-width: 0;
 }
 
-.sl-icon-picker .sl-but-green {
+.sl-icon-picker .sl-but {
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
@@ -7802,10 +7814,22 @@ button.sl-but-mini {
   width: var(--sl-form-label-width);
   flex-shrink: 0;
   padding-top: var(--sl-space-3);
+  color: var(--sl-text-muted);
 }
 
 .sl-value-text {
   padding-top: var(--sl-space-3);
+}
+
+/* A read-only value row is a fact, as on the site: a rule between two rows, the caption muted, a short value weighed */
+.sl-value-row + .sl-value-row {
+  border-top: 1px solid var(--sl-border);
+}
+
+/* A text area of a field arrives as parser output, and its paragraphs keep the weight of a text */
+.sl-value-text:not(:has(> :is(p, ul, ol, pre, table, blockquote, div))) {
+  font-weight: var(--sl-weight-semibold);
+  color: var(--sl-text-strong);
 }
 
 /* A fixed caption column survived down to a phone, because this row folded at no width at all */
@@ -11054,7 +11078,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   padding: var(--sl-space-5);
 }
 
-.sl-fm-hint,
 .sl-series-none {
   margin: 0;
   font-size: var(--sl-font-small);
@@ -11619,7 +11642,8 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-metric-delta-flat,
 .sl-metric-delta-none { color: var(--sl-text-muted); }
 
-/* The file door of a form row carries none of the window's component names, which the administrative browser owns (docs/WINDOW.md) */
+/* A line of controls in a form row: the post buttons of one field, main first, and the file door, free of the names of the window (docs/WINDOW.md) */
+.sl-div-field:has(> .sl-post-button),
 .sl-file-door {
   display: flex;
   flex-wrap: wrap;
@@ -12844,7 +12868,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--sl-metric-min-width), 1fr));
   gap: var(--sl-space-5);
-  margin-bottom: var(--sl-space-6);
 }
 
 .sl-metric {
@@ -12904,7 +12927,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   grid-column: 2;
   grid-row: 1 / span 3;
   align-self: center;
-  font-size: var(--sl-size-icon-xl);
+  font-size: var(--sl-size-icon-lg);
   line-height: 1;
   color: var(--sl-primary);
 }
@@ -12925,7 +12948,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-chart-ram);
 }
 
-/* Series list name and value: a dashed rule between the rows, and the rows of a window share out what its row has left, so no window keeps an empty foot */
+/* Series list name and value: on a page the rows take the columns, padding and rule of the rows of div.html, so facts and fields read as one table */
 .sl-kv-list {
   display: flex;
   flex: 1 1 auto;
@@ -12937,24 +12960,46 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   position: relative;
   display: grid;
   flex: 1;
-  grid-template-columns: var(--sl-monitor-table-width) minmax(0, 1fr);
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: var(--sl-space-5);
-  padding: var(--sl-space-3) 0;
-  border-bottom: 1px dashed var(--sl-border);
-  font-size: var(--sl-font-small);
+  gap: var(--sl-space-6);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border-bottom: 1px solid var(--sl-border);
 }
 
-.sl-kv:last-child {
+/* The rule under the last fact parts the list from the form or the notes that follow it; a list that ends its block, or a window, draws none */
+.sl-kv-list:last-child > .sl-kv:last-child,
+.sl-pane .sl-kv:last-child {
   border-bottom: 0;
 }
 
 .sl-kv > dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3);
   min-width: 0;
-  text-align: right;
   font-weight: var(--sl-weight-semibold);
   font-variant-numeric: tabular-nums;
   color: var(--sl-text);
+}
+
+/* A window of a board keeps the narrow list: the value to the right, a dashed rule, and the rows share out what the window has left, so none keeps an empty foot */
+.sl-pane .sl-kv {
+  grid-template-columns: var(--sl-monitor-table-width) minmax(0, 1fr);
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-3) 0;
+  border-bottom-style: dashed;
+  font-size: var(--sl-font-small);
+}
+
+.sl-pane .sl-kv > dd {
+  display: block;
+  text-align: right;
+}
+
+.sl-pane .sl-kv > dt {
+  color: var(--sl-text-muted);
 }
 
 .sl-kv-soft > dt {
@@ -12972,7 +13017,10 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-primary);
 }
 
-.sl-kv > dt,
+.sl-kv > dt {
+  font-weight: var(--sl-weight-normal);
+}
+
 .sl-kv-flag,
 .sl-kv-mute {
   font-weight: var(--sl-weight-normal);
@@ -13006,7 +13054,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   min-width: 0;
 }
 
-.sl-kv .sl-long,
+.sl-pane .sl-kv .sl-long,
 .sl-fm-props .sl-long {
   justify-content: flex-end;
 }

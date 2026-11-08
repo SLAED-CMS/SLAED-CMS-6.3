@@ -866,7 +866,8 @@
             getSlot(id, 'emptytitle').textContent = row[1];
             getSlot(id, 'emptytext').textContent = row[2];
             box = getSlot(id, 'emptyact');
-            box.textContent = row[3];
+            getSlot(id, 'emptyacticon').className = 'bi bi-' + ((name === 'fail') ? 'arrow-repeat' : 'arrow-counterclockwise');
+            getSlot(id, 'emptyacttext').textContent = row[3];
             box.hidden = row[3] === '';
             box.setAttribute('data-sl-act', (name === 'fail') ? 'retry' : 'reset');
             getSlot(id, 'emptybox').classList.toggle('sl-is-fail', name === 'fail');

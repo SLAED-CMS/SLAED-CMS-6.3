@@ -81,9 +81,9 @@
       <button type="submit" name="go" value="back" class="sl-but-back" formnovalidate><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ back_text }}</button>
       {% endif %}
       {% if probe_text %}
-      <button type="submit" name="go" value="probe" class="sl-but sl-setup-probe"><i class="bi bi-plug" aria-hidden="true"></i> {{ probe_text }}</button>
+      <button type="submit" name="go" value="probe" class="sl-but-green sl-setup-probe"><i class="bi bi-plug" aria-hidden="true"></i> {{ probe_text }}</button>
       {% endif %}
-      <button type="submit" name="go" value="next" class="{% if is_install %}sl-but-green{% else %}sl-but-blue{% endif %} sl-setup-next"><i class="bi {% if is_install %}bi-download{% else %}bi-arrow-right{% endif %}" aria-hidden="true"></i> {{ next_text }}</button>
+      <button type="submit" name="go" value="next" class="sl-but-blue sl-setup-next"><i class="bi {% if is_install %}bi-download{% else %}bi-arrow-right{% endif %}" aria-hidden="true"></i> {{ next_text }}</button>
     </div>
     {% endif %}
   </div>

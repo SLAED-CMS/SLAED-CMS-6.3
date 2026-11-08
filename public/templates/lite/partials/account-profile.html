@@ -78,10 +78,8 @@
       {% endif %}
     </div>
     {% endif %}
-    {% if has_field %}
-    <div class="sl-profile-panel sl-profile-wide">
-      {{{ field }}}
-    </div>
+    {% if field_html %}
+    <div class="sl-profile-panel sl-profile-wide">{{{ field_html }}}</div>
     {% endif %}
     {% if has_warn_list %}
     <div class="sl-profile-panel sl-profile-wide sl-is-warn">

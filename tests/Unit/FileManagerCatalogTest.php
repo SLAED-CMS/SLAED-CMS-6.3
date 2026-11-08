@@ -462,7 +462,7 @@ final class FileManagerCatalogTest extends TestCase
             $this->assertStringContainsString($hook, $code, 'Nothing listens for '.$hook.', so the browser cannot tell a list on its way from one that never arrived');
         }
         $shell = $this->getBody('core/admin.php', 'getAdminFileShell');
-        foreach (['_UPLOADS_FAIL', '_UPLOADS_FAILTXT', '_RETRY', '_UPLOADS_EMPTY', '_UPLOADS_NOFINDTXT'] as $word) {
+        foreach (['_EDITOR_FAIL', '_EDITOR_FAILWHY', '_RETRY', '_EDITOR_EMPTY', '_EDITOR_NONEWHY'] as $word) {
             $this->assertStringContainsString($word, $shell, 'The state of the list is drawn without '.$word.', so one of them speaks with the words of another');
         }
     }
