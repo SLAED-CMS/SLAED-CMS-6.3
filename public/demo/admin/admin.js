@@ -453,11 +453,9 @@
     }
     if (!quiet) {
       table.setAttribute('aria-busy', 'true');
-      doc.querySelectorAll('[data-sl-busy]').forEach((n) => { n.hidden = false; });
       clearTimeout(setList.busy);
       setList.busy = setTimeout(() => {
         table.setAttribute('aria-busy', 'false');
-        doc.querySelectorAll('[data-sl-busy]').forEach((n) => { n.hidden = true; });
       }, 320);
     }
     const base = getInView();

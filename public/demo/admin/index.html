@@ -252,7 +252,6 @@
             </div>
             <div class="sl-alert sl-alert-info sl-list-note" data-sl-allpages hidden data-mark="Э26"><div class="sl-alert-body"><span data-sl-allpages-text></span> <button type="button" class="sl-linkbtn" data-sl-allpages-go>Отметить все 8 414 комментариев</button><button type="button" class="sl-linkbtn" data-sl-allpages-off hidden>Снять отметку</button></div></div>
             <div class="sl-alert sl-alert-error sl-list-note" data-sl-error role="alert" tabindex="-1" hidden data-mark="Э28 Д6"><div class="sl-alert-body">Не удалось загрузить список: сервер не ответил. Отметки и фильтры сохранены. <button type="button" class="sl-but" data-sl-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Повторить</button></div></div>
-            <div class="sl-loading sl-list-busy" data-sl-busy hidden aria-hidden="true"></div>
             <table class="sl-table-list-sort sl-table-fixed sl-list" data-sl-table-sort data-sl-list data-density="standard">
               <caption class="sl-sr">Комментарии сайта</caption>
               <thead data-mark="Э19 В02.5">
@@ -591,7 +590,7 @@
         <li data-code="Э25">Счётчик «Отмечено: N» держит одну ширину и не сдвигает строку страниц, он же служит видимой подписью действия: слово «Действие» есть только для экранного чтеца («Действие с отмеченными»); «OK» недоступна, пока ничего не отмечено; в действиях добавлено «Активировать».</li>
         <li data-code="Э26" data-show="allpages">«Отметить все 8 414 комментариев» — предлагается после отметки всей страницы.</li>
         <li data-code="Э27">Клавиши: J и K — строки, X — отметить, E — править, / — поиск; все клавиши списка — в подсказке «i» пейджера, кнопка выделена тусклым системным зелёным, при наведении — ярким; у нижнего пейджера кнопка «Наверх», у верхнего — «Вниз» к концу списка, обе тусклым синим цветом пейджера, при наведении — ярким; где страниц нет («Ждут проверки», фильтр, поиск), клавиши работают и «i» остаётся слева над и под списком.</li>
-        <li data-code="Э28" data-show="fail">Загрузка списка — индикатор темы (sl-loading); сбой — сообщение с «Повторить», отметки и фильтры сохраняются (в палитре — «Смоделировать сбой сети»).</li>
+        <li data-code="Э28" data-show="fail">Загрузка списка — строки тускнеют, читалка слышит aria-busy; сбой — сообщение с «Повторить», отметки и фильтры сохраняются (в палитре — «Смоделировать сбой сети»).</li>
         <li data-code="Э29">Удалённая строка передаёт фокус следующей, а не началу страницы.</li>
         <li data-code="Э32" data-show="phone">Телефон: строка таблицы — карточка с подписями колонок; при отметке действие встаёт к нижнему краю экрана.</li>
       </ul>

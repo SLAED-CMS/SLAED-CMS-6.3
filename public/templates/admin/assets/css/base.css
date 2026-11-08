@@ -282,7 +282,6 @@
 
   /* Components: the animation durations of one element; the modal opens and closes on a transition step instead */
   --sl-dial-dur: calc(0.05s * var(--sl-time-scale));
-  --sl-loading-dur: calc(0.8s * var(--sl-time-scale));
   --sl-row-dur: calc(0.9s * var(--sl-time-scale));
   --sl-led-dur: calc(2s * var(--sl-time-scale));
   --sl-alert-dur: calc(1.8s * var(--sl-time-scale));
@@ -470,11 +469,6 @@
   --sl-led-border: 2px;
   --sl-led-ring: 6px;
   --sl-led-shadow: 0 0 0 var(--sl-led-ring) transparent;
-  --sl-loading-width: 73px;
-  --sl-loading-height: 17px;
-  --sl-loading-dot-width: 6px;
-  --sl-loading-dot-height: 6px;
-  --sl-loading-dot-gap: 12px;
   --sl-donut-width: 76px;
   --sl-donut-height: 76px;
   /* The thickness of the session ring, which is the donut less its hole, halved */

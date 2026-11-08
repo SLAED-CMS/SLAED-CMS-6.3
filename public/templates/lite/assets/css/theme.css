@@ -3158,51 +3158,6 @@ pre code.hljs {
   }
 }
 
-.sl-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  width: var(--sl-loading-width);
-  height: var(--sl-loading-height);
-  margin-left: auto;
-  margin-right: auto;
-  background: none;
-  font-size: 0;
-}
-
-.sl-loading::before {
-  width: var(--sl-loading-dot-width);
-  height: var(--sl-loading-dot-height);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-primary-strong);
-  box-shadow:
-    var(--sl-loading-dot-gap) 0 0 var(--sl-primary),
-    calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-primary);
-  content: "";
-  animation: sl-loading-dots var(--sl-loading-dur) infinite linear;
-}
-
-@keyframes sl-loading-dots {
-  0% {
-    box-shadow:
-      var(--sl-loading-dot-gap) 0 0 var(--sl-primary),
-      calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-primary);
-  }
-
-  33% {
-    box-shadow:
-      var(--sl-loading-dot-gap) 0 0 var(--sl-primary-strong),
-      calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-primary);
-  }
-
-  66% {
-    box-shadow:
-      var(--sl-loading-dot-gap) 0 0 var(--sl-primary),
-      calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-primary-strong);
-  }
-}
-
 /* Editor shell: one frame for Plain and CodeMirror; the card rail follows the state the runtime writes on the frame */
 .sl-editor {
   display: flex;
@@ -5124,29 +5079,9 @@ dialog.sl-editor-emoji-panel {
   opacity: var(--sl-fade-muted);
 }
 
-/* Buttons: htmx loading state with blocked repeat clicks */
-.sl-but.htmx-request,
-.sl-but.htmx-request:hover {
-  position: relative;
-  color: transparent;
-  text-shadow: none;
+/* Buttons: one whose htmx request is on its way takes no repeat click */
+.sl-but.htmx-request {
   pointer-events: none;
-}
-
-.sl-but.htmx-request::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--sl-loading-dot-width);
-  height: var(--sl-loading-dot-height);
-  margin: calc(var(--sl-space-2) * -1) 0 0 calc(var(--sl-space-6) * -1);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-primary-strong);
-  box-shadow:
-    var(--sl-loading-dot-gap) 0 0 var(--sl-primary),
-    calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-primary);
-  animation: sl-loading-dots var(--sl-loading-dur) infinite linear;
 }
 
 /* Blocks: positioning anchors for corner tool clusters */
@@ -13077,14 +13012,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-danger);
 }
 
-/* An action goes at its own pace: while the server has not answered, the object is busy and says so, and nothing on the list disappears before the answer */
+/* An action goes at its own pace: while the server has not answered, the object is dimmed under a cover, and nothing on the list disappears before the answer */
 .sl-fm-win .sl-fm-busy {
-  align-items: center;
   background: var(--sl-fm-busy-bg);
   border-radius: var(--sl-radius-2);
-  display: flex;
   inset: 0;
-  justify-content: center;
   position: absolute;
   z-index: var(--sl-z-overlay);
 }

@@ -1001,52 +1001,6 @@ button[type="submit"].sl-but-back {
   background-color: var(--sl-warning-subtle);
 }
 
-/* Loading: the lit dot takes the strong step and the waiting ones the base tone, the shape lite carries in its colour */
-.sl-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  width: var(--sl-loading-width);
-  height: var(--sl-loading-height);
-  margin-left: auto;
-  margin-right: auto;
-  background: none;
-  font-size: 0;
-}
-
-.sl-loading::before {
-  width: var(--sl-loading-dot-width);
-  height: var(--sl-loading-dot-height);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-success-strong);
-  box-shadow:
-    var(--sl-loading-dot-gap) 0 0 var(--sl-success),
-    calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-success);
-  content: "";
-  animation: sl-loading-dots var(--sl-loading-dur) infinite linear;
-}
-
-@keyframes sl-loading-dots {
-  0% {
-    box-shadow:
-      var(--sl-loading-dot-gap) 0 0 var(--sl-success),
-      calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-success);
-  }
-
-  33% {
-    box-shadow:
-      var(--sl-loading-dot-gap) 0 0 var(--sl-success-strong),
-      calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-success);
-  }
-
-  66% {
-    box-shadow:
-      var(--sl-loading-dot-gap) 0 0 var(--sl-success),
-      calc(var(--sl-loading-dot-gap) * 2) 0 0 var(--sl-success-strong);
-  }
-}
-
 /* Status icons: active and inactive states */
 .sl-status-active,
 .sl-status-inactive {
@@ -3749,18 +3703,7 @@ dialog.sl-editor-emoji-panel {
   grid-area: 1 / 1;
 }
 
-/* A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
-.sl-table-shell:has(> .sl-list-busy) {
-  position: relative;
-}
-
-.sl-list-busy {
-  position: absolute;
-  inset: 0;
-  z-index: var(--sl-z-raised);
-  margin: auto;
-}
-
+/* A request on its way: the rows dim and the reader hears aria-busy */
 [data-sl-list][aria-busy="true"] .sl-table-shell tbody {
   opacity: var(--sl-fade-muted);
 }
@@ -12594,14 +12537,11 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-danger);
 }
 
-/* An action goes at its own pace: while the server has not answered, the object is busy and says so, and nothing on the list disappears before the answer */
+/* An action goes at its own pace: while the server has not answered, the object is dimmed under a cover, and nothing on the list disappears before the answer */
 .sl-fm-win .sl-fm-busy {
-  align-items: center;
   background: var(--sl-fm-busy-bg);
   border-radius: var(--sl-radius-2);
-  display: flex;
   inset: 0;
-  justify-content: center;
   position: absolute;
   z-index: var(--sl-z-overlay);
 }

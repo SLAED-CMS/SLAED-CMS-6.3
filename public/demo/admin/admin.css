@@ -1217,18 +1217,7 @@
   color: var(--sl-success-strong);
 }
 
-/* Э28 A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
-.sl-table-shell {
-  position: relative;
-}
-
-.sl-list-busy {
-  position: absolute;
-  inset: 0;
-  z-index: var(--sl-z-raised);
-  margin: auto;
-}
-
+/* Э28 A request on its way: the rows dim and the reader hears aria-busy */
 .sl-list[aria-busy="true"] tbody {
   opacity: var(--sl-fade-muted);
 }

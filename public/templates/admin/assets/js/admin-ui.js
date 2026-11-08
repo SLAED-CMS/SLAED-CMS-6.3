@@ -2544,10 +2544,9 @@
         var elt = event.detail ? event.detail.elt : null;
         return elt && elt.closest ? elt.closest('[data-sl-list]') : null;
     }
-    // Э28 While a list loads its rows dim under the loading mark of the theme and the reader hears aria-busy
+    // Э28 While a list loads its rows dim and the reader hears aria-busy
     function setListBusy(box, busy) {
         box.setAttribute('aria-busy', busy ? 'true' : 'false');
-        box.querySelector('[data-sl-list-busy]').hidden = !busy;
     }
     // Э15 A filter field that acts at once sends its form: htmx carries it inside a live list, the browser elsewhere
     document.addEventListener('change', function (event) {

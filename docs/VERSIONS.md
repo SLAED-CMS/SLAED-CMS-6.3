@@ -1,5 +1,17 @@
 # Versions
 
+## 2026-11-08
+
+### No loader of three dots is left in either theme
+
+- **A list of the panel** that loads dims its rows and says `aria-busy`, with no mark over the table; the tabs,
+  filters and pages of a canon list wait the same way.
+- **A file** of the file manager under an action is covered by its dimmed `.sl-fm-busy` alone.
+- **A button of the site** whose htmx request is on its way keeps its label and takes no repeat click.
+- **Breaking:** the class `.sl-loading`, the keyframes `sl-loading-dots` and the tokens `--sl-loading-dur`,
+  `--sl-loading-width`, `--sl-loading-height`, `--sl-loading-dot-width`, `--sl-loading-dot-height` and
+  `--sl-loading-dot-gap` of `admin` and `lite` are gone; a theme of its own that overrides them is no longer read.
+
 ## 2026-11-07
 
 ### Rows per page and page numbers come from one place: the general settings, with an own number of a module where it needs one

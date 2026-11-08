@@ -15,6 +15,7 @@ return [
     # A second was decided on 2026-10-11: the five --sl-pnum-* names and the panel's --sl-card-shadow lost their one reader, the drawn arrow of the old panel pager
     # A third was decided on 2026-10-09 with the ranks plan: the site's --sl-rank-height lost its one reader, the rank picture of the profile, when ranks became icons
     # A fourth was decided on 2026-11-04: the panel's six --sl-drift-* names left with the four-dot loader of the live chart, gone 0.2 s into a load
+    # A fifth was decided on 2026-11-08: the six --sl-loading-* names of both themes left with the three-dot loader of a list, a file and a site button
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -213,15 +214,15 @@ return [
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
-        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut', 'drift', 'drift-dot',
+        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut',
         'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'empty', 'entry', 'f-title', 'fav', 'feedback',
         'field', 'figure', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'form-side', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
         'fresh-now', 'fresh-week', 'gauge', 'graph', 'ground', 'group', 'guard', 'header', 'hub-head', 'hub-row',
-        'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot', 'loading',
-        'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
+        'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot',
+        'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'metric', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'pane', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
         'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day',

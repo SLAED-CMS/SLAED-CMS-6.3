@@ -273,7 +273,6 @@
   --sl-fresh-days-dur: calc(1.9s * var(--sl-time-scale));
   --sl-fresh-week-dur: calc(4s * var(--sl-time-scale));
   --sl-fresh-month-dur: calc(2.6s * var(--sl-time-scale));
-  --sl-loading-dur: calc(0.8s * var(--sl-time-scale));
   --sl-marquee-dur: calc(5s * var(--sl-time-scale));
   /* A marquee moves in discrete steps, one per character of the line it carries, so its curve is a step function */
   --sl-marquee-ease: steps(50);
@@ -430,12 +429,6 @@
   --sl-live-dot-border: 2px;
   --sl-live-dot-width: 12px;
   --sl-live-dot-height: 12px;
-  --sl-loading-width: 73px;
-  --sl-loading-height: 17px;
-  --sl-loading-dot-width: 6px;
-  --sl-loading-dot-height: 6px;
-  /* The three dots of the loader are one element and two shadows, so the step between them lives here */
-  --sl-loading-dot-gap: 12px;
   --sl-logo-height: 59px;
   --sl-login-drop-width: 260px;
   --sl-madein-width: 54px;

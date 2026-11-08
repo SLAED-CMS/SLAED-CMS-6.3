@@ -2500,7 +2500,7 @@
         }, 700 + at * 100);
     }
 
-    // A pressed button bursts like the favourite star, the star and the rating on the answer; it holds its sparks all along, as htmx lifts it only until the answer
+    // A pressed button bursts like the favourite star, the star and the rating on the answer; it lifts itself for as long as its sparks fly
     function setPressBurst() {
         document.addEventListener('click', function (event) {
             var node = event.target && event.target.closest ? event.target.closest('.sl-but, .sl-but-blue, .sl-but-red, .sl-but-green, .sl-but-foot, .sl-but-back, .sl-but-mini') : null;
