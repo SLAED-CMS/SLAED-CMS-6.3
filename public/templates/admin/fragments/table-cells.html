@@ -10,17 +10,10 @@
 </th>
 {% else %}
 <td{% if cell.class_name or cell.is_truncate or cell.is_col_id or cell.is_col_check or cell.is_col_author or cell.is_col_status or cell.is_col_actions or cell.is_col_date or cell.is_col_count or cell.is_col_title %} class="{% if cell.class_name %}{{ cell.class_name }}{% endif %}{% if cell.is_truncate %} sl-cell-ellipsis{% endif %}{% if cell.is_col_id %} sl-col-id{% endif %}{% if cell.is_col_check %} sl-col-check{% endif %}{% if cell.is_col_author %} sl-col-author{% endif %}{% if cell.is_col_status %} sl-col-status{% endif %}{% if cell.is_col_actions %} sl-col-actions{% endif %}{% if cell.is_col_date %} sl-col-date{% endif %}{% if cell.is_col_count %} sl-col-count{% endif %}{% if cell.is_col_title %} sl-col-title{% endif %}"{% endif %}{% if cell.title_text %} title="{{ cell.title_text }}"{% endif %}{% if cell.label %} data-label="{{ cell.label }}"{% endif %}{% if cell.stamp %} data-sort="{{ cell.stamp }}"{% elseif cell.stat %} data-sort="{% if cell.stat.is_fail %}1{% elseif cell.stat.is_wait %}2{% elseif cell.stat.is_on %}4{% else %}3{% endif %}"{% endif %}{% if cell.attr %} {{{ cell.attr }}}{% endif %}>
-  {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}
-  {% if cell.stat %}
-  <span class="{% if cell.stat.is_fail %}sl-status-fail{% elseif cell.stat.is_wait %}sl-status-wait{% elseif cell.stat.is_on %}sl-status-active{% else %}sl-status-inactive{% endif %}" role="img" title="{% if cell.stat.text %}{{ cell.stat.text }}{% elseif cell.stat.is_on %}{{ _ACT }}{% else %}{{ _DEACT }}{% endif %}" aria-label="{% if cell.stat.text %}{{ cell.stat.text }}{% elseif cell.stat.is_on %}{{ _ACT }}{% else %}{{ _DEACT }}{% endif %}" data-sl-lamp></span>
-  {% elseif cell.stamp %}
-  <time datetime="{{ cell.stamp }}" data-sl-ago>{{ cell.content_text }}</time>
-  {% elseif cell.text_html %}
-  <span class="sl-cell-text">{{{ cell.text_html }}}</span>
-  {% elseif cell.has_content_text %}
-  {{ cell.content_text }}
+  {% if cell.chip %}
+  <span class="sl-cell-pair">{% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}<span class="sl-cell-text">{{{ cell.text_html }}}</span><span class="sl-chip sl-chip-accent" title="{{ cell.chip.title }}"><span>{{ cell.chip.label }}</span></span></span>
   {% else %}
-  {{{ cell.content_html }}}
+  {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}{% if cell.stat %}<span class="{% if cell.stat.is_fail %}sl-status-fail{% elseif cell.stat.is_wait %}sl-status-wait{% elseif cell.stat.is_on %}sl-status-active{% else %}sl-status-inactive{% endif %}" role="img" title="{% if cell.stat.text %}{{ cell.stat.text }}{% elseif cell.stat.is_on %}{{ _ACT }}{% else %}{{ _DEACT }}{% endif %}" aria-label="{% if cell.stat.text %}{{ cell.stat.text }}{% elseif cell.stat.is_on %}{{ _ACT }}{% else %}{{ _DEACT }}{% endif %}" data-sl-lamp></span>{% elseif cell.stamp %}<time datetime="{{ cell.stamp }}" data-sl-ago>{{ cell.content_text }}</time>{% elseif cell.text_html %}<span class="sl-cell-text">{{{ cell.text_html }}}</span>{% elseif cell.has_content_text %}{{ cell.content_text }}{% else %}{{{ cell.content_html }}}{% endif %}
   {% endif %}
 </td>
 {% endif %}

@@ -366,7 +366,7 @@ function config(): void {
         ],
         ...getTplPagerFields($conf['search']),
     ];
-    $html = $tpl->getHtmlPart('box', ['title' => _PREFERENCES, 'content_html' => $tpl->getHtmlPart('form', [
+    $html = $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=save',
         'hidden' => $hidden,
         'rows' => $cfgrows,

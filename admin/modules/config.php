@@ -15,10 +15,10 @@ function getGeoipFileRow(string $label, string $file): string {
     return $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
             ['content_html' => $label],
-            ['is_col_status' => true, 'stat' => ['text' => $info['found'] ? _FOUND : _NOTFOUND, 'is_on' => (bool)$info['found'], 'is_fail' => !$info['found']]],
             ['content_html' => $size],
             ['content_html' => $date],
             ['content_html' => (string)$info['path']],
+            ['is_col_status' => true, 'stat' => ['text' => $info['found'] ? _FOUND : _NOTFOUND, 'is_on' => (bool)$info['found'], 'is_fail' => !$info['found']]],
         ],
     ])]);
 }
@@ -102,10 +102,10 @@ function getGeoipPanel(): string {
     ];
     $head = [
         ['content' => _GEOIP_BASE],
-        ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
         ['content' => _SIZE],
         ['content' => _DATE],
         ['content' => _GEOIP_PATH],
+        ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
     ];
     $body = getGeoipFileRow(_GEOIP_COUNTRYDB, (string)($conf['geoip_country'] ?? 'storage/geoip/country.mmdb'));
     $body .= getGeoipFileRow(_GEOIP_ASNDB, (string)($conf['geoip_asn'] ?? 'storage/geoip/asn.mmdb'));
@@ -125,7 +125,7 @@ function config(): void {
     $ctab = getVar('get', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab > 4) $ctab = 0;
     $links = [];
-    foreach ([_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE] as $idx => $label) {
+    foreach ([_GENPREF, _SEO, _LOCALIZATION, _CENSORS, _OPTIMIZE] as $idx => $label) {
         $links[] = [
             'href' => '#',
             'is_active' => $ctab === $idx,
@@ -888,7 +888,7 @@ function replace(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=config&tab=0', 'name=config&tab=1', 'name=config&tab=2', 'name=config&tab=3', 'name=config&op=replace', 'name=config&tab=4', 'name=config&op=info'],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _REPLACE, _OPTIMIZE, _MANUAL],
+        'tabs' => [_GENPREF, _SEO, _LOCALIZATION, _CENSORS, _REPLACE, _OPTIMIZE, _MANUAL],
         'tab' => 4,
     ]);
     if ($pick === '') {
@@ -1006,7 +1006,7 @@ function restore(): void {
         setRedirect($afile.'.php?name=config&op=restore', false, 302, $text, $warn);
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=config', 'name=config&op=restore', 'name=config&op=info'], 'tabs' => [_PREFERENCES, _CONFIG_RESTORE, _MANUAL], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=config', 'name=config&op=restore', 'name=config&op=info'], 'tabs' => [_PREFERENCES, _CONFIG_RECOVER, _MANUAL], 'tab' => 1]);
     $jour = getConfigJournal();
     if (!$jour) {
         echo $cont.$tpl->getHtmlFrag('alert', ['text' => _CONFIG_CLEAN]);
@@ -1047,7 +1047,7 @@ function info(): void {
             'name=config&tab=4',
             'name=config&op=info',
         ],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _REPLACE, _OPTIMIZE, _MANUAL],
+        'tabs' => [_GENPREF, _SEO, _LOCALIZATION, _CENSORS, _REPLACE, _OPTIMIZE, _MANUAL],
     ]);
 }
 

@@ -32,7 +32,7 @@ function groups(): void {
             'points_text' => number_format($row['points'], 0, '', ' '),
             'users' => $row['users'],
             'users_text' => _USERSCOUNT.': '.number_format($row['users'], 0, '', ' '),
-            'users_url' => $afile.'.php?name=account&search='.($row['extra'] ? '6&chng='.$row['id'] : '7&chng='.$row['points']),
+            'users_url' => $afile.'.php?name=account&'.($row['extra'] ? 'grp='.$row['id'] : 'search=7&chng='.$row['points']),
             'users_title' => _GROUPS_SHOWUSERS,
             'empty_text' => _GROUPS_EMPTY,
             'mark_text' => _SPEC,

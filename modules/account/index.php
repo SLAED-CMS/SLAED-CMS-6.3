@@ -861,16 +861,16 @@ function logins(): void {
         $info = getAgentInfo($agent, 0);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
             ['text' => format_time((string)$row['time'], _TIMESTRING)],
-            ['stat' => ['text' => $res[$row['result']] ?? (string)$row['result'], 'is_on' => $row['result'] === 'ok', 'is_fail' => $row['result'] !== 'ok']],
             ['text' => ($row['way'] === 'oauth') ? _ACCOUNT_LOGOAUTH : _PASSWORD],
             ['text' => (string)$row['ip']],
             ['primary_text' => $info['browser'].' / '.$info['os'], 'primary_title' => $agent],
+            ['stat' => ['text' => $res[$row['result']] ?? (string)$row['result'], 'is_on' => $row['result'] === 'ok', 'is_fail' => $row['result'] !== 'ok']],
         ]]);
     }
     $cont = ($rows === '') ? $tpl->getHtmlFrag('empty', []) : $tpl->getHtmlFrag('table', [
         'is_list' => true,
         'rows_html' => $rows,
-        'headers' => [['text' => _DATE], ['text' => _STATUS, 'is_head_status' => true], ['text' => _TYPE], ['text' => _IP], ['text' => _BROWSER]],
+        'headers' => [['text' => _DATE], ['text' => _TYPE], ['text' => _IP], ['text' => _BROWSER], ['text' => _STATUS, 'is_head_status' => true]],
     ]).getTplPager(['count' => $log['total'], 'limit' => $num, 'mod' => $conf['name'], 'url_extra' => ['op' => 'logins']]);
     echo $tpl->getHtmlFrag('title', ['title' => _ACCOUNT_LOGINS, 'is_level_one' => true]).getUserNav().$cont;
     setFoot();

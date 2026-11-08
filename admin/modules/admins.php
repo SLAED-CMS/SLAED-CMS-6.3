@@ -73,7 +73,7 @@ function admins(): void {
             ['is_col_status' => true, 'attr' => 'data-sort="'.$stat.'"', 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', [
                 'icon_name' => 'shield-fill-check',
                 'title_text' => ($stat === 2) ? _SUPERUSER : (($stat === 1) ? _ADMIN : _NO),
-                'color_attr' => ($stat === 2) ? 'var(--sl-danger)' : (($stat === 1) ? 'var(--sl-success)' : 'var(--sl-text-muted)'),
+                'color_attr' => ($stat === 2) ? 'var(--sl-accent)' : (($stat === 1) ? 'var(--sl-success)' : 'var(--sl-text-muted)'),
             ])],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
                 ['href' => $afile.'.php?name=admins&op=add&id='.$aid, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true],
@@ -89,7 +89,7 @@ function admins(): void {
             ['content' => _URANK, 'is_truncate' => true],
             ['content' => _EMAIL],
             ['content' => _LANGUAGE],
-            ['content' => _ACCESS, 'is_col_status' => true],
+            ['content' => _ACCESS, 'is_col_status' => true, 'is_head_access' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,

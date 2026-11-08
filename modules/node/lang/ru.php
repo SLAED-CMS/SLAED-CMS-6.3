@@ -5,8 +5,10 @@
 # Website: slaed.net
 
 define('_NODE_ABC','Алфавит');
+define('_NODE_ACTIVITY','Активность');
 define('_NODE_ADDED','Материал опубликован.');
 define('_NODE_ARCHIVE','Архив');
+define('_NODE_ASK','Заявка');
 define('_NODE_ASSETS','Файлы и ссылки');
 define('_NODE_ATTACH','Файлы');
 define('_NODE_BADDATE','Дата указана неверно: используйте вид ГГГГ-ММ-ДД ЧЧ:ММ.');
@@ -60,5 +62,7 @@ define('_NODE_VISIT','Перейти на сайт');
 define('_NODE_VRAIL','Рельс');
 define('_NODE_VTILES','Плитки');
 define('_NODE_WCLOSE','Закрыто');
+define('_NODE_WDONE','Отвечено');
+define('_NODE_WOPEN','Ожидает');
 define('_NODE_WSTAFF','Ожидает ответа поддержки');
 define('_NODE_WUSER','Ожидает ответа автора');

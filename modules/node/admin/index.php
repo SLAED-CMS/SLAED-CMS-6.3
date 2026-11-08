@@ -226,32 +226,37 @@ function getNodeSupportFilter(string $key, ?int $def): ?int {
     return $raw;
 }
 
-# The queue of a support type: the requests waiting for support by priority and age unless the filter of state, assignment and priority asks for others
-function setNodeSupportQueue(NodeType $type): void {
+# The options of the type filter of the list: all types the admin moderates, the picked one selected
+function getNodeTypeOpts(array $types, string $name): array {
+    $out = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']];
+    foreach ($types as $key => $one) $out[] = ['value_attr' => $key, 'label_text' => getModuleName($key), 'is_selected' => $key === $name];
+    return $out;
+}
+
+# The queue of a support type by priority and age; the type and the status of the list keep their place, the state of the request follows them
+function setNodeSupportQueue(NodeType $type, NodeStatus $pub, array $topts, array $sopts): void {
     global $afile, $conf, $tpl;
     $hand = getNodeHandler($type);
-    $state = getNodeSupportFilter('state', (int)($conf['node']['support']['state']['staff'] ?? 0));
-    $aid = getNodeSupportFilter('aid', null);
-    $prio = getNodeSupportFilter('prio', null);
+    $wait = (int)($conf['node']['support']['state']['staff'] ?? 0);
+    $state = getNodeSupportFilter('state', ($pub === NodeStatus::Published) ? $wait : null);
     $num = max(1, getVar('get', 'num', 'num', 1));
     try {
-        $lim = getListLimit(fn(): int => $hand->getNodeSupportCount($type, $state, $aid, $prio));
-        $data = $hand->getNodeSupportList($type, $num, $lim, $state, $aid, $prio);
+        $lim = getListLimit(fn(): int => $hand->getNodeSupportCount($type, $state, $pub));
+        $data = $hand->getNodeSupportList($type, $num, $lim, $state, $pub);
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeFault($err));
     }
-    $labs = getNodeSupportLabels();
-    $who = getAdminNames('node-'.$type->name);
+    $labs = getNodeSupportLabels(true);
     setHead();
     $head = getNodeAdminTabs('', ['part' => true, 'subtitle_html' => $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
         'label' => _SEARCH,
         'is_part' => true,
-        'hidden' => [['nameattr' => 'name', 'valueattr' => 'node'], ['nameattr' => 'type', 'valueattr' => $type->name]],
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'node']],
         'fields' => [
-            ['field_id' => 'sl-node-state', 'label' => _NODE_STATE, 'name_attr' => 'state', 'options' => getNodeSupportOpts($labs['state'], $state, _ALL), 'is_now' => true],
-            ['field_id' => 'sl-node-prio', 'label' => _PRIORITY, 'name_attr' => 'prio', 'options' => getNodeSupportOpts($labs['prio'], $prio, _ALL), 'is_now' => true],
-            ['field_id' => 'sl-node-aid', 'label' => _NODE_ASSIGN, 'name_attr' => 'aid', 'options' => getNodeSupportOpts([0 => _NODE_NOBODY] + $who, $aid, _ALL), 'is_now' => true],
+            ['field_id' => 'sl-node-type', 'label' => _TYPE, 'name_attr' => 'type', 'options' => $topts, 'is_now' => true],
+            ['field_id' => 'sl-node-state', 'label' => _STATUS, 'name_attr' => 'status', 'options' => $sopts, 'is_now' => true],
+            ['field_id' => 'sl-node-ask', 'label' => _NODE_ASK, 'name_attr' => 'state', 'options' => getNodeSupportOpts($labs['state'], $state, _ALL), 'is_now' => true],
         ],
     ])]);
     $rows = [];
@@ -270,8 +275,7 @@ function setNodeSupportQueue(NodeType $type): void {
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]];
     }
-    $keep = ['state' => ($state === null) ? 'all' : $state, 'aid' => ($aid === null) ? 'all' : $aid, 'prio' => ($prio === null) ? 'all' : $prio];
-    $calm = $state === (int)($conf['node']['support']['state']['staff'] ?? 0) && $aid === null && $prio === null;
+    $calm = $pub === NodeStatus::Published && $state === $wait;
     echo getTplAdminList([
         'head_html' => $head,
         'is_fixed' => true,
@@ -280,14 +284,14 @@ function setNodeSupportQueue(NodeType $type): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _POSTEDBY, 'is_col_author' => true],
-            ['content' => _NODE_STATE],
+            ['content' => _NODE_ASK],
             ['content' => _PRIORITY],
             ['content' => _NODE_ASSIGN, 'is_truncate' => true],
-            ['content' => _LASTACTIVITY, 'is_col_date' => true],
+            ['content' => _NODE_ACTIVITY, 'is_col_date' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
-        'href' => $afile.'.php?name=node&type='.$type->name.'&'.http_build_query($keep).'&',
+        'href' => $afile.'.php?name=node&type='.$type->name.'&status='.$pub->value.'&state='.(($state === null) ? 'all' : $state).'&',
         'page' => $num,
         'pages' => max(1, (int)ceil($data['count'] / $lim)),
         'count' => $data['count'],
@@ -304,18 +308,17 @@ function show(): void {
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     $name = getVar('get', 'type', 'var', '');
     if ($name !== '' && !isset($types[$name])) setNodeAdminFault(404, _NODE_GONE);
-    if ($name !== '' && $types[$name]->ext === 'support') {
-        setNodeSupportQueue($types[$name]);
-        return;
-    }
     $raw = getVar('get', 'status', 'raw', '');
     $state = ($raw === '') ? NodeStatus::Published : (ctype_digit($raw) ? NodeStatus::tryFrom((int)$raw) : null);
     if ($state === null) setNodeAdminFault(400, _NODE_BADFILTER);
-    $num = max(1, getVar('get', 'num', 'num', 1));
-    $topts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']];
-    foreach ($types as $key => $one) $topts[] = ['value_attr' => $key, 'label_text' => getModuleName($key), 'is_selected' => $key === $name];
+    $topts = getNodeTypeOpts($types, $name);
     $sopts = [];
     foreach (NodeStatus::cases() as $one) $sopts[] = ['value_attr' => (string)$one->value, 'label_text' => getNodeStateLabel($one), 'is_selected' => $one === $state];
+    if ($name !== '' && $types[$name]->ext === 'support') {
+        setNodeSupportQueue($types[$name], $state, $topts, $sopts);
+        return;
+    }
+    $num = max(1, getVar('get', 'num', 'num', 1));
     setHead();
     $head = getNodeAdminTabs('', ['part' => true, 'subtitle_html' => $types ? $tpl->getHtmlFrag('list-filter', [
             'action_url' => $afile.'.php',
@@ -354,10 +357,10 @@ function show(): void {
                 ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $node->id],
                 ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $node->title, 'has_content_text' => true, 'content_text' => $node->title],
                 ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($type->name)],
-                ['is_col_status' => true, 'stat' => ['text' => getNodeStateLabel($node->status), 'is_on' => $node->status === NodeStatus::Published,
-                    'is_wait' => $node->status === NodeStatus::Pending]],
                 ['is_col_date' => true, 'moment' => $node->pubdate],
                 ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $who],
+                ['is_col_status' => true, 'stat' => ['text' => getNodeStateLabel($node->status), 'is_on' => $node->status === NodeStatus::Published,
+                    'is_wait' => $node->status === NodeStatus::Pending]],
                 ['is_col_actions' => true, 'dial' => $dial],
             ]];
         }
@@ -370,9 +373,9 @@ function show(): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _TYPE, 'is_truncate' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _POSTEDBY, 'is_col_author' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
@@ -1167,7 +1170,7 @@ function import(): void {
     setHead();
     echo getNodeAdminTabs('import')
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8')]) : '')
-        .$tpl->getHtmlPart('box', ['title' => _NODE_IMPORT, 'content_html' => $tpl->getHtmlPart('form', [
+        .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'form_attr' => 'enctype="multipart/form-data"',
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'import'], ['name_attr' => 'token',
@@ -1244,7 +1247,7 @@ function config(): void {
     }
     echo getNodeAdminTabs('config')
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8')]) : '')
-        .$tpl->getHtmlPart('box', ['title' => _NODE_LIMITS, 'content_html' => $tpl->getHtmlPart('form', [
+        .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'config'], ['name_attr' => 'token',
                 'value_attr' => getSiteToken('node')]],
@@ -1272,7 +1275,7 @@ function support(): void {
         }
         setRedirect($self, false, 302, _NODE_SSAVED);
     }
-    $labs = getNodeSupportLabels();
+    $labs = getNodeSupportLabels(true);
     $view = getNodeViewData($type, $node, 'view');
     setHead();
     $who = ($view['author'] !== '') ? $view['author'] : _ANONYM;

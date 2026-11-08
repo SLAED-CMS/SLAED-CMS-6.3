@@ -3043,8 +3043,8 @@ a map with other names, non-integers, values other than `0..n-1` or priorities n
 
 ```php
 public function updateNodeSupport(int $id, int $aid, int $state, int $prio, int $version): void;
-public function getNodeSupportCount(NodeType $type, ?int $state = null, ?int $aid = null, ?int $prio = null): int;
-public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array;
+public function getNodeSupportCount(NodeType $type, ?int $state = null, NodeStatus $status = NodeStatus::Published): int;
+public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, NodeStatus $status = NodeStatus::Published): array;
 ```
 
 - `updateNodeSupport()` changes the card at the expected version in one statement. A moderator sets assignment
@@ -3052,8 +3052,8 @@ public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $
   own request between `staff` and `closed` and must send the stored `aid` and `prio`. Background context
   `DENIED`, stale version `CONFLICT`, unreadable request `NOTFOUND`. Closing and reopening move `activity`;
   repeating stored values writes nothing; card changes send no mail.
-- `getNodeSupportList()` is the administrative queue, moderators only: published requests, `null` filter lifted,
-  `aid = 0` for unassigned, `limit` up to `limits.maxlist`, in the panel up to `LIST_MAX`, order `s.prio DESC, s.activity ASC, s.id ASC`;
+- `getNodeSupportList()` is the administrative queue, moderators only: requests of one status of publication, published
+  by default, of one state or of all for `null`, `limit` up to `limits.maxlist`, in the panel up to `LIST_MAX`, order `s.prio DESC, s.activity ASC, s.id ASC`;
   returns `['nodes' => NodeTarget[], 'ext' => [id => card], 'count' => int]`. `getNodeSupportCount()` is that
   `count` alone in one statement, with the same rights and filters: the bell of the admin menu and the pager of the panel.
 - Routes: public `POST op=support` (owner, CSRF, card version, state `staff` or `closed`; `aid`/`prio` come from

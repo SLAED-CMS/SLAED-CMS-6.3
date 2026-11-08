@@ -351,9 +351,11 @@ function getNodeViewData(NodeType $type, Node|NodeTarget $node, string $mode): a
 }
 
 # The labels of the states and the priorities of a request of support, keyed by the numbers the two maps of config/node.php store
-function getNodeSupportLabels(): array {
+# The panel reads a state as one word, the author on the site the whole phrase
+function getNodeSupportLabels(bool $short = false): array {
     global $conf;
-    $slab = ['staff' => _NODE_WSTAFF, 'author' => _NODE_WUSER, 'closed' => _NODE_WCLOSE];
+    $slab = $short ? ['staff' => _NODE_WOPEN, 'author' => _NODE_WDONE, 'closed' => _NODE_WCLOSE]
+        : ['staff' => _NODE_WSTAFF, 'author' => _NODE_WUSER, 'closed' => _NODE_WCLOSE];
     $plab = ['low' => _NODE_PLOW, 'normal' => _NODE_PNORM, 'high' => _NODE_PHIGH, 'urgent' => _NODE_PURGE];
     $out = ['state' => [], 'prio' => []];
     foreach ((array)($conf['node']['support']['state'] ?? []) as $key => $val) $out['state'][$val] = $slab[$key] ?? (string)$key;

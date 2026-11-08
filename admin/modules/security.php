@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 $tabset = [
     'ops' => ['name=security', 'name=security&op=passwd', 'name=security&op=oauthkeys', 'name=security&op=config', 'name=security&op=info'],
-    'tabs' => [_BANNED, _SEC_PASS, _SEC_OAUTH, _PREFERENCES, _MANUAL],
+    'tabs' => [_BANNED, _ACCESS, _SEC_OAUTH, _PREFERENCES, _MANUAL],
 ];
 
 function banlist(): void {
@@ -20,7 +20,7 @@ function banlist(): void {
     $user = getVar('get', 'kind', 'word', '') === 'user' || getVar('get', 'uname', 'name', '') !== '';
     $base = $afile.'.php?name=security&op=banlist&kind=';
     $subs = '';
-    foreach (['ip' => _BANNED_IP, 'user' => _BANNED_USERS] as $key => $label) {
+    foreach (['ip' => _BANNED_IP, 'user' => _USERS] as $key => $label) {
         $subs .= $tpl->getHtmlFrag('tabs-link', ['href' => $base.$key, 'hx_get' => $base.$key, 'is_active' => ($key === 'user') === $user, 'label' => $label, 'title' => $label]);
     }
     $note = checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert();

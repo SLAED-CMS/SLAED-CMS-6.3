@@ -112,7 +112,7 @@ function database(string $run = ''): void {
     $words = ['done' => [($type === 'repair') ? _OK : _OPTIMIZED, 'is_on'], 'same' => [_ALREADYOPTIMIZED, 'is_off'], 'fail' => [_ERROR, 'is_fail'],
         'none' => [_NO, 'is_off']];
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL], 'tab' => ['' => 0, 'optimize' => 1, 'repair' => 2][$type],
+    $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _DB_SQL, _MANUAL], 'tab' => ['' => 0, 'optimize' => 1, 'repair' => 2][$type],
         'part' => [0, 1, 2]]);
     if ($dbname === '') {
         setHead();
@@ -144,7 +144,7 @@ function database(string $run = ''): void {
             ? $tpl->getHtmlFrag('inline-badge', ['is_muted' => !$tabfree, 'label' => filterSize($tabfree)])
             : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
         $mark = $words[$marks[$name] ?? ''] ?? [];
-        $stattag = ['is_col_status' => true] + ($mark ? ['stat' => ['text' => $mark[0], $mark[1] => true]] : []);
+        $stattag = ['is_col_status' => true, 'stat' => $mark ? ['text' => $mark[0], $mark[1] => true] : ['text' => _NO]];
         if ($type === '') {
             $stattag = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
                 getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
@@ -203,7 +203,7 @@ function dump(): void {
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL];
+    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _DB_SQL, _MANUAL];
     $run = $type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec');
     if ($run && !checkAdminPost('database')) setRedirect($afile.'.php?name=database&op=dump', false, 302, _TOKENMISS, true);
     setHead();
@@ -288,7 +288,7 @@ function dump(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'],
-        'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL],
+        'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _DB_SQL, _MANUAL],
     ]);
 }
 

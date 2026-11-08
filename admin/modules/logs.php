@@ -25,7 +25,7 @@ $labels = [
 
 $tabset = [
     'ops' => ['name=logs', 'name=logs&op=logins', 'name=logs&op=config', 'name=logs&op=info'],
-    'tabs' => [_HOME, _ACCOUNT_LOGINS, _PREFERENCES, _MANUAL],
+    'tabs' => [_HOME, _SEC_LOGINS, _PREFERENCES, _MANUAL],
 ];
 
 function logs(): void {
@@ -129,17 +129,19 @@ function logview(): void {
                 $cells[] = ['has_content_text' => true, 'content_text' => $mods[$row['modul'] ?? ''] ?? (string)($row['modul'] ?? '')];
                 $cells[] = ['has_content_text' => true, 'content_text' => $login ? _SEC_ENTRY : ($words[$op] ?? $op)];
                 $cells[] = ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $tid ? '#'.$tid.($more > 0 ? ' +'.$more : '') : ''];
-                $code = (string)($row['result'] ?? '');
-                $cells[] = ['is_col_status' => true] + (($code === '') ? [] : ['stat' => ['text' => $results[$code] ?? $code, ($tones[$code] ?? 'is_off') => true]]);
             } else {
                 $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['msg']] + getTplLongCell((string)$row['msg'], _MESSAGE);
             }
             $cells[] = ['content_html' => Geoip::getIpHtml((string)($row['ip'] ?? ''))];
+            $code = (string)($row['result'] ?? '');
+            $stat = ($code === '') ? ['text' => _NO] : ['text' => $results[$code] ?? $code, ($tones[$code] ?? 'is_off') => true];
+            if ($isadm) $cells[] = ['is_col_status' => true, 'stat' => $stat];
             $rows[] = ['cells' => $cells];
         }
-        $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true]] : [['content' => _MESSAGE, 'is_truncate' => true]];
-        $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head, [['content' => _IP, 'is_col_date' => true]]);
+        $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true]]
+            : [['content' => _MESSAGE, 'is_truncate' => true]];
+        $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head, [['content' => _IP, 'is_col_date' => true]],
+            $isadm ? [['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true]] : []);
         $link = 'name=logs&op=logview&file='.$file.($event !== '' ? '&event='.$event : '').($modul !== '' ? '&modul='.$modul : '').($res !== '' ? '&res='.$res : '')
             .($levl !== '' ? '&level='.$levl : '').($ip !== '' ? '&ip='.urlencode($ip) : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
         setHead();
@@ -240,10 +242,10 @@ function logins(): void {
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))]
                 + getTplLongCell(trim((string)$row['name'].' #'.intval($row['uid'])), _ACCOUNT),
             ['has_content_text' => true, 'content_text' => $row['admin'] ? _ADMIN : _USER],
-            ['is_col_status' => true, 'stat' => ['text' => $results[$row['result']] ?? (string)$row['result'], ($tones[$row['result']] ?? 'is_off') => true]],
             ['has_content_text' => true, 'content_text' => $ways[$row['way']] ?? (string)$row['way']],
             ['content_html' => Geoip::getIpHtml((string)$row['ip'])],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $info['browser'].' / '.$info['os']] + getTplLongCell($agent, _BROWSER),
+            ['is_col_status' => true, 'stat' => ['text' => $results[$row['result']] ?? (string)$row['result'], ($tones[$row['result']] ?? 'is_off') => true]],
         ]];
     }
     $link = 'name=logs&op=logins'.($uid ? '&uid='.$uid : '').($side !== '' ? '&side='.$side : '').($res !== '' ? '&res='.$res : '')
@@ -253,7 +255,7 @@ function logins(): void {
         'head_html' => getTplAdminTabs($tabset + ['tab' => 1, 'part' => [0, 1], 'subtitle_html' => $form]),
         'key' => 'logs-logins',
         'head' => [['content' => _DATE, 'is_col_date' => true], ['content' => _ACCOUNT, 'is_truncate' => true], ['content' => _SEC_ROLE],
-            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _TYPE], ['content' => _IP], ['content' => _BROWSER, 'is_truncate' => true]],
+            ['content' => _TYPE], ['content' => _IP], ['content' => _BROWSER, 'is_truncate' => true], ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true]],
         'rows' => $rows,
         'href' => $afile.'.php?'.$link,
         'page' => $num,

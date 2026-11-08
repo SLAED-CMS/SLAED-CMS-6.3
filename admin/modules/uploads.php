@@ -11,7 +11,7 @@ require_once BASE_DIR.'/core/classes/update.php';
 function getUploadsTabs(): array {
     return [
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=theme', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _THEME, _UPLOADS_TPLS, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _SYSTEM, _THEME_TAB, _UPLOADS_TPLS, _PREFERENCES, _MANUAL],
     ];
 }
 

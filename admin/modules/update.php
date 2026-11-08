@@ -28,7 +28,7 @@ function getUpdateView(): string {
     $notes = '';
     if ($state['error'] !== '') {
         $check += ['chip' => _UPDATE_NOTDONE, 'tone' => 'warn'];
-        $notes .= getUpdateWarn(sprintf(_UPDATE_REFUSE, $state['error']));
+        $notes .= getUpdateWarn(getUpdateWhy($state['error']));
     }
     $bits = Update::getExtBits();
     $unzip = ($bits & 2) ? 'ZipArchive' : (($bits & 4) ? 'PharData' : '');
@@ -54,6 +54,13 @@ function getUpdateView(): string {
     $rows = array_merge($rows, $last['rows'], [['label_html' => _FUNCTIONS, 'field_html' => $acts]]);
     $list = $tpl->getHtmlFrag('kv-list', ['items' => array_merge($items, $last['items'], $pack['items'])]).$notes.$last['notes'].$pack['notes'];
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]).$pack['html'];
+}
+
+# Why a check of the master did not finish, in words a site owner reads: what happened and what to do, the code itself only for a reason the panel does not know
+function getUpdateWhy(string $code): string {
+    $why = ['master' => _UPDATE_WHYMASTER, 'size' => _UPDATE_WHYSIZE, 'sign' => _UPDATE_WHYSIGN, 'format' => _UPDATE_WHYFORMAT, 'channel' => _UPDATE_WHYCHAN,
+        'stale' => _UPDATE_WHYSTALE, 'expired' => _UPDATE_WHYEXP, 'write' => _UPDATE_WHYWRITE];
+    return sprintf(_UPDATE_REFUSE, $why[$code] ?? sprintf(_UPDATE_WHYOTHER, $code));
 }
 
 # The warning under the list of facts that says why a chip of a row is not green; the words may carry a code or a name from the master or the archive
@@ -241,8 +248,7 @@ function getUpdateSettings(): string {
         return ['label_html' => $label, 'label_id' => $ids['label'], 'hint_html' => $hint, 'hint_id' => $hid, 'field_html' => $field];
     };
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
-    $sent = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_SENT, 'messages' => [_UPDATE_S_ID, _UPDATE_S_VER, _UPDATE_S_ENV, _UPDATE_S_ERR, _UPDATE_S_HOST,
-        _UPDATE_S_FAIL]]);
+    $sent = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_SENT]);
     $rows = [
         $radio('channel', _UPDATE_CHANNEL, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable', [['value' => 'stable', 'label' => _UPDATE_STABLE],
             ['value' => 'beta', 'label' => _UPDATE_BETA]]),
@@ -283,7 +289,7 @@ function check(): void {
     if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update', false, 302, _TOKENMISS, true);
     $state = getUpdateSite();
     $res = Update::addCheck($db, $conf, $state);
-    $text = $res['ok'] ? (($res['found'] !== '') ? sprintf(_UPDATE_NEW, $res['found']) : _UPDATE_NONE) : sprintf(_UPDATE_REFUSE, $res['error']);
+    $text = $res['ok'] ? (($res['found'] !== '') ? sprintf(_UPDATE_NEW, $res['found']) : _UPDATE_NONE) : getUpdateWhy($res['error']);
     setRedirect($afile.'.php?name=update', false, 302, $text, !$res['ok']);
 }
 

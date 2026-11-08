@@ -133,12 +133,12 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([422, $card, 409, 403, $card], $run['refuse']);
     }
 
-    # The queue lists the waiting requests by priority and filters them by state and assignment; a bad filter and a foreign moderator are refused
+    # The queue lists the waiting requests by priority and filters them by state and by status of publication; a bad filter and a foreign moderator are refused
     # The list of all types of a moderator whose one type carries the extension reads it through that extension
     #[Test]
     public function theQueueOrdersAndFiltersTheRequests(): void
     {
-        $this->assertSame(['both' => [true, true, true], 'closed' => false, 'mine' => [true, false], 'free' => [false, true], 'bad' => 400, 'moder' => 404,
+        $this->assertSame(['both' => [true, true, true], 'closed' => false, 'bad' => 400, 'pub' => [true, false, false, 400], 'moder' => 404,
             'single' => 200], $this->getRuns()['queue']);
     }
 
@@ -217,8 +217,8 @@ final class NodeSupportTest extends TestCase
         $this->assertSame(0, preg_match('/(?:STATE|PRIO)_[A-Z]+/', $code), 'The class declares state or priority constants');
         $this->assertStringNotContainsString("PREFIX_DB.'_comment", $code, 'The extension reaches the comment table');
         foreach (['public function updateNodeSupport(int $id, int $aid, int $state, int $prio, int $version): void',
-            'public function getNodeSupportCount(NodeType $type, ?int $state = null, ?int $aid = null, ?int $prio = null): int',
-            'public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array'] as $one) {
+            'public function getNodeSupportCount(NodeType $type, ?int $state = null, NodeStatus $status = NodeStatus::Published): int',
+            'public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, NodeStatus $status = NodeStatus::Published): array'] as $one) {
             $this->assertStringContainsString($one, $code);
         }
         $this->assertSame(

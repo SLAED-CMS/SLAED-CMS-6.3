@@ -872,7 +872,7 @@ function getLayoutTree(array $dft, int $key, string $tab, string $sel, bool $oob
         $note = _LAYOUT_THEMEHINT;
     }
     $tabs = [];
-    foreach ([['page', 'file-earmark-richtext', _PAGE], ['menu', 'menu-button-wide', _LAYOUT_MENUS], ['theme', 'palette', _LAYOUT_THEME]] as [$one, $icon, $label]) {
+    foreach ([['page', 'file-earmark-richtext', _PAGE], ['menu', 'menu-button-wide', _LAYOUT_MENUS], ['theme', 'palette', _THEME_TAB]] as [$one, $icon, $label]) {
         $tabs[] = ['label' => $label, 'icon' => $icon, 'is_on' => $one === $tab, 'url' => getLayoutUrl(['op' => 'tree', 'page' => $key, 'tab' => $one, 'sel' => $sel])];
     }
     $last = array_slice($lay['pages'][$key]['sections'] ?? [], -1)[0]['type'] ?? '';
@@ -1638,7 +1638,7 @@ function layout(): void {
         'insp_html' => getLayoutInsp($dft, $key, $sel), 'lib_title' => _LAYOUT_ADDSEC, 'lib_groups' => $groups, 'lib_groups_label' => _LAYOUT_GROUPS, 'lib_find' => _LAYOUT_FINDSEC,
         'lib_after' => _LAYOUT_AFTER, 'lib_start' => _LAYOUT_ATSTART, 'lib_note' => _LAYOUT_LIBNOTE, 'lib_sects' => array_values($sects),
         'none_text' => _NONE_FOUND, 'close_text' => _CLOSE,
-        'sets_title' => _LAYOUT_SETS, 'where_title' => _LAYOUT_WHERE, 'links' => getLayoutLinks(), 'pal_title' => _LAYOUT_CMDS, 'pal_find' => _LAYOUT_PALFIND,
+        'sets_title' => _LAYOUT_SETS, 'where_title' => _URLS, 'links' => getLayoutLinks(), 'pal_title' => _LAYOUT_CMDS, 'pal_find' => _LAYOUT_PALFIND,
         'pal_acts' => getLayoutCommands(), 'pal_acts_title' => _ADM_ACTS, 'pal_pages_title' => _LAYOUT_PAGES, 'pal_secs_title' => _LAYOUT_SECS,
         'pal_add_title' => _LAYOUT_ADDSEC, 'pal_add' => _ADD, 'pal_parts_title' => _LAYOUT_AT_ALL, 'pal_parts' => $parts, 'pal_pages' => $pages, 'undo_text' => _UNDO,
         'ed' => bin2hex(random_bytes(6)), 'story_url' => getLayoutUrl(['op' => 'story']), 'story_title' => _LAYOUT_STORY,
@@ -1646,7 +1646,7 @@ function layout(): void {
         'ready_title' => _LAYOUT_NEWPAGE, 'ready_sub' => $lay['shipped'] ? _LAYOUT_READYSHIP : _LAYOUT_READYSUB, 'ready_cards' => getLayoutReadyCards($types),
         'checks_url' => getLayoutUrl(['op' => 'checks']), 'checks_text' => _LAYOUT_CHECKS, 'dest_url' => getLayoutUrl(['op' => 'dest']), 'dest_title' => _LAYOUT_TOPAGE,
         'guest_text' => _LAYOUT_GUEST, 'guest_title' => _LAYOUT_GUESTTIP, 'preview_note' => _LAYOUT_PREVNOTE, 'edit_text' => _LAYOUT_BACKEDIT,
-        'edit_url' => getLayoutUrl(['op' => 'edit']), 'edit_title' => _EDIT, 'source_url' => getLayoutUrl(['op' => 'source']), 'file_title' => _LAYOUT_FILETAB,
+        'edit_url' => getLayoutUrl(['op' => 'edit']), 'edit_title' => _EDIT, 'source_url' => getLayoutUrl(['op' => 'source']), 'file_title' => _FILE,
         'link_tip' => _LAYOUT_LINKTIP, 'link_title' => _LAYOUT_LINK, 'link_sub' => _LAYOUT_LINKSUB, 'term_label' => _LAYOUT_LINKTERM, 'link_make' => _LAYOUT_LINKMAKE,
         'terms' => array_map(static fn(int $v): array => ['value' => $v, 'label' => sprintf(getPluralForm($v, _LAYOUT_DAYS), $v), 'is_on' => $v === LAYOUT_TERMS[1]], LAYOUT_TERMS),
         'copy_text' => _COPY, 'copied_text' => _COPIED, 'cancel_text' => _CANCEL, 'save_url' => getLayoutUrl(['op' => 'save']), 'mod' => $mod,
@@ -1674,7 +1674,7 @@ function getLayoutCommands(): array {
         ['blk-add', 'bricks', _ADDNEWBLOCK, []],
         ['tab-page', 'file-earmark-richtext', _PAGE, []],
         ['tab-menu', 'menu-button-wide', _LAYOUT_MENUS, []],
-        ['tab-theme', 'palette', _LAYOUT_THEME, []],
+        ['tab-theme', 'palette', _THEME_TAB, []],
         ['dev-desk', 'display', _LAYOUT_WIDTH.': '._LAYOUT_DESK, []],
         ['dev-tablet', 'tablet', _LAYOUT_WIDTH.': '._LAYOUT_TABLET, []],
         ['dev-phone', 'phone', _LAYOUT_WIDTH.': '._LAYOUT_PHONE, []],
@@ -2511,7 +2511,7 @@ function export(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=layout', 'name=layout&op=info'],
-        'tabs' => [_LAYOUT_BUILDER, _MANUAL],
+        'tabs' => [_HOME, _MANUAL],
     ]);
 }
 

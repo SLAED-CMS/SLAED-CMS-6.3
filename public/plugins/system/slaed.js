@@ -3078,14 +3078,16 @@
     function setTimeAgo(node) {
         var list = (node && node.querySelectorAll ? node : document).querySelectorAll('time[data-sl-ago]');
         if (!list.length || !window.Intl || !window.Intl.RelativeTimeFormat) return;
-        var fmt = new window.Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
+        var lang = document.documentElement.lang || undefined;
+        var fmt = new window.Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
         var steps = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
         list.forEach(function (time) {
             var sec = (Date.parse(time.dateTime) - Date.now()) / 1000;
             var step = steps.find(function (one) { return Math.abs(sec) >= one[1]; }) || steps[steps.length - 1];
             if (isNaN(sec)) return;
             if (!time.title) time.title = time.textContent.trim();
-            time.textContent = fmt.format(Math.round(sec / step[1]), step[0]);
+            var text = fmt.format(Math.round(sec / step[1]), step[0]);
+            time.textContent = text.charAt(0).toLocaleUpperCase(lang) + text.slice(1);
         });
     }
     function setSlaedUi() {

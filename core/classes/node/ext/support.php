@@ -273,39 +273,36 @@ final class NodeSupport implements NodeExtension {
         }
     }
 
-    # The conditions of the queue of the type with their values for its moderator: published requests by state, assignment (0 none) and priority
-    private function getSupportWhere(NodeType $type, ?int $state, ?int $aid, ?int $prio): array {
+    # The conditions of the queue of the type with their values for its moderator: requests of one status of publication, of one state or of all
+    private function getSupportWhere(NodeType $type, ?int $state, NodeStatus $status): array {
         if (!$this->checkModer($type)) throw new NodeException('The context does not moderate the type', NodeException::DENIED);
         if ($type->ext !== 'support') throw $this->getInvalid('type');
         $maps = $this->getMaps();
         if ($state !== null && !in_array($state, $maps['state'], true)) throw $this->getInvalid('state');
-        if ($prio !== null && !in_array($prio, $maps['prio'], true)) throw $this->getInvalid('prio');
-        if ($aid !== null && $aid < 0) throw $this->getInvalid('aid');
         $where = 'n.tid = :tid AND n.status = :stat';
-        $pars = ['tid' => $type->id, 'stat' => NodeStatus::Published->value];
-        foreach (['state' => $state, 'aid' => $aid, 'prio' => $prio] as $key => $val) {
-            if ($val === null) continue;
-            $where .= ' AND s.'.$key.' = :'.$key;
-            $pars[$key] = $val;
+        $pars = ['tid' => $type->id, 'stat' => $status->value];
+        if ($state !== null) {
+            $where .= ' AND s.state = :state';
+            $pars['state'] = $state;
         }
         return [$where, $pars];
     }
 
     # The total of the queue of the type for its moderator with the conditions of its list, read without a page: the bell of the menu and the pager of the panel
-    public function getNodeSupportCount(NodeType $type, ?int $state = null, ?int $aid = null, ?int $prio = null): int {
-        [$where, $pars] = $this->getSupportWhere($type, $state, $aid, $prio);
+    public function getNodeSupportCount(NodeType $type, ?int $state = null, NodeStatus $status = NodeStatus::Published): int {
+        [$where, $pars] = $this->getSupportWhere($type, $state, $status);
         $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_node_support AS s INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = s.nid WHERE '.$where;
         return intval($this->getQueryRes($sql, $pars)->fetchColumn());
     }
 
-    # One page of the queue of the type with its total for its moderator: published requests by state, assignment (0 none) and priority, a page of the panel to LIST_MAX
-    public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array {
+    # One page of the queue of the type with its total for its moderator: requests by state and status of publication, a page of the panel to LIST_MAX
+    public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, NodeStatus $status = NodeStatus::Published): array {
         global $conf;
-        [$where, $pars] = $this->getSupportWhere($type, $state, $aid, $prio);
+        [$where, $pars] = $this->getSupportWhere($type, $state, $status);
         $max = $conf['node']['limits']['maxlist'] ?? null;
         if (!is_int($max) || $max < 1) throw $this->getStorage('The limits of the Node configuration are broken');
         if ($page < 1 || $limit < 1 || $limit > (defined('ADMIN_FILE') ? LIST_MAX : $max) || $page > intdiv(4294967295, $limit) + 1) throw $this->getInvalid('page');
-        $count = $this->getNodeSupportCount($type, $state, $aid, $prio);
+        $count = $this->getNodeSupportCount($type, $state, $status);
         $out = ['nodes' => [], 'ext' => [], 'count' => $count];
         if ($count < 1) return $out;
         $sql = 'SELECT n.id, n.uid, n.title, n.comon, n.comnum, n.score, n.ratings, s.aid, s.state, s.prio, s.version, s.activity, a.name AS aname, u.name AS uname'

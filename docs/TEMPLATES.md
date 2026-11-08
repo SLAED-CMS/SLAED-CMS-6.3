@@ -463,7 +463,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` and `codemirror` write them onto the `<textarea>` of `editor-frame`, and the shell runtime copies the name onto the editable area of CodeMirror when it mounts; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. A code editor of `Editor::getCode()` is named by the `label` of its caller, or `_TEXT`.
 - **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing and a `<div>` value, which may carry the paragraphs of a text area. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
-- **A block of the rows of one thing spans its box.** `partials/toggle-form-block.html` (an additional field, a rule of "Замена слов", a scope of "Рейтинги", a feed of `rss`) puts its name with the toggle `+` in a cap and its rows under it at the full width of the box, the caption left as in every form of the panel; a block standing in the field cell of another row (the answers of a poll) and the items of the side panel of the builder keep them stacked, as every nested grid.
+- **A block of the rows of one thing spans its box.** `partials/toggle-form-block.html` (an additional field, a rule of "Замены", a scope of "Рейтинги", a feed of `rss`) puts its name with the toggle `+` in a cap and its rows under it at the full width of the box, the caption left as in every form of the panel; a block standing in the field cell of another row (the answers of a poll) and the items of the side panel of the builder keep them stacked, as every nested grid.
 - **A caption stands at the top of its field.** `.sl-form-row` and `.sl-value-row` of the site and `.sl-div-item` of the panel align to `start`; the first line of a caption meets the line of a single field (on the site by a top padding of half the field height less one line, in the panel by a caption line as high as a control), so a text area, a list or a picture keeps its caption at its top. A baseline alignment was tried and refused: a text area and a picture have no baseline, and the caption fell to their foot
 - **Every chip that shows a value names it.** A size, a count, a date, a status or a module in a chip carries a `title` of an existing constant (`_SIZE`, `_NODE_DLOADS`, `_ALLMATERIALS`, `_COMMENTS`, `_VOTES`, `_DATE`, `_STATUS`, `_MODUL`, `_RATING`, `_CATEGORY`), so a hover says what the figure is; a chip that is a button with its own words needs none
 - **Every button bursts when pressed.** `setPressBurst()` of `slaed.js` gives each `.sl-but*` and `.sl-but-mini` the burst of the favourite star (`.sl-is-burst`: the ring, the pop of the icon, two spark sets), in both themes on the same tokens `--sl-fav-*` and `--sl-spark-shadow`; the star and the rating keep their own burst on the answer of the server, and `--sl-time-scale` 0 stills it
@@ -606,8 +606,8 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `is_fixed` | the fixed table layout |
 
 - **The filter has one place.** `partials/module-head.html` draws `subtitle_html` and `find` in one block after the
-  tabs, so the order of the focus follows the bar. A filter of three fields or more always stands in the bar under the tabs; one or two fields, the settings find
-  or a button stand beside the title in one line once the content column `sl-admin-content-inner`, the container the
+  tabs, so the order of the focus follows the bar. A filter of four fields, or of three with a box to type in, always stands in the bar under the tabs; one or two
+  fields, three choices, the settings find or a button stand beside the title in one line once the content column `sl-admin-content-inner`, the container the
   head measures, is 960px wide, their controls at their own width and giving way before the line would break, and in
   the bar under it. The bar lays its fields in aligned columns of a label and a control: three across, four as two by
   two, two under 900px of the column, one under 560px; the button closes the first line, a link stands under it. The
@@ -621,13 +621,26 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 - **A record names its module honestly.** A list, a filter or a group that says which module a record belongs to
   takes `getModuleTitle()`: a Node type is the module and its type («Материалы - Новости»), never a module of its own, and
   any other module its name alone, never its key.
+- **A name may carry a chip.** The cell key `chip` (`label`, `title`) of `fragments/table-cells.html` draws the tip, the
+  `text_html` and an accent chip in one line `sl-cell-pair`: the name keeps its width, the chip takes the rest and ends
+  in its own ellipsis, a name too long for the cell ends in an ellipsis first; in the full view and the cards the chip
+  wraps under the name whole. The special group at the nick of «Пользователи» is the first.
+- **A tip stands 4px from its text.** The «(i)» of `fragments/popover.html` ends without a newline and `table-cells.html`
+  prints it flush against the content of the cell, so no space of the font widens the gap: the margin `--sl-space-2`
+  of `.sl-tip` is the whole of it, in a cell, in a line with a chip, in the cards and beside a label.
 - **A status has four tones.** The cell key `stat` of `fragments/table-cells.html` (and of `table-row.html` of lite) draws
   one icon: `is_on` the green check, `is_wait` the clock, `is_fail` the red cross, none of them the grey dashed circle
   of off; `text` is its tip and its name for a screen reader, `_ACT`/`_DEACT` without it. The cell sorts by the tone
-  through `data-sort`, and the lamp of a row turned in place (`admin-ui.js`) keeps it. A head with `is_head_status` or
-  `is_head_error`, and the head of the options `is_col_actions` (the gear of its dial), shows its icon instead of
+  through `data-sort`, and the lamp of a row turned in place (`admin-ui.js`) keeps it. A head with `is_head_status`,
+  `is_head_error`, `is_head_run` (the result of the last run, a clock with an arrow) or `is_head_access` (the rights of
+  an account, a shield), and the head of the options `is_col_actions` (the gear of its dial), shows its icon instead of
   the word, which stays in its tip and for a screen reader. In the fixed layout a status or an error column is as wide
   as its icon, the options keep the width of the dial; a column of a status or an error is sortable.
+- **A row ends in one order.** The service columns close every list of the site and the panel as error, status,
+  options: an error or a result of a run stands right before the status, the status right before the options, and a
+  list without options ends in its status. Every column of data — dates, the author, the IP, the browser — stands
+  before them. A column of an error or a status never leaves a cell empty: a row without an error, a result or a status
+  yet draws the grey circle of off with `_NO` as its tip.
 - **A centred column keeps its title over its values.** The cells of `sl-col-id`, `-status`, `-date`, `-count`, `-sent`
   and of a last column that is not the options or the boxes have equal sides, and in a sortable table a lane for the
   mark on the right of the title and of every cell alike, so both centre in the same width. A sortable title stands
@@ -1235,7 +1248,7 @@ Every reader passes the raw column and its title, and every template takes the r
 - **The list.** `groups()` counts the members of every group in one query with `GROUP BY` — a special group the users
   whose `grp` it is, a point group every user at or above its threshold — and prints the point groups by threshold and
   the special groups by members, most first. The members link goes to the user list of `account` filtered by it:
-  `search=6&chng=<id>` for a special group, `search=7&chng=<threshold>` for a point group. A step names its sort keys in
+  `grp=<id>` for a special group, `search=7&chng=<threshold>` for a point group. A step names its sort keys in
   `data-sl-sort-*`, and the button `data-sl-ladder-sort` of its list reverses the steps in place in `admin-ui.js`;
   nothing is stored.
 - **A painted name stays readable.** The step writes the group colour as `--sl-d-group`; the name reads `--sl-group-text`

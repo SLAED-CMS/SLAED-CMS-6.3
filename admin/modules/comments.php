@@ -56,7 +56,7 @@ function comments(): void {
     $chng = $flt['chng'];
     $head = getTplAdminTabs([
         'ops' => [$flt['base'], $flt['base'].'&status=1', $flt['cur'].'&op=config', $flt['cur'].'&op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _COMMENTS_MOD, _PREFERENCES, _MANUAL],
         'tab' => $status,
         'part' => [0, 1],
         'subtitle_html' => getCommentsSearch($flt, true),
@@ -146,7 +146,7 @@ function edit(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => [$flt['base'], $flt['base'].'&status=1', $flt['cur'].'&op=config', $flt['cur'].'&op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _COMMENTS_MOD, _PREFERENCES, _MANUAL],
         'tab' => $flt['status'],
         'subtitle_html' => getCommentsSearch($flt, false),
     ]);
@@ -206,7 +206,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _COMMENTS_MOD, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
@@ -435,7 +435,7 @@ function recount(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _COMMENTS_MOD, _PREFERENCES, _MANUAL],
     ]);
 }
 

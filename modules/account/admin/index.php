@@ -10,27 +10,35 @@ function getAccountTabs(): array {
     return [
         'ops' => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=favorites', 'name=account&op=pointreset', 'name=account&op=config',
             'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _FAVORITES, _NULLPOINTS, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _ADD, _NEW, _FAVORITES, _NULLPOINTS, _PREFERENCES, _MANUAL],
     ];
 }
 
 function getAccountSearch(string $op = ''): string {
-    global $afile, $tpl;
+    global $afile, $db, $tpl;
     $kinds = match ($op) {
         'newuser' => [2 => _NICKNAME, 3 => _EMAIL],
         'oauthlist' => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 8 => _OAUTH_PROVIDER],
-        default => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 4 => _IP, 5 => _URL, 6 => _SPEC_GROUP, 7 => _POINTS],
+        default => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 4 => _IP, 5 => _URL, 7 => _POINTS],
     };
     $search = getVar('get', 'search', 'num', 2);
     $opts = [];
     foreach ($kinds as $key => $label) $opts[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $search === $key];
+    $fields = [['field_id' => 'sl-acc-in', 'label' => _SEARCH, 'name_attr' => 'search', 'options' => $opts, 'find_id' => 'sl-acc-q', 'find_name' => 'chng',
+        'find_value' => trim(getVar('get', 'chng'))]];
+    if ($op === '') {
+        $grp = getVar('get', 'grp', 'num', 0);
+        $grps = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => !$grp]];
+        $res = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY name');
+        while ([$gid, $gname] = $db->getSqlRow($res)) $grps[] = ['value_attr' => (string)$gid, 'label_text' => (string)$gname, 'is_selected' => $grp === (int)$gid];
+        $fields[] = ['field_id' => 'sl-acc-grp', 'label' => _SPEC_GROUP, 'name_attr' => 'grp', 'options' => $grps, 'is_now' => true];
+    }
     return $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
         'label' => _SEARCH,
         'is_part' => true,
         'hidden' => array_values(array_filter([['nameattr' => 'name', 'valueattr' => 'account'], ($op !== '') ? ['nameattr' => 'op', 'valueattr' => $op] : null])),
-        'fields' => [['field_id' => 'sl-acc-in', 'label' => _SEARCH, 'name_attr' => 'search', 'options' => $opts, 'find_id' => 'sl-acc-q', 'find_name' => 'chng',
-            'find_value' => trim(getVar('get', 'chng'))]],
+        'fields' => $fields,
     ]);
 }
 
@@ -50,15 +58,19 @@ function getAccountScope(string $op, string $src = 'get'): array {
     }
     $from = PREFIX_DB.'_users AS u';
     $cols = [1 => 'id', 2 => 'name', 3 => 'email', 4 => 'ip', 5 => 'website'];
-    if ($chng !== '' && isset($cols[$search])) return [$from, ' WHERE u.'.$cols[$search].' LIKE :search', ['search' => '%'.$chng.'%'], 'u.'.$cols[$search].' ASC'];
-    if ($chng === '' || ($search !== 6 && $search !== 7)) return [$from, '', [], 'u.id DESC'];
-    return [$from, ($search === 6) ? ' WHERE u.grp = :grp' : ' WHERE u.points >= :pts', [($search === 6) ? 'grp' : 'pts' => intval($chng)], 'u.id ASC'];
+    $grp = getVar($src, 'grp', 'num', 0);
+    [$cond, $pars, $order] = [$grp ? ['u.grp = :grp'] : [], $grp ? ['grp' => $grp] : [], 'u.id DESC'];
+    if ($chng !== '' && isset($cols[$search])) [$cond[], $pars['search'], $order] = ['u.'.$cols[$search].' LIKE :search', '%'.$chng.'%', 'u.'.$cols[$search].' ASC'];
+    if ($chng !== '' && $search === 7) [$cond[], $pars['pts'], $order] = ['u.points >= :pts', intval($chng), 'u.id ASC'];
+    return [$from, $cond ? ' WHERE '.implode(' AND ', $cond) : '', $pars, $order];
 }
 
 function account(): void {
     global $db, $afile, $conf;
     $search = getVar('get', 'search', 'num', 2);
     $chng = trim(getVar('get', 'chng'));
+    $grp = getVar('get', 'grp', 'num', 0);
+    $keep = (($chng !== '') ? ['search' => $search, 'chng' => $chng] : []) + ($grp ? ['grp' => $grp] : []);
     [$from, $where, $pars, $order] = getAccountScope('');
     [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(u.id), MAX(u.id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
     $anum = getListLimit($count);
@@ -68,7 +80,7 @@ function account(): void {
         .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp)'.$where.' ORDER BY '.$order.' LIMIT '.(($num - 1) * $anum).', '.$anum;
     $res = $db->getSqlQuery($sql, $pars);
     setHead();
-    $back = 'name=account'.(($chng !== '') ? '&search='.$search.'&chng='.urlencode($chng) : '');
+    $back = 'name=account'.($keep ? '&'.http_build_query($keep) : '');
     $esc = static fn(string $text): string => filterTextHighlight(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $chng);
     $rows = [];
     while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname] = $db->getSqlRow($res)) {
@@ -77,8 +89,7 @@ function account(): void {
             ['href' => $afile.'.php?name=account&op=oauthlist&search=1&chng='.$uid, 'icon_name' => 'key', 'title' => _OAUTHLIST],
         ];
         if ($ip) $dial[] = ['href' => $afile.'.php?name=security&op=banlist&new_ip='.rawurlencode((string)$ip), 'icon_name' => 'ban', 'title' => _BANIPSENDER];
-        $drop = getTplPostAction(['name' => 'account', 'op' => 'delete', 'id[]' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
-            'trash', _ONDELETE);
+        $drop = getTplPostAction(['name' => 'account', 'op' => 'delete', 'id[]' => $uid, 'num' => $num] + $keep, 'trash', _ONDELETE);
         $rows[] = ['name' => (string)$name, 'drop' => $drop, 'details' => [
             ['label' => _HASH, 'value' => md5((string)$agent)],
             ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING)],
@@ -88,7 +99,8 @@ function account(): void {
             ['label' => _POINTS, 'value' => (string)$point],
         ], 'cells' => [
             ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
-            ['is_truncate' => true, 'title_text' => (string)$name, 'text_html' => $esc((string)$name)],
+            ['is_truncate' => true, 'title_text' => (string)$name, 'text_html' => $esc((string)$name)]
+                + ($gname ? ['chip' => ['label' => (string)$gname, 'title' => _SPEC_GROUP.': '.$gname]] : []),
             ['class_name' => 'sl-col-ip', 'content_html' => $ip ? filterTextHighlight(Geoip::getIpHtml($ip), $chng) : _NO],
             ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
             ['is_col_date' => true, 'moment' => $reg],
@@ -1104,7 +1116,8 @@ function delete(): void {
     foreach ($done ? array_map('intval', $ids) : [] as $id) {
         if (!$act($id)) $done = false;
     }
-    $keep = array_filter(['search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
+    $keep = array_filter(['search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'grp' => getVar('post', 'grp', 'num', 0),
+        'num' => getVar('post', 'num', 'num', 0)]);
     setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 

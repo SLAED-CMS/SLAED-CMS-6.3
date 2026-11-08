@@ -25,7 +25,7 @@ function categories(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+        'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
         'subtitle_html' => $subtitle,
     ]);
     echo $cont
@@ -67,7 +67,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+        'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
         'tab' => 1,
         'subtitle_html' => $subtitle,
     ]);
@@ -171,8 +171,8 @@ function add(): void {
         'is_subtabs' => true,
         'tabs_html' =>
             $tpl->getHtmlFrag('tabs-link', ['href' => '#', 'is_active' => true, 'label' => _CATEGORY, 'rel' => 'categories-add-panel-0', 'title' => _CATEGORY])
-            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-add-panel-1', 'title' => _ACESS])
-            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-add-panel-2', 'title' => _ACESSF]),
+            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACCESS, 'rel' => 'categories-add-panel-1', 'title' => _ACCESS])
+            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _FORUM, 'rel' => 'categories-add-panel-2', 'title' => _FORUM]),
         'content_html' =>
             $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
             .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
@@ -204,7 +204,7 @@ function subadd(): void {
         $subtitle = getTplCategoryModule('modul', '', $modul, true);
         $cont = getTplAdminTabs([
             'ops' => $ops,
-            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+            'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
             'tab' => 2,
             'subtitle_html' => $subtitle,
         ]);
@@ -309,8 +309,8 @@ function subadd(): void {
             'is_subtabs' => true,
             'tabs_html' =>
                 $tpl->getHtmlFrag('tabs-link', ['href' => '#', 'is_active' => true, 'label' => _CATEGORY, 'rel' => 'categories-subadd-panel-0', 'title' => _CATEGORY])
-                .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-subadd-panel-1', 'title' => _ACESS])
-                .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-subadd-panel-2', 'title' => _ACESSF]),
+                .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACCESS, 'rel' => 'categories-subadd-panel-1', 'title' => _ACCESS])
+                .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _FORUM, 'rel' => 'categories-subadd-panel-2', 'title' => _FORUM]),
             'content_html' =>
                 $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
                 .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
@@ -331,7 +331,7 @@ function subadd(): void {
         $subtitle = getTplCategoryModule('modul', '', $modul, true);
         $navi = getTplAdminTabs([
             'ops' => $ops,
-            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+            'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
             'tab' => 2,
             'subtitle_html' => $subtitle,
         ]);
@@ -352,7 +352,7 @@ function addedit(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+        'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
         'tab' => 3,
         'subtitle_html' => $subtitle,
     ]);
@@ -395,7 +395,7 @@ function edit(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+        'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
         'tab' => 3,
         'subtitle_html' => $subtitle,
     ]);
@@ -502,8 +502,8 @@ function edit(): void {
         'is_subtabs' => true,
         'tabs_html' =>
             $tpl->getHtmlFrag('tabs-link', ['href' => '#', 'is_active' => true, 'label' => _CATEGORY, 'rel' => 'categories-edit-panel-0', 'title' => _CATEGORY])
-            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-edit-panel-1', 'title' => _ACESS])
-            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-edit-panel-2', 'title' => _ACESSF]),
+            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACCESS, 'rel' => 'categories-edit-panel-1', 'title' => _ACCESS])
+            .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _FORUM, 'rel' => 'categories-edit-panel-2', 'title' => _FORUM]),
         'content_html' =>
             $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
             .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
@@ -731,7 +731,7 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
             'name=categories&op=info'.$modlink],
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
+        'tabs' => [_HOME, _ADD, _SUBCATEGORY, _EDIT, _MANUAL],
     ]);
 }
 

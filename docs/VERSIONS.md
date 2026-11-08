@@ -2,6 +2,22 @@
 
 ## 2026-11-08
 
+### A tab of the panel is one word, and the note of «Обновления» is one paragraph
+
+- **A tab names its job in one word** — the section already names the subject: «Добавить», «Создать» and «Код» of
+  «Блоки и баннеры», «Новые» and «Сброс» of «Пользователи», «Запрос», «Доступ», «OAuth», «Входы», «Локализация»,
+  «Замены», «Восстановление», «Модерация», «Отказы», «Оценки», «Система», «Тема», «Шаблоны», «Импорт», and «Доступ»
+  and «Форум» in the form of a category, «Отправка» and «Ресурсы» in the form of a Node type, «Файл» and «Ссылки» in
+  the settings of «Конструктор сайта». The first tab of «RSS-каналы» and «Конструктор сайта» is «Главная», as
+  elsewhere. «Новый тип», «Экспорт TXT», «Экспорт Markdown» and «Топ-запросы» keep two parts, one word would lose them.
+- **The note of the settings of «Обновления»** says what a check sends in one paragraph, like every other note; the
+  channels read «Stable» and «Beta», the extension «Sodium».
+- **Breaking:** the language constants `_ADDCATEGORY`, `_ADDSUBCATEGORY`, `_ACESS`, `_ACESSF`, `_BANNED_USERS`,
+  `_SEC_PASS`, `_UPLOADS_SYSTEM`, `_LAYOUT_FILETAB`, `_LAYOUT_WHERE`, `_GEOLOCATION` and `_UPDATE_S_ID`,
+  `_UPDATE_S_VER`, `_UPDATE_S_ENV`, `_UPDATE_S_ERR`, `_UPDATE_S_HOST`, `_UPDATE_S_FAIL` are gone; `_MULTILINGUAL` is
+  `_LOCALIZATION`, `_LAYOUT_THEME` is `_THEME_TAB`; `_COMMENTS_MOD` and `_CONFIG_RECOVER` are new. A module of its own
+  that reads a removed constant fails.
+
 ### Tables and section heads are one series on the site and in the panel
 
 - **The head of a section** carries one or two filter fields beside the title once its column is 960px wide, and any
@@ -14,12 +30,28 @@
   long for its column ends in an ellipsis with the whole title in its tip.
 - **A record names its module honestly:** a Node type is «Материалы - Новости», another module its name alone, never
   its key (`getModuleTitle()`).
+- **A row ends in one order:** error, status, options; a list without options ends in its status, and a cell of an
+  error or a status is never empty — without a value it shows the grey circle. The result of a run of «Планировщик» and
+  the rights of «Администраторы» show their icon in the head too, and the shield of a super administrator is the accent
+  colour, not the red of an error. A relative date of the panel begins with a capital letter («Через 5 часов»).
+- **A special group shows at the nick** in the list of «Пользователи» as a chip, and the filter picks the group from a
+  list.
+- **The support queue keeps the filter of the list:** the type and the status of publication stand beside the title as
+  in «Материалы», the request («Ожидает», «Отвечено», «Закрыто») follows them, and a request out of publication is found
+  again; priority and assignment are sorted in their columns, the query no longer reads `aid` and `prio`. Three choices
+  without a box to type in stand beside the title like two. Breaking: `NodeSupport::getNodeSupportCount()` and
+  `getNodeSupportList()` drop `$aid` and `$prio` and take the status of publication after the state.
+- **A failed check of «Обновления» says why in words:** the reason code (`master`, `sign` and the rest) becomes a
+  sentence of what happened and what to do, the code shows only for a reason the panel does not know.
+- **No section repeats its tab:** the titles «Пределы» and «Импорт» of «Материалы» and «Конфигурации» of «Поиск» are
+  gone; `_NODE_LIMITS` is removed.
 - **Breaking:** `partials/module-head.html` draws the filter after the tabs, not inside the title; a theme of its own
   that overrides the partial keeps the old place. The language constants `_ADIR`, `_VIEW` and `_POINTS_SCOPE` are gone,
   and the values of `_SWORD`, `_SEARCHFIELDS`, `_FIELDS_KEY`, `_POINTS_LIMIT`, `_POINTS_PERIOD` and `_TVIEWS` are one
   word. The tokens `--sl-col-check-width`, `--sl-col-actions-width`, `--sl-col-date-width`, `--sl-col-count-width` and
   `--sl-col-status-width` of `admin` hold new values; `.sl-status-inactive` is the grey dashed circle, not the red
-  cross, which is `.sl-status-fail` now.
+  cross, which is `.sl-status-fail` now. The user list filters a special group by `grp=<id>`; the old address
+  `search=6&chng=<id>` shows the whole list.
 
 ### No loader of three dots is left in either theme
 

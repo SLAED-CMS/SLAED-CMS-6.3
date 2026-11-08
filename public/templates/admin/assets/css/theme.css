@@ -1448,7 +1448,7 @@ pre code.hljs {
   cursor: help;
   width: var(--sl-size-icon-sm);
   height: var(--sl-size-icon-sm);
-  margin: calc(var(--sl-space-2) * -1) var(--sl-space-3) 0 0;
+  margin: calc(var(--sl-space-2) * -1) var(--sl-space-2) 0 0;
   color: var(--sl-primary-strong);
   font-size: var(--sl-size-icon-sm);
   line-height: 1;
@@ -3843,6 +3843,14 @@ dialog.sl-editor-emoji-panel {
     overflow-wrap: anywhere;
   }
 
+  .sl-table-list-sort:is([data-sl-density="full"], [data-sl-density="cards"]) .sl-cell-pair {
+    flex-wrap: wrap;
+  }
+
+  .sl-table-list-sort:is([data-sl-density="full"], [data-sl-density="cards"]) .sl-cell-pair > .sl-chip {
+    flex-basis: auto;
+  }
+
   .sl-table-list-sort[data-sl-density="full"] tbody td {
     padding-top: var(--sl-space-3);
     padding-bottom: var(--sl-space-3);
@@ -3949,7 +3957,7 @@ dialog.sl-editor-emoji-panel {
     flex: 1 0 100%;
     display: flex;
     align-items: flex-start;
-    gap: var(--sl-space-3);
+    gap: var(--sl-space-2);
     font-weight: var(--sl-weight-semibold);
     white-space: normal;
   }
@@ -7469,6 +7477,39 @@ button.sl-but-mini {
   max-width: 100%;
 }
 
+/* A name with a chip is one line: the name keeps its width, the chip takes the rest and cuts its own words; a name too long for the cell ends in an ellipsis before the chip */
+.sl-cell-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.sl-cell-pair > .sl-float {
+  flex: none;
+  margin: 0;
+}
+
+.sl-cell-pair > .sl-cell-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sl-cell-pair > .sl-chip {
+  flex: 1 1 0;
+  max-width: max-content;
+}
+
+.sl-cell-pair > .sl-chip > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* A cut cell that ends the row stays cut: the open overflow of a last cell belongs to the dial */
 .sl-table-fixed td.sl-cell-ellipsis:last-child {
   overflow: hidden;
@@ -7702,9 +7743,9 @@ button.sl-but-mini {
   min-width: 0;
 }
 
-/* Up to two fields stand beside the title in one line once the column holds them, the controls giving way before the line breaks, and the hits of the find then open to the left */
+/* Two fields, or three choices without a box to type in, stand beside the title once the column holds them; the controls give way first, the hits of the find open left */
 @container (width >= 960px) {
-  .sl-box > .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) {
+  .sl-box > .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) {
     grid-row: 1;
     grid-column: 2;
     justify-self: end;
@@ -7712,31 +7753,35 @@ button.sl-but-mini {
     margin: 0;
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) > .sl-searchbox {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) > .sl-searchbox {
     flex: 0 1 auto;
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) .sl-filter {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-filter {
     grid-template-columns: max-content minmax(0, max-content);
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) .sl-filter:has(> .sl-filter-field:nth-of-type(2)) {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-filter:has(> .sl-filter-field:nth-of-type(2)) {
     grid-template-columns: repeat(2, max-content minmax(0, max-content));
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) .sl-filter > :is(.sl-filter-field, .sl-but) {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-filter:has(> .sl-filter-field:nth-of-type(3)) {
+    grid-template-columns: repeat(3, max-content minmax(0, max-content));
+  }
+
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-filter > :is(.sl-filter-field, .sl-but) {
     grid-row: 1;
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) .sl-filter > .sl-but {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-filter > .sl-but {
     grid-column: auto;
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) .sl-filter-field > :not(label) {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-filter-field > :not(label) {
     max-width: var(--sl-search-max-width);
   }
 
-  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(3))) .sl-form-hits {
+  .sl-module-head-subtitle:not(:has(.sl-filter-field:nth-of-type(4))):not(:has(.sl-filter-field:nth-of-type(3)):has(.sl-filter-field input)) .sl-form-hits {
     right: 0;
     left: auto;
   }

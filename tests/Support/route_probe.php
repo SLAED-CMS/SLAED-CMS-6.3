@@ -875,9 +875,14 @@ function getRouteSupport(PDO $pdo): array {
     $out['queue'] = [
         'both' => [str_contains($full, 'Anna request'), str_contains($full, 'Boris request'), strpos($full, 'Anna request') < strpos($full, 'Boris request')],
         'closed' => str_contains($queue('&state=2'), 'Anna request'),
-        'mine' => [str_contains($queue('&state=all&aid=5'), 'Anna request'), str_contains($queue('&state=all&aid=5'), 'Boris request')],
-        'free' => [str_contains($queue('&state=all&aid=0'), 'Anna request'), str_contains($queue('&state=all&aid=0'), 'Boris request')],
         'bad' => getRouteReply('helper', 'GET', 'admin.php?name=node&type=help&state=abc')['code'],
+        'pub' => (function () use ($pdo, $queue, $bid): array {
+            $pdo->exec('UPDATE '.RPREF.'_nodes SET status = 3 WHERE id = '.(int)$bid);
+            $out = [str_contains($queue('&status=3'), 'Boris request'), str_contains($queue('&status=3'), 'Anna request'),
+                str_contains($queue('&state=all'), 'Boris request'), getRouteReply('helper', 'GET', 'admin.php?name=node&type=help&status=x')['code']];
+            $pdo->exec('UPDATE '.RPREF.'_nodes SET status = 2 WHERE id = '.(int)$bid);
+            return $out;
+        })(),
         'moder' => $code('moder', 'admin.php?name=node&type=help'),
         'single' => $code('helper', 'admin.php?name=node'),
     ];

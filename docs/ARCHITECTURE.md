@@ -1245,7 +1245,7 @@ install schema creates the table and the 6.2 update creates it with
 
 **Reading.** A user reads their own logins in the profile,
 `index.php?name=account&op=logins`, with the pager. The panel reads them all on
-the tab "Журнал входов" of "Журналы" (`name=logs&op=logins`), filtered by account,
+the tab "Входы" of "Журналы" (`name=logs&op=logins`), filtered by account,
 panel or site, result, way and period. Every journal of `Logger` opens on
 "Журналы" as a table (`op=logview&file=<name>`), read by
 `Logger::getEntries()`: newest first across every file of the channel, so

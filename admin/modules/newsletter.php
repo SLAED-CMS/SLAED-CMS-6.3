@@ -412,8 +412,8 @@ function queue(): void {
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['title']] + getTplLongCell((string)$row['title'], _TITLE),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['tries']],
             ['is_col_date' => true, 'moment' => $row['time']],
+            ['is_col_status' => true, 'stat' => ($note === '') ? ['text' => _NO] : ['text' => $note, 'is_fail' => true]],
             ['is_col_status' => true, 'stat' => ['text' => getQueueState($row), 'is_on' => $qst === 1, 'is_fail' => $qst === 2, 'is_wait' => $qst === 0]],
-            ['is_col_status' => true] + (($note === '') ? [] : ['stat' => ['text' => $note, 'is_fail' => true]]),
             ['is_col_actions' => true, 'dial' => getQueueActions($row, $back)],
         ]];
     }
@@ -430,8 +430,8 @@ function queue(): void {
             ['content' => _TITLE, 'is_truncate' => true],
             ['content' => _MAIL_TRY, 'is_col_count' => true],
             ['content' => _DATE, 'is_col_date' => true],
-            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
@@ -528,8 +528,8 @@ function dead(): void {
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
             ['is_truncate' => true, 'text_html' => $mail] + getTplLongCell((string)$row['email'], _EMAIL),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
-            ['is_col_status' => true] + (($note === '') ? [] : ['stat' => ['text' => $note, 'is_fail' => true]]),
             ['is_col_date' => true, 'moment' => $row['time']],
+            ['is_col_status' => true, 'stat' => ($note === '') ? ['text' => _NO] : ['text' => $note, 'is_fail' => true]],
             ['is_col_actions' => true, 'dial' => []],
         ]];
     }
@@ -542,8 +542,8 @@ function dead(): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _EMAIL, 'is_truncate' => true],
             ['content' => _MAIL_FAILS, 'is_col_count' => true],
-            ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
             ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
