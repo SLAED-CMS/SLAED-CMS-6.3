@@ -134,4 +134,23 @@ final class InputFilterTest extends TestCase
         $this->assertLessThanOrEqual(255, $kept);
         $this->assertTrue($same, 'getAgent() no longer answers the full escaped agent the blocker hashes');
     }
+
+    # A return address after a login stays a path of this site: a scheme, a host, "//", a backslash, a control byte, a space and an overflow all give none
+    #[Test]
+    public function backUrlStaysOnThisSite(): void
+    {
+        $data = $this->getProbe();
+        $home = $data['home'];
+        $this->assertSame([$home.'index.php?name=news&id=2', '', '', '', '', '', '', '', '', ''], $data['back']);
+    }
+
+    # The page of a plain GET is its own way back, a refused back gives none rather than the page, a fragment of htmx and a POST without a back field have none
+    #[Test]
+    public function backUrlComesFromTheFormOrThePage(): void
+    {
+        $data = $this->getProbe();
+        $home = $data['home'];
+        $forum = $home.'index.php?name=forum';
+        $this->assertSame([$home.'admin.php?name=node&op=edit&id=5', '', '', '', '', '', $forum, $home.'account?back='.rawurlencode($forum)], $data['backget']);
+    }
 }

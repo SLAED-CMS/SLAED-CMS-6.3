@@ -604,7 +604,7 @@ class Parser {
                 function(array $m): string {
                     $show = (defined('ADMIN_FILE') || is_user());
                     $this->vary = true;
-                    $txt = $show ? $this->filterNest($m[1]) : sprintf(_HIDETEXT, getSeoUrl(['name' => 'account']));
+                    $txt = $show ? $this->filterNest($m[1]) : sprintf(_HIDETEXT, getLoginUrl());
                     return $this->addStash($this->getQuoteHtml(['is_hide' => true, 'content_html' => $txt, 'title_text' => _HIDE]));
                 },
                 $src

@@ -775,6 +775,19 @@ What the web server may reach, the self-check and the journals are under
 "Private Data Boundary"; how the journals are written and read, the record of
 the panel's actions and the login table under "Journal Boundary".
 
+**The way back after a login** is one field for the panel, the site and OAuth.
+Every login form carries a hidden `back` from `getBackUrl()` (`core/system.php`):
+the posted or linked `back`, else the address of the page itself on a plain GET;
+a POST without the field and an htmx fragment have none. A link that invites a
+guest to log in is `getLoginUrl()`, the login page with that `back`, and the
+OAuth buttons pass it to `oauth_init`, whose row in `_oauth_temp` holds it until
+the callback. `filterBackUrl()` accepts only a path under `HOME_PATH` without
+`//`, a backslash, a space or a control byte, so no form or link can send the
+visitor to another host; a login with no valid `back` lands where it always did.
+The panel's end of session reloads the page it was on, so its login form already
+stands at the section the administrator returns to. `refer=1` with the Referer
+is left to the switches that return to the page they were pressed on.
+
 Security can exit early for blocked or invalid requests before the normal
 `setHead()` / `setFoot()` page lifecycle.
 

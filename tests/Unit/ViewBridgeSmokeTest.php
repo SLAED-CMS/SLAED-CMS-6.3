@@ -37,7 +37,7 @@ namespace Tests\Unit {
                 'submit_button' => ['button_type' => 'submit', 'label' => 'Send'],
                 'lost_link' => ['href' => 'index.php?name=account&op=pass_lost', 'label' => 'Lost'],
                 'register_link' => ['href' => 'index.php?name=account&op=registration', 'label' => 'Register'],
-                'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
+                'back_field' => ['name_attr' => 'back', 'value_attr' => '/index.php?name=news'],
                 'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
             ]);
 
@@ -45,6 +45,7 @@ namespace Tests\Unit {
             $this->assertStringContainsString('login-form', $html);
             $this->assertStringContainsString('Nickname', $html);
             $this->assertStringContainsString('Register', $html);
+            $this->assertStringContainsString('name="back" value="/index.php?name=news"', $html);
         }
 
         #[Test]
@@ -137,7 +138,7 @@ namespace Tests\Unit {
                 'submit_button' => ['button_type' => 'submit', 'label' => 'Send'],
                 'lost_link' => ['href' => 'index.php?name=account&op=pass_lost', 'label' => 'Lost'],
                 'register_link' => ['href' => 'index.php?name=account&op=registration', 'label' => 'Join'],
-                'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
+                'back_field' => ['name_attr' => 'back', 'value_attr' => '/index.php?name=news'],
                 'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
             ]);
             $frag = $tpl->getHtmlFrag('alert', [

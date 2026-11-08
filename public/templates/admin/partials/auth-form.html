@@ -14,6 +14,7 @@
   <div class="sl-admin-login-submit">
     {% include 'fragments/hidden.html' with hidden %}
     {% if token %}{% include 'fragments/hidden.html' with token %}{% endif %}
+    {% if back.value_attr %}{% include 'fragments/hidden.html' with back %}{% endif %}
     {% include 'fragments/button.html' with submit %}
   </div>
 </form>

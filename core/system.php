@@ -2029,12 +2029,12 @@ function setHead(array $seo = []): void {
             'register_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'newuser']), 'title' => _REG, 'label' => _REG, 'icon_name' => 'person-plus',
                 'is_account_button' => true],
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
-            'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
+            'back_field' => ['name_attr' => 'back', 'value_attr' => getBackUrl()],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
             'oauth_html' => Oauth::getButtons(),
         ]);
     } else {
-        $item = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'account']), 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
+        $item = $tpl->getHtmlFrag('link', ['href' => getLoginUrl(), 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
     [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(PUBLIC_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
@@ -2243,6 +2243,25 @@ function setRedirect(string $url, bool $refer = false, int $code = 302, string $
     if (!preg_match('#^([a-z][a-z0-9+.-]*:|/)#i', $target)) $target = HOME_PATH.$target;
     header('Location: '.$target, true, $code);
     exit;
+}
+
+# A return address after a login is a path of this site alone: no scheme, no host, no "//" a browser would read as one, no space, control byte or backslash
+function filterBackUrl(string $raw): string {
+    if (strlen($raw) > 512 || preg_match('/[\x00-\x20\x7F\\\\]/', $raw)) return '';
+    return (str_starts_with($raw, HOME_PATH) && !str_starts_with($raw, '//')) ? $raw : '';
+}
+
+# The page a login returns to: a back a form or link carries decides even when refused, else this page on a plain GET; an htmx answer is never a page
+function getBackUrl(): string {
+    $raw = getVar('req', 'back', 'raw', '');
+    if ($raw !== '' || strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) !== 'GET' || isset($_SERVER['HTTP_HX_REQUEST'])) return filterBackUrl(is_string($raw) ? $raw : '');
+    return filterBackUrl((string)($_SERVER['REQUEST_URI'] ?? ''));
+}
+
+# The login page of the site with the way back to this one
+function getLoginUrl(): string {
+    $back = getBackUrl();
+    return getSeoUrl(['name' => 'account'] + (($back !== '') ? ['back' => rawurlencode($back)] : []));
 }
 
 # Highlights text terms inside HTML content

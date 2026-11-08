@@ -7,7 +7,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-# The DB-free surface of the Oauth client core/classes/oauth.php: redirects, base64url, claims, the Microsoft issuer and the full id_token validation
+# The DB-free surface of the Oauth client core/classes/oauth.php: base64url, claims, the Microsoft issuer and the full id_token validation
 final class OauthTest extends TestCase
 {
     private static mixed $key = null;
@@ -84,20 +84,6 @@ final class OauthTest extends TestCase
     private function requireKey(): void
     {
         if (self::$key === null) $this->markTestSkipped('OpenSSL key generation unavailable in this runtime');
-    }
-
-    #[Test]
-    public function redirectRejectsSchemesHostsAndControlChars(): void
-    {
-        $this->assertSame('index.php?name=news', \Oauth::getRedirect('index.php?name=news'));
-        $this->assertSame('/', \Oauth::getRedirect('https://evil.example/x'));
-        $this->assertSame('/', \Oauth::getRedirect('https:evil.example'));
-        $this->assertSame('/', \Oauth::getRedirect('JaVaScRiPt:alert(1)'));
-        $this->assertSame('/', \Oauth::getRedirect('data:text/html,x'));
-        $this->assertSame('/', \Oauth::getRedirect('//evil.example'));
-        $this->assertSame('/', \Oauth::getRedirect('/index.php'));
-        $this->assertSame('/', \Oauth::getRedirect(''));
-        $this->assertStringNotContainsString("\n", \Oauth::getRedirect("index.php?a=1\r\nSet-Cookie: x=y"));
     }
 
     #[Test]

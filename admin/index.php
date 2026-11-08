@@ -306,7 +306,7 @@ function checkAdminLogin(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
         Captcha::clearLoginFailures('admin', $name);
         addLoginLog($lid, true, 'ok', $name);
-        setRedirect($afile.'.php');
+        setRedirect(getBackUrl() ?: $afile.'.php');
     } else {
         Captcha::registerLoginFailure('admin', $name);
         addLoginLog($lid, true, $block ? 'blocked' : 'password', $name);
@@ -416,6 +416,7 @@ function getAdminLoginForm(): void {
             'route' => $afile,
             'rows' => $rows,
             'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
+            'back' => ['name_attr' => 'back', 'value_attr' => getBackUrl()],
             'submit' => ['button_type' => 'submit', 'submit_label' => _LOGIN, 'icon_name' => 'box-arrow-in-right'],
         ]);
     }

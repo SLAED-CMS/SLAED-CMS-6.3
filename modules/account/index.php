@@ -60,7 +60,8 @@ function account(): void {
         $after .= Oauth::getButtons();
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
-            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
+            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'back', 'value_attr' => getBackUrl()]).$fields,
             'captcha' => $captcha,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'login', 'label' => _USERLOGIN, 'icon_name' => 'box-arrow-in-right']),
             'after_submit' => $after,
@@ -601,9 +602,9 @@ function view(): void {
         }
     } else {
         http_response_code(403);
-        setHead(['title' => sprintf(_MODULEUSERS, getSeoUrl(['name' => $conf['name']]))]);
+        setHead(['title' => sprintf(_MODULEUSERS, getLoginUrl())]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 15]);
-        echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_MODULEUSERS, getSeoUrl(['name' => $conf['name']])), 'meta' => $meta]);
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_MODULEUSERS, getLoginUrl()), 'meta' => $meta]);
         setFoot();
     }
 }
@@ -1105,7 +1106,7 @@ function login(): void {
     }
     if (!$stop) {
         setUserLogin((int)$uid, (string)$nick, (string)$pass, (int)$story, (int)$blockon, (string)$theme);
-        setRedirect(getSeoUrl(['name' => $conf['name']]), true);
+        setRedirect(getBackUrl() ?: getSeoUrl(['name' => $conf['name']]));
     } else {
         Captcha::registerLoginFailure('user', $uname);
         addLoginLog(($nick === $uname) ? intval($uid) : 0, false, $block ? 'blocked' : 'password', $uname);
@@ -1748,13 +1749,13 @@ function oauthretry(string $msg): void {
 }
 
 function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): void {
-    global $db, $conf;
+    global $db;
     $row = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
     if (!is_array($row) || empty($row['id'])) oautherror();
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = NOW() WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
     if ($event !== '') Logger::addOauth('info', $event, ['prov' => $prov, 'uid' => $uid]);
     setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme'], 'oauth');
-    setRedirect($redir !== '' ? $redir : getSeoUrl(['name' => $conf['name']]));
+    setRedirect($redir);
 }
 
 function oauthinit(): void {
@@ -1763,7 +1764,8 @@ function oauthinit(): void {
         Logger::addOauth('warning', 'oauth_provider_disabled', ['prov' => $prov]);
         oautherror();
     }
-    $redir = Oauth::getRedirect(getVar('get', 'redirect', 'text'));
+    $raw = getVar('get', 'back', 'raw', '');
+    $redir = filterBackUrl(is_string($raw) ? $raw : '');
     $state = bin2hex(random_bytes(32));
     $nonce = bin2hex(random_bytes(32));
     $verif = bin2hex(random_bytes(32));
@@ -1839,7 +1841,7 @@ function oauthback(): void {
         oautherror();
     }
     $mail = $claims['verified'] ? $claims['email'] : '';
-    $redir = Oauth::getRedirect((string)$row['redirect']);
+    $redir = filterBackUrl((string)$row['redirect']) ?: HOME_PATH;
     $uid = Oauth::getUserId($prov, $claims['sub']);
     if ($uid !== null) {
         oauthlogin($uid, $prov, $redir);
@@ -1955,7 +1957,7 @@ function oauthfinish(): void {
         Logger::addOauth('warning', 'oauth_bad_config', ['prov' => $prov]);
         oautherror();
     }
-    $redir = Oauth::getRedirect((string)$row['redirect']);
+    $redir = filterBackUrl((string)$row['redirect']) ?: HOME_PATH;
     $act = getVar('post', 'act', 'word');
     if ($act === 'link') {
         $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));

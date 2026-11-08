@@ -135,7 +135,7 @@ if (empty($go)) {
         }
     }
     $lkey = $pkey ?: ($name ? (empty($op) && $file === 'index' ? $layout->getModuleKey($name) : 0) : $layout->getHomeKey());
-    if ($lkey && !$layout->isPageShown($lkey)) $deny(is_user() ? _MODULESADMINS : sprintf(_MODULEUSERS, getSeoUrl(['name' => 'account'])));
+    if ($lkey && !$layout->isPageShown($lkey)) $deny(is_user() ? _MODULESADMINS : sprintf(_MODULEUSERS, getLoginUrl()));
     # A page of sections alone: its title, description, picture and robots, the canonical address its path; the draft keeps no address and indexes nothing
     if ($pkey) {
         $pdata = $layout->getPage($pkey);
@@ -189,7 +189,7 @@ if (empty($go)) {
                 getLang($name);
                 require_once $path;
             } elseif ($view == 1 && !is_moder($name)) {
-                if (!is_user()) $info = sprintf(_MODULEUSERS, getSeoUrl(['name' => 'account'])).' ';
+                if (!is_user()) $info = sprintf(_MODULEUSERS, getLoginUrl()).' ';
                 $group = $mconf['group'] ?? 0;
                 $gname = '';
                 if ($group) {

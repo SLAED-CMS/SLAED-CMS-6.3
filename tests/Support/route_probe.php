@@ -2867,7 +2867,7 @@ function getRouteEmail(PDO $pdo, string $work): array {
     $codes = [];
     foreach (['ohne1' => 'Ohne Eins', 'ohne2' => 'Ohne Zwei'] as $who => $name) {
         $ptok = bin2hex(random_bytes(32));
-        $pdo->prepare('INSERT INTO '.$pre.'oauth_temp (token, kind, provider, uid, email, uname, redirect, time) VALUES (?, \'pending\', \'google\', ?, \'\', ?, \'index.php\', ?)')
+        $pdo->prepare('INSERT INTO '.$pre.'oauth_temp (token, kind, provider, uid, email, uname, redirect, time) VALUES (?, \'pending\', \'google\', ?, \'\', ?, \'/\', ?)')
             ->execute([$ptok, 'sub-'.$who, $name, time()]);
         file_put_contents($work.'/jar-'.$who.'.txt', "127.0.0.1\tFALSE\t/\tFALSE\t0\toauth-pt\t".$ptok."\n", FILE_APPEND);
         $atok = getRouteToken(getRouteReply($who, 'GET', 'index.php?name=account&op=oauth_finish')['body'], 'name="uname"');
@@ -2963,7 +2963,7 @@ function getRouteJournal(PDO $pdo, string $work): array {
     $init = getRouteReply('link', 'GET', 'index.php?name=account&op=oauth_init&prov=google');
     $ptok = bin2hex(random_bytes(32));
     $pdo->prepare('INSERT INTO '.$pre.'oauth_temp (token, kind, provider, uid, email, uname, redirect, time) VALUES (?, \'pending\', \'google\', \'sub-clara\', \'\', \'Clara\','
-        .' \'index.php\', ?)')->execute([$ptok, time()]);
+        .' \'/\', ?)')->execute([$ptok, time()]);
     file_put_contents($work.'/jar-link.txt', "127.0.0.1\tFALSE\t/\tFALSE\t0\toauth-pt\t".$ptok."\n", FILE_APPEND);
     $atok = getRouteToken(getRouteReply('link', 'GET', 'index.php?name=account&op=oauth_finish')['body'], 'user_password');
     $link = ['op' => 'oauth_finish', 'act' => 'link', 'user_name' => 'clara', 'user_password' => 'wrong-pass', 'token' => $atok];

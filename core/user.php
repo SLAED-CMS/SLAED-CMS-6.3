@@ -244,7 +244,7 @@ function setComShow(int $id, int $acomm, ?string $route): string {
     $stat = '';
     $form = '';
     if ($mode !== CommentMode::Disabled && !is_user() && $conf['comments']['anonpost'] == 0) {
-        $form = $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getSeoUrl(['name' => 'account'])), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        $form = $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getLoginUrl()), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } elseif ($mode !== CommentMode::Disabled) {
         $userinfo = getUserInfo();
         $note = !is_moder($conf['name']) && ($mode === CommentMode::Moderated || !empty($userinfo['access']) || (!is_user() && $conf['comments']['anonpost'] == 1));

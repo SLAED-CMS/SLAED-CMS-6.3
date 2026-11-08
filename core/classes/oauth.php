@@ -48,13 +48,6 @@ class Oauth {
         return preg_match('/^[a-f0-9]{64}$/', $val) ? $val : '';
     }
 
-    # Normalizes a post-login redirect target to a safe internal path, rejects any scheme, host, backslash, control chars, relative root and what overflows its column
-    public static function getRedirect(string $raw): string {
-        $raw = trim(preg_replace('/[\x00-\x1F\x7F\\\\]/', '', $raw));
-        if ($raw === '' || str_starts_with($raw, '/') || mb_strlen($raw) > 512) return HOME_PATH;
-        if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $raw)) return HOME_PATH;
-        return $raw;
-    }
 
     # Performs a hardened curl request to a provider endpoint: TLS verify, no redirects, 10s timeout, 64 KB body cap, JSON content type check
     public static function getHttp(string $url, array $post = [], string $auth = ''): array {
@@ -399,13 +392,14 @@ class Oauth {
         return '';
     }
 
-    # Renders sign-in buttons for all ready OAuth providers, empty string when OAuth is disabled or no provider is fully configured
-    public static function getButtons(string $redir = ''): string {
+    # Renders sign-in buttons for all ready OAuth providers with the way back to this page, empty string when OAuth is disabled or no provider is fully configured
+    public static function getButtons(): string {
         global $tpl;
         $rows = [];
+        $back = getBackUrl();
         foreach (['google', 'microsoft'] as $prov) {
             if (!self::getProvider($prov)) continue;
-            $url = getSeoUrl(['name' => 'account', 'op' => 'oauth_init', 'prov' => $prov] + (($redir !== '') ? ['redirect' => rawurlencode($redir)] : []));
+            $url = getSeoUrl(['name' => 'account', 'op' => 'oauth_init', 'prov' => $prov] + (($back !== '') ? ['back' => rawurlencode($back)] : []));
             $rows[] = ['prov' => $prov, 'label' => ucfirst($prov), 'href' => $url];
         }
         if (!$rows) return '';

@@ -1295,6 +1295,29 @@ if ($mode === 'statscookie') {
     putenv('HTTP_USER_AGENT='.$_SERVER['HTTP_USER_AGENT']);
     $out['agent'] = [mb_strlen(getAgent()), mb_strlen(filterCutText(getAgent(), 255)), md5(getAgent()) === md5(filterText($_SERVER['HTTP_USER_AGENT']))];
     $out['html'] = [filterHtml('cost $5'), filterHtml('back\\slash'), filterHtml('say "hi" and \'bye\''), filterHtml('')];
+    $home = HOME_PATH;
+    $out['home'] = $home;
+    $out['back'] = [filterBackUrl($home.'index.php?name=news&id=2'), filterBackUrl('https://evil.example/x'), filterBackUrl('//evil.example'),
+        filterBackUrl('/\\evil.example'), filterBackUrl('javascript:alert(1)'), filterBackUrl('index.php'), filterBackUrl($home."x\r\nSet-Cookie: a=b"),
+        filterBackUrl($home.'a b'), filterBackUrl($home.str_repeat('a', 520)), filterBackUrl('')];
+    $_GET = $_POST = [];
+    $_SERVER['REQUEST_METHOD'] = 'GET';
+    $_SERVER['REQUEST_URI'] = $home.'admin.php?name=node&op=edit&id=5';
+    $page = getBackUrl();
+    $_GET = ['back' => 'https://evil.example/'];
+    $bad = getBackUrl();
+    $_GET = [];
+    $_SERVER['HTTP_HX_REQUEST'] = 'true';
+    $frag = getBackUrl();
+    unset($_SERVER['HTTP_HX_REQUEST']);
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $post = getBackUrl();
+    $_POST = ['back' => 'https://evil.example/'];
+    $evil = getBackUrl();
+    $_POST = ['back' => ['x']];
+    $list = getBackUrl();
+    $_POST = ['back' => $home.'index.php?name=forum'];
+    $out['backget'] = [$page, $bad, $frag, $post, $evil, $list, getBackUrl(), getLoginUrl()];
 } elseif ($mode === 'getvar') {
     $_POST = [
         'flat' => ['red', '', 'blue'],

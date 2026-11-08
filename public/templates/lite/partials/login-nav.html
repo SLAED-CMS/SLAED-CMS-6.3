@@ -26,7 +26,9 @@
       {% if token %}
       <input type="hidden" name="{{ token_field.name_attr }}" value="{{ token_field.value_attr }}">
       {% endif %}
-      <input type="hidden" name="{{ refer_field.name_attr }}" value="{{ refer_field.value_attr }}">
+      {% if back_field.value_attr %}
+      <input type="hidden" name="{{ back_field.name_attr }}" value="{{ back_field.value_attr }}">
+      {% endif %}
       <input type="hidden" name="{{ op_field.name_attr }}" value="{{ op_field.value_attr }}">
     </form>
   </li>

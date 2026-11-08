@@ -23,7 +23,7 @@ function setOauthPending(string $prov, int $keep): array {
         'uid' => 'probe-'.substr($tok, 0, 12),
         'email' => 'probe@slaed.loc',
         'uname' => 'Probe',
-        'redirect' => 'index.php',
+        'redirect' => HOME_PATH,
     ];
     if (!Oauth::setTemp('pending', $tok, $data)) return ['error' => 'the pending row could not be written'];
     if ($keep > 0) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_oauth_temp SET time = :time WHERE token = :tok', ['time' => time() + $keep, 'tok' => $tok]);
