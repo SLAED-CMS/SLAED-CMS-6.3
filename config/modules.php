@@ -87,7 +87,7 @@ return [
             'lang' => '_FEEDBACK',
             'icon' => 'envelope-open',
             'active' => '1',
-            'view' => '1',
+            'view' => '0',
             'menu' => '1',
             'group' => '0',
             'side' => '2',

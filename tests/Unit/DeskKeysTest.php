@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 # The desk conveniences of both file screens, read off the shipped source, the two themes and the two skins without writing to the site
 final class DeskKeysTest extends TestCase
 {
-    private const THEMES = ['admin', 'lite'];
+    private const THEMES = ['admin', 'aurora'];
     private const ADMINJS = 'public/templates/admin/assets/js/admin-ui.js';
     private const EDITJS = 'public/plugins/system/filemanager.js';
     private const SITEJS = 'public/plugins/system/slaed.js';

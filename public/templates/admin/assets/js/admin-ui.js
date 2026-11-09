@@ -1814,7 +1814,9 @@
         }));
         box.querySelector('.sl-rhythm-figure > b').textContent = per.figure;
         box.querySelector('.sl-rhythm-figure > span').textContent = per.note;
-        box.querySelector('.sl-rhythm-figure > em').textContent = per.delta || '';
+        var delta = box.querySelector('.sl-rhythm-figure > em');
+        delta.textContent = per.delta || '';
+        delta.className = (per.dir && per.dir !== 'none') ? 'sl-rhythm-delta-' + per.dir : '';
         if (fresh) setSeriesSwap(host);
     }
     // The rhythm of a site, on the engine of the live chart: a figure and its period over the chart, the legend and the view under it

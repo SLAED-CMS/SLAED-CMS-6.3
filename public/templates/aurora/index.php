@@ -1,0 +1,100 @@
+<?php
+# Author: Eduard Laas
+# 2005 - 2026 SLAED
+# License: MIT
+# Website: slaed.net
+
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+# Return the CSS season class based on the current date
+function setTemplateSeason(): string {
+    $zdate = date('z');
+    if ($zdate > 355 || $zdate < 5) return 'sl-newyear';
+    $seas = [0 => 'sl-winter', 1 => 'sl-spring', 2 => 'sl-summer', 3 => 'sl-autumn'];
+    return $seas[floor(date('n') / 3) % 4];
+}
+
+# Query recent forum topics and render via forum-teaser partial
+function setTemplateForum(): string {
+    global $db, $tpl;
+    $items = '';
+    $result = getForumTopics('id, title, ltime, luid, lname, lpost, status', '97, 98, 99, 100, 101', 3);
+    while ([$id, $title, $time, $luid, $lname, $lpost, $status, $path, , $lpath] = $db->getSqlRow($result)) {
+        $items .= $tpl->getHtmlFrag('forum-teaser-item', [
+            'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
+            'href' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]).'#'.$lpost,
+            'title' => getDecodedText($title),
+            'by' => _POSTEDBY,
+            'poster' => $luid ? user_info($lname, $lpath) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
+            'when_label' => _DATE,
+            'when' => format_time($time, _TIMESTRING),
+        ]);
+    }
+    return $tpl->getHtmlPart('forum-teaser', ['items' => $items, 'label' => _FORUM]);
+}
+
+# The header marquee: the latest material of the first active type in the faq mode of this theme; the mode is a theme name, so the core knows no type here
+function getTemplateFaq(): string {
+    global $tpl;
+    $type = getNodeModeType('faq');
+    if ($type === null) return '';
+    try {
+        $query = getNodeReader()->setNodeType($type)->setNodePage(1, 1);
+        $query->setNodeOrder('published', 'desc');
+        $node = $query->getNodeList()[0] ?? null;
+    } catch (NodeException) {
+        return '';
+    }
+    if ($node === null) return '';
+    return $tpl->getHtmlFrag('link', [
+        'href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]),
+        'title' => $node->title,
+        'icon_name' => 'stars',
+        'label' => $node->title,
+    ]);
+}
+
+# Head-time variables of aurora: no band on a layout page that turns it off, the banner category as the head resolved it by read right, top bar links in six tones
+function getThemeHeadVars(): array {
+    global $conf, $tpl, $sitevars, $layout, $lkey;
+    $parts = $sitevars['parts'] ?? [];
+    foreach (array_keys($parts['social'] ?? []) as $i) $parts['social'][$i]['tone'] = $i % 6;
+    $band = !($layout instanceof Layout) || empty($lkey) || !empty($layout->getPage((int)$lkey)['band']);
+    $mname = ($band && $conf['name']) ? getModuleName($conf['name']) : '';
+    $fcat = (int)($sitevars['head_cid'] ?? 0);
+    $ctitle = getVar('get', 'cat', 'num', 0) ? '' : (string)($sitevars['head_item'] ?? '');
+    $sep = $conf[$conf['name']]['defis'] ?? $conf['defis'];
+    $cname = ($band && $fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
+    if ($cname !== '' && $ctitle !== '') {
+        $cname .= ' '.htmlspecialchars(urldecode($sep), ENT_QUOTES, 'UTF-8').' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
+    }
+    $head = '';
+    if ($mname !== '' || $cname !== '') {
+        $head = $tpl->getHtmlFrag('aurora-head-banner', ['module' => $mname, 'category' => $cname]);
+    }
+    $season = setTemplateSeason();
+    return [
+        'season' => $season,
+        'modul' => $conf['name'] ?? '',
+        'parts' => $parts,
+        'faqtitle' => getTemplateFaq(),
+        'head_html' => $head,
+        'preload' => getTemplateLcpPreload($season, $head !== ''),
+    ];
+}
+
+# Build a single LCP preload link for the hero actually rendered on this page: head-content pages use <season>-cat.webp
+function getTemplateLcpPreload(string $season, bool $hasHead): string {
+    if (!$hasHead) return '';
+    $img = preg_replace('/^sl-/', '', $season).'-cat.webp';
+    $href = 'templates/'.getTheme().'/images/seasons/'.$img;
+    if (!is_file(PUBLIC_DIR.'/'.$href)) return '';
+    return '<link rel="preload" as="image" href="'.HOME_PATH.$href.'" fetchpriority="high">'."\n";
+}
+
+# Provide foot-time variables for the aurora theme layout
+function getThemeFootVars(): array {
+    return [
+        'forumblock' => setTemplateForum(),
+    ];
+}

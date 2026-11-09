@@ -10,7 +10,7 @@ use ZipArchive;
 # The operations of the system area - create, rename, copy, move, delete and pack - over a disposable tree rebuilt before each test
 final class FileManagerOpsTest extends TestCase
 {
-    private const DIRS = ['templates', 'templates/lite', 'files', 'files/keep', 'files/full', 'storage/logs', 'storage/sessions'];
+    private const DIRS = ['templates', 'templates/aurora', 'files', 'files/keep', 'files/full', 'storage/logs', 'storage/sessions'];
     private const BODIES = [
         'index.php' => "<?php echo 1;\n",
         '.env' => "SECRET=1\n",
@@ -151,9 +151,9 @@ final class FileManagerOpsTest extends TestCase
     public function aCopyLeavesTheSourceStanding(): void
     {
         $man = $this->getManager();
-        $res = $man->addFileCopy('files/note.txt', 'templates/lite/note.txt');
+        $res = $man->addFileCopy('files/note.txt', 'templates/aurora/note.txt');
         $this->assertTrue($res['ok'], 'A copy was refused with '.var_export($res['error'], true));
-        $this->assertSame("one\n", file_get_contents(self::$root.'/templates/lite/note.txt'), 'The copy does not carry the content of the source');
+        $this->assertSame("one\n", file_get_contents(self::$root.'/templates/aurora/note.txt'), 'The copy does not carry the content of the source');
         $this->assertFileExists(self::$root.'/files/note.txt', 'The copy took the source away');
         $this->assertSame('closed', $man->addFileCopy('files/keep', 'files/second')['error'], 'A directory was copied');
     }

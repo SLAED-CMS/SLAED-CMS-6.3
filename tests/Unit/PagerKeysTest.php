@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 # The arrow keys of the pager and the tip that explains them, read off the shipped script, the two themes and the six locales without writing to the site
 final class PagerKeysTest extends TestCase
 {
-    private const THEMES = ['admin', 'lite'];
+    private const THEMES = ['admin', 'aurora'];
     private const LOCALES = ['de', 'en', 'fr', 'pl', 'ru', 'uk'];
     private const SITEJS = 'public/plugins/system/slaed.js';
 
@@ -74,11 +74,11 @@ final class PagerKeysTest extends TestCase
     #[Test]
     public function bothThemesExplainTheKeys(): void
     {
-        $lite = $this->getFile('public/templates/lite/fragments/pager.html');
+        $aurora = $this->getFile('public/templates/aurora/fragments/pager.html');
         $note = 'The pager fragments of the two themes differ, though the mechanism and the classes are one';
-        $this->assertSame($lite, $this->getFile('public/templates/admin/fragments/pager.html'), $note);
+        $this->assertSame($aurora, $this->getFile('public/templates/admin/fragments/pager.html'), $note);
         $note = 'The pager does not take its key tip from the fragment of its theme';
-        $this->assertStringContainsString("{% include 'fragments/pager-keys.html' %}", $lite, $note);
+        $this->assertStringContainsString("{% include 'fragments/pager-keys.html' %}", $aurora, $note);
         foreach (self::THEMES as $name) {
             $keys = $this->getFile('public/templates/'.$name.'/fragments/pager-keys.html');
             $note = 'The key tip of theme '.$name.' is no tip of the system';
@@ -90,7 +90,7 @@ final class PagerKeysTest extends TestCase
             $note = 'The keys of the tip of theme '.$name.' stand in a definition list, which each theme lays out as label and value';
             $this->assertStringNotContainsString('<dl', $keys, $note);
         }
-        $link = $this->getFile('public/templates/lite/fragments/pager-link.html');
+        $link = $this->getFile('public/templates/aurora/fragments/pager-link.html');
         $note = 'An arrow link does not name the key that follows it';
         $this->assertStringContainsString('aria-keyshortcuts="{{ key_name }}"', $link, $note);
         foreach (self::THEMES as $name) {

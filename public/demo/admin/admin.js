@@ -1090,7 +1090,7 @@
     }).join('');
     const home = page === 'home';
     return app('sl-dock-plain' + (home ? ' sl-dock-here' : ''), 'index.html', 'Главная страница панели' + (home ? ' · вы здесь' : ''),
-      '<img src="../../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">', home ? ' aria-current="page"' : '')
+      '<img src="../../templates/aurora/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">', home ? ' aria-current="page"' : '')
       + '<div class="sl-dock-body" id="sl-dock-body" data-sl-dock-body' + (getKept('sl.dock.fold') === '1' ? ' hidden style="display: none"' : '') + '>'
       + (pins ? '<span class="sl-dock-sep sl-dock-pin"></span><span class="sl-dock-pins" data-mark="М9">' + pins + '</span>' : '')
       + '<span class="sl-dock-sep"></span>'
@@ -1099,7 +1099,7 @@
       ' data-sl-open="sl-stats" style="--sl-d-adm: 50%; --sl-d-people: 50%; --sl-d-bots: 50%" data-mark="М13"')
       + btn('sl-dock-stack', 'Свои ссылки: 5', DOCK_ICO('folder2-open') + '<b class="sl-dock-badge" title="Одна ссылка не работает">!</b>',
       ' data-sl-dock-pop="stack" aria-controls="sl-dock-pop-stack" aria-expanded="false"')
-      + btn('sl-dock-me', 'SLAED CMS', '<img src="../../templates/lite/images/avatars/presets/038.svg" alt="">',
+      + btn('sl-dock-me', 'SLAED CMS', '<img src="../../templates/aurora/images/avatars/presets/038.svg" alt="">',
       ' data-sl-dock-pop="me" aria-controls="sl-dock-pop-me" aria-expanded="false" data-mark="М14"')
       + '<span class="sl-dock-sep"></span>'
       + app('sl-dock-plain sl-dock-out', '../../admin.php?op=logout', 'Выход', DOCK_ICO('box-arrow-right'))
@@ -1141,7 +1141,7 @@
       + '<a href="https://webmaster.yandex.ru/" target="_blank" rel="noopener noreferrer" title="Яндекс Вебмастер"><span style="--sl-dock-c: var(--sl-warning)">'
       + DOCK_ICO('bar-chart-line') + '</span><span>Яндекс Вебмастер</span></a></div></div>'
       + '<div class="sl-dock-pop" id="sl-dock-pop-me" data-sl-dock-pop-id="me" hidden><div class="sl-dock-me-head"><img '
-      + 'src="../../templates/lite/images/avatars/presets/038.svg" alt=""><b>SLAED CMS</b><small>Суперадминистратор</small></div>'
+      + 'src="../../templates/aurora/images/avatars/presets/038.svg" alt=""><b>SLAED CMS</b><small>Суперадминистратор</small></div>'
       + '<dl class="sl-dock-facts"><dt>Вошёл</dt><dd>сегодня, 20:31</dd><dt>Прошлый вход</dt><dd>вчера, 21:14</dd><dt>IP-адрес</dt><dd>127.0.0.1</dd><dt>До конца сеанса</dt>'
       + '<dd>47 мин</dd></dl>'
       + '<div class="sl-dock-row">Положение меню <span class="sl-dock-pair"><button type="button" data-sl-dock-dir="row" aria-pressed="' + (dir === 'row')

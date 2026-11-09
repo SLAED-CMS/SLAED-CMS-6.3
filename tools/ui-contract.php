@@ -35,14 +35,14 @@ return [
             ],
             'kind' => 'admin',
         ],
-        'lite' => [
-            'root' => 'public/templates/lite',
-            'api' => 'public/templates/lite/assets/css/base.css',
+        'aurora' => [
+            'root' => 'public/templates/aurora',
+            'api' => 'public/templates/aurora/assets/css/base.css',
             # The file presentation.css dresses the one page of the presentation module and lands between base and theme, because the runtime bundles the directory by name
             # The audit walks a list instead, so the file is named here or it is bundled and never checked
             'css' => [
-                'public/templates/lite/assets/css/base.css', 'public/templates/lite/assets/css/dock.css', 'public/templates/lite/assets/css/presentation.css',
-                'public/templates/lite/assets/css/theme.css', 'public/templates/lite/assets/editors/toastui/skin.css',
+                'public/templates/aurora/assets/css/base.css', 'public/templates/aurora/assets/css/dock.css', 'public/templates/aurora/assets/css/presentation.css',
+                'public/templates/aurora/assets/css/theme.css', 'public/templates/aurora/assets/editors/toastui/skin.css',
             ],
             'kind' => 'frontend',
         ],
@@ -253,7 +253,7 @@ return [
         '--sl-d-box-y' => 'top edge of a ring of the site builder in the page, plugins/system/builder.js',
         '--sl-d-count' => 'speed dial item count, plugins/system/filemanager.js',
         '--sl-d-device' => 'width of the device the frame of the site builder shows, templates/admin/assets/js/layout.js',
-        '--sl-d-depth' => 'nesting depth of a comment or of a check list row, templates/lite/fragments/comment.html and templates/*/fragments/check-list.html',
+        '--sl-d-depth' => 'nesting depth of a comment or of a check list row, templates/aurora/fragments/comment.html and templates/*/fragments/check-list.html',
         '--sl-d-dock-lift' => 'height the notice of the panel and the site climbs over a floating menu lying under it, plugins/system/dock.js',
         '--sl-d-dock-px' => 'left of a pop of the floating menu over its icon inside the window, plugins/system/dock.js',
         '--sl-d-dock-py' => 'top of a pop of the upright floating menu beside its icon inside the window, plugins/system/dock.js',
@@ -263,8 +263,8 @@ return [
         '--sl-d-dock-y' => 'centre of the floating menu down the window, plugins/system/dock.js',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
         '--sl-d-editor-floor' => 'height of the field CodeMirror takes the place of, plugins/system/editor.js',
-        '--sl-d-focus' => 'point of a picture its crop keeps in view, object-position of templates/lite/sections/*.html',
-        '--sl-d-frame' => 'height of the frame of an embedded page, the field height of templates/lite/sections/embed.html',
+        '--sl-d-focus' => 'point of a picture its crop keeps in view, object-position of templates/aurora/sections/*.html',
+        '--sl-d-frame' => 'height of the frame of an embedded page, the field height of templates/aurora/sections/embed.html',
         '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
         '--sl-d-group' => 'colour of a group on its ladder step, its contrast tiles and the bind swatch of its form, templates/admin/fragments/group-step.html,'
@@ -272,19 +272,19 @@ return [
         '--sl-d-hint-x' => 'editor variable list left inside its card, at the caret or under the capsule button, plugins/system/editor.js',
         '--sl-d-hint-y' => 'editor variable list top inside its card, below the caret line or at the top of the card, plugins/system/editor.js',
         '--sl-d-i' => 'place of a check among the bars of the cockpit lamp, which times its scan, templates/admin/partials/cockpit.html and'
-            .' templates/lite/partials/presentation-hero.html',
+            .' templates/aurora/partials/presentation-hero.html',
         '--sl-d-knob-w' => 'width of the chosen cell of a segmented switch, which its plate takes, plugins/system/slaed.js',
         '--sl-d-knob-x' => 'left of the chosen cell of a segmented switch inside its track, where its plate travels, plugins/system/slaed.js',
-        '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
+        '--sl-d-level' => 'profile completion percentage, templates/aurora/partials/account-home.html and account-profile.html',
         '--sl-d-pill-x' => 'editor capsule horizontal offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-rank' => 'colour of the lit marks of a group rank, templates/*/fragments/rank.html',
         '--sl-d-view-height' => 'height of what the editor preview shows, measured in its sandboxed frame, plugins/system/editor.js',
         '--sl-d-members' => 'session donut end of the member share, templates/*/partials/session-summary.html',
-        '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
-        '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
-        '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
-        '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'
+        '--sl-d-meter' => 'profile completeness percentage, templates/aurora/partials/account-settings.html and plugins/system/slaed.js',
+        '--sl-d-at' => 'settings rail mark index, templates/aurora/partials/account-settings.html',
+        '--sl-d-of' => 'settings rail mark count less one, templates/aurora/partials/account-settings.html',
+        '--sl-d-part' => 'share of a measured figure as a percentage, templates/aurora/fragments/presentation-stat.html, partials/presentation-stats.html'
             .' and partials/presentation-runtime.html, the shares of the watch window, templates/*/partials/session-stats.html,'
             .' and the fill of a meter, templates/admin/fragments/meter.html',
         '--sl-d-gate-top' => 'fraction of a pixel that sets the request guard gate on the first whole device pixel in its scene, plugins/presentation/presentation.js',
@@ -296,15 +296,15 @@ return [
         '--sl-d-pointer-y' => 'pointer viewport vertical position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',
         '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
-        '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
+        '--sl-d-ring' => 'profile ring colour, templates/aurora/partials/account-home.html and account-profile.html',
         '--sl-d-share' => 'share of members a group holds against the largest group, as a fraction, templates/admin/fragments/group-step.html',
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
         '--sl-d-swatch' => 'colour one swatch of a palette shows, and the value the own-colour wheel holds, templates/admin/partials/group-form.html and assets/js/admin-ui.js',
         '--sl-d-toast' => 'time a notice stays, which the ring of the panel notice counts down, plugins/system/slaed.js',
         '--sl-d-turn' =>'place of a node in a staggered row: a solid head or a window head its beam crosses and a part of a ground rising, templates/admin/assets/js/admin-ui.js,'
             .' a rating star that bursts, plugins/system/slaed.js, and a check row of the installer, templates/admin/pages/setup.html',
-        '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
-        '--sl-d-usrlevel' => 'user group progress, templates/lite/partials/block-user-info.html',
+        '--sl-d-user' => 'user group colour, templates/aurora/partials/block-user-info.html',
+        '--sl-d-usrlevel' => 'user group progress, templates/aurora/partials/block-user-info.html',
         '--sl-d-x' => 'horizontal position of a travelling card or packet inside its scene, plugins/presentation/presentation.js, and of the pointer'
             .' inside a home tile, a tile of figures or a pressed control of the panel, templates/admin/assets/js/admin-ui.js',
         '--sl-d-y' => 'vertical position of a travelling card inside its scene, plugins/presentation/presentation.js, and of the pointer'
@@ -323,19 +323,19 @@ return [
 
     # Files outside the theme packages that declare or read theme token names
     'places' => [
-        'public/templates/lite/fragments/comment.html',
-        'public/templates/lite/partials/account-home.html',
-        'public/templates/lite/partials/account-profile.html',
-        'public/templates/lite/partials/account-settings.html',
-        'public/templates/lite/partials/block-user-info.html',
-        'public/templates/lite/partials/session-summary.html',
+        'public/templates/aurora/fragments/comment.html',
+        'public/templates/aurora/partials/account-home.html',
+        'public/templates/aurora/partials/account-profile.html',
+        'public/templates/aurora/partials/account-settings.html',
+        'public/templates/aurora/partials/block-user-info.html',
+        'public/templates/aurora/partials/session-summary.html',
         'public/templates/admin/partials/session-summary.html',
-        'public/templates/lite/partials/session-stats.html',
+        'public/templates/aurora/partials/session-stats.html',
         'public/templates/admin/partials/session-stats.html',
-        'public/templates/lite/partials/presentation-hero.html',
-        'public/templates/lite/partials/presentation-stats.html',
-        'public/templates/lite/fragments/presentation-ring.html',
-        'public/templates/lite/fragments/presentation-stat.html',
+        'public/templates/aurora/partials/presentation-hero.html',
+        'public/templates/aurora/partials/presentation-stats.html',
+        'public/templates/aurora/fragments/presentation-ring.html',
+        'public/templates/aurora/fragments/presentation-stat.html',
         'admin/modules/monitor.php',
         'admin/modules/admins.php',
         'public/plugins/system/slaed.js',
@@ -377,7 +377,7 @@ return [
                 'teal' => ['50' => 70.6, '300' => 70.6, '600' => 46.7, '900' => 32.4],
                 'violet' => ['50' => 62.0, '300' => 47.3, '600' => 46.9, '900' => 41.8],
             ],
-            'lite' => [
+            'aurora' => [
                 'blue' => ['50' => 72.7, '100' => 67.4, '200' => 63.7, '300' => 61.0, '400' => 57.6, '500' => 56.0, '600' => 53.4, '700' => 50.6, '800' => 44.5, '900' => 20.2],
                 'gray' => ['50' => 100.0, '100' => 98.2, '200' => 96.3, '300' => 92.4, '400' => 88.4, '500' => 72.7, '600' => 39.8, '700' => 20.6, '800' => 10.1, '900' => 0.0],
                 'green' => ['50' => 65.9, '100' => 65.9, '200' => 64.3, '300' => 62.5, '400' => 56.3, '500' => 46.7, '600' => 36.3, '700' => 36.3, '800' => 36.3, '900' => 36.3],
@@ -434,7 +434,7 @@ return [
         # The paragraph reset of base.css and the list item of the markdown block: one is the element default every page inherits, the other a rule scoped to markdown
         # They meet at one step by chance
         '.sl-markdown li, p',
-        # Two site blocks and two cells of the profile hub that lite hides on a narrow screen, beside the rail parts the editor window hides at the same width
+        # Two site blocks and two cells of the profile hub that aurora hides on a narrow screen, beside the rail parts the editor window hides at the same width
         # They met when the skin took the shared breakpoint ladder and the hub's own 760 moved onto 768; one set is page furniture, the other a dialog the page never sees
         '#block-idea, #block-feedback, .sl-profile-hub-row > span:nth-of-type(1), .sl-profile-hub-row-head, '
             .'.sl-fm-win .sl-fm-rail-cap, .sl-fm-win .sl-fm-rail-sep, .sl-fm-win .sl-fm-rail-foot, '
@@ -445,12 +445,12 @@ return [
         '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, '
             .'.sl-dashboard-panel-head:hover',
         # A body that is one declaration reaching one ladder step is need and not repetition, the same way `display: flex` under 122 flex containers is
-        # These three met when lite's type sizes landed on the ladder: an element default beside three small labels, three places at the smallest step, four glyphs at one icon step
+        # These three met when aurora's type sizes hit the ladder: an element default beside three small labels, three places at the smallest step, four glyphs at one icon step
         # Merging any of them would file an element reset or one component's glyph inside a list that names nothing
         '.sl-chip.sl-topic-post .bi, .sl-chip.sl-topic-edit .bi, .sl-fm-win .sl-fm-drop small, .sl-fm-win .sl-fm-view .sl-pager-info, small',
         '.sl-block-pm a > .bi:last-child, .sl-cab-nav .sl-cab-act b, .sl-pmf-mate small',
         '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
-        # The same shape in lite: the hover of a forum row and one resting note, which met when 0.9 and 0.75 folded onto one step
+        # The same shape in aurora: the hover of a forum row and one resting note, which met when 0.9 and 0.75 folded onto one step
         # The note is not a hover, and the two share nothing else
         '.sl-forum-jump:hover, .sl-session-note',
         # The element default every page inherits, a utility that bolds any inline run, and one component label
@@ -495,7 +495,7 @@ return [
         '.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
-        # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read topic and a nested list
+        # The same meeting in aurora, where the faint tone is already shared by a footer menu, the glyphs of a read topic and a nested list
         # None of them is the markdown source, and a selector list holding all four would name nothing
         '.sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
             .'.sl-list-item > li ul, .sl-list-item > li ul a, '
@@ -602,22 +602,22 @@ return [
     # The key is the `@media context` and the selector joined by two spaces, which is what `--cross` prints
     'divergent' => [
         '.sl-metric-name' =>
-            'admin shares the capitals of the name with the heads of its windows in one selector list, and lite has no window head to share them with, '
+            'admin shares the capitals of the name with the heads of its windows in one selector list, and aurora has no window head to share them with, '
             .'so its name of a tile carries them in its own rule; the face, the size and the colour are the same',
         # The shorthand and the three longhands are not two spellings of one intent: every longhand a shorthand leaves out is reset to its initial value
         # So `list-style: disc outside` fixes the type where the longhands leave it alone
         'ul' =>
             'admin leaves list-style-type to the browser so a nested list changes its mark - disc, then circle, then square - '
-            .'and lite fixes it at a disc. The shorthand cannot express the first: writing it flattened 82 nested marks in admin',
+            .'and aurora fixes it at a disc. The shorthand cannot express the first: writing it flattened 82 nested marks in admin',
         'body' =>
             'the page shell, which canon does not cover: the panel fills the viewport it owns and the site sets a floor of nothing on a document whose '
             .'width the content decides. layouts and pages are outside canon for the same reason',
         'thead tr th[data-sort-method="none"]' =>
-            'admin resets the padding its own sort arrow reserved; lite reserves a wider one and never resets it, because no lite table carries a column '
+            'admin resets the padding its own sort arrow reserved; aurora reserves a wider one and never resets it, because no aurora table carries a column '
             .'the sorter is told to skip',
         '.sl-but' =>
             'two different controls under one name: the panel button is a bordered rectangle that inherits the form font, the site button is a pill with '
-            .'a bevel, its own height and its own type. Every property lite adds is that pill; giving the panel the same twenty declarations would make '
+            .'a bevel, its own height and its own type. Every property aurora adds is that pill; giving the panel the same twenty declarations would make '
             .'the admin look like the site, which is the one thing this batch may not do',
         '.sl-dimmed' =>
             'what each theme dims is a different thing: the panel dims a menu row that is off and pulls its text to the border tone, because an inactive '
@@ -627,16 +627,16 @@ return [
             'the panel hint is a glyph the admin draws itself - its own box, tone, size and transition - while the site puts the hint on whatever element '
             .'carries it and only pushes the next one away. One is a control, the other a modifier',
         '.sl-tip > .sl-float-panel' =>
-            'the whole floating panel is defined here in lite and on .sl-float-panel in admin; the two carry the same declarations under two selectors, '
+            'the whole floating panel is defined here in aurora and on .sl-float-panel in admin; the two carry the same declarations under two selectors, '
             .'so the tool sees one side as empty. Moving either would change which rule wins over the placement rule',
         '.sl-float-panel::after' =>
-            'the arrow of the panel is drawn against a border in admin, which needs a drop-shadow to sit on it; lite gives the panel a muted border and '
+            'the arrow of the panel is drawn against a border in admin, which needs a drop-shadow to sit on it; aurora gives the panel a muted border and '
             .'paints the shadow on the two contexts that show one, so the shared rule carries none',
         '.sl-float.sl-float-up > .sl-float-panel::after' =>
             'the flipped half of the same arrow, and the same reason',
         '.sl-editor-pal-cap' =>
             'admin sets the type of the caption once, in the rule it shares with the caption of the file manager and the heads of the tree of the site '
-            .'builder, so the tool sees the admin side without it; lite has the palette caption alone and keeps its type on the rule',
+            .'builder, so the tool sees the admin side without it; aurora has the palette caption alone and keeps its type on the rule',
         '.sl-chip' =>
             'the panel chip is a count badge with a minimum width and a bold micro type; the site chip is a label with an icon, its own gap and a pointer '
             .'transition. They share a name and a shape and nothing else',
@@ -644,16 +644,16 @@ return [
             'one notice, two looks by the owner\x27s answer of 2026-10-19: the panel notice is a flash alert inside a fixed host and takes the alert\x27s '
             .'box, the site notice is the fixed inverse pill that carries its own place, fill and fade',
         '.sl-dial' =>
-            'the speed dial is two mechanisms: in admin an absolutely placed row that grows its items in place, in lite an inline toggle with an '
+            'the speed dial is two mechanisms: in admin an absolutely placed row that grows its items in place, in aurora an inline toggle with an '
             .'absolutely placed fan. Everything below follows from that, and the two were built that way on purpose',
         '.sl-dial.sl-open, .sl-dial:hover' =>
-            'the open dial: admin lifts a whole row onto a surface, lite raises one fan above the page',
+            'the open dial: admin lifts a whole row onto a surface, aurora raises one fan above the page',
         '.sl-dial-toggle, .sl-dial-item' =>
-            'lite\'s dial opens on a click and says so with a pointer; admin\'s opens on hover',
+            'aurora\'s dial opens on a click and says so with a pointer; admin\'s opens on hover',
         '.sl-dial.sl-open .sl-dial-toggle, .sl-dial:hover .sl-dial-toggle' =>
             'the same, and the site\'s toggle carries the text that reads on its fill',
         '.sl-dial .sl-dial-item' =>
-            'the resting item: admin collapses its width to nothing, lite parks it behind the toggle',
+            'the resting item: admin collapses its width to nothing, aurora parks it behind the toggle',
         '.sl-dial.sl-open .sl-dial-item, .sl-dial:hover .sl-dial-item' =>
             'the opened item, the other half of the same two mechanisms',
         '.sl-bulk-bar' =>

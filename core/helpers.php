@@ -162,9 +162,11 @@ function getEditorPreview(): void {
     exit;
 }
 
-# The one pager of both themes: maxpg numbers round the current page between the first and the last, each marked far or near so a narrow pager can drop them
+# The one pager of both themes, numbers marked far or near so a narrow pager can drop them; setFoot() gets the largest count of a pager by page
 function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, array $meta = []): string {
-    global $tpl;
+    global $tpl, $pgmax;
+    if (($meta['param'] ?? 'page') === 'page') $pgmax = max((int)($pgmax ?? 0), $pages);
+    unset($meta['param']);
     if ($pages <= 1 && empty($meta['rows'])) return '';
     $num = max(1, min($num, $pages));
     $maxpg = max(1, $maxpg);
@@ -242,7 +244,7 @@ function getTplPager(array $data = []): string {
             ? ['query' => $mkurl($i), 'target_id' => $targetid, 'push_url' => $pushurl ? 'true' : 'false']
             : ['href' => $mkurl($i)];
     };
-    return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
+    return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit, 'param' => $n]);
 }
 
 # Render one admin module header; the title and a later open tab name the browser tab, and a tab named in post is an action slaed.js posts with its token
@@ -1413,8 +1415,9 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
     $on = !empty($rule['active']);
     if ($typ != 2 && !(($on && $id && $mod) || ($rat && $scor))) return '';
     $live = $typ != 2 && $on && ($typ || !$rule['detail']);
+    $lean = $scored ? [1 => 'is', 0 => '', -1 => 'down'][intval($scor) <=> 3 * intval($votes)] : '';
     $part = $stl == '1'
-        ? ['rate1_title' => _RATE1, 'rate5_title' => _RATE5]
+        ? ['rate1_title' => _RATE1, 'rate5_title' => _RATE5, 'lean' => $lean]
         : ['width' => (string)$width, 'stars' => getRatingStars($width), 'votes' => (string)$votnum, 'votes_title' => _VOTES];
     $body = $tpl->getHtmlFrag($stl == '1' ? 'rating-like' : 'rating-bar', [
         'result' => $result,
@@ -1627,7 +1630,7 @@ function getPageNumbers(string $mod, int $count, int $pages, int $limit, array|s
         $href = $site ? getSeoUrl(['name' => $mod] + (is_array($url) ? $url : []) + [$n => $i]).$anchor : HOME_PATH.$afile.'.php?'.$url.$n.'='.$i.$anchor;
         return ['href' => $href];
     };
-    return getTplPagerView((int)$num, $pages, $maxpg, $target, ['count' => $count, 'limit' => $limit]);
+    return getTplPagerView((int)$num, $pages, $maxpg, $target, ['count' => $count, 'limit' => $limit, 'param' => $n]);
 }
 
 # Render text parts as one block, so the break between parts is the theme's decision; $iswide puts a blank line between, $israw passes markup through

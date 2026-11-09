@@ -134,7 +134,7 @@ final class ReleaseToolTest extends TestCase
             'config/header.php' => "<?php\n", 'public/robots.txt' => "User-agent: *\n", 'public/index.php' => "<?php\n", 'public/update.php' => "<?php\n# one\n",
             'storage/update/sql/table.sql' => "-- table\n", 'storage/update/sql/table_update6_3.sql' => "-- 6.3\n", 'core/system.php' => "<?php\n# one\n",
             'modules/news/index.php' => "<?php\n# news\n", 'docs/a.md' => "# a\n", 'modules/master/api.php' => "<?php\n# master\n",
-            'modules/changelog/index.php' => "<?php\n# changelog\n", 'public/templates/lite/partials/changelog.html' => "<div></div>\n",
+            'modules/changelog/index.php' => "<?php\n# changelog\n", 'public/templates/aurora/partials/changelog.html' => "<div></div>\n",
             'config/modules.php' => "<?php\nreturn [\n    'modules' => [\n        'admins' => [\n            'lang' => '_ADMINS',\n            'active' => '1',\n        ],\n"
                 ."        'changelog' => [\n            'lang' => '_CHANGELOG',\n            'active' => '1',\n        ],\n        'news' => [\n            'lang' => '_NEWS',\n"
                 ."            'active' => '1',\n        ],\n    ],\n];\n"];
@@ -258,7 +258,7 @@ final class ReleaseToolTest extends TestCase
         $this->assertNotContains('modules/master/api.php', $names, 'The module master of slaed.net is in the archive');
         $this->assertArrayNotHasKey('modules/master/api.php', $run['firstzip']['list']['files'], 'files.json lists the module master');
         $this->assertNotContains('modules/changelog/index.php', $names, 'The module changelog of slaed.net is in the archive');
-        $this->assertNotContains('public/templates/lite/partials/changelog.html', $names, 'A template only the changelog renders is in the archive');
+        $this->assertNotContains('public/templates/aurora/partials/changelog.html', $names, 'A template only the changelog renders is in the archive');
         $mods = $run['firstzip']['modules'];
         $tmp = self::$work.'/modules.php';
         file_put_contents($tmp, $mods);

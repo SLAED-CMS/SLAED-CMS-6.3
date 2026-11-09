@@ -150,7 +150,7 @@ Large views live in `templates/<theme>/partials/node/`, repeated elements in
 `fragments/node/card.html`, `block.html`, `image.html`, `gallery.html`, `download.html`, `player.html`,
 `link.html` and `tree.html`. A display mode other than `default` may override any base file but `head.html` and
 `hints.html`, which are rendered by their own name, with `node/<mode>/<file>`; `getNodeTplName()` picks the mode file
-when the theme has it and the base file otherwise. The `lite` theme ships the modes `docs`, `faq`, `files`, `media` and `support`.
+when the theme has it and the base file otherwise. The `aurora` theme ships the modes `docs`, `faq`, `files`, `media` and `support`.
 
 ## Code layout
 
@@ -2577,7 +2577,7 @@ use it, so a mode overrides `list`, `view`, `card`, `block`, `tree` and each res
 - The admin side uses the shared `templates/admin` templates and has no Node templates or modes. A search hit of Node
   is shown by the shared row of the search module.
 
-### Display modes of the lite theme
+### Display modes of the aurora theme
 
 | `view.mode` | Files | Output |
 |---|---|---|
@@ -2646,7 +2646,7 @@ back).
 | Template | Called by | Keys |
 |---|---|---|
 | `partials/node/list.html` | `setNodeList()` | `head_html`, `intro`, `groups` (`label`, `count`, `items_html`; `label` empty without month heads), `rail` (`id`, `href`, `title`, `date`, `date_iso`, `intro_html`, `is_first`), `rail_name`, `title`, `is_compact`, `is_row`, `is_tiles`, `date_label`, `read_label`, `pager_html`, `more_href`, `more_label`, `empty_alert` |
-| `partials/node/head.html` | `getNodeHead()` | `title`, `count_text`, `view_html`, `filters_label`; `cats_html`, `cats_label`, `cat_name`, `is_cat`; `lets_html`, `lets_label`, `lets_hint`, `let_name`, `is_let`; `sort_name`, `sort_label`, `show_label`, `sorts` (`href`, `label`, `icon_name`, `is_current`), `mine` (`href`, `label`, `icon_name`, `count`, `is_on`), `is_new`, `is_fav`, `new_label`, `fav_label`; `dir_href`, `dir_label`, `dir_title`, `is_asc`; `reset_href`, `reset_label`; `find_mod`, `find_label`, `hint_href`, `search_label`; `rss_href`, `rss_title`, `top_label`, `add_href`, `add_label` |
+| `partials/node/head.html` | `getNodeHead()` | `title`, `is_home` (the title as `h2` under the site name), `count_text`, `count_title`, `view_html`, `filters_label`; `cats_html`, `cats_label`, `cat_name`, `is_cat`; `lets_html`, `lets_label`, `lets_hint`, `let_name`, `is_let`; `sort_name`, `sort_label`, `show_label`, `sorts` (`href`, `label`, `icon_name`, `is_current`), `mine` (`href`, `label`, `icon_name`, `count`, `is_on`), `is_new`, `is_fav`, `new_label`, `fav_label`; `dir_href`, `dir_label`, `dir_title`, `is_asc`; `reset_href`, `reset_label`; `find_mod`, `find_label`, `hint_href`, `search_label`; `rss_href`, `rss_title`, `top_label`, `add_href`, `add_label` |
 | `partials/node/hints.html` | `getNodeHint()` in `core/user.php` | `hints` (`href`, `label`) |
 | `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext`, `is_play` |
 | `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''` |
@@ -2689,7 +2689,7 @@ not cached.
 
 ### Theme hooks
 
-Lite classes in `templates/lite/assets/css/theme.css`: `sl-node-toc`, `sl-node-toc-intro`, `sl-node-faq`,
+Aurora classes in `templates/aurora/assets/css/theme.css`: `sl-node-toc`, `sl-node-toc-intro`, `sl-node-faq`,
 `sl-node-faq-body`, `sl-node-file`, `sl-node-tiles`, `sl-node-tile`, `sl-node-tile-cover`, `sl-node-tree`,
 `sl-node-tree-cur`, `sl-node-tree-more`, `sl-node-tree-pager`; the list `sl-node-list` (with `overflow-anchor: none`,
 so the scroll anchoring of the browser does not flip the bar between its two heights), the views `sl-node-compact`,
@@ -2922,7 +2922,7 @@ a kind of content" asks `getNodeModeType($mode)`, never a type name:
 |---|---|---|
 | `modules/presentation/index.php` | `article`, `docs`, `files` | count, category count, latest material |
 | `admin/modules/monitor.php` `getMonitorDbStats()` | `article`, `files` | dashboard counts |
-| `templates/lite/index.php` `getTemplateFaq()` | `faq` | header marquee |
+| `templates/aurora/index.php` `getTemplateFaq()` | `faq` | header marquee |
 
 The profile (`core/user.php`) counts an author's materials with `NodeQuery::getNodeAuthorStat()` and lists the
 latest per type; `support` types appear only in the account menu, never in profiles.

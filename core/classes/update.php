@@ -53,7 +53,7 @@ final class Update {
     private const SHARED = ['node', 'fields', 'uploads', 'ratings', 'layout'];
 
     # The themes a release ships and replaces whole; every other theme of public/templates/ is left as it is
-    public const THEMES = ['admin', 'lite'];
+    public const THEMES = ['admin', 'aurora'];
 
     # A range of versions in a note: bounds such as ">=8.0.0 <8.0.2" separated by one space, or empty for every version
     public const RANGE = '#^((<=|>=|<|>|=)?\d{1,5}\.\d{1,5}\.\d{1,5}( (<=|>=|<|>|=)?\d{1,5}\.\d{1,5}\.\d{1,5})*)?$#D';
@@ -196,7 +196,7 @@ final class Update {
         return preg_match('#^config/[a-z0-9_]+\.php$#D', $path) === 1 && !in_array(basename($path), ['header.php', 'chmod.php', 'local.php'], true);
     }
 
-    # Whether a shipped path is replaced whole even when the site changed it, its old copy kept by the backup: a language file and a file of the themes admin and lite
+    # Whether a shipped path is replaced whole even when the site changed it, its old copy kept by the backup: a language file and a file of the themes admin and aurora
     public static function isSwapFile(string $path): bool {
         return preg_match('#^((modules/[^/]+/)?(admin/)?lang/[^/]+\.php|public/templates/('.implode('|', self::THEMES).')/.+)$#D', $path) === 1;
     }

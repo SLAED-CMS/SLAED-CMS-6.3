@@ -26,7 +26,7 @@ final class SeoSemanticsValidationTest extends TestCase
     public function testHeadFragmentsEscapeTextAndAttributeContexts(): void
     {
         if (!class_exists('Template', false)) require_once $this->base.'/core/classes/template.php';
-        $tpl = new Template('lite');
+        $tpl = new Template('aurora');
         $payload = '"><script>alert(1)</script>';
         $title = $tpl->getHtmlFrag('head-title', ['title' => $payload]);
         $meta = $tpl->getHtmlFrag('head-meta', ['name' => 'description', 'content' => $payload]);
@@ -50,10 +50,10 @@ final class SeoSemanticsValidationTest extends TestCase
 
     public function testSemanticComponentsRequireExplicitBooleanContexts(): void
     {
-        $card = file_get_contents($this->base.'/public/templates/lite/fragments/card.html');
-        $vote = file_get_contents($this->base.'/public/templates/lite/partials/voting-widget.html');
-        $pop = file_get_contents($this->base.'/public/templates/lite/fragments/popover.html');
-        $layout = file_get_contents($this->base.'/public/templates/lite/layouts/app.html');
+        $card = file_get_contents($this->base.'/public/templates/aurora/fragments/card.html');
+        $vote = file_get_contents($this->base.'/public/templates/aurora/partials/voting-widget.html');
+        $pop = file_get_contents($this->base.'/public/templates/aurora/fragments/popover.html');
+        $layout = file_get_contents($this->base.'/public/templates/aurora/layouts/app.html');
 
         $this->assertMatchesRegularExpression('#\{% if is_detail %\}\s*<h1#', $card);
         $this->assertMatchesRegularExpression('#\{% elseif is_nested %\}\s*<h3#', $card);
@@ -69,7 +69,7 @@ final class SeoSemanticsValidationTest extends TestCase
     public function testCardHeadingContextsRenderWithoutDedicatedTitleFragment(): void
     {
         if (!class_exists('Template', false)) require_once $this->base.'/core/classes/template.php';
-        $tpl = new Template('lite');
+        $tpl = new Template('aurora');
         $data = ['id' => '1', 'title_href' => '/item', 'title_attr' => 'Card', 'title_text' => 'Card'];
         $detail = $tpl->getHtmlFrag('card', $data + ['is_detail' => true]);
         $nested = $tpl->getHtmlFrag('card', $data + ['is_nested' => true]);

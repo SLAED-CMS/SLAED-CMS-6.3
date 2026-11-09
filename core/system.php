@@ -1931,9 +1931,9 @@ function setHead(array $seo = []): void {
     $strlink .= doCss();
     $script = doScript().$stscript;
     if (defined('ADMIN_FILE')) {
-        $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
+        $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed-logo-wordmark-gradient-blue.svg'));
         $adpath = getThemeFilePath('images/logos/'.$adlogo);
-        if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeFilePath('images/logos/slaed_logo_256x73.png');
+        if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeFilePath('images/logos/slaed-logo-wordmark-gradient-blue.svg');
         $adminvars = [
             'theme' => getTheme(),
             'mode' => getThemeMode(),
@@ -2107,9 +2107,9 @@ function setHead(array $seo = []): void {
     return;
 }
 
-# Render the page foot; X-SL-Part of a panel list gets its title and content only, a lost session reloads, a notice is cleared, a draft is marked unless framed with edit=1
+# Render the page foot: a panel X-SL-Part gets title and content, a lost session reloads, a notice is cleared, a draft is marked unless edit=1, a page no pager reached is 404
 function setFoot(): void {
-    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot, $layout, $lkey, $prs;
+    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot, $layout, $lkey, $prs, $pgmax;
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
@@ -2144,6 +2144,7 @@ function setFoot(): void {
         $body = $mark.$layout->getPageHtml($lkey, $body, $tpl, $prs);
         [$blocks, $blocks_c] = $layout->getPageColumns($lkey) ?? [$blocks, $blocks_c];
     }
+    if (http_response_code() < 400 && getVar('get', 'page', 'num', 0) > max(1, (int)($pgmax ?? 0))) setError(404);
     $flash = getFlashHtml();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
@@ -2528,6 +2529,7 @@ function setCategories(string $mod, int $cur = 0, array $nums = [], int $total =
                 'name' => $name,
                 'icon_name' => preg_match('/^[a-z0-9-]+$/', (string)$val[3]) ? $val[3] : 'folder',
                 'count' => $hidden ? '' : ($nums[$val[0]] ?? ''),
+                'count_title' => _ALLMATERIALS,
                 'description' => getConst($val[2]),
                 'subs' => $subs,
             ]);
@@ -2535,7 +2537,7 @@ function setCategories(string $mod, int $cur = 0, array $nums = [], int $total =
     }
     if (!$cont) return '';
     return $tpl->getHtmlFrag('category-row', ['is_current' => !$cur, 'tone' => 0, 'href' => getSeoUrl(['name' => $mod]), 'title' => _ALLMATERIALS,
-        'name' => _ALLMATERIALS, 'icon_name' => 'collection', 'count' => $total, 'description' => '', 'subs' => []]).$cont;
+        'name' => _ALLMATERIALS, 'icon_name' => 'collection', 'count' => $total, 'count_title' => _ALLMATERIALS, 'description' => '', 'subs' => []]).$cont;
 }
 
 # Load configuration file or directory and return chmod warning if needed

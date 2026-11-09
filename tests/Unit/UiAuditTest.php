@@ -238,7 +238,7 @@ final class UiAuditTest extends TestCase
 
     # One declaration per row with the answer read off the row, not off the tool
     # This table caught `z-index: 0` being swallowed by the neutral-value allowlist before the bare-number rule could see it
-    # A stacking context is a decision, and the count was quietly four low in admin and eight in lite
+    # A stacking context is a decision, and the count was quietly four low in admin and eight in aurora
     public static function getDeclCases(): array
     {
         return [

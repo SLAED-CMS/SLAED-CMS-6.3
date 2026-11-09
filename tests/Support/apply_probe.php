@@ -140,7 +140,7 @@ function setProbePristine(string $work, string $base): void {
     $site = $work.'/pristine';
     foreach (ADIRS as $dir) addProbeCopy(BASE_DIR.'/'.$dir, $site.'/'.$dir);
     foreach (['index.php', 'admin.php', 'setup.php', 'error.html', 'robots.txt', 'favicon.ico'] as $one) addProbeCopy(BASE_DIR.'/public/'.$one, $site.'/public/'.$one);
-    foreach (['admin', 'lite'] as $one) addProbeCopy(BASE_DIR.'/public/templates/'.$one, $site.'/public/templates/'.$one);
+    foreach (['admin', 'aurora'] as $one) addProbeCopy(BASE_DIR.'/public/templates/'.$one, $site.'/public/templates/'.$one);
     addProbeCopy(BASE_DIR.'/public/plugins', $site.'/public/plugins', ['editors']);
     $data = require $site.'/config/db.php';
     $data['db'] = array_replace($data['db'], ['name' => $base, 'prefix' => APREF]);
@@ -169,7 +169,7 @@ function setProbePristine(string $work, string $base): void {
     setProbeLine($pack.'/core/system.php', "file_put_contents(dirname(__DIR__).'/storage/probe-core.log', \"new\\n\", FILE_APPEND);");
     file_put_contents($pack.'/core/rescue.php', "\n# the rescuer of ".AVER."\n", FILE_APPEND);
     file_put_contents($pack.'/lang/en.php', "\n# the language of ".AVER."\n", FILE_APPEND);
-    file_put_contents($pack.'/public/templates/lite/assets/css/theme.css', "\n/* the theme of ".AVER." */\n", FILE_APPEND);
+    file_put_contents($pack.'/public/templates/aurora/assets/css/theme.css', "\n/* the theme of ".AVER." */\n", FILE_APPEND);
     file_put_contents($pack.'/core/probenew.php', "<?php\n# a file 8.0.1 adds\n");
     mkdir($pack.'/tools/probe', 0755, true);
     file_put_contents($pack.'/tools/probe/new.txt', "a folder 8.0.1 adds\n");
@@ -383,7 +383,7 @@ function getProbeLook(): array {
     return ['ver' => preg_match("#'SL_VERSION', '([0-9.]+)'#", (string)file_get_contents($site.'/core/version.php'), $hit) === 1 ? $hit[1] : '',
         'new' => is_file($site.'/core/probenew.php'), 'folder' => is_file($site.'/tools/probe/new.txt'), 'gone' => !is_file($site.'/core/probegone.php'),
         'lang' => str_contains((string)file_get_contents($site.'/lang/en.php'), 'the language of '.AVER),
-        'theme' => str_contains((string)file_get_contents($site.'/public/templates/lite/assets/css/theme.css'), 'the theme of '.AVER),
+        'theme' => str_contains((string)file_get_contents($site.'/public/templates/aurora/assets/css/theme.css'), 'the theme of '.AVER),
         'third' => is_file($site.'/public/templates/probe3/index.html'), 'rescue' => str_contains((string)file_get_contents($site.'/core/rescue.php'), 'the rescuer of '.AVER),
         'executor' => !str_contains((string)file_get_contents($site.'/core/apply.php'), 'installed executor'), 'option' => isset(getProbeConf('global')['probeopt']),
         'marks' => array_keys(getProbeConf('update')['update']['steps'] ?? []), 'local' => is_file($site.'/config/local.php'), 'lock' => is_file($dir.'/apply.lock'),

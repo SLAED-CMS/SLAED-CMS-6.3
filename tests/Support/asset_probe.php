@@ -33,10 +33,10 @@ function getProbeEditor(): array {
 # The head of the site theme printed from a list and a map that name one missing file
 function getProbeGhost(): array {
     global $conf, $theme;
-    $theme = 'lite';
-    $css = 'templates/lite/assets/css/ghost-probe.css';
+    $theme = 'aurora';
+    $css = 'templates/aurora/assets/css/ghost-probe.css';
     $js = 'plugins/system/ghost-probe.js';
-    $conf['derived']['assets']['lite'] = ['css' => [$css], 'js' => [$js]];
+    $conf['derived']['assets']['aurora'] = ['css' => [$css], 'js' => [$js]];
     $conf['derived']['version'][$css] = 'abcdef0123';
     $conf['derived']['version'][$js] = '0123abcdef';
     return ['css' => doCss(), 'js' => doScript()];
@@ -48,7 +48,7 @@ try {
     $out = [
         'map' => is_array($conf['derived']['version'] ?? null),
         'keys' => array_values(array_intersect(['script_a', 'script_b'], array_keys($conf))),
-        'lite' => getProbeHead('lite'),
+        'aurora' => getProbeHead('aurora'),
         'admin' => getProbeHead('admin'),
         'editor' => getProbeEditor(),
         'ghost' => getProbeGhost(),

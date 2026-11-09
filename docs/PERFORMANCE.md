@@ -353,7 +353,7 @@ headers, PHP only prints their addresses.
 
 Every printer of a stylesheet or script address goes through
 `Template::getAssetUrl()`, which appends the version of the file's content:
-`/templates/lite/assets/css/theme.css?v=0a5af6e4ae`, from the root of the site, the first ten hex
+`/templates/aurora/assets/css/theme.css?v=0a5af6e4ae`, from the root of the site, the first ten hex
 characters of its SHA-1.
 
 - The versions are the map `$conf['derived']['version']`, which
@@ -626,7 +626,7 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
   ends, and compares the crops per channel in both schemes, 16 of 255 at most; `--tones=` takes the cockpit through its
   states, `--crops=<dir>` keeps the PNGs. The parts: `cockpit`, `cockpit-stat`, `cockpit-mon`, `led` and `live` (with a
   margin of 8 px, their ring lies outside the box), `hero`, `system` (the map), `blocks` (the block scene), `pipeline`,
-  `guard`, `runtime`, `development`, `forum-dot`, `avatar-dot` and `profile-dot` (the live dots of lite, a margin of 12 px).
+  `guard`, `runtime`, `development`, `forum-dot`, `avatar-dot` and `profile-dot` (the live dots of aurora, a margin of 12 px).
   A part
   against itself differs by at most 1 of 255, with the mark of the cockpit state stilled, as its glyph rasters
   differently between two loads; `pipeline` differs by up to 26 of 255 in the light scheme between runs, the cause
@@ -660,7 +660,7 @@ The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the 
 | The same, with the halo of the lamp | presentation, top / pointer | 62 → 62 / 71 → 77 | 49 → 59 / 54 → 72 | 33 → 33 / 72 → 83 | 17 → 16 / 15 → 16 | 120 |
 | The aurora on the framed blocks of the panel, drawn by the `--sl-aurora-*` tokens (the pair holds the uncommitted panel CSS of another session too) | panel, idle / pointer | 68 → 63 / 87 → 91 | 81 → 79 / 87 → 98 | 95 → 91 / 165 → 203 | 5 → 5 / 14 → 17 | 120 / 120 → 116 |
 | The presentation pauses by scene and block, not by section; the dashes of the block scene on a layer of their own; the pulse strip sleeps once its line reached its aim (2026-11-07, 5 rounds) | presentation, system / development / guard / top | 50 → 48 / 51 → 35 / 82 → 78 / 65 → 63 | 119 → 61 / 17 → 16 / 55 → 53 / 62 → 61 | 29 → 29 / 37 → 34 / 69 → 61 / 29 → 28 | 2 → 2 / 17 → 11 / 26 → 22 / 14 → 14 | 120 |
-| The live dot of lite (forum sections, user block, profile) pulses by a ring on `transform` and `opacity` instead of `sl-live-pulse` on `box-shadow`; the crops `forum-dot`, `avatar-dot`, `profile-dot` stay within 37 of 255, past the tolerance only at the edge of the halo in the first moments, taken by the owner (2026-11-09, 5 rounds) | forum, idle, 16 dots | 122 → 73 | 96 → 45 | 600 → 86 | 1 → 2 | 116 → 120 |
+| The live dot of aurora (forum sections, user block, profile) pulses by a ring on `transform` and `opacity` instead of `sl-live-pulse` on `box-shadow`; the crops `forum-dot`, `avatar-dot`, `profile-dot` stay within 37 of 255, past the tolerance only at the edge of the halo in the first moments, taken by the owner (2026-11-09, 5 rounds) | forum, idle, 16 dots | 122 → 73 | 96 → 45 | 600 → 86 | 1 → 2 | 116 → 120 |
 
 The style time the forum rings still cost is not their own: the marquee of the head (`step` on `width`) and the two live icons
 of the side blocks (`sl-live-pulse` on `box-shadow`) are refused by the compositor on the same page, and while one

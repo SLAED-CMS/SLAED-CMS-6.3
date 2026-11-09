@@ -360,9 +360,9 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     $meta = $tpl->getHtmlFrag('head-base', ['href' => $base])."\n"
         .$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, follow'])."\n";
     $license = getLicenseHtml();
-    $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
+    $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed-logo-wordmark-gradient-blue.svg'));
     $adpath = getThemeFilePath('images/logos/'.$adlogo);
-    if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeFilePath('images/logos/slaed_logo_256x73.png');
+    if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeFilePath('images/logos/slaed-logo-wordmark-gradient-blue.svg');
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {

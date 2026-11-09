@@ -536,9 +536,9 @@ function getNodeRoute(): NodeType {
     return getNodeTypeMap()[$conf['name']] ?? setNodeDeny(404);
 }
 
-# The list of a type with its filters, sort and page; both answers of one address vary by HX-Request, and a page past the end is not found before any redirect
+# The list of a type with its filters, sort and page; both answers vary by HX-Request, a page past the end is not found, the home type's first page names the root
 function setNodeList(): void {
-    global $conf, $tpl, $home;
+    global $conf, $tpl, $home, $layout;
     $cat = getNodeNumber('cat');
     $num = getNodeNumber('page') ?: 1;
     $let = getVar('get', 'let', 'raw', '');
@@ -655,9 +655,12 @@ function setNodeList(): void {
         ]);
         $plain = $sort === '' && $dir === '' && $let === '' && $new === '' && $fav === '';
         $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['page' => $num] : []) + (($arch !== '') ? ['archive' => 1] : []);
+        $hkey = ($layout instanceof Layout) ? $layout->getHomeKey() : 0;
+        $hslot = $hkey ? $layout->getSlotName($hkey) : '';
+        $front = $home || (($hslot === '') ? trim(explode(',', (string)($conf['module'] ?? ''))[0]) : (string)$hslot) === $type->name;
         $seo = ['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
             'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
-            'canon' => ($home && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
+            'canon' => ($front && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
             + ($home ? [] : ['desc' => $cat ? null : getConst($type->intro)]);
         if (!$part) setHead($seo);
     } catch (NodeException $err) {
@@ -704,9 +707,9 @@ function getNodeSortWay(NodeType $type, string $key): string {
     return ($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc');
 }
 
-# The header of a list; the default sort and direction leave the address clean, as the list sends them back there
+# The header of a list, a section of the home page there; the default sort and direction leave the address clean, as the list sends them back there
 function getNodeHead(NodeType $type, array $base, string $key, string $way, array $nums, array $wins, array $look): string {
-    global $tpl;
+    global $tpl, $home;
     $set = $type->settings['list'];
     $cells = [];
     $names = ['cards' => [_NODE_VCARDS, 'card-text'], 'compact' => [_NODE_VCOMPACT, 'view-list'], 'list' => [_LIST, 'list-ul'], 'accordion' => [_NODE_VACCORD,
@@ -739,6 +742,8 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
     $asc = $way === 'asc';
     return $tpl->getHtmlPart('node/head', [
         'title' => getModuleName($type->name),
+        'is_home' => !empty($home),
+        'count_title' => _ALLMATERIALS,
         'view_html' => (count($cells) > 1) ? $tpl->getHtmlFrag('mode-switch', ['action' => $look['action'], 'hidden' => $token, 'modes' => $cells, 'field' => 'view',
             'is_view' => true, 'label' => _NODE_VIEW]) : '',
         'count_text' => $narrow ? sprintf(getPluralForm($nums['total'], _MATERIALSOF), $nums['count'], $nums['total'])

@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="ru" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>22 · Dashboard Layout · Эталон — SLAED CMS 8</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
-<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
-<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../templates/aurora/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/aurora/assets/css/base.css">
+<link rel="stylesheet" href="../templates/aurora/assets/css/theme.css">
 <style>/* Original 00 artwork and layout; isolated from the native CMS shell. */
 @scope (.sl-leader) {
 
@@ -989,7 +989,7 @@ linear-gradient(90deg,light-dark(color-mix(in srgb, var(--sl-primary-strong) 3%,
 <div class="v-gauges">
   <div class="v-gauge"><div class="v-chart" data-radial="{&quot;start&quot;:135,&quot;sweep&quot;:270,&quot;ticks&quot;:12,&quot;offset&quot;:0.2,&quot;arcs&quot;:[{&quot;value&quot;:27,&quot;max&quot;:100,&quot;width&quot;:12,&quot;tone&quot;:&quot;--blue&quot;}]}"></div><div class="v-gauge-val"><b>27<small>ms</small></b><span>Генерация</span></div></div>
   <div class="v-gauge"><div class="v-chart" data-radial="{&quot;start&quot;:135,&quot;sweep&quot;:270,&quot;ticks&quot;:12,&quot;offset&quot;:0.2,&quot;arcs&quot;:[{&quot;value&quot;:88,&quot;max&quot;:100,&quot;width&quot;:12,&quot;tone&quot;:&quot;--good&quot;}]}"></div><div class="v-gauge-val"><b>88<small>%</small></b><span>Cache hit</span></div></div>
-  <div class="v-plate"><img src="../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED"><b>PHOENIX</b><small>control / runtime</small></div>
+  <div class="v-plate"><img src="../templates/aurora/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED"><b>PHOENIX</b><small>control / runtime</small></div>
   <div class="v-gauge"><div class="v-chart" data-radial="{&quot;start&quot;:135,&quot;sweep&quot;:270,&quot;ticks&quot;:12,&quot;offset&quot;:0.2,&quot;arcs&quot;:[{&quot;value&quot;:12,&quot;max&quot;:50,&quot;width&quot;:12,&quot;tone&quot;:&quot;--warn&quot;}]}"></div><div class="v-gauge-val"><b>12<small>/50</small></b><span>SQL-запросов</span></div></div>
   <div class="v-gauge"><div class="v-chart" data-radial="{&quot;start&quot;:135,&quot;sweep&quot;:270,&quot;ticks&quot;:12,&quot;offset&quot;:0.2,&quot;arcs&quot;:[{&quot;value&quot;:76,&quot;max&quot;:120,&quot;width&quot;:12,&quot;tone&quot;:&quot;--blue2&quot;}]}"></div><div class="v-gauge-val"><b id="gaugeOnline">76</b><span>Online</span></div></div>
 </div></div>
@@ -2050,7 +2050,7 @@ const CORE={
  'Файлы':[['files.index','ok'],['upload.check','clean'],['download.count','+1'],['meta.write','ok']],
  'SEO':[['canonical.resolve','ok'],['meta.compose','ok'],['sitemap.queue','ready'],['robots.check','ok']],
  'Безопасность':[['request.filter','allowed'],['injection.scan','blocked'],['log.append','ok'],['session.guard','ok']],
- 'Шаблоны':[['template.load','lite'],['blocks.render','6'],['partials.merge','ok'],['render.total','12ms']]
+ 'Шаблоны':[['template.load','aurora'],['blocks.render','6'],['partials.merge','ok'],['render.total','12ms']]
 };
 const coreBtns=$$('#coreMenu [data-core]'), coreLog=$('#coreLog'), corePath=$('#corePath');
 let coreTouched=false, coreIndex=0;

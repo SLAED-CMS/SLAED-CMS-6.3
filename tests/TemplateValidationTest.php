@@ -238,7 +238,7 @@ class TemplateValidationTest extends TestCase
         $base = str_replace('/', '\\', self::$basePath);
         $front = self::getFrontendThemes();
         $this->assertSame('modules/forum/index.php', self::getRelativePath($base.'\\modules\\forum\\index.php'));
-        $this->assertSame('templates/lite/partials/menu.html', self::getRelativePath($base.'\\public\\templates/lite\\partials\\menu.html'));
+        $this->assertSame('templates/aurora/partials/menu.html', self::getRelativePath($base.'\\public\\templates/aurora\\partials\\menu.html'));
         $this->assertSame('modules/forum/index.php', self::getRelativePath(str_replace('\\', '/', self::$basePath).'/modules/forum/index.php'));
         $this->assertSame($front, self::getThemesForPath('modules/forum/index.php', $front));
         $this->assertSame(['admin'], self::getThemesForPath('admin/modules/blocks.php', $front));
@@ -447,7 +447,7 @@ class TemplateValidationTest extends TestCase
     # Both fragments read selectid, and no caller of the select fragment names input_id
     public function testSelectFragmentsShareTheirIdKey(): void
     {
-        foreach (['admin', 'lite'] as $theme) {
+        foreach (['admin', 'aurora'] as $theme) {
             $frag = (string)file_get_contents(self::$templatesPath.'/'.$theme.'/fragments/select.html');
             $this->assertStringContainsString('{% if selectid %} id="{{ selectid }}"{% endif %}', $frag, 'The select fragment of '.$theme.' does not read selectid');
             $this->assertStringNotContainsString('input_id', $frag, 'The select fragment of '.$theme.' reads a second id key');
@@ -469,7 +469,7 @@ class TemplateValidationTest extends TestCase
     # Every action of a panel alert stands in its slot acts_html, and both alert fragments draw that slot after the body
     public function testAlertActionsStandInTheirSlot(): void
     {
-        foreach (['admin', 'lite'] as $theme) {
+        foreach (['admin', 'aurora'] as $theme) {
             $frag = (string)file_get_contents(self::$templatesPath.'/'.$theme.'/fragments/alert.html');
             $slot = '#</div>\s*\{% if acts_html %\}\s*<div class="sl-alert-acts">\s*\{\{\{ acts_html \}\}\}\s*</div>\s*\{% endif %\}\s*</div>#';
             $this->assertMatchesRegularExpression($slot, $frag, 'The alert fragment of '.$theme.' has no action slot after its body');

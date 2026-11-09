@@ -98,7 +98,7 @@ final class ForumRightTest extends TestCase
     {
         $this->assertStringContainsString("urlencode(getVar('post', 'defis', 'let', '>'))", $this->getSource('modules/forum/admin/index.php', 'configsave'));
         $uses = [
-            ['modules/forum/index.php', 'forum'], ['core/helpers.php', 'getTplCategoryTrail'], ['public/templates/lite/index.php', 'getThemeHeadVars'],
+            ['modules/forum/index.php', 'forum'], ['core/helpers.php', 'getTplCategoryTrail'], ['public/templates/aurora/index.php', 'getThemeHeadVars'],
         ];
         foreach ($uses as [$file, $name]) {
             $code = $this->getSource($file, $name);

@@ -121,12 +121,12 @@ final class UpdateMergeTest extends TestCase
         $this->assertSame(['ok' => false, 'error' => 'pack', 'name' => 'config/node.php', 'adds' => []], $res);
     }
 
-    # Language files of every place the page Languages edits and the themes admin and lite are replaced whole; code, settings and other themes are not
+    # Language files of every place the page Languages edits and the themes admin and aurora are replaced whole; code, settings and other themes are not
     #[Test]
     public function languagesAndTheTwoThemesAreReplacedWhole(): void
     {
         foreach (['lang/ru.php', 'admin/lang/en.php', 'modules/news/lang/de.php', 'modules/forum/admin/lang/uk.php', 'public/templates/admin/fragments/alert.html',
-            'public/templates/lite/assets/css/theme.css'] as $path) {
+            'public/templates/aurora/assets/css/theme.css'] as $path) {
             $this->assertTrue(Update::isSwapFile($path), $path.' is not replaced whole');
         }
         foreach (['core/system.php', 'lang/index.html', 'lang/sub/ru.php', 'config/lang.php', 'public/templates/mytheme/index.html', 'public/templates/admin',

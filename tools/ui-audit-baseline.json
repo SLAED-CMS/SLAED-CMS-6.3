@@ -18,7 +18,7 @@
             "tokens": 382,
             "contrast": 0
         },
-        "lite": {
+        "aurora": {
             "count": 0,
             "bare": 0,
             "dup": 0,
@@ -420,7 +420,7 @@
             "--sl-z-sticky",
             "--sl-z-toast"
         ],
-        "lite": [
+        "aurora": [
             "--sl-accent",
             "--sl-adm-mix",
             "--sl-alert-act-mix",

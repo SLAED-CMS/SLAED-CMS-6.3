@@ -26,7 +26,7 @@ Created in:
 ## Themes
 Current theme directories:
 - `templates/admin`
-- `templates/lite`
+- `templates/aurora`
 
 ## Theme Roles
 
@@ -34,7 +34,7 @@ Current theme directories:
 - current admin theme files
 - contains admin layouts, pages, partials, and fragments used by the admin runtime
 
-### `templates/lite`
+### `templates/aurora`
 - current bundled frontend theme
 - contains frontend layouts, pages, partials, fragments, assets, and images
 - includes a local copy of Bootstrap Icons under `assets/vendor/bootstrap-icons/`
@@ -72,7 +72,7 @@ The last three are the contract of the site builder, "Layout Sections" below; a 
 sections and no parts, and the panel theme `admin` has none.
 
 `sound/` holds the voices `plugins/system/sound.js` plays: `success`, `error`, `warn`, `queue`, `win` in both themes,
-`inbox` and `send` in `lite`, each `<voice>.mp3`. The layout names the folder on `<html>` as `data-sl-sound` from
+`inbox` and `send` in `aurora`, each `<voice>.mp3`. The layout names the folder on `<html>` as `data-sl-sound` from
 `getThemeFileUrl('sound/')`, and `getAssetList()` adds the engine to the derived script list only for a theme that has
 the folder, so no request looks at the disk and a theme without it stays silent; `checkThemeAssets()` does not ask for it. A voice sounds only in answer to an action or an
 event, not before the first touch of the page, at most once in 2.5 s per kind, and only while the switch "Звук" of
@@ -82,7 +82,7 @@ names its voice by `HX-Trigger: {"sl-sound": "<voice>"}`.
 
 `index.html` is not the main architectural entry for the active template runtime.
 
-Common active layout files in `templates/lite` include `layouts/app.html` and `layouts/home.html`. `templates/admin` uses admin-specific layouts such as `layouts/admin.html` and `layouts/bare.html`.
+Common active layout files in `templates/aurora` include `layouts/app.html` and `layouts/home.html`. `templates/admin` uses admin-specific layouts such as `layouts/admin.html` and `layouts/bare.html`.
 
 ## Theme Hooks
 
@@ -360,14 +360,14 @@ Current template-related tests include:
 Theme-local assets should live inside the theme.
 
 Recommended pattern:
-- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships; `lite` adds `assets/css/presentation.css`, the stylesheet of the one page of the presentation module, and `getThemeAssets()` lists every file of `assets/css/` in name order, so it sits between the two
-- `assets/js/<name>.js` — theme-owned scripts; `admin` carries `admin-ui.js`, `lite` ships none
+- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships; `aurora` adds `assets/css/presentation.css`, the stylesheet of the one page of the presentation module, and `getThemeAssets()` lists every file of `assets/css/` in name order, so it sits between the two
+- `assets/js/<name>.js` — theme-owned scripts; `admin` carries `admin-ui.js`, `aurora` ships none
 - a script one page needs stays out of the global `script_f` list: the module hands `script => ['src' => 'plugins/<name>/<name>.js', 'attr' => 'defer']` to its partial, which prints it through `fragments/head-script-src.html` — `plugins/presentation/presentation.js` is loaded this way, the captcha provider the same
 - `assets/vendor/<library>/...`
 - `assets/editors/<editor-id>/skin.css` — when an editor manifest declares `theme.skin`
 
 Example already present — the icon stylesheet and its WOFF2 font, nothing else of Bootstrap:
-- `templates/lite/assets/vendor/bootstrap-icons/`
+- `templates/aurora/assets/vendor/bootstrap-icons/`
 - `templates/admin/assets/vendor/bootstrap-icons/`
 
 ### Versioned Addresses And Order
@@ -471,7 +471,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 
 ## Editor Fragments
 
-The editor shell is canon: its fragments are byte-identical in `templates/admin` and `templates/lite`, its rules stand in
+The editor shell is canon: its fragments are byte-identical in `templates/admin` and `templates/aurora`, its rules stand in
 both `theme.css`, its names in `tools/ui-contract.php`. `Editor::getFrame()` in `core/classes/editor.php` renders them;
 a driver passes data and writes no class string. The behaviour is `plugins/system/editor.js`, described with the data
 keys in `docs/EDITORS.md`, "The Shell".
@@ -629,7 +629,7 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 - **A tip stands 4px from its text.** The «(i)» of `fragments/popover.html` ends without a newline and `table-cells.html`
   prints it flush against the content of the cell, so no space of the font widens the gap: the margin `--sl-space-2`
   of `.sl-tip` is the whole of it, in a cell, in a line with a chip, in the cards and beside a label.
-- **A status has four tones.** The cell key `stat` of `fragments/table-cells.html` (and of `table-row.html` of lite) draws
+- **A status has four tones.** The cell key `stat` of `fragments/table-cells.html` (and of `table-row.html` of aurora) draws
   one icon: `is_on` the green check, `is_wait` the clock, `is_fail` the red cross, none of them the grey dashed circle
   of off; `text` is its tip and its name for a screen reader, `_ACT`/`_DEACT` without it. The cell sorts by the tone
   through `data-sort`, and the lamp of a row turned in place (`admin-ui.js`) keeps it. A head with `is_head_status`,
@@ -688,7 +688,7 @@ of a type.
   as a chip in the colour of the pager; its panel is the system `sl-float` of the key tip, open on hover and focus, the
   lower one opening upward by `data-sl-float-up`. The rows are 10, 25, 50, 100, 250 with the pages each would give, "all"
   with the count (off above `LIST_MAX`), an own number in a field, and "Вернуть умолчание · N"; the list's own number is
-  marked by a dot. A list of one page keeps its pager for the chip. The lite twin of the fragment prints the range text
+  marked by a dot. A list of one page keeps its pager for the chip. The aurora twin of the fragment prints the range text
   alone, since `PagerKeysTest` holds `pager.html` byte-identical in both themes.
 - **The reader stays on the same row.** After a choice the page is counted from the first row under the table head,
   `#sl-list` is swapped by htmx with the new `num`, the script puts that row back where it stood, and the toast says the
@@ -805,7 +805,7 @@ What a page of the panel tells, not asks, is one of four kinds, and each kind ha
   rows of `div.html`: the label in the first half, the value from the start of the second, the same padding and rule,
   so the facts and the fields under them read as one table. In a window of a board (`fragments/pane.html`, the
   "Мониторинг") the list keeps its narrow form: the value to the right, a dashed rule, the small text.
-- **The site speaks the same way.** The theme `lite` draws a fact of a page — an extra field of a material, a post of
+- **The site speaks the same way.** The theme `aurora` draws a fact of a page — an extra field of a material, a post of
   the forum, the preview — with `fragments/field-value.html`: the tracks of its form row, a rule between two rows,
   the caption muted and a short value weighed, while the paragraphs of a text area keep the weight of a text. A card
   of facts — the panels of the public profile, the extra fields among them — is the window: `sl-profile-info-row`
@@ -866,7 +866,7 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
 | `layouts/admin.html` | admin | `setFoot()` | the skip link, the logo without `h1`, the phone drawer of the menu, the line `data-sl-said`, the window `#sl-session`, the badge of the screensaver, the root attributes `data-sl-still`, `data-sl-rail`, `data-sl-dock-off` from the first byte |
 | `fragments/bell.html` | admin | `getAdminLayoutVars()` | the bell with the queues of `getAdminQueues()` and the address of their poll |
 | `fragments/palette.html` | admin | the layout | Ctrl+K: the actions, the sections gathered from the menu or the cards, the settings of the page |
-| `fragments/toast.html` | both | `getWindowSet()` | the one notice: in admin a flash alert with a ring of `--sl-d-toast` and "Отменить" in the slot, in lite a pill |
+| `fragments/toast.html` | both | `getWindowSet()` | the one notice: in admin a flash alert with a ring of `--sl-d-toast` and "Отменить" in the slot, in aurora a pill |
 | `partials/cockpit.html`, `fragments/live-chip.html` | admin | `getAdminPanel()` | the four rings, the lamp with the sixteen signal rows, the strip and the live chip of the home |
 | `fragments/admin-block.html`, `partials/session-summary.html` | both | `adminblock()` | the block "Администрация": the summary ring, the keys, the own links |
 | `partials/session-stats.html` | both | `getSessionStats()` | the body of the watch window `#sl-stats` |
@@ -877,11 +877,11 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
   closed is one Tab stop, its items reachable once it opens; "…" shows on hover and focus.
 - **The drawer of a phone** is one mechanism for both themes, `setDrawer()` of `slaed.js`: the toggle
   `data-sl-menu-open` names its menu by `aria-controls` (`sl-menu` in `layouts/admin.html`, `hmenu` in
-  `partials/site-header.html` of `lite`) and says its state by `aria-expanded`; `data-sl-menu-close` on the scrim
+  `partials/site-header.html` of `aurora`) and says its state by `aria-expanded`; `data-sl-menu-close` on the scrim
   `sl-menu-scrim` and on the cross `sl-menu-close` shuts it, and so do Escape and a window opened from inside it. While
   `body[data-sl-drawer]` stands the rest of the page is inert, the focus enters the menu and comes back to the toggle.
   The theme decides where the menu is a drawer by showing the toggle: a hidden toggle opens nothing, and once it hides
-  the drawer shuts. Both themes take the step of 900 px; above it the menu of `lite` is the bar of the header, below it
+  the drawer shuts. Both themes take the step of 900 px; above it the menu of `aurora` is the bar of the header, below it
   the same `partials/menu.html` and the search stand in one column of the drawer, a branch under its item.
 - **The title of the tab** puts the most important first: `setFoot()` joins the section, the open tab, `_ADMIN` and the name of
   the site by `getSeoTitle()` over `$conf['defis']`. `getTplAdminTabs()` gives both; its first tab is not written.
@@ -934,7 +934,7 @@ The laws of a move:
 ### The Cost Of A Frame
 
 A moving page of either theme keeps a core busy while nobody touches it; these laws hold that cost down without
-changing what the reader sees. They bind the panel, the presentation of lite and every new effect; the rig that proves
+changing what the reader sees. They bind the panel, the presentation of aurora and every new effect; the rig that proves
 them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
 
 - **The picture comes first.** A change of an effect for its cost keeps the picture: it is proven by the pixels of the
@@ -974,7 +974,7 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
   parent says `inherit`.
 - **What stays by decision.** `sl-cockpit-alarm` on `box-shadow` and `sl-cockpit-throb` on `filter` run only in the state
   danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it; the lamp of the presentation cockpit glows by the `drop-shadow` of the panel lamp, rastered again under its turning comet, about 12 points of GPU on the top of the presentation (owner, 2026-11-04);
-  the live dot of lite (the user block, the profile, a forum section with new messages) pulses by a ring on `transform`
+  the live dot of aurora (the user block, the profile, a forum section with new messages) pulses by a ring on `transform`
   and `opacity` under an opaque dot, its edge up to 37 of 255 from `sl-live-pulse` in the first tenth of the cycle
   (owner, 2026-11-09);
   the moving acts of Phoenix draw on the canvas, not through `ImageData`. The quiet ground of Phoenix asks for a frame
@@ -997,7 +997,7 @@ holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter(
 | The ground | `pane-ground.html`, `.sl-ground` | `content_html`. Its grid drifts on a layer of its own, `.sl-ground-lines`, by `transform`: the drift measured 5.7% and 14.5% of a core (renderer, GPU) against 4.8% and 13.2% without it and 20.4% and 43.5% by `background-position` |
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
 | A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon` or three lamps without it, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list enters a window by the key `pane` of `getTplAdminList()` and draws the same cap |
-| A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `is_good`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
+| A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
 | Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good`; `chip` with `tone` after the text (section "Facts Of A Page") |
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
 | A meter | `meter.html`, `.sl-meter`, drawn by `getTplMeter()` | a share of a real limit with the role `meter` and `--sl-d-part`; `is_row` is the form inside a table row |
@@ -1045,7 +1045,7 @@ leaves as the event `sl-series-pick` on `document`, with `detail.index`, `-1` fo
 | `kind` | Data |
 |---|---|
 | `live` | `label`, `at` (the time of the points, seconds), `now`, `grid` (the texts of the scale from the top), `words` (`now`, `sec`, `min` with `%s`), `series`: `key`, `name`, `unit`, `digits`, `tone`, `max` (without it the common top of the series without a limit), `values` |
-| `rhythm` | `label`, `period_label`, `view_label`, `views`: `key` (`area`, `bar`), `name`, `icon`; `periods`: `key`, `name`, `figure`, `note`, `delta`, `labels` (of the panel of a point), `ticks` (of the axis, empty for none), `series`: `key`, `name`, `tone`, `unit`, `digits`, `values` |
+| `rhythm` | `label`, `period_label`, `view_label`, `views`: `key` (`area`, `bar`), `name`, `icon`; `periods`: `key`, `name`, `figure`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`; it colours the delta as a tile does), `labels` (of the panel of a point), `ticks` (of the axis, empty for none), `series`: `key`, `name`, `tone`, `unit`, `digits`, `values` |
 | `days` | `label`, `tone`, `can_pick`, `pick`, `days`: `label`, `cap`, `value`, `is_end`, `is_run`, `rows` (the rows of the panel, `[name, text, tone]`) |
 | `archive` | `months`: `name`, `year` (only on a month whose year is written; a first month of a year no later than June, so neighbours do not collide), `value`, `href` (empty for a gap), `is_gap`, `is_run`, `is_pick`, `rows`; `keys`: `mark` (`pick`, `run`, `gap`) and `text`, the hint `is_hint` |
 | `week` | `name`, `tone`, `low`, `high`, `days`: `name`, `cap`, `is_end`; `hours` (a label or empty), `spans` (the hour in the panel), `cells`: seven rows of 24 numbers |
@@ -1070,7 +1070,7 @@ leaves as the event `sl-series-pick` on `document`, with `detail.index`, `-1` fo
 
 ## Node List Contract
 
-The list of a Node type is one part that swaps itself: `partials/node/list.html` of `lite` is `#sl-node-list`, the
+The list of a Node type is one part that swaps itself: `partials/node/list.html` of `aurora` is `#sl-node-list`, the
 header `partials/node/head.html` inside it, the cards in `#sl-node-items`, the pager and "Показать ещё" in
 `#sl-node-foot`. What the server reads and answers — the parameters, the counts, the views, the `HX-Request` answer —
 is in `docs/NODE.md`, "List header", "Views of a list" and "Live list"; the keys of the three templates are in its
@@ -1122,7 +1122,7 @@ pager — is one component, `sl-seg`, in the `theme.css` of both themes; the fac
 | `sl-seg-run` | a run of cells printed by another fragment, laid straight into the track by `display: contents` |
 
 - **A modifier sets the tokens of its place and nothing else.** `sl-seg-mode` — the gradient of the top band, light
-  icons, only in lite, since the panel has no mode switch; `sl-seg-view` — a quiet track; `sl-seg-pager` — mini cells,
+  icons, only in aurora, since the panel has no mode switch; `sl-seg-view` — a quiet track; `sl-seg-pager` — mini cells,
   the plate set inside the track by `--sl-space-1`, the digits small and bold. A setting (the mode, the view) wears a
   neutral light plate, a place (the current page) the brand colour.
 - **A switch of a screen is the plain `sl-seg`.** The span of the rhythm of "Статистика" (`24ч`, `7д`, `30д`) and the
@@ -1172,7 +1172,7 @@ and takes the general number, shown as its placeholder; the face is the stand `p
 | `fragments/pager.html` | the `nav` labelled `_PAGENAV`: the row `sl-pager-main` with the arrows and the rail in `sl-pager-nav`, the side group `sl-pager-side` with "Наверх" on `#top` and the key tip outside a panel list, then the line `sl-pager-info` |
 | `fragments/pager-link.html` | one cell: a number (`sl-seg-cell`), an arrow (`sl-but-mini`) or the dots; a link by `href`, an htmx link by `query` with `target_id` and `push_url`, a `span` for the current page and for an arrow at the end of the run |
 
-Both fragments are byte-identical in `templates/admin` and `templates/lite`; only each theme's sheet differs.
+Both fragments are byte-identical in `templates/admin` and `templates/aurora`; only each theme's sheet differs.
 
 | Key | To | Carries |
 |---|---|---|
@@ -1180,17 +1180,21 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
 | `is_far`, `is_near` | `pager-link` | a number more than one away from the current page, or its neighbour; never the first or the last. The fragment prints `sl-pager-far` and `sl-pager-near` |
 | `is_nav`, `rel`, `icon_name`, `key_name` | `pager-link` | an arrow: `rel="prev"` or `rel="next"`, its chevron, and `aria-keyshortcuts` with `ArrowLeft` or `ArrowRight` |
 | `is_dots` | `pager-link` | the muted cell `&hellip;` |
-| `page_label`, `page_of`, `overall`, `count` | `pager` | "3 из 10" and "Всего 97"; the word "Страница" of `page_label` is printed for screen readers only, so the page line fits the row of its pager |
+| `page_label`, `page_of`, `overall`, `count` | `pager` | "3 из 10" and "97"; the words "Страница" of `page_label` and "Всего" of `overall` are printed for screen readers only, so the page line fits the row of its pager |
 | `range_from`, `range_to`, `range_text` | `pager` | "Показаны 21–30", only when the caller names `limit` and `count` |
 
 - **The rail is the segmented switch.** The numbers are the `sl-seg-run` of `sl-seg sl-seg-pager` with
   `data-sl-knob="pager"`, so the plate travels to the new page after a reload and after an htmx swap.
 - **It narrows by its own column.** `.sl-pager` declares `container-type: inline-size`: under 520px of it the far
-  numbers and the range part of the line go, under 320px the neighbours too, leaving `‹ 1 … 8 … 16 ›`. A container of
-  inline size does not grow by its content, so a flex foot that holds the pager gives it a width — the panel module foot
-  and the forum foot do; the other places hold it as a block. The site centres the row and puts the line under it; the panel starts the row
-  at the left and pushes the line to the right, under the row in a narrow container; the panel list foot puts the bulk
-  action under the pager below 560px.
+  numbers go, under 320px the neighbours too, leaving `‹ 1 … 8 … 16 ›`. A container of inline size does not grow by its
+  content, so a flex foot that holds the pager gives it a width — the panel module foot, the forum foot and the Node
+  foot do; the other places hold it as a block. Both themes start the row at the left. The site reads the numbers, the
+  side group and the line in one row; between 520px and 680px a run with far numbers drops the range part of the line
+  so the line keeps to the row, and under 480px the row turns into a centred column with the whole line under the
+  numbers. Beside the buttons of a foot (`sl-node-foot`, `sl-forum-foot`) the pager keeps its row and its whole line, and
+  the foot decides: the Node foot drops the range under 720px of itself and turns into the centred column under 480px,
+  with "Показать ещё" under the pager. The panel pushes the line to the right, under the row in a narrow container; the
+  panel list foot puts the bulk action under the pager below 560px.
 - **The arrow keys page the list.** `setPagerKeys()` in `slaed.js` listens to ← and → without a modifier and clicks the
   back or forward link (`a[rel]`) of the first pager on show outside a window, so an htmx link swaps as it does for the
   pointer and two pagers of one topic lead to the same page. It stands aside when the key was handled already, when the
@@ -1216,7 +1220,7 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
 ## Forum List
 
 - **A section wears its category tile.** A row of the forum home (`getForumSectionRow()` in `modules/forum/index.php`,
-  `fragments/forum-category-row.html` of lite) opens with the tile `sl-icat` a material shows for its category: the icon
+  `fragments/forum-category-row.html` of aurora) opens with the tile `sl-icat` a material shows for its category: the icon
   of the category, or the icon of the forum, in the tone `sl-cat-tone-N` of its order, the same 46px and the same lift
   on hover, which the whole row triggers. The title carries no icon of its own.
 - **The state is a mark on the corner, not a second icon.** `sl-forum-mark-new` is the green live dot of the user
@@ -1244,7 +1248,7 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
 - **Titles stay on one line.** The title of a section or a topic, and of a topic beside its buttons, ends in an ellipsis
   where it does not fit (`sl-cell-ellipsis`); its whole text is the tip of its link or heading.
 - **A column title is parted from the one before** by a short line, as in the panel (`.sl-table-head th + th`, every
-  table head of lite); the title after the empty one over the tiles takes none. A sortable count keeps the lane of its
+  table head of aurora); the title after the empty one over the tiles takes none. A sortable count keeps the lane of its
   mark on the right of its title and of every cell alike, so it centres without a lane on the left.
 - **The columns sort.** Both tables carry `data-sl-table-sort`: a title sorts by its name (`data-sort`), the counts as
   numbers, the last message by its time; the column of the tile and the column of boxes do not sort.
@@ -1272,12 +1276,12 @@ Every reader passes the raw column and its title, and every template takes the r
 
 - **One fragment in both themes.** `fragments/rank.html` prints `<span class="sl-rank" role="img">` with the title as
   `title` and accessible name and `--sl-d-rank` as the colour, then one `<i class="bi bi-<icon>" aria-hidden="true">`
-  per mark, the lit ones `sl-is-active`. The files are the same in `templates/admin` and `templates/lite`; only the sheets
+  per mark, the lit ones `sl-is-active`. The files are the same in `templates/admin` and `templates/aurora`; only the sheets
   differ.
 - **The sheet.** The lit mark takes `--sl-d-rank`, the muted one `--sl-border-strong` — the same icon in a muted tone,
   not an outline variant, so every icon of the catalogue works. The marks stand at `--sl-space-1` and take the size of
   the place they are printed in by `.sl-rank .bi { font-size: inherit; }`, which the panel needs against its fixed `.bi`
-  size and lite carries so both sheets read alike.
+  size and aurora carries so both sheets read alike.
 - **One contrast floor, 3:1 on both surfaces.** One stored colour serves the light and the dark theme, and no colour
   reaches 4.5:1 on both at once; 3:1 is the floor both meet (WCAG 1.4.11 for the marks). Every swatch of the panel
   passes it; a colour the administrator picks below it is warned about, never refused.
@@ -1358,9 +1362,9 @@ that holds the output of a module, belongs to the core and is never a descriptio
 - **The provider.** A module may bring `sections/<type>.php`, which returns a `Closure` that takes the section and
   answers values laid over those of its fields. A section on the data of a module is a type of that module, so a site
   without the module has no such type in the library.
-- **Shipped.** Lite describes 17 types. The module `node` brings `feed` ("Свежие материалы", over `getNodeFeed()`, the
+- **Shipped.** Aurora describes 17 types. The module `node` brings `feed` ("Свежие материалы", over `getNodeFeed()`, the
   engine of the block `node.php`) and `item` ("Материал", a record by `getNodeContent()` of its type); `presentation`
-  brings `sites` ("Внедрения", over `getPresentationSites()`) with a default fragment. Lite draws `feed`, `item` and
+  brings `sites` ("Внедрения", over `getPresentationSites()`) with a default fragment. Aurora draws `feed`, `item` and
   `sites` with fragments of its own.
 
 ### The description
@@ -1381,17 +1385,17 @@ optionally `show`, `tab` (`look` for the tab "Вид"), `options` (key → label
 (`[key, value]`: the field shows and is checked only while another field holds that value), `for` on a field `url`:
 the key of the text of the button it leads from, and `alt` on a picture: the key of the field that describes it. A
 `file` is a picture by itself and is described by a field `alt` when the item has one; a field of another type, as the
-`select` of a mark of lite, is a picture only by naming its `alt`. The check before a publication names a filled picture
+`select` of a mark of aurora, is a picture only by naming its `alt`. The check before a publication names a filled picture
 whose describing field is empty, once per describing field.
 
 A button of a fragment prints only with both its text and its address, so the pair is closed on both sides: a `make`
 carries no button text without its address, and the check before a publication names a filled text whose address is
-empty ("Кнопка «…» никуда не ведёт"). Lite ties `href` to `btn` in `hero`, `cta`, `media` and the items of `prices`, and
+empty ("Кнопка «…» никуда не ведёт"). Aurora ties `href` to `btn` in `hero`, `cta`, `media` and the items of `prices`, and
 `href2` to `btn2` in `hero`; `LayoutTest` holds that no default and no ready page breaks a pair.
 
 | `type` | Edited as | The fragment gets |
 |---|---|---|
-| `text`, `textarea`, `email`, `date`, `url`, `int`, `bool`, `select` | a type of `Field`, checked by `checkFieldValues()`; `show` draws a `select` as `seg`, a `bool` as `switch`, an `int` as `range` | the value made canonical by `Field`; a `select` also `<key>_<option>`, a `url` outside the site `<key>_ext`. An option key follows the name of `Field` (`[a-z][a-z0-9_]`, no hyphen): one bad key empties the field on every value, with no error |
+| `text`, `textarea`, `email`, `date`, `url`, `int`, `bool`, `select` | a type of `Field`, checked by `checkFieldValues()`; `show` draws a `select` as `seg`, a `bool` as `switch`, an `int` as `range` | the value made canonical by `Field`; a `select` also `<key>_<option>`, a `url` outside the site `<key>_ext`, a field marked `"tel": true` whose value holds a digit `<key>_tel` (`tel:` with only `+` and the digits). An option key follows the name of `Field` (`[a-z][a-z0-9_]`, no hyphen): one bad key empties the field on every value, with no error |
 | `markdown` | the content editor of the site in the editor window, with the file manager over `layout.attach` | `<key>_html` by `Parser::filterDoc()` with the module `layout` |
 | `code` | "Свой HTML" in the code editor, for the super administrator | `<key>_html`, printed as it is |
 | `file` | the file field over `layout.attach` | the address of a path below `uploads/`, in a public folder only |
@@ -1429,11 +1433,11 @@ by its fields, as the values of a section.
 
 - `parts`: each `title`, `note`, `icon`, `where` (the place the structure of the screen groups it by) and `fields` as
   in a description; optionally `items` with its `key`, the name of its list in `theme`, and `conf`, the keys of
-  `config/global.php` the part edits as "Конфигурации" does. Lite declares `brand` (its `conf` is `sitename` and
-  `site_logo`, its field `tagline`), `pane`, `social`, `line`, `contacts`, `marks` and `tabs`. A mark of lite is a
+  `config/global.php` the part edits as "Конфигурации" does. Aurora declares `brand` (its `conf` is `sitename` and
+  `site_logo`, its field `tagline`), `pane`, `social`, `line`, `contacts`, `marks` and `tabs`. A mark of aurora is a
   link (`url`) around a picture: `logo` picks one of the theme's marks in `images/tech/`, `<logo>.svg` in mono with
   `<logo>-color.svg` over it, shown on hover and keyboard focus; without a `logo` the uploaded `img` stands alone.
-- `menus`: each `title`, `where`, `depth` and `icons`; lite declares `main` two levels deep and `foot` one.
+- `menus`: each `title`, `where`, `depth` and `icons`; aurora declares `main` two levels deep and `foot` one.
 - `zones`: the zones of blocks `l`, `r`, `c`, `d` with their `title` and `icon`, the Bootstrap icon of the zone in the
   tree of the screen (`layout-sidebar` without it); the tree sets them under one head "Блоки".
 
@@ -1441,7 +1445,7 @@ by its fields, as the values of a section.
 
 `presets.json` maps a key to a ready page: `title`, `note`, `icon`, `band` and `sections`, each a `type` with an
 optional `make` laid over the defaults of that type. The screen puts its own "Из текста" and "Пустая" first; a type the
-theme and its modules do not describe is skipped when the page is made. Lite brings thirteen.
+theme and its modules do not describe is skipped when the page is made. Aurora brings thirteen.
 
 ### Marks of the edit mode
 
@@ -1461,7 +1465,7 @@ theme without them keeps the rings and the inspector and loses only the typing i
 The screen draws the page at the width of its device — 1366, 820 or 390 px — and scales it down to its stage; the
 message `{sl: 'scale'}` makes `builder.js` write the inverse, at most 2, as `--sl-d-zoom` on the root of the page, which
 the CSS of the names, the toolbar, the button "Добавить секцию" and the drag label takes as `zoom`, so they keep their
-size (lite: `presentation.css`).
+size (aurora: `presentation.css`).
 
 ### The screen of the builder
 
@@ -1501,7 +1505,7 @@ A new theme is made by copying an etalon and editing one file: `templates/<theme
 
 Axes, ladders, the allowlist, categorical sets, declared component names, the ramp and the ratchet list live in `tools/ui-contract.php`. That file is the contract: it is committed, and it is what every tool reads.
 
-- **`error.html`** is the one surface that renders when the CMS cannot, so it carries its own `:root` instead of reading a theme. Its values are the light half of `lite`, because no server is there to write `data-theme`.
+- **`error.html`** is the one surface that renders when the CMS cannot, so it carries its own `:root` instead of reading a theme. Its values are the light half of `aurora`, because no server is there to write `data-theme`.
 - **`--sl-size-chip`** is read by `plugins/system/slaed.js` for speed-dial geometry and cannot be renamed without touching the script in the same commit. Names written from outside CSS carry `--sl-d-*` and are registered under `data` in the contract.
 
 Both themes stand at **zero untokenised visual decisions**, and every ratcheted count is at zero except `scoped` and `important`. Neither of those two is a defect list: a scoped custom property on a component root is an internal the rules permit, and an `!important` is permitted where it is need. What the ratchet buys is that neither can grow.
@@ -1514,8 +1518,8 @@ only where an editor lives, and a rule left behind there is a component stripped
 on every other page.
 
 The file manager window is the worked example. Its rules moved from
-`templates/{lite,admin}/assets/editors/toastui/skin.css` into
-`templates/{lite,admin}/assets/css/theme.css`, values unchanged — a move, not a
+`templates/{aurora,admin}/assets/editors/toastui/skin.css` into
+`templates/{aurora,admin}/assets/css/theme.css`, values unchanged — a move, not a
 rewrite. Five of them do not start with the window root: `.sl-shot-side .sl-fm-props`
 and its four relatives dress the properties panel of the shot window, which
 `getWindowShot()` builds from `core/helpers.php` and which is already system-wide;
@@ -1533,7 +1537,7 @@ window, beside its own root.
 `sl-fm-split`, `sl-fm-drop`, `sl-fm-queue`, `sl-fm-queue-cap`, `sl-fm-empty`,
 `sl-fm-props` and `sl-fm-main`, the last a *button* class there. The window took a
 root of its own, `sl-fm-win`, and stays scoped under it. The eight `--sl-fm-*`
-tokens admin's `base.css` carries beyond lite's twenty — `bar-width`,
+tokens admin's `base.css` carries beyond aurora's twenty — `bar-width`,
 `edit-height`, `preview-height`, `search-width`, `sep-height`, `split-height`,
 `thumb-height`, `thumb-width` — belong to that browser and not to the window.
 
@@ -1632,7 +1636,7 @@ The repeated audit of 2026-11-01 (`docs/VERSIONS.md`) left these, each with its 
 - **The strip of the archive**, `target-size`: "The Engine Of The Parts" above; the equal means were checked on the live page.
 - **`landmark-unique` on the builder:** axe compares the `main` of the panel with the `main` of the site inside the frame.
   They are two documents, and nothing needs changing.
-- **The theme `lite` inside the frame of the builder**, contrast: `.sl-generates` 2.65, the legends of the debug panel 2.74 and
+- **The theme `aurora` inside the frame of the builder**, contrast: `.sl-generates` 2.65, the legends of the debug panel 2.74 and
   3, `.sl-builder-name` 2.75. This is the theme of the site, which no audit has covered.
 - **`color-contrast` incomplete:** axe gave up on 76 thousand nodes on gradients and overlays. Outside "Статистика",
   "Мониторинг" and the cockpit of the home, which were measured by pixels, nobody read them by hand. In those three only the

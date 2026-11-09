@@ -152,7 +152,7 @@ after load and reports one finding per broken rule. In Git Bash set `MSYS_NO_PAT
 
 CSS formatting must be verified per file with a parser-normalized, comment-independent token stream. Record line and comment counts, before/after SHA-256 hashes, property value changes, and removed selectors. Formatting and adjacent-rule consolidation are separate diffs: consolidation additionally compares the flattened at-rule, selector, and declaration stream and checks computed styles against captured DOM at desktop and mobile viewports.
 
-The `admin` and `lite` reports are independent. Never compare token values, selector inventories, or computed styles across themes.
+The `admin` and `aurora` reports are independent. Never compare token values, selector inventories, or computed styles across themes.
 
 ### Theme Browser Route Matrices
 

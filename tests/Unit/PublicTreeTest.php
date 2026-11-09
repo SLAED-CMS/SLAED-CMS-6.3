@@ -151,7 +151,7 @@ final class PublicTreeTest extends TestCase
         foreach ($list as $path) {
             $this->assertSame(404, $this->getReply($path)['status'], $path.' is reachable over HTTP');
         }
-        $this->assertSame(200, $this->getReply('/templates/lite/assets/css/base.css')['status'], 'An asset of the theme is not served from public/');
+        $this->assertSame(200, $this->getReply('/templates/aurora/assets/css/base.css')['status'], 'An asset of the theme is not served from public/');
         $this->assertSame(200, $this->getReply('/plugins/system/slaed.js')['status'], 'A script of the plugins is not served from public/');
     }
 

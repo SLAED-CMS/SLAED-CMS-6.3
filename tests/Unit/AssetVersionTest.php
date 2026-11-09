@@ -114,7 +114,7 @@ class AssetVersionTest extends TestCase
         }
         sort($want);
         $this->assertSame($want, array_keys($map));
-        $list = ['templates/lite/assets/css/theme.css', 'plugins/editors/toastui/assets/toastui-editor.all.min.js'];
+        $list = ['templates/aurora/assets/css/theme.css', 'plugins/editors/toastui/assets/toastui-editor.all.min.js'];
         foreach ($list as $file) $this->assertSame($this->getHash($file), $map[$file]);
     }
 
@@ -124,7 +124,7 @@ class AssetVersionTest extends TestCase
     {
         $probe = $this->getProbe();
         $this->assertTrue($probe['map'], 'The derived configuration carries no version map');
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $list = array_merge($this->getAddresses($probe[$theme]['css']), $this->getAddresses($probe[$theme]['js']));
             $this->assertNotEmpty($list, 'The '.$theme.' head prints no asset');
             foreach ($list as $url) {
@@ -140,7 +140,7 @@ class AssetVersionTest extends TestCase
     public function aPagePrintsItsAssetsFromTheMapWithoutStatingAFile(): void
     {
         $probe = $this->getProbe();
-        $this->assertSame(['/templates/lite/assets/css/ghost-probe.css?v=abcdef0123'], $this->getAddresses($probe['ghost']['css']));
+        $this->assertSame(['/templates/aurora/assets/css/ghost-probe.css?v=abcdef0123'], $this->getAddresses($probe['ghost']['css']));
         $this->assertSame(['/plugins/system/ghost-probe.js?v=0123abcdef'], $this->getAddresses($probe['ghost']['js']));
     }
 
@@ -178,7 +178,7 @@ class AssetVersionTest extends TestCase
         $ship = (require BASE_DIR.'/config/global.php')['script_f'];
         $want = array_map('trim', explode(',', $ship));
         $this->assertSame(['plugins/htmx/htmx.min.js', 'plugins/system/global-func.js', 'plugins/system/slaed.js'], array_slice($want, 0, 3));
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $this->assertSame(0, preg_match('#<script(?![^>]*\sdefer\b)[^>]*\ssrc=#', $probe[$theme]['js']), 'A '.$theme.' head script is not deferred');
             $this->assertStringNotContainsString('async', $probe[$theme]['js']);
             $list = array_map(static fn(string $v): string => substr(explode('?v=', $v)[0], 1), $this->getAddresses($probe[$theme]['js']));

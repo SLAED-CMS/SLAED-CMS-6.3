@@ -198,12 +198,12 @@ final class LayoutTest extends TestCase
         $this->assertGreaterThan(max($ids), $data['next'], 'The counter of the file would give a number again');
     }
 
-    # The delivery fills every menu of lite and carries every key of its parts; an item leads to an address of the site from / or of https, a heading without an address holds items
+    # The delivery fills every menu of aurora and carries every key of its parts; an item leads to a site address from / or https, a heading without an address holds items
     #[Test]
     public function theShippedChromeCarriesEveryPart(): void
     {
         $data = self::getShippedFile()['layout'];
-        $places = (new Layout([], 'lite', false, false))->getThemePlaces();
+        $places = (new Layout([], 'aurora', false, false))->getThemePlaces();
         $this->assertSame(array_keys($places['menus']), array_keys($data['menus']));
         foreach ($data['menus'] as $list) {
             $this->assertNotSame([], $list);
@@ -220,7 +220,7 @@ final class LayoutTest extends TestCase
         sort($keys);
         $have = array_keys($data['theme']);
         sort($have);
-        $this->assertSame($keys, $have, 'An update brings a site the keys of the delivery, so it carries every key lite declares');
+        $this->assertSame($keys, $have, 'An update brings a site the keys of the delivery, so it carries every key aurora declares');
     }
 
     # The merge of an update writes the delivered file through the string form of setConfigFile(), every scalar as text; the site still has its home page and its slot
@@ -286,9 +286,9 @@ final class LayoutTest extends TestCase
         $this->assertStringEndsWith('<main>BODY</main>', $this->getReader($data)->getPageHtml(2, '<main>BODY</main>', $tpl, $this->getParser()), 'Output no slot took was dropped');
     }
 
-    # A section of lite prints each value as its kind asks: Field refuses a bad address, a bad picture, icon or tone prints nothing, a list stops at its max
+    # A section of aurora prints each value as its kind asks: Field refuses a bad address, a bad picture, icon or tone prints nothing, a list stops at its max
     #[Test]
-    public function aSectionOfLitePrintsItsValuesByTheirKinds(): void
+    public function aSectionOfAuroraPrintsItsValuesByTheirKinds(): void
     {
         $page = ['sections' => [
             $this->getSection(1, 'hero', ['over' => 'Over', 'title' => 'A < B', 'accent' => 'Acc', 'text' => "One\nTwo", 'btn' => 'Go', 'href' => 'javascript:alert(1)',
@@ -303,8 +303,8 @@ final class LayoutTest extends TestCase
             $this->getSection(7, 'media', ['title' => 'Flip', 'text' => '', 'photo' => 'presentation/brand/background-4.png', 'side' => 'right']),
             $this->getSection(8, 'cta', ['title' => 'Call', 'btn' => 'Write', 'href' => '/contact', 'desk' => '']),
         ]];
-        $read = new Layout($this->getLayout(['pages' => [1 => $page]]), 'lite', false, false, '', self::$mods);
-        $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
+        $read = new Layout($this->getLayout(['pages' => [1 => $page]]), 'aurora', false, false, '', self::$mods);
+        $html = $read->getPageHtml(1, '', new Template('aurora'), $this->getParser());
         $this->assertStringContainsString('id="top"', $html);
         $this->assertStringContainsString('<b>A &lt; B</b> <span>Acc</span>', $html);
         $this->assertMatchesRegularExpression('#<p class="sl-pres-lead sl-sec-lines">One\n\s*Two</p>#', $html);
@@ -343,12 +343,12 @@ final class LayoutTest extends TestCase
             2 => ['sections' => [$this->getSection(1, 'module'), $hero]],
             3 => ['band' => true, 'sections' => [$hero]],
             4 => ['sections' => [['phone' => false] + $hero]],
-        ]]), 'lite', false, false, '', self::$mods);
-        $top = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
+        ]]), 'aurora', false, false, '', self::$mods);
+        $top = $read->getPageHtml(1, '<main>BODY</main>', new Template('aurora'), $this->getParser());
         $this->assertStringContainsString('style="--sl-d-focus: center" fetchpriority="high" width="2560"', $top);
         $this->assertStringNotContainsString('loading="lazy"', $top);
         foreach ([2 => 'under the module', 3 => 'under the band', 4 => 'off the phone'] as $key => $why) {
-            $low = $read->getPageHtml($key, '<main>BODY</main>', new Template('lite'), $this->getParser());
+            $low = $read->getPageHtml($key, '<main>BODY</main>', new Template('aurora'), $this->getParser());
             $this->assertStringContainsString('style="--sl-d-focus: center" loading="lazy" width="2560"', $low, 'A hero '.$why.' loaded at once');
             $this->assertStringNotContainsString('fetchpriority', $low);
         }
@@ -365,14 +365,14 @@ final class LayoutTest extends TestCase
             $this->getSection(4, 'text', ['title' => 'Body', 'body' => 'x']),
         ]];
         $data = $this->getLayout(['pages' => [1 => $page]]);
-        $read = new Layout($data, 'lite', false, false, '', self::$mods);
-        $plain = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
+        $read = new Layout($data, 'aurora', false, false, '', self::$mods);
+        $plain = $read->getPageHtml(1, '<main>BODY</main>', new Template('aurora'), $this->getParser());
         $this->assertStringNotContainsString('data-sl-pick', $plain, 'A visitor got the marks of the builder');
         $this->assertStringNotContainsString('data-sl-text', $plain);
         $this->assertStringNotContainsString('data-sl-md', $plain);
         $this->assertFalse($read->isBuildMode());
         $read->setBuildMode();
-        $html = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
+        $html = $read->getPageHtml(1, '<main>BODY</main>', new Template('aurora'), $this->getParser());
         $this->assertTrue($read->isBuildMode());
         $this->assertStringContainsString('data-sl-pick="sec:1"', $html);
         $this->assertMatchesRegularExpression('#<div data-sl-pick="sec:2" data-sl-build-one>\s*<main>BODY</main>\s*</div>#', $html, 'The slot is not picked around the module');
@@ -383,11 +383,11 @@ final class LayoutTest extends TestCase
         $this->assertStringContainsString('data-sl-md="body"', $html);
     }
 
-    # Every text lite marks names a field: of its type in a section (an item of its list, Markdown or own HTML by kind), of a part or a menu item in the chrome
+    # Every text aurora marks names a field: of its type in a section (an item of its list, Markdown or own HTML by kind), of a part or a menu item in the chrome
     #[Test]
-    public function theMarksOfLiteNameTheFieldsOfTheirTypes(): void
+    public function theMarksOfAuroraNameTheFieldsOfTheirTypes(): void
     {
-        foreach (glob(PUBLIC_DIR.'/templates/lite/sections/*.html') ?: [] as $file) {
+        foreach (glob(PUBLIC_DIR.'/templates/aurora/sections/*.html') ?: [] as $file) {
             $type = basename($file, '.html');
             $json = is_file(dirname($file).'/'.$type.'.json') ? dirname($file).'/'.$type.'.json' : BASE_DIR.'/modules/presentation/sections/'.$type.'.json';
             $desc = is_file($json) ? json_decode((string)file_get_contents($json), true) : [];
@@ -403,31 +403,31 @@ final class LayoutTest extends TestCase
                 $this->assertContains($kind, $want, $type.'.html marks '.$path.' of the kind '.$kind.' as '.$mark);
             }
         }
-        $head = (string)file_get_contents(PUBLIC_DIR.'/templates/lite/fragments/presentation-head.html');
+        $head = (string)file_get_contents(PUBLIC_DIR.'/templates/aurora/fragments/presentation-head.html');
         $this->assertStringContainsString('data-sl-text="title"', $head, 'The head of a framed section is not marked');
-        $places = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/lite/places.json'), true);
+        $places = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/aurora/places.json'), true);
         [$fields, $lists] = [['title' => true], []];
         foreach ($places['parts'] as $part) {
             foreach ($part['fields'] ?? [] as $one) $fields[$one['key']] = true;
             if (isset($part['items']['key'])) $lists[$part['items']['key']] = array_column($part['items']['fields'], 'type', 'key');
         }
         foreach (['site-header', 'site-footer', 'menu'] as $name) {
-            $code = (string)file_get_contents(PUBLIC_DIR.'/templates/lite/partials/'.$name.'.html');
+            $code = (string)file_get_contents(PUBLIC_DIR.'/templates/aurora/partials/'.$name.'.html');
             preg_match_all('#data-sl-pick="(part|menu):([a-z]+)#', $code, $hit, PREG_SET_ORDER);
-            foreach ($hit as [, $kind, $key]) $this->assertArrayHasKey($key, $places[$kind.'s'], $name.'.html picks the '.$kind.' '.$key.', which lite does not declare');
+            foreach ($hit as [, $kind, $key]) $this->assertArrayHasKey($key, $places[$kind.'s'], $name.'.html picks the '.$kind.' '.$key.', which aurora does not declare');
             preg_match_all('#data-sl-text="([^"]+)"#', $code, $hit);
             foreach ($hit[1] as $path) {
                 $item = preg_match('#^([a-z]+)\.\{\{ [a-z]+\.order_num \}\}\.([a-z0-9]+)$#', $path, $one) === 1;
-                $this->assertTrue($item ? isset($lists[$one[1]][$one[2]]) : isset($fields[$path]), $name.'.html marks '.$path.', which no part of lite describes');
+                $this->assertTrue($item ? isset($lists[$one[1]][$one[2]]) : isset($fields[$path]), $name.'.html marks '.$path.', which no part of aurora describes');
             }
         }
     }
 
-    # Every section of lite and of the modules has its fragment, fields of the closed kinds a fragment receives, defined labels and defaults, no default button without its address
+    # Every section of aurora and the modules has its fragment, fields of the closed kinds a fragment receives, defined labels and defaults, no default button without its address
     #[Test]
-    public function theSectionsOfLiteAreDescribedInFull(): void
+    public function theSectionsOfAuroraAreDescribedInFull(): void
     {
-        $dir = PUBLIC_DIR.'/templates/lite/sections';
+        $dir = PUBLIC_DIR.'/templates/aurora/sections';
         $lang = file_get_contents(BASE_DIR.'/admin/lang/ru.php').file_get_contents(BASE_DIR.'/lang/ru.php');
         foreach (glob(BASE_DIR.'/modules/*/sections', GLOB_ONLYDIR) ?: [] as $one) {
             foreach (['/lang/ru.php', '/admin/lang/ru.php'] as $file) if (is_file(dirname($one).$file)) $lang .= (string)file_get_contents(dirname($one).$file);
@@ -443,7 +443,7 @@ final class LayoutTest extends TestCase
         foreach ($files as $file) {
             $type = basename($file, '.json');
             $desc = json_decode((string)file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
-            $this->assertFileExists($dir.'/'.$type.'.html', $type.' has no fragment in lite');
+            $this->assertFileExists($dir.'/'.$type.'.html', $type.' has no fragment in aurora');
             foreach ([$desc['title'], $desc['note']] as $name) $this->assertArrayHasKey($name, $defs, $type.' names an undefined '.$name);
             $this->assertMatchesRegularExpression('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D', $desc['icon']);
             $this->assertIsBool($desc['frame']);
@@ -495,7 +495,7 @@ final class LayoutTest extends TestCase
             'media' => ['sites', 'gallery', 'video'],
             'trust' => ['stats', 'voices', 'team'],
         ], $groups);
-        $sets = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/lite/presets.json'), true, 512, JSON_THROW_ON_ERROR);
+        $sets = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/aurora/presets.json'), true, 512, JSON_THROW_ON_ERROR);
         foreach ($sets as $set => $ready) {
             foreach ($ready['sections'] as $sec) {
                 $desc = $descs[$sec['type']] ?? ['fields' => [], 'make' => []];
@@ -507,7 +507,7 @@ final class LayoutTest extends TestCase
             }
         }
         $bare = array_diff(array_map(static fn(string $v): string => basename($v, '.html'), glob($dir.'/*.html') ?: []), array_merge(...array_values($groups)));
-        $this->assertSame([], array_values($bare), 'A fragment of lite has no type that describes it');
+        $this->assertSame([], array_values($bare), 'A fragment of aurora has no type that describes it');
     }
 
     # The kinds of an outside frame give their addresses and nothing else: a film of YouTube in its privacy mode or of the uploads, a page of https alone, a point of the map
@@ -526,8 +526,8 @@ final class LayoutTest extends TestCase
             $this->getSection(8, 'map', ['title' => 'Off map', 'point' => '95, 8']),
             $this->getSection(9, 'html', ['code' => '<b data-x="1">Own</b>']),
         ]];
-        $read = new Layout($this->getLayout(['pages' => [1 => $page], 'theme' => ['phone' => '+49 1', 'email' => 'a@example.org']]), 'lite', false, false, '', self::$mods);
-        $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
+        $read = new Layout($this->getLayout(['pages' => [1 => $page], 'theme' => ['phone' => '+49 1', 'email' => 'a@example.org']]), 'aurora', false, false, '', self::$mods);
+        $html = $read->getPageHtml(1, '', new Template('aurora'), $this->getParser());
         $this->assertStringContainsString('<template><iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"', $html);
         $this->assertStringContainsString('src="/uploads/presentation/brand/background-2.png" alt="" style="--sl-d-focus: left top"', $html);
         $this->assertStringContainsString('<video src="/uploads/presentation/clip.webm" controls preload="metadata"></video>', $html);
@@ -554,18 +554,18 @@ final class LayoutTest extends TestCase
     public function theFirstQuestionOpens(): void
     {
         $sec = $this->getSection(1, 'faq', ['title' => 'Faq', 'open' => true, 'items' => [['q' => 'One?', 'a' => 'Yes'], ['q' => 'Two?', 'a' => 'No']]]);
-        $read = new Layout($this->getLayout(['pages' => [1 => ['sections' => [$sec]]]]), 'lite', false, false, '', self::$mods);
-        $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
+        $read = new Layout($this->getLayout(['pages' => [1 => ['sections' => [$sec]]]]), 'aurora', false, false, '', self::$mods);
+        $html = $read->getPageHtml(1, '', new Template('aurora'), $this->getParser());
         $this->assertSame(1, substr_count($html, ' open>'));
         $this->assertMatchesRegularExpression('#<details class="sl-node-faq" open>\s*<summary>.*One\?#s', $html);
         $this->assertStringContainsString('<md data-mod="layout" data-safe="1">No</md>', $html);
     }
 
-    # The showcase of sites is a type of the module presentation with its provider, drawn by the fragment of lite
+    # The showcase of sites is a type of the module presentation with its provider, drawn by the fragment of aurora
     #[Test]
     public function theShowcaseIsATypeOfItsModule(): void
     {
-        $types = (new Layout([], 'lite', false, false))->getSectionTypes();
+        $types = (new Layout([], 'aurora', false, false))->getSectionTypes();
         $this->assertSame(['presentation', 'theme'], [$types['sites']['root'], $types['sites']['frag']]);
         $this->assertSame(str_replace('\\', '/', BASE_DIR.'/modules/presentation/sections/sites.php'), str_replace('\\', '/', $types['sites']['prov']));
         $this->assertFileExists(BASE_DIR.'/modules/presentation/sections/sites.html', 'A theme without its own fragment has none to fall back on');
@@ -688,7 +688,7 @@ final class LayoutTest extends TestCase
             'marks' => array_fill(0, 8, ['img' => 'presentation/brand/tech/php.png', 'title' => 'PHP']),
             'tabs' => [['title' => 'Ideas', 'href' => '/forum'], ['title' => 'Mail', 'href' => '/contact'], ['title' => 'Third', 'href' => '/x']],
         ];
-        $parts = (new Layout($this->getLayout(['theme' => $theme]), 'lite', false, false, '', self::$mods))->getThemeData($this->getParser());
+        $parts = (new Layout($this->getLayout(['theme' => $theme]), 'aurora', false, false, '', self::$mods))->getThemeData($this->getParser());
         $this->assertSame("One\nTwo", $parts['tagline']);
         $this->assertTrue($parts['paneon']);
         $this->assertSame(['', '', 'https://example.org/', true], [$parts['panehref'], $parts['email'], $parts['web'], $parts['web_ext']]);
@@ -701,28 +701,28 @@ final class LayoutTest extends TestCase
         $this->assertSame(['social', 'marks', 'tabs'], array_values(array_filter(array_keys($parts), static fn(string $k): bool => is_array($parts[$k]))));
     }
 
-    # The chrome of lite prints the menus and parts of the layout and carries no value of slaed.net of its own
+    # The chrome of aurora prints the menus and parts of the layout and carries no value of slaed.net of its own
     #[Test]
-    public function theChromeOfLiteComesFromTheLayout(): void
+    public function theChromeOfAuroraComesFromTheLayout(): void
     {
         $files = ['partials/site-header.html', 'partials/site-footer.html', 'partials/menu.html', 'fragments/block-menu.html'];
         foreach ($files as $one) {
-            $code = (string)file_get_contents(PUBLIC_DIR.'/templates/lite/'.$one);
+            $code = (string)file_get_contents(PUBLIC_DIR.'/templates/aurora/'.$one);
             foreach (['slaed.de', 'slaed.info', 'Ostercappeln', 'support@slaed.net', 'images/tmp/', 'Все великое', 'Aктуальная'] as $word) {
                 $this->assertStringNotContainsString($word, $code, $one.' still carries '.$word);
             }
         }
         $lang = file_get_contents(BASE_DIR.'/admin/lang/ru.php').file_get_contents(BASE_DIR.'/lang/ru.php');
         preg_match_all("/^define\('(_[A-Z0-9_]+)'/m", $lang, $hit);
-        $places = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/lite/places.json'), true, 512, JSON_THROW_ON_ERROR);
+        $places = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/aurora/places.json'), true, 512, JSON_THROW_ON_ERROR);
         array_walk_recursive($places, function (mixed $val, string|int $key) use ($hit): void {
-            if (in_array($key, ['title', 'note', 'where', 'label'], true) && $val !== '') $this->assertContains($val, $hit[1], 'places.json of lite names an undefined '.$val);
+            if (in_array($key, ['title', 'note', 'where', 'label'], true) && $val !== '') $this->assertContains($val, $hit[1], 'places.json of aurora names an undefined '.$val);
         });
         $item = $this->getMenuItem(...);
         $kids = [$item('Docs <b>', 'https://example.org/', ['blank' => true]), $item('Mail', '/contact', ['icon' => 'star'])];
         $list = [$item('Group', '', ['kids' => $kids]), $item('News', '/news')];
-        $read = new Layout($this->getLayout(['menus' => ['main' => $list]]), 'lite', false, false, '', self::$mods);
-        $tpl = new Template('lite');
+        $read = new Layout($this->getLayout(['menus' => ['main' => $list]]), 'aurora', false, false, '', self::$mods);
+        $tpl = new Template('aurora');
         $menu = $tpl->getHtmlPart('menu', ['menus' => ['main' => $read->getMenu('main')], 'home' => 'Home']);
         $this->assertStringContainsString('<a href="#" title="Group">Group</a>', $menu, 'A group without its address lost its place in the menu');
         $this->assertStringContainsString('<a href="https://example.org/" title="Docs &lt;b&gt;" target="_blank" rel="noopener">Docs &lt;b&gt;</a>', $menu);

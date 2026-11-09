@@ -168,7 +168,7 @@ final class EditorFormatTest extends TestCase
         $this->assertCount(2, array_filter($frags, fn($one) => $one[0] === 'editor-frame'));
         foreach (['editor-frame', 'editor-kit'] as $name) {
             $dir = PUBLIC_DIR.'/templates/%s/fragments/'.$name.'.html';
-            $this->assertFileEquals(sprintf($dir, 'admin'), sprintf($dir, 'lite'), $name.' differs between the themes');
+            $this->assertFileEquals(sprintf($dir, 'admin'), sprintf($dir, 'aurora'), $name.' differs between the themes');
         }
     }
 
@@ -217,7 +217,7 @@ final class EditorFormatTest extends TestCase
         $this->assertStringContainsString('textSetup', (string)file_get_contents(PUBLIC_DIR.'/plugins/editors/codemirror/assets/core.js'), 'The core carries no setup of a text');
         $this->assertStringContainsString("frame.style.setProperty('--sl-d-editor-floor'", $run, 'CodeMirror does not keep the height of its field');
         $this->assertStringContainsString("area.addEventListener('invalid'", $run, 'An empty required text under CodeMirror blocks the form without a word');
-        foreach (['admin', 'lite'] as $theme) {
+        foreach (['admin', 'aurora'] as $theme) {
             $css = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/assets/css/theme.css');
             $this->assertStringContainsString('.sl-editor .cm-editor .tok-heading', $css, 'The '.$theme.' theme does not paint a Markdown text');
             $floor = 'min-height: var(--sl-d-editor-floor, var(--sl-editor-height))';
@@ -337,7 +337,7 @@ final class EditorFormatTest extends TestCase
         $code = fn(array $data) => $this->getFragData($this->getDriverFrags(fn() => Editor::getCode($data + ['id' => 'c', 'lang' => 'php', 'text' => 'x'])), 'editor-frame');
         $this->assertTrue($code(['readonly' => true])['is_readonly'] ?? null, 'The code editor does not pass readonly to its frame');
         $this->assertFalse($code([])['is_readonly'] ?? null, 'Code is read-only unasked');
-        foreach (['admin', 'lite'] as $theme) {
+        foreach (['admin', 'aurora'] as $theme) {
             $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-frame.html');
             $this->assertStringContainsString('{% if is_readonly %} readonly{% endif %}', $frame, 'The frame of '.$theme.' does not mark its area read-only');
             $kit = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
@@ -464,7 +464,7 @@ final class EditorFormatTest extends TestCase
         foreach ($want as $key => $name) {
             $this->assertSame('word '.$name, $kit[$key.'_text'] ?? null, 'The comparison has no word for '.$key);
         }
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
             foreach (['<dialog class="sl-modal sl-modal-lg sl-editor-diff" data-sl-editor-diff', 'data-sl-editor-diff-view="all" aria-pressed="true"',
                 'data-sl-editor-diff-view="side" aria-pressed="false"', 'data-sl-editor-diff-back', 'data-sl-editor-diff-side hidden'] as $part) {
@@ -504,7 +504,7 @@ final class EditorFormatTest extends TestCase
         $this->assertStringContainsString("'url' => HOME_PATH.'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview'", $editor,
             'A text is not previewed by the route of its door');
         $this->assertStringContainsString("'preview' => 'text',", (string)file_get_contents(BASE_DIR.'/core/helpers.php'), 'The texts of the site are not previewed');
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
             foreach (['data-sl-editor-act="preview" data-sl-editor-need="preview" aria-pressed="false"', 'data-sl-editor-cmd="preview" data-sl-editor-need="preview"',
                 'data-sl-editor-view-frame sandbox="allow-same-origin"', 'data-sl-editor-view-open href="#" target="_blank" rel="noopener" hidden'] as $part) {

@@ -268,11 +268,11 @@ final class NodeRouteTest extends TestCase
         $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/core/classes/node/view.php'), 'The preparer runs SQL');
         $this->assertTrue(method_exists('Template', 'checkTemplateFile') || str_contains((string)file_get_contents($root.'/core/classes/template.php'),
             'public function checkTemplateFile(string $kind, string $name): bool'));
-        $lite = $root.'/public/templates/lite';
-        foreach (['partials/node/list.html', 'partials/node/view.html'] as $one) $this->assertFileExists($lite.'/'.$one);
-        foreach (['card', 'block', 'image', 'gallery', 'download', 'player', 'link', 'tree'] as $one) $this->assertFileExists($lite.'/fragments/node/'.$one.'.html');
-        $this->assertFileDoesNotExist($lite.'/fragments/node/search.html', 'The search module renders the rows of Node itself');
-        $this->assertFileEquals($lite.'/fragments/repeat.html', $root.'/public/templates/admin/fragments/repeat.html', 'The repeatable rows differ between the themes');
+        $aurora = $root.'/public/templates/aurora';
+        foreach (['partials/node/list.html', 'partials/node/view.html'] as $one) $this->assertFileExists($aurora.'/'.$one);
+        foreach (['card', 'block', 'image', 'gallery', 'download', 'player', 'link', 'tree'] as $one) $this->assertFileExists($aurora.'/fragments/node/'.$one.'.html');
+        $this->assertFileDoesNotExist($aurora.'/fragments/node/search.html', 'The search module renders the rows of Node itself');
+        $this->assertFileEquals($aurora.'/fragments/repeat.html', $root.'/public/templates/admin/fragments/repeat.html', 'The repeatable rows differ between the themes');
         foreach (['index.php', 'lang', 'admin/index.php', 'admin/lang', 'admin/info/ru.md'] as $one) $this->assertFileExists($root.'/modules/node/'.$one);
         $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/modules/node/index.php'), 'The public controller runs SQL');
         $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/modules/node/admin/index.php'), 'The administrative controller runs SQL');

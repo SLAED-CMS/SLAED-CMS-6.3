@@ -1,4 +1,4 @@
-/* The sections of the site builder on the theme lite and the editing layer of its canvas (sb-*). A section is drawn on
+/* The sections of the site builder on the theme aurora and the editing layer of its canvas (sb-*). A section is drawn on
    the classes of the site itself - presentation.css of the theme, loaded on every page - so the rules below (sc-*) are
    only what the presentation has no form for: the picture of the hero, the row of buttons, a text beside a picture,
    the column count, the claim with a button, the zones of blocks. Every value is a token of the theme */

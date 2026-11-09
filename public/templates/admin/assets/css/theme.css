@@ -4104,7 +4104,7 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */
+/* Chips: unified tinted pill labels — shared vocabulary with the aurora theme (sl-chip + tone modifiers) */
 .sl-chip {
   display: inline-flex;
   align-items: center;
@@ -5257,7 +5257,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-shot-side { max-height: var(--sl-shot-side-height); }
 }
 
-/* Chip tones and chip buttons used inside modal footers; class names match the lite theme */
+/* Chip tones and chip buttons used inside modal footers; class names match the aurora theme */
 .sl-live-act {
   border: 0;
   cursor: pointer;
@@ -5273,7 +5273,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   --sl-chip-tone: var(--sl-danger);
 }
 
-/* Bulk action bar: appears once at least one row is checked; the class name matches the lite theme */
+/* Bulk action bar: appears once at least one row is checked; the class name matches the aurora theme */
 .sl-bulk-bar {
   display: flex;
   align-items: center;
@@ -6139,7 +6139,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-3);
 }
 
-/* Alert: unified notice — shared class vocabulary with the lite theme and parser callouts */
+/* Alert: unified notice — shared class vocabulary with the aurora theme and parser callouts */
 .sl-alert {
   --sl-alert-c: var(--sl-primary);
   /* The wash an alert lies in is its own colour at one ratio, so one declaration serves every tone and follows it into dark */
@@ -6808,10 +6808,6 @@ button.sl-seg-cell:hover {
   box-shadow: var(--sl-shadow-xs);
 }
 
-.sl-pager-nav > a.sl-but-mini:hover,
-.sl-pager-nav > a.sl-but-mini:focus-visible,
-.sl-pager-side > a.sl-but-mini:hover,
-.sl-pager-side > a.sl-but-mini:focus-visible,
 .sl-pager-nav > span.sl-but-mini.sl-is-muted {
   background: transparent;
   box-shadow: none;
@@ -6968,6 +6964,10 @@ button.sl-seg-cell:hover {
   transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
+.sl-pager-nav > a.sl-but-mini:hover,
+.sl-pager-nav > a.sl-but-mini:focus-visible,
+.sl-pager-side > a.sl-but-mini:hover,
+.sl-pager-side > a.sl-but-mini:focus-visible,
 .sl-pager-rows:is(:hover, .sl-is-open) > .sl-pager-rows-btn,
 .sl-pager-rows-btn:focus-visible {
   background: var(--sl-primary-strong);
@@ -7175,14 +7175,13 @@ input.sl-pager-rows-key:focus-visible {
   }
 }
 
-/* Under 520px of its own column the far numbers and the range go and the line stands under the row, under 320px the neighbours go too */
+/* Under 520px of its own column the far numbers go and the line stands under the row, under 320px the neighbours go too */
 @container (width < 520px) {
   .sl-pager-info {
     margin-left: 0;
   }
 
-  .sl-pager .sl-pager-far,
-  .sl-pager .sl-pager-range {
+  .sl-pager .sl-pager-far {
     display: none;
   }
 }
@@ -7208,7 +7207,7 @@ input.sl-pager-rows-key:focus-visible {
   line-height: 1;
 }
 
-/* Mini chip button: 26px round trigger holding a single icon, shared visual language with the lite theme */
+/* Mini chip button: 26px round trigger holding a single icon, shared visual language with the aurora theme */
 .sl-but-mini {
   display: inline-flex;
   align-items: center;
@@ -7260,7 +7259,7 @@ input.sl-pager-rows-key:focus-visible {
   box-shadow: var(--sl-shadow-focus);
 }
 
-/* Mini button on a button element: drop the browser chrome that would draw a second border over the round fill, as the lite theme already does */
+/* Mini button on a button element: drop the browser chrome that would draw a second border over the round fill, as the aurora theme already does */
 button.sl-but-mini {
   border: 0;
   -webkit-appearance: none;
@@ -11209,6 +11208,11 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   position: relative;
 }
 
+/* A preview glyph takes the step of its frame: the bare .bi rule would hold it at the smallest one */
+:is(.sl-fm-preview, .sl-fm-props-img, .sl-fm-zoom) > .bi {
+  font-size: inherit;
+}
+
 .sl-fm-preview .sl-fm-zoom {
   display: flex;
   align-items: center;
@@ -13016,10 +13020,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-text-strong);
 }
 
-.sl-metric-good > .sl-metric-value {
-  color: var(--sl-success-strong);
-}
-
 .sl-metric:has(> .sl-metric-icon) {
   grid-template-columns: minmax(0, 1fr) auto;
   column-gap: var(--sl-space-5);
@@ -13925,8 +13925,11 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   font-size: var(--sl-font-small);
   font-style: normal;
   font-weight: var(--sl-weight-bold);
-  color: var(--sl-success-strong);
 }
+
+.sl-rhythm-figure > .sl-rhythm-delta-up { color: var(--sl-success-strong); }
+.sl-rhythm-figure > .sl-rhythm-delta-down { color: var(--sl-danger-strong); }
+.sl-rhythm-figure > .sl-rhythm-delta-flat { color: var(--sl-primary-strong); }
 
 /* The list of days fits the content from a laptop up; on a narrower screen it scrolls sideways inside its own block rather than cutting its titles */
 [data-sl-series="table"] {

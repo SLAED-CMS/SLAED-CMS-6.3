@@ -13,9 +13,9 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'lite';
+            $GLOBALS['__test_theme'] = 'aurora';
             $GLOBALS['conf'] = [
-                'theme' => 'lite',
+                'theme' => 'aurora',
                 'sitename' => 'SLAED',
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
@@ -29,7 +29,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersLoginNavPartial(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlPart('login-nav', [
                 'login' => 'Login',
                 'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'placeholder_text' => 'Nickname'],
@@ -51,7 +51,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersMessageBlockPartial(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlPart('message-block', [
                 'title' => 'Hello',
                 'intro_text' => 'Warn',
@@ -65,7 +65,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersAlertFragment(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlFrag('alert', [
                 'text' => 'Hello',
                 'is_warn' => true,
@@ -85,7 +85,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersAlertActionSlot(): void
         {
-            foreach (['admin', 'lite'] as $theme) {
+            foreach (['admin', 'aurora'] as $theme) {
                 $tpl = new \Template($theme);
                 $bare = $tpl->getHtmlFrag('alert', ['text' => 'Plain']);
                 $this->assertStringContainsString('Plain', $bare);
@@ -105,7 +105,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersErrorPageWithBareLayout(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlPage('error', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
@@ -130,7 +130,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewDirectCallsRenderSmokeOutputs(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $part = $tpl->getHtmlPart('login-nav', [
                 'login' => 'Login',
                 'name_field' => ['itype' => 'text', 'name_attr' => 'user_name'],
@@ -165,7 +165,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersModulePageWithAppLayout(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlPage('module', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
@@ -193,7 +193,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersHomePageWithHomeLayout(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlPage('home', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
@@ -220,7 +220,7 @@ namespace Tests\Unit {
         #[Test]
         public function linkAndListItemCompositionPreservesEscapingAndBlankTarget(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $link = $tpl->getHtmlFrag('link', [
                 'href' => 'index.php?name=news&id=1',
                 'title' => '<Title>',
@@ -241,37 +241,37 @@ namespace Tests\Unit {
         }
 
         #[Test]
-        public function liteThemeRendersModulePage(): void
+        public function auroraThemeRendersModulePage(): void
         {
-            $tpl = new \Template('lite');
+            $tpl = new \Template('aurora');
             $html = $tpl->getHtmlPage('module', [
                 'lang' => 'en',
-                'sitename' => 'Lite',
+                'sitename' => 'Aurora',
                 'slogan' => 'Fast CMS',
                 'meta' => '<meta charset="utf-8">',
-                'links' => '<link rel="stylesheet" href="lite.css">',
-                'scripts' => '<script src="lite.js"></script>',
-                'login' => '<div class="lite-login">Login</div>',
-                'menu' => '<nav class="lite-menu">Menu</nav>',
-                'head_html' => '<div class="lite-head">Head</div>',
-                'content' => '<section class="lite-body">Body</section>',
-                'blocks_left' => '<div class="lite-left">Left</div>',
-                'blocks_right' => '<div class="lite-right">Right</div>',
-                'blocks_down' => '<div class="lite-down">Down</div>',
-                'foot_html' => '<div class="lite-foot">Foot</div>',
-                'faqtitle' => '<span class="lite-faq">FAQ</span>',
-                'forumblock' => '<div class="lite-forum">Forum</div>',
-                'contactblock' => '<div class="lite-contact">Contact</div>',
+                'links' => '<link rel="stylesheet" href="aurora.css">',
+                'scripts' => '<script src="aurora.js"></script>',
+                'login' => '<div class="aurora-login">Login</div>',
+                'menu' => '<nav class="aurora-menu">Menu</nav>',
+                'head_html' => '<div class="aurora-head">Head</div>',
+                'content' => '<section class="aurora-body">Body</section>',
+                'blocks_left' => '<div class="aurora-left">Left</div>',
+                'blocks_right' => '<div class="aurora-right">Right</div>',
+                'blocks_down' => '<div class="aurora-down">Down</div>',
+                'foot_html' => '<div class="aurora-foot">Foot</div>',
+                'faqtitle' => '<span class="aurora-faq">FAQ</span>',
+                'forumblock' => '<div class="aurora-forum">Forum</div>',
+                'contactblock' => '<div class="aurora-contact">Contact</div>',
             ], 'app');
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('lite-login', $html);
-            $this->assertStringContainsString('lite-head', $html);
-            $this->assertStringContainsString('lite-body', $html);
-            $this->assertStringContainsString('lite-left', $html);
-            $this->assertStringContainsString('lite-right', $html);
-            $this->assertStringContainsString('lite-down', $html);
-            $this->assertStringContainsString('lite-foot', $html);
+            $this->assertStringContainsString('aurora-login', $html);
+            $this->assertStringContainsString('aurora-head', $html);
+            $this->assertStringContainsString('aurora-body', $html);
+            $this->assertStringContainsString('aurora-left', $html);
+            $this->assertStringContainsString('aurora-right', $html);
+            $this->assertStringContainsString('aurora-down', $html);
+            $this->assertStringContainsString('aurora-foot', $html);
         }
     }
 }

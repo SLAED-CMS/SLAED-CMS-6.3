@@ -43,7 +43,7 @@ $args = array_slice($argv, 3);
 $data = match ($job) {
     'assets' => getProbeThemes($args),
     'file' => getProbeFiles(),
-    'make' => setScratchTheme((string)($args[0] ?? 'lite')),
+    'make' => setScratchTheme((string)($args[0] ?? 'aurora')),
     'gone' => ['gone' => deleteScratchTheme((string)($args[0] ?? ''))],
     'pick' => setUserThemeName((string)($args[0] ?? ''), (string)($args[1] ?? '')),
     default => ['error' => 'unknown job: '.$job],

@@ -324,14 +324,14 @@ class EditorRoomTest extends TestCase
         $this->assertStringContainsString("ed.removeToolbarItem('image')", $js, 'The vendor image item is back beside our own, so there are two windows again');
         $note = 'The toolbar icon is conditional again, so a visitor who may only insert an address finds none';
         $this->assertMatchesRegularExpression('#\n\s*addBtn\(id, ed\);#', $this->getEntry($js), $note);
-        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
-        $this->assertSame($lite, $this->getFile('public/templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
-        $this->assertStringContainsString('js-slaed-image-url', $lite, 'The address field is gone from the window, which is the one thing every visitor may use');
+        $aurora = $this->getFile('public/templates/aurora/partials/file-manager.html');
+        $this->assertSame($aurora, $this->getFile('public/templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
+        $this->assertStringContainsString('js-slaed-image-url', $aurora, 'The address field is gone from the window, which is the one thing every visitor may use');
         $note = 'The address field answers to more than canlink, though the place rule is the one thing that may withhold an address';
-        $this->assertSame(1, $this->getDepth($lite, 'js-slaed-image-url'), $note);
+        $this->assertSame(1, $this->getDepth($aurora, 'js-slaed-image-url'), $note);
         $note = 'The address section stands under a condition of its own, so a place storing a file name could still be handed one';
-        $this->assertStringContainsString('{% if can_link %}'."\n".'        <section class="sl-fm-pane" data-sl-pane="url"', $lite, $note);
-        foreach (['lite', 'admin'] as $theme) {
+        $this->assertStringContainsString('{% if can_link %}'."\n".'        <section class="sl-fm-pane" data-sl-pane="url"', $aurora, $note);
+        foreach (['aurora', 'admin'] as $theme) {
             $path = dirname(__DIR__, 2).'/public/templates/'.$theme.'/partials/editor-toastui-dialogs.html';
             $this->assertFileDoesNotExist($path, 'A second window markup survives in the '.$theme.' theme');
         }

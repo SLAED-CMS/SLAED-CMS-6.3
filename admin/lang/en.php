@@ -1439,7 +1439,7 @@ define('_UPDATE_REJECTED','Archive not taken');
 define('_UPDATE_STAGEOK','Version %s is downloaded, verified and unpacked.');
 define('_UPDATE_FAULT','Last refusal');
 define('_UPDATE_LANGS','An update from the panel replaces the language files of the release whole: edits made here are lost, the old files stay in the backup of the installation.');
-define('_UPDATE_THEMES','An update from the panel replaces the themes admin and lite whole: edits made here are lost, the old files stay in the backup of the installation. Other themes are not touched.');
+define('_UPDATE_THEMES','An update from the panel replaces the themes admin and aurora whole: edits made here are lost, the old files stay in the backup of the installation. Other themes are not touched.');
 define('_UPDATE_TEST','Test installation');
 define('_UPDATE_INSTALL','Install');
 define('_UPDATE_INSTHINT','The installation closes the site while it runs: it backs up the database, moves the files, runs the database steps and adds the new settings, step by step, each in its own request. Before it starts, the page shows a rescue code once.');

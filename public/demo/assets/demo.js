@@ -523,18 +523,18 @@ const DEMO_SETUP = [
   {
     file: 'setup-12-season.html',
     title: 'Порог · Сезон',
-    note: 'Порог на теме сайта lite. Сезонная фотополоса шапки сайта несёт заголовок Magistral, карточка заходит на её нижний край, в шапке карточки — ' +
+    note: 'Порог на теме сайта aurora. Сезонная фотополоса шапки сайта несёт заголовок Magistral, карточка заходит на её нижний край, в шапке карточки — ' +
       'переключатель режима, как в верхней полосе сайта. Путь — семь номеров на одной нити. По странице идёт сезон: снег, лепестки, блики или листья — ' +
       'какой сезон выбран на панели стенда; живой установщик выберет его по месяцу. Прогон — кольцо со знаком внутри.',
-    tags: ['тема lite', 'сезонная полоса', 'снег и листья', 'переключатель режима'],
+    tags: ['тема aurora', 'сезонная полоса', 'снег и листья', 'переключатель режима'],
   },
   {
-    file: 'setup-13-lite.html',
-    title: 'Порог · Lite',
-    note: 'Проба: Порог с движением 09 на теме сайта lite. Кнопки — пилюли lite, как в 12, заголовки — Magistral, переключатель режима — в углу шапки. ' +
+    file: 'setup-13-aurora.html',
+    title: 'Порог · Aurora',
+    note: 'Проба: Порог с движением 09 на теме сайта aurora. Кнопки — пилюли aurora, как в 12, заголовки — Magistral, переключатель режима — в углу шапки. ' +
       'Свет за курсором по странице и кромке, блик логотипа, путь сегментами, шаги со своей стороны, полоса прогона со штрихами и огоньком, ' +
       'печать с искрами на финале. Своего у лица только раскладка: компоненты, кнопки и тона — темы.',
-    tags: ['09 + кнопки 12', 'тема lite', 'движение'],
+    tags: ['09 + кнопки 12', 'тема aurora', 'движение'],
   },
 ];
 
@@ -609,7 +609,7 @@ const DEMO_PLAIN = [
     file: 'ed-plain-05-preview.html',
     title: 'Код / Просмотр',
     note: 'Две вкладки над полем, как «Write / Preview» у GitHub. «Просмотр» показывает шаблон так, как его выведет сайт: ' +
-      'переменные заменены настоящими файлами стенда — картинкой, звуком, PDF, — вокруг страница темы lite в текущей схеме, ' +
+      'переменные заменены настоящими файлами стенда — картинкой, звуком, PDF, — вокруг страница темы aurora в текущей схеме, ' +
       'до и после вложения — абзацы статьи. Ошибка в шаблоне видна раньше, чем её увидит читатель.',
     tags: ['вкладки как у GitHub', 'живой просмотр', 'настоящие файлы'],
   },
@@ -675,7 +675,7 @@ const DEMO_CODE = [
   {
     file: 'ed-code-05-split.html',
     title: 'Стенд',
-    note: 'Код и результат рядом: слева CodeMirror, справа шаблон, выведенный страницей темы lite с настоящими файлами ' +
+    note: 'Код и результат рядом: слева CodeMirror, справа шаблон, выведенный страницей темы aurora с настоящими файлами ' +
       'стенда, и обновляется на каждом нажатии. Над ними переключатель [align] — нет, слева, по центру, справа, — так что ' +
       'обтекание текста проверяется, не уходя со страницы. На узком экране половины встают друг под другом.',
     tags: ['код и результат', '[align] вживую', 'настоящие файлы'],
@@ -710,7 +710,7 @@ const DEMO_CODE = [
     note: 'Сборка из лидеров на основе «Фокуса»: в покое только код, ярлык формата и рельс. Под рукой справа от ярлыка ' +
       'проявляется капсула команд «Панели» — отмена, поиск, перенос, свёртка, формат, копирование, откат, переменные, ' +
       'подсказка у курсора, просмотр, сверка, палитра и экран. «Просмотр» из «Код / Просмотр» открывает под кодом шаблон ' +
-      'на странице темы lite с настоящими файлами и переключателем [align], во весь экран — рядом с кодом. «Сверка» — окно ' +
+      'на странице темы aurora с настоящими файлами и переключателем [align], во весь экран — рядом с кодом. «Сверка» — окно ' +
       'канона: было → стало вместе или рядом, счёт и «Вернуть было»; открывается и меткой «изменено». Внизу строка ' +
       'состояния «Панели» со значком проверки, Ctrl+K — палитра со всеми командами и шпаргалкой клавиш.',
     tags: ['финал', 'капсула команд', 'просмотр', 'сверка', 'проверка', 'Ctrl+K'],
@@ -1216,7 +1216,7 @@ const DEMO_ADMINUX = [  {
 ];
 
 /* The admin block: adminblock() in core/system.php, bkey 'admin' (id 2 on the stand). Every face stands in two rooms -
-   the panel column (?ctx=admin, admin theme) and the site column (?ctx=site, lite theme) - over one corpus from
+   the panel column (?ctx=admin, admin theme) and the site column (?ctx=site, aurora theme) - over one corpus from
    assets/ablock.js: the block row of the stand database, the queue and the visitors of the etalon. The desk on the page
    switches the role, the content after the line and the queue, so each face is judged on the dead link of the base,
    on three links, on free text and on nothing. Codes Б0.* are the repairs every face carries, Б0N.* its own */
@@ -1330,7 +1330,7 @@ const DEMO_ABLOCK = [
       { c: 'Б08.4', t: '«Ссылки» — число на углу, мёртвая ссылка — жёлтая точка; список раскрывается data-sl-toggle слайдом (500 мс).' },
       { c: 'Б08.5',
         t: 'У «Всего» иконка bi-people, нейтральная: это сумма, а не доля кольца; строка стоит в колонке строк сводки; так же — в блоке пользователя на самом сайте '
-          + '(partials/session-summary.html темы lite).' },
+          + '(partials/session-summary.html темы aurora).' },
       { c: 'Б08.7',
         t: 'Цвета — легенда кольца: администрация фиолетовая (accent) со своим сектором, пользователи зелёные, боты оранжевые, гости синие; красный только за опасностью и '
           + '«Выходом». Та же легенда в окне статистики и на иконке «Наблюдения» меню.' },
@@ -1867,7 +1867,7 @@ const DEMO_MODES = [
   ['dark', 'Тёмная'],
 ];
 
-const T = '../templates/lite';
+const T = '../templates/aurora';
 
 const CHROME_TOP = `
   <div id="topbar">
@@ -2547,7 +2547,7 @@ function setDemoDrop() {
       : '';
   }
 
-  /* The card of `templates/lite/partials/editor-toastui-templates.html`, verbatim */
+  /* The card of `templates/aurora/partials/editor-toastui-templates.html`, verbatim */
   function getJob(file) {
     const box = document.createElement('div');
     box.className = 'sl-fm-job';
@@ -3120,7 +3120,7 @@ function setEdNote(frame, text) {
   });
 }
 
-/* Build the lite page that renders a template with real files of the stand in place of its variables */
+/* Build the aurora page that renders a template with real files of the stand in place of its variables */
 function getEdPage(frame) {
   const kind = frame.dataset.demoEdKind || 'jpg';
   const vals = { ...ED_SAMPLE.base, ...(ED_SAMPLE[kind] || {}), '[align]': frame.edAlign || '' };
@@ -3130,8 +3130,8 @@ function getEdPage(frame) {
   const tail = 'Текст после вложения. Если выбрано расположение слева или справа, абзац обтекает вложение, а при «нет» '
     + 'и «центр» встаёт под ним. Ширина, высота и заголовок подставлены из настоящего файла стенда.';
   return `<!doctype html><html lang="ru" data-theme="${mode}"><head><meta charset="utf-8"><base href="${location.href}">`
-    + '<link rel="stylesheet" href="../templates/lite/assets/css/base.css">'
-    + '<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">'
+    + '<link rel="stylesheet" href="../templates/aurora/assets/css/base.css">'
+    + '<link rel="stylesheet" href="../templates/aurora/assets/css/theme.css">'
     + '<style>html,body{background:var(--sl-bg)}body{display:flow-root;margin:0;padding:var(--sl-space-5);color:var(--sl-text);'
     + 'font-size:var(--sl-font-body);line-height:var(--sl-line-loose)}p{margin:0 0 var(--sl-space-4)}p:last-child{margin:0}</style>'
     + `</head><body><p>${lead}</p>${body}<p>${tail}</p></body></html>`;

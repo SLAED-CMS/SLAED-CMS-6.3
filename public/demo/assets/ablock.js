@@ -4,7 +4,7 @@
    block's content. adminblock() also prints the second block, "Наблюдение", from getUserSessionAdminInfo().
 
    One page per face, two rooms per page: ?ctx=admin stands on the admin theme with the panel shell and the block form,
-   ?ctx=site stands on the lite theme with the news column. The face is window.AB_FACE, declared by the page before this
+   ?ctx=site stands on the aurora theme with the news column. The face is window.AB_FACE, declared by the page before this
    script runs; it answers blocks(d) with the HTML of its sidebar blocks and may answer dock(d) and after(host, d).
 
    Loaded in <head>: it writes the theme of the room, then builds the body before slaed.js and demo.js boot */
@@ -12,7 +12,7 @@
   const root = document.documentElement;
   const params = new URLSearchParams(location.search);
   const ctx = params.get('ctx') === 'site' ? 'site' : 'admin';
-  const theme = ctx === 'site' ? 'lite' : 'admin';
+  const theme = ctx === 'site' ? 'aurora' : 'admin';
   const stamp = Date.now();
   root.dataset.abCtx = ctx;
   document.write(
@@ -59,9 +59,9 @@
 
   // Who is on the site. "Стенд" is what the stand really shows - the administrator himself and one guest. "Оживлённо"
   // is a busy evening of the live site: the people are the commenters of the etalon corpus with their countries and
-  // their stored avatars (presets of templates/lite), the bots are the two crawlers the session table knows
-  const AVA = '../templates/lite/images/avatars/';
-  const FLAG = '../templates/lite/images/flags/';
+  // their stored avatars (presets of templates/aurora), the bots are the two crawlers the session table knows
+  const AVA = '../templates/aurora/images/avatars/';
+  const FLAG = '../templates/aurora/images/flags/';
   const SESSIONS = {
     stand: [
       { kind: 'admin', name: 'SLAED CMS', ava: 'presets/038.svg', cc: '', ip: '127.0.0.1', page: '/admin.php', ago: '1 сек' },
@@ -278,7 +278,7 @@
 </section>`;
   }
 
-  // "Наблюдение" as the room prints it; on the site the ring is the lite one, fed the shares it waits for - the live
+  // "Наблюдение" as the room prints it; on the site the ring is the aurora one, fed the shares it waits for - the live
   // block feeds it the admin keys and the ring reads "%" with nothing in it
   function who(d) {
     const w = d.who;
@@ -351,7 +351,7 @@
     return `<div class="ab-w">${me}${now}${bar}${legend}${opt.pile === false ? '' : pile}${list}</div>`;
   }
 
-  /* ---------- The summary: the lower half of the site's user block (partials/session-summary.html of lite) ---------- */
+  /* ---------- The summary: the lower half of the site's user block (partials/session-summary.html of aurora) ---------- */
 
   // The ring of shares and the lines beside it, the chips "Подробнее" and "Обновить" under them. "Подробнее" opens
   // the window of the live statistics (statsWin) instead of the list the site folds out over the card

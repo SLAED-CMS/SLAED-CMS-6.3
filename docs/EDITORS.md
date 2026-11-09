@@ -136,7 +136,7 @@ either: its `getAssets()` prints `cm6.css` once and its widget names the core an
 
 ## The Shell
 
-One component in canon, byte-identical in `templates/admin` and `templates/lite`, as the window canon is. The look is the
+One component in canon, byte-identical in `templates/admin` and `templates/aurora`, as the window canon is. The look is the
 stand's final face `public/demo/ed-code-09-final.html`: at rest the text, the format tab and the rail; under the hand the
 command capsule beside the tab; the status line under the text.
 
@@ -254,7 +254,7 @@ The capsule of `editor-kit.html` stands in groups (`sl-editor-grp`), each comman
 frame cannot serve and a group left empty. It keeps to one line no wider than `--sl-capsule-max-width` and scrolls what
 does not fit; under 900 points the folds and the two format commands leave it (`sl-editor-wide`) and under 560 the group
 of preview, comparison, copy and reset (`sl-editor-mid`), every command staying in the palette.
-A member in the lite theme gets the same capsule as the panel.
+A member in the aurora theme gets the same capsule as the panel.
 
 The palette is a `dialog.sl-modal` cloned from the kit on its first call, one per page: groups Правка, Формат, Вставка,
 Вид and the variables, a filter by letters in their order, the last command raised in its group, the keys of the engine

@@ -57,7 +57,7 @@ return [
         'note' => '60',
     ],
     'ltitle' => '1',
-    'module' => 'presentation',
+    'module' => 'news',
     'mtemp' => 'Здравствуйте!
 
 [text]
@@ -82,9 +82,12 @@ support@slaed.net',
 	"url": "[homeurl]",
 	"image": "[logo]",
 	"sameAs": [
+		"https://github.com/SLAED-CMS/SLAED-CMS-6.3",
+		"https://www.youtube.com/@SLAED-CMS",
+		"https://x.com/slaed_cms",
 		"https://vk.com/slaed_cms",
-		"https://www.facebook.com/SLAED-CMS-577310846059054",
-		"https://twitter.com/slaed_cms"
+		"https://slaed.de",
+		"https://slaed.info"
 	]
 }
 </script>',
@@ -96,7 +99,7 @@ support@slaed.net',
     'slogan' => 'SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.',
     'startdate' => '2013-06-17 00:00:00',
     'syntax' => '2',
-    'theme' => 'lite',
+    'theme' => 'aurora',
     'user_c' => 'slaed',
     'user_c_t' => '2592000',
     'var_view' => '0',

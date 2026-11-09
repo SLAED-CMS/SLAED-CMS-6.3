@@ -1439,7 +1439,7 @@ define('_UPDATE_REJECTED','Archiv nicht angenommen');
 define('_UPDATE_STAGEOK','Version %s ist heruntergeladen, geprüft und entpackt.');
 define('_UPDATE_FAULT','Letzte Ablehnung');
 define('_UPDATE_LANGS','Ein Update über das Panel ersetzt die Sprachdateien des Releases vollständig: hier gemachte Änderungen gehen verloren, die alten Dateien bleiben in der Sicherung der Installation.');
-define('_UPDATE_THEMES','Ein Update über das Panel ersetzt die Themes admin und lite vollständig: hier gemachte Änderungen gehen verloren, die alten Dateien bleiben in der Sicherung der Installation. Andere Themes bleiben unberührt.');
+define('_UPDATE_THEMES','Ein Update über das Panel ersetzt die Themes admin und aurora vollständig: hier gemachte Änderungen gehen verloren, die alten Dateien bleiben in der Sicherung der Installation. Andere Themes bleiben unberührt.');
 define('_UPDATE_TEST','Probeinstallation');
 define('_UPDATE_INSTALL','Installieren');
 define('_UPDATE_INSTHINT','Während der Installation ist die Website geschlossen: Sie sichert die Datenbank, verschiebt die Dateien, führt die Datenbankschritte aus und ergänzt die neuen Einstellungen – Schritt für Schritt, jeder in einer eigenen Anfrage. Vor dem Start zeigt die Seite einmalig einen Rettungscode.');

@@ -44,9 +44,9 @@ const SB_ICONS = [
 const getSbFile = (path) => [path, new URL('../' + path, location.href).href, path.split('/').pop()];
 const SB_PHOTOS = [1, 2, 3, 4, 5, 6, 7].map((n) => 'uploads/presentation/brand/background-' + n + '.png')
   .concat(['simplicity', 'functionality', 'efficiency', 'security'].map((k) => 'uploads/presentation/dna/' + k + '.webp')).map(getSbFile);
-/* The pictures of the marks in the footer: the mono marks of images/tech/ of the theme lite, with the caption each carries */
+/* The pictures of the marks in the footer: the mono marks of images/tech/ of the theme aurora, with the caption each carries */
 const SB_MARKS = [['php.svg', 'PHP'], ['mysql.svg', 'MySQL / MariaDB'], ['html5.svg', 'HTML5'], ['css.svg', 'CSS3'], ['javascript.svg', 'JavaScript'],
-  ['htmx.svg', 'htmx']].map(([file, title]) => getSbFile('templates/lite/images/tech/' + file).concat(title));
+  ['htmx.svg', 'htmx']].map(([file, title]) => getSbFile('templates/aurora/images/tech/' + file).concat(title));
 const SB_LOGOS = [
   ['slaed-logo-wordmark-gradient-blue.svg', 'Знак и имя, градиент'],
   ['slaed-logo-wordmark-solid-blue.svg', 'Знак и имя, синий'],
@@ -297,7 +297,7 @@ const SB_HEAD = [
 /* The groups of the library in their order: each holds a full row of three cards, the first two rows */
 const SB_GROUPS = ['Основа', 'Медиа', 'Материалы сайта', 'Доверие', 'Связь', 'Для мастеров'];
 
-/* The sections of the theme lite. Each is drawn on the classes the site already has (presentation.css of the theme,
+/* The sections of the theme aurora. Each is drawn on the classes the site already has (presentation.css of the theme,
    loaded on every page): the frame of a presentation section, its hero, stat tiles, DNA and technology cards, pulse
    cards and commit rows, the showcase, the voices, the claim, and the questions of the faq mode. In the system each type
    is a description found in a root - the theme or a module, whose provider gives the data (the feed is Node's) */
@@ -656,7 +656,7 @@ Object.entries(SB_NEUTRAL).forEach(([k, make]) => { SB_TYPES[k].stand = SB_TYPES
 
 /* The parts of the theme around the content: each is a place on every page, set once for the whole site. hint stands
    under the fields; items.key names the list of the part in the theme values. In the system this list is the
-   description lite carries of its places; another theme declares its own, and the values stay by key */
+   description aurora carries of its places; another theme declares its own, and the values stay by key */
 const SB_PARTS = {
   brand: {
     title: 'Логотип и строка', icon: 'badge-tm', where: 'Шапка',

@@ -1439,7 +1439,7 @@ define('_UPDATE_REJECTED','Archiwum nieprzyjęte');
 define('_UPDATE_STAGEOK','Wersja %s jest pobrana, sprawdzona i rozpakowana.');
 define('_UPDATE_FAULT','Ostatnia odmowa');
 define('_UPDATE_LANGS','Aktualizacja z panelu zastępuje w całości pliki językowe wydania: zmiany wprowadzone tutaj przepadną, poprzednie pliki zostaną w kopii instalacji.');
-define('_UPDATE_THEMES','Aktualizacja z panelu zastępuje w całości motywy admin i lite: zmiany wprowadzone tutaj przepadną, poprzednie pliki zostaną w kopii instalacji. Inne motywy pozostają nietknięte.');
+define('_UPDATE_THEMES','Aktualizacja z panelu zastępuje w całości motywy admin i aurora: zmiany wprowadzone tutaj przepadną, poprzednie pliki zostaną w kopii instalacji. Inne motywy pozostają nietknięte.');
 define('_UPDATE_TEST','Instalacja próbna');
 define('_UPDATE_INSTALL','Zainstaluj');
 define('_UPDATE_INSTHINT','Na czas instalacji strona jest zamknięta: instalacja tworzy kopię bazy danych, przenosi pliki, wykonuje kroki bazy i dopisuje nowe ustawienia — krok po kroku, każdy w osobnym żądaniu. Przed startem strona raz pokaże kod ratunkowy.');

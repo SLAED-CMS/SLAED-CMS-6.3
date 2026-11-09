@@ -225,7 +225,8 @@ final class StatisticDataTest extends TestCase
     {
         $probe = $this->getProbe();
         $this->assertSame('', $probe['week10']);
-        $this->assertSame('+0%', $probe['week14']);
+        $this->assertSame('0%', $probe['week14']);
+        $this->assertSame('flat', $probe['week14dir']);
     }
 
     # Before the first hit of a month the counter still holds the last day of the old one: the page opens the new month empty, and the old one has all its days

@@ -109,7 +109,7 @@ final class SeriesPartsTest extends TestCase
     {
         $doc = self::getPart('metric-list', ['items' => [
             ['label' => 'CPU', 'value' => '12', 'unit' => '%', 'note' => 'n<', 'tone' => 'cpu', 'icon' => 'cpu-fill'],
-            ['label' => 'Plain', 'value' => '<7', 'is_good' => true],
+            ['label' => 'Plain', 'value' => '<7'],
         ]]);
         $tiles = $doc->querySelectorAll('.sl-metrics > .sl-metric');
         $this->assertCount(2, $tiles);
@@ -118,7 +118,7 @@ final class SeriesPartsTest extends TestCase
         $this->assertStringContainsString('sl-metric-cpu', $tiles[0]->getAttribute('class'));
         $this->assertSame('n<', $doc->querySelector('.sl-metric > small')->textContent);
         $this->assertNull($tiles[1]->querySelector('.sl-metric-dot, .sl-metric-icon'));
-        $this->assertStringContainsString('sl-metric-good', $tiles[1]->getAttribute('class'));
+        $this->assertSame('sl-metric', $tiles[1]->getAttribute('class'));
         $this->assertSame('<7', $tiles[1]->querySelector('.sl-metric-value')->textContent);
     }
 

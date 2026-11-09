@@ -96,4 +96,5 @@ $prun = static fn(int $num): array => array_map(static fn(int $i): array => getS
 $pspan = static fn(int $num): array => getStatRhythm(['day' => null, 'past' => null, 'run' => $prun($num)])['periods'][1];
 $pout['week10'] = $pspan(10)['delta'];
 $pout['week14'] = $pspan(14)['delta'];
+$pout['week14dir'] = $pspan(14)['dir'];
 echo json_encode($pout, JSON_UNESCAPED_UNICODE);

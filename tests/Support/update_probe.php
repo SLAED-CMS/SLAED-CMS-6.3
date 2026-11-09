@@ -598,8 +598,8 @@ function setConfSite(): void {
     mkdir(BASE_DIR.'/modules/forum', 0777, true);
     mkdir(BASE_DIR.'/admin/modules', 0777, true);
     touch(BASE_DIR.'/admin/modules/config.php');
-    mkdir(PUBLIC_DIR.'/templates/lite/images/logos', 0777, true);
-    touch(PUBLIC_DIR.'/templates/lite/images/logos/mark.svg');
+    mkdir(PUBLIC_DIR.'/templates/aurora/images/logos', 0777, true);
+    touch(PUBLIC_DIR.'/templates/aurora/images/logos/mark.svg');
     foreach (CONFSHIP as $name) file_put_contents(CONFIG_DIR.'/'.$name.'.php', getConfShip($name));
     $head = "<?php\nif (!defined('FUNC_FILE')) die('Illegal file access');\n\n";
     foreach (CONFOLD as $name => $body) file_put_contents(CONFIG_DIR.'/config_'.$name.'.php', $head.$body."\n\n?>\n");

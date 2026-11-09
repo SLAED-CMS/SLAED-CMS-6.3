@@ -210,8 +210,8 @@ function config(): void {
     ])];
     $path = 'templates/admin/images/logos/';
     $dir = PUBLIC_DIR.'/'.$path;
-    $adlogo = $conf['admin_logo'] ?? 'slaed_logo_256x73.png';
-    if (!is_file(PUBLIC_DIR.'/'.$path.$adlogo)) $adlogo = 'slaed_logo_256x73.png';
+    $adlogo = $conf['admin_logo'] ?? 'slaed-logo-wordmark-gradient-blue.svg';
+    if (!is_file(PUBLIC_DIR.'/'.$path.$adlogo)) $adlogo = 'slaed-logo-wordmark-gradient-blue.svg';
     $list = is_dir($dir) ? scandir($dir) : [];
     $opts = '';
     if (is_array($list)) {
@@ -762,7 +762,7 @@ function save(): void {
         $names = array_map(static fn(string $v): string => ($v === 'sitename') ? _SITENAME : _LOGO, $keys);
         if ($keys) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, sprintf(_ADM_BADVAL, implode(', ', $names)), true);
         $xadlogo = basename(str_replace('templates/admin/images/logos/', '', getVar('post', 'admin_logo', 'text')));
-        if (!is_file(PUBLIC_DIR.'/templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed_logo_256x73.png';
+        if (!is_file(PUBLIC_DIR.'/templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed-logo-wordmark-gradient-blue.svg';
 
         $xuser_c = getVar('post', 'user_c', 'text');
         $xadmin_c = getVar('post', 'admin_c', 'text');

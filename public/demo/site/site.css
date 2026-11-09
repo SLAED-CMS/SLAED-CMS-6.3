@@ -1,8 +1,8 @@
-/* The site etalon of the stand (demo/site/): the news feed of the lite theme seen by a signed-in administrator. The menu,
+/* The site etalon of the stand (demo/site/): the news feed of the aurora theme seen by a signed-in administrator. The menu,
    the block "Администрация" and the window "Наблюдение" come from ../assets/admin-block.css, one file for both themes;
    here is only what the site has of its own and the stand around it. Tokens only */
 
-/* ---------- С14 The token the shared file reads and the lite theme lacks: the text on a solid fill, as the admin theme declares it ---------- */
+/* ---------- С14 The token the shared file reads and the aurora theme lacks: the text on a solid fill, as the admin theme declares it ---------- */
 
 :root {
   --sl-solid-text: light-dark(var(--sl-on-solid), #ffffff);
@@ -284,7 +284,7 @@
   opacity: var(--sl-fade-muted);
 }
 
-/* The option rows of the panel's settings window, which the lite theme does not carry */
+/* The option rows of the panel's settings window, which the aurora theme does not carry */
 .demo-panel .sl-set-row {
   display: flex;
   align-items: center;

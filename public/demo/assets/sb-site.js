@@ -1,4 +1,4 @@
-/* The canvas of the site builder: a page of the site in the theme lite, drawn from the layout of sb-data.js. The header,
+/* The canvas of the site builder: a page of the site in the theme aurora, drawn from the layout of sb-data.js. The header,
    the footer and the answer of a module are the live ones, fetched from the site; the header and the footer are then
    filled from the theme parts and the menus, so what the editor changes lands in the very markup a visitor gets. The
    content between them is the list of sections, each drawn on the classes the site already has (presentation.css).
@@ -414,7 +414,7 @@
       <li class="sl-d-btns"><a class="sl-but" href="${esc(href(t.paneHref))}" data-sb-text="theme:paneBtn">${esc(t.paneBtn)}</a></li>`;
   }
 
-  /* The title band of lite (#head-content): the page's own title, or the name of the module whose slot it holds */
+  /* The title band of aurora (#head-content): the page's own title, or the name of the module whose slot it holds */
   function setBand(key, page) {
     const sh = st.shell;
     let band = sh.querySelector('#head-content');
@@ -442,7 +442,7 @@
     const logo = sh.querySelector('#header .sl-logo');
     if (logo) {
       const img = logo.querySelector('img');
-      img.src = new URL('../templates/lite/images/logos/' + t.logo, location.href).href;
+      img.src = new URL('../templates/aurora/images/logos/' + t.logo, location.href).href;
       img.removeAttribute('width');
       img.removeAttribute('height');
       [logo, img].forEach((n) => { n.title = t.sitename; });

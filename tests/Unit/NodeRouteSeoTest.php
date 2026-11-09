@@ -9,14 +9,16 @@ use PHPUnit\Framework\Attributes\Test;
 # The addresses and feeds of Node over route_probe.php seo: the canonical address, translated categories, the feeds, the retired addresses and the support card
 final class NodeRouteSeoTest extends NodeRouteCase
 {
-    # The canonical address of a view and a list names no foreign parameter of the query, the start page keeps the address of the site and its slogan
+    # A canonical address names no foreign parameter, the list of the start type names the root, a view takes no page number, the start page keeps its slogan
     #[Test]
     public function theCanonicalAddressLeavesForeignParametersOut(): void
     {
         $run = $this->getMode('seo');
         $site = $run['site'];
         $this->assertSame([$site.'/news/view/102', $site.'/news/view/102', $site.'/news?cat=1',
-            $site.'/news?page=2', $site.'/', $site.'/', true], $run['canon'], 'A canonical address carries a foreign parameter or a view is not indexed');
+            $site.'/news?page=2', $site.'/', $site.'/', true, $site.'/'], $run['canon'],
+            'A canonical address carries a foreign parameter, a view is not indexed or the list of the start page names itself');
+        $this->assertSame(404, $run['nopage'], 'A view without a pager answers a page number instead of not found');
         $this->assertSame(['Probe slogan of the site', true, ''], $run['desc'], 'The start page on a Node type lost the slogan as its description');
     }
 

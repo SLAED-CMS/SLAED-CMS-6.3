@@ -2095,10 +2095,12 @@ function getRouteSeo(PDO $pdo, string $work): array {
     $link = fn(string $html, string $rel): string => preg_match('#<link\s+rel="'.$rel.'"[^>]*href="([^"]*)"#s', $html, $hit) ? html_entity_decode($hit[1]) : '';
     $meta = fn(string $html): string => preg_match('#<meta\s+name="description"\s+content="([^"]*)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
     $out = [];
-    $junk = $get('index.php?name=news&op=view&id=102&cat=5&page=3&let=Q&uname=zed')['body'];
+    $junk = $get('index.php?name=news&op=view&id=102&cat=5&let=Q&uname=zed')['body'];
+    $out['nopage'] = $get('index.php?name=news&op=view&id=102&page=3')['code'];
     $out['canon'] = [$link($junk, 'canonical'), $link($get('index.php?name=news&op=view&id=102')['body'], 'canonical'),
         $link($get('index.php?name=news&cat=1&id=9&uname=zed')['body'], 'canonical'), $link($get('index.php?name=news&page=2&id=9')['body'], 'canonical'),
-        $link($get('')['body'], 'canonical'), $link($get('index.php?id=5&uname=zed')['body'], 'canonical'), str_contains($junk, 'content="index, follow"')];
+        $link($get('')['body'], 'canonical'), $link($get('index.php?id=5&uname=zed')['body'], 'canonical'), str_contains($junk, 'content="index, follow"'),
+        $link($get('index.php?name=news')['body'], 'canonical')];
     $out['site'] = $site;
     $home = $get('')['body'];
     $out['desc'] = [$meta($home), str_contains($home, 'property="og:description" content="Probe slogan of the site"'), $meta($get('index.php?name=news')['body'])];
@@ -2136,7 +2138,7 @@ function getRouteSeo(PDO $pdo, string $work): array {
     $gone = $get('news.html');
     $out['retired'] = [$gone['code'], str_contains($gone['body'], 'content="noindex, follow"'), $get('faq-cat-39.html')['code'], $get('config/db.php')['code'],
         $move('index.php/index.php?name=sitemap'), $move('index.php/'), $move('index.php'), $move('admin.php/x', 'root'), $wild('//evil.example/index.php'),
-        $wild('//evil.example/index.php/x'), $get('templates/lite/index.php?error=403')['code'], $get('uploads/presentation/none.png')['code']];
+        $wild('//evil.example/index.php/x'), $get('templates/aurora/index.php?error=403')['code'], $get('uploads/presentation/none.png')['code']];
     $out['kept'] = [$get('')['code'], $get('index.php?name=news')['code'], getRouteReply('root', 'GET', 'admin.php')['code'], $get('error.html')['code'],
         str_contains($get('error.html')['body'], 'Service temporarily unavailable')];
     $plain = html_entity_decode($feed['body']);

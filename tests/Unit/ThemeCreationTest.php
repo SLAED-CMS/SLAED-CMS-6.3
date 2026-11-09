@@ -15,7 +15,7 @@ namespace Tests\Unit {
     # The theme contract of docs/TEMPLATES.md as a test: a new theme is a copy of an etalon with one block edited, and the copy must pass the whole contract
     final class ThemeCreationTest extends TestCase
     {
-        private const ETALON = 'lite';
+        private const ETALON = 'aurora';
 
         private static string $root = '';
         private static string $name = '';

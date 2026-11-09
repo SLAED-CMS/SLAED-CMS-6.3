@@ -67,7 +67,7 @@ namespace Tests\Unit {
             if (!class_exists('Template', false)) {
                 require_once BASE_DIR.'/core/classes/template.php';
             }
-            $GLOBALS['tpl'] = new \Template('lite');
+            $GLOBALS['tpl'] = new \Template('aurora');
             self::$p = new \Parser();
         }
 
@@ -278,15 +278,15 @@ namespace Tests\Unit {
             }
             $hadtpl = array_key_exists('tpl', $GLOBALS);
             $oldtpl = $GLOBALS['tpl'] ?? null;
-            $GLOBALS['tpl'] = new \Template('lite');
+            $GLOBALS['tpl'] = new \Template('aurora');
 
             try {
                 $parser = new \Parser();
                 $missing = $parser->filterContent('![gone](/uploads/parser-missing.png)', true, '');
                 $this->assertStringContainsString('<i class="bi bi-image sl-img-placeholder" role="img" aria-label="gone">', $missing);
 
-                $existing = $parser->filterContent('![](/templates/lite/images/favicon.svg)', true, '');
-                $this->assertStringContainsString('src="/templates/lite/images/favicon.svg"', $existing);
+                $existing = $parser->filterContent('![](/templates/aurora/images/favicon.svg)', true, '');
+                $this->assertStringContainsString('src="/templates/aurora/images/favicon.svg"', $existing);
                 $this->assertStringContainsString('alt=""', $existing, 'A Markdown image without a description took an alt CommonMark does not give it');
                 $this->assertStringContainsString('onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"', $existing);
                 $this->assertStringNotContainsString('class="sl-img', $existing);
@@ -305,7 +305,7 @@ namespace Tests\Unit {
             }
             $hadtpl = array_key_exists('tpl', $GLOBALS);
             $oldtpl = $GLOBALS['tpl'] ?? null;
-            $GLOBALS['tpl'] = new \Template('lite');
+            $GLOBALS['tpl'] = new \Template('aurora');
 
             $png = base64_encode(str_repeat('a', 1024));
             $limit = base64_encode(str_repeat('a', \Parser::EMBEDMAX));
@@ -374,7 +374,7 @@ namespace Tests\Unit {
             }
             $hadtpl = array_key_exists('tpl', $GLOBALS);
             $oldtpl = $GLOBALS['tpl'] ?? null;
-            $GLOBALS['tpl'] = new \Template('lite');
+            $GLOBALS['tpl'] = new \Template('aurora');
 
             try {
                 $parser = new \Parser();

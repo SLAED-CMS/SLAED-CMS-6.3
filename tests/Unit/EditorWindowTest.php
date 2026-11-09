@@ -103,21 +103,21 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function everySectionOfTheRailIsRenderedAndStatesItsRight(): void
     {
-        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
-        $this->assertSame($lite, $this->getFile('public/templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
+        $aurora = $this->getFile('public/templates/aurora/partials/file-manager.html');
+        $this->assertSame($aurora, $this->getFile('public/templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
         foreach (self::PANES as $pane) {
-            $this->assertStringContainsString('data-sl-pane="'.$pane.'"', $lite, 'The rail carries no section '.$pane.', so one way of inserting a file has nowhere to live');
+            $this->assertStringContainsString('data-sl-pane="'.$pane.'"', $aurora, 'The rail carries no section '.$pane.', so one way of inserting a file has nowhere to live');
         }
         foreach (['can_upload', 'can_embed', 'can_list'] as $flag) {
-            $this->assertStringContainsString('{% if not '.$flag.' %} disabled{% endif %}', $lite, 'The section of '.$flag.' disappears instead of being closed and explained');
+            $this->assertStringContainsString('{% if not '.$flag.' %} disabled{% endif %}', $aurora, 'The section of '.$flag.' disappears instead of being closed and explained');
             $this->assertMatchesRegularExpression(
                 '#\{% if not '.$flag.' %\}\s*<i class="bi bi-lock-fill#',
-                $lite,
+                $aurora,
                 'A section closed by '.$flag.' carries no lock, so the boundary of the rights is invisible'
             );
         }
         foreach (['up_why', 'embed_why', 'files_why'] as $why) {
-            $this->assertStringContainsString('{{ '.$why.' }}', $lite, 'A closed section never prints '.$why.', so it says nothing about why it is closed');
+            $this->assertStringContainsString('{{ '.$why.' }}', $aurora, 'A closed section never prints '.$why.', so it says nothing about why it is closed');
         }
         $win = $this->getBody('core/helpers.php', 'getFileManagerWindow');
         $this->assertStringContainsString("'can_zip' => \$mdr && in_array('editorArchive'", $win, 'Packing follows something other than the role and the routes of the place');
@@ -139,17 +139,17 @@ final class EditorWindowTest extends TestCase
     # The window keeps its styles under its own root, because the administrative theme owns the same component names for the browser of the catalogue
     # The window is dressed by the theme and not by the skin: a page carrying no editor receives no skin at all, and the same window opens there
     # The skeleton is a shared component of the theme, so it stands in both of them under one name rather than being redefined beside one
-    # Lite owns no file browser, so every file manager rule standing at its top level would be the window losing its own root
+    # Aurora owns no file browser, so every file manager rule standing at its top level would be the window losing its own root
     # Two boxes carry file manager parts under that root: the window itself and the insertion options dialog, whose caption, radio row and field are its parts
     # The insertion options dialog is invisible on every walked page, so nothing but this test would report it losing its shape
     #[Test]
     public function theWindowKeepsItsStylesUnderItsOwnRoot(): void
     {
-        $lite = $this->getFile('public/templates/lite/assets/editors/toastui/skin.css');
-        $this->assertSame($lite, $this->getFile('public/templates/admin/assets/editors/toastui/skin.css'), 'The two themes no longer carry the same window skin');
-        $rules = (string)preg_replace('#/\*.*?\*/#s', '', $lite);
+        $aurora = $this->getFile('public/templates/aurora/assets/editors/toastui/skin.css');
+        $this->assertSame($aurora, $this->getFile('public/templates/admin/assets/editors/toastui/skin.css'), 'The two themes no longer carry the same window skin');
+        $rules = (string)preg_replace('#/\*.*?\*/#s', '', $aurora);
         $this->assertStringNotContainsString('.sl-fm-', $rules, 'The skin still dresses the file manager, which leaves the window bare on every page without an editor');
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $css = $this->getFile('public/templates/'.$theme.'/assets/css/theme.css');
             foreach (['sl-fm-rail', 'sl-fm-pane', 'sl-fm-tile', 'sl-fm-queue', 'sl-fm-props'] as $part) {
                 $this->assertStringContainsString(
@@ -161,9 +161,9 @@ final class EditorWindowTest extends TestCase
             $this->assertStringContainsString('.sl-skel {', $css, 'The skeleton of a list is missing from the '.$theme.' theme, so one of the two would have to invent it');
             $this->assertStringContainsString('prefers-reduced-motion', $css, 'The skeleton of the '.$theme.' theme pulses even where motion is asked to stop');
         }
-        $loose = preg_match_all('#(?m)^\.sl-fm-(?!win)#', $this->getFile('public/templates/lite/assets/css/theme.css'));
+        $loose = preg_match_all('#(?m)^\.sl-fm-(?!win)#', $this->getFile('public/templates/aurora/assets/css/theme.css'));
         $this->assertSame(0, $loose, 'The window declares a file manager class at the top level, where it meets the same name of the administrative browser');
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $insert = $this->getFile('public/templates/'.$theme.'/fragments/window-body-insert.html');
             foreach (['sl-fm-label', 'sl-fm-as', 'sl-fm-field'] as $part) {
                 $this->assertStringContainsString($part, $insert, 'The insertion options of theme '.$theme.' stopped using '.$part.', so this guard now proves nothing');
@@ -223,11 +223,11 @@ final class EditorWindowTest extends TestCase
         foreach (['fm-act', 'fm-busy', 'fm-dial', 'fm-job', 'fm-pick', 'fm-prop', 'fm-row', 'fm-tile', 'fm-why', 'msg-info', 'msg-warn'] as $name) {
             $this->assertStringContainsString(
                 'data-tpl="'.$name.'"',
-                $this->getFile('public/templates/lite/partials/file-manager-templates.html'),
+                $this->getFile('public/templates/aurora/partials/file-manager-templates.html'),
                 'The template '.$name.' stayed with the editor, so the runtime finds null where it expects a node'
             );
         }
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $part = $this->getFile('public/templates/'.$theme.'/partials/file-manager-templates.html');
             $this->assertSame(11, substr_count($part, '<template'), 'The draw templates of theme '.$theme.' are not the eleven the runtime needs');
             $emoji = $this->getFile('public/templates/'.$theme.'/partials/emoji-panel.html');
@@ -235,7 +235,7 @@ final class EditorWindowTest extends TestCase
             $this->assertStringNotContainsString('data-tpl="fm-', $emoji, 'A file manager template of theme '.$theme.' stayed behind, so one node is looked for in two places');
         }
         $this->assertSame(
-            $this->getFile('public/templates/lite/partials/file-manager-templates.html'),
+            $this->getFile('public/templates/aurora/partials/file-manager-templates.html'),
             $this->getFile('public/templates/admin/partials/file-manager-templates.html'),
             'The two themes no longer carry the same draw templates'
         );
@@ -271,7 +271,7 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString('api.addPanel = addPanel;', $this->getFile('public/plugins/system/filemanager.js'), 'The window offers no public way to open it');
         $page = $this->getFile('public/plugins/system/slaed.js');
         $this->assertStringContainsString('window.SlaedEditor.getEditor(id)', $page, 'An insert of the page misses a text under CodeMirror');
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $dir = 'public/templates/'.$theme.'/fragments/';
             $tpl = $this->getFile($dir.'editor-kit.html');
             foreach (['files', 'emoji'] as $act) $this->assertStringContainsString('data-sl-editor-act="'.$act.'"', $tpl, 'The capsule of '.$theme.' has no '.$act.' button');
@@ -300,8 +300,8 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString("'plugins/system/emoji.js'", $drv, 'Toast UI does not load the panel from the runtime');
         $this->assertStringContainsString('Editor::getEmojiPanel()', $drv, 'Toast UI prints the templates of the panel on its own');
         $this->assertStringContainsString('"emoji-panel"', $this->getFile('public/plugins/editors/toastui/manifest.json'), 'Toast UI does not name the partial it needs');
-        $this->assertSame($this->getFile('public/templates/lite/partials/emoji-panel.html'), $this->getFile('public/templates/admin/partials/emoji-panel.html'));
-        foreach (['lite', 'admin'] as $theme) {
+        $this->assertSame($this->getFile('public/templates/aurora/partials/emoji-panel.html'), $this->getFile('public/templates/admin/partials/emoji-panel.html'));
+        foreach (['aurora', 'admin'] as $theme) {
             $this->assertFileDoesNotExist(dirname(__DIR__, 2).'/public/templates/'.$theme.'/partials/editor-toastui-templates.html');
             $skin = $this->getFile('public/templates/'.$theme.'/assets/editors/toastui/skin.css');
             $this->assertDoesNotMatchRegularExpression('#\.sl-editor-emoji-#', $skin, 'The rules of the panel stayed in the Toast UI skin of '.$theme);
@@ -333,20 +333,20 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString('function setCurrent(id, num)', $js, 'Nothing makes one object the current one, so the properties would follow a mark');
         $this->assertStringContainsString('function setPicks(id)', $js, 'Nothing keeps the marks, so a tile and a row of one file could show two states');
         $this->assertMatchesRegularExpression('#room\.pick = \[\];#', $js, 'The marks are never dropped, so an action would travel to a file of another listing');
-        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
-        $this->assertStringContainsString('sl-bulk-bar', $lite, 'The panel of the actions over several files is gone from the window');
-        $this->assertStringContainsString('data-sl-slot="pickall"', $lite, 'The head of the list carries no mark for all of them');
+        $aurora = $this->getFile('public/templates/aurora/partials/file-manager.html');
+        $this->assertStringContainsString('sl-bulk-bar', $aurora, 'The panel of the actions over several files is gone from the window');
+        $this->assertStringContainsString('data-sl-slot="pickall"', $aurora, 'The head of the list carries no mark for all of them');
     }
 
     # The catalogue has five states and the settled one is only one of them; an empty catalogue and an empty filter carry different words on purpose
     #[Test]
     public function theCatalogueCarriesEveryStateOfTheProcess(): void
     {
-        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
+        $aurora = $this->getFile('public/templates/aurora/partials/file-manager.html');
         foreach (['compact', 'full', 'skel', 'empty'] as $view) {
-            $this->assertStringContainsString('data-sl-view="'.$view.'"', $lite, 'The catalogue has no view '.$view.', so one state of the process has nowhere to be shown');
+            $this->assertStringContainsString('data-sl-view="'.$view.'"', $aurora, 'The catalogue has no view '.$view.', so one state of the process has nowhere to be shown');
         }
-        $this->assertStringContainsString('sl-skel-tile', $lite, 'The list on its way shows nothing in the place of the tiles it is about to fill');
+        $this->assertStringContainsString('sl-skel-tile', $aurora, 'The list on its way shows nothing in the place of the tiles it is about to fill');
         $js = $this->getFile('public/plugins/system/filemanager.js');
         $rows = substr($js, (int)strpos($js, 'function setState(id, name)'), 800);
         foreach (['empty:', 'filter:', 'fail:'] as $state) {
@@ -384,7 +384,7 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function theFormRowOpensTheSameWindowThroughOneDoor(): void
     {
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $frag = $this->getFile('public/templates/'.$theme.'/fragments/file-field.html');
             foreach (['file', 'path', 'url', 'chip', 'name'] as $part) {
                 $this->assertStringContainsString(
@@ -412,7 +412,7 @@ final class EditorWindowTest extends TestCase
             );
         }
         $this->assertSame(
-            $this->getFile('public/templates/lite/fragments/file-field.html'),
+            $this->getFile('public/templates/aurora/fragments/file-field.html'),
             $this->getFile('public/templates/admin/fragments/file-field.html'),
             'The two themes no longer carry the same door'
         );
@@ -448,7 +448,7 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function anOrdinaryFormSendsItsFileThroughTheSameDoor(): void
     {
-        foreach (['lite', 'admin'] as $theme) {
+        foreach (['aurora', 'admin'] as $theme) {
             $frag = $this->getFile('public/templates/'.$theme.'/fragments/file-field.html');
             $this->assertStringContainsString('{% if is_form %} data-sl-file-form{% endif %}', $frag, 'The door of theme '.$theme.' cannot tell a form upload from the window');
             $this->assertStringContainsString(

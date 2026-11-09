@@ -22,5 +22,5 @@
       {% endif %}
     </div>
   </div>
-  <p class="sl-pager-info"><span class="sl-visually-hidden">{{ page_label }} </span><b>{{ page_of }}</b>{% if range_text %}{% include 'fragments/pager-rows.html' %}{% endif %}{% if count %} · {{ overall }} <b>{{ count }}</b>{% endif %}</p>
+  <p class="sl-pager-info"><span class="sl-visually-hidden">{{ page_label }} </span><b>{{ page_of }}</b>{% if range_text %}{% include 'fragments/pager-rows.html' %}{% endif %}{% if count %} · <span class="sl-visually-hidden">{{ overall }} </span><b>{{ count }}</b>{% endif %}</p>
 </nav>

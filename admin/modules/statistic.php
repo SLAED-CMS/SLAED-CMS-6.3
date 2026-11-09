@@ -93,14 +93,15 @@ function getStatHourAvg(?array $day, string $key): array {
 }
 
 # A period of 7 or 30 days of the rhythm: the hits, hosts and crawlers of the days up to the day of the scope
-function getStatRhythmSpan(string $key, string $name, array $list, string $delta): array {
+function getStatRhythmSpan(string $key, string $name, array $list, array $delta): array {
     $num = count($list);
     return [
         'key' => $key,
         'name' => $name,
         'figure' => filterDecimal(array_sum(array_column($list, 'h')), 0),
         'note' => _STATISTIC_INSPAN,
-        'delta' => $delta,
+        'delta' => $delta['delta'],
+        'dir' => $delta['dir'],
         'labels' => array_map('getStatDayCap', $list),
         'ticks' => array_map(static fn(array $row, int $i): string => ($num <= 7 || $i % 5 === 0) ? substr($row['date'], 0, 5) : '', $list, array_keys($list)),
         'series' => [
@@ -120,7 +121,8 @@ function getStatRhythm(array $data): array {
         $rows[] = ['key' => 'gen', 'name' => _GENERATION.', ms', 'tone' => 'accent', 'values' => getStatHourAvg($day, 'gen')];
         $rows[] = ['key' => 'sql', 'name' => _STATISTIC_SQLPAGE, 'tone' => 'success', 'values' => getStatHourAvg($day, 'sql')];
     }
-    $change = static fn(int $was, int $now): string => $was ? (($now >= $was) ? '+' : '−').abs((int)round(($now - $was) / $was * 100)).'%' : '';
+    $change = static fn(int $was, int $now): array => $was ? getStatDelta(['h' => $was], ['h' => $now], 'h') : ['delta' => '', 'dir' => 'none'];
+    $then = $change($data['past']['h'] ?? 0, $day['h'] ?? 0);
     $week = array_slice($data['run'], -7);
     $older = (count($data['run']) >= 14) ? array_slice($data['run'], -14, 7) : [];
     $hour = range(0, 23);
@@ -135,13 +137,14 @@ function getStatRhythm(array $data): array {
                 'name' => _STATISTIC_H24,
                 'figure' => filterDecimal($day['h'] ?? 0, 0),
                 'note' => _STATISTIC_INSPAN,
-                'delta' => $change($data['past']['h'] ?? 0, $day['h'] ?? 0),
+                'delta' => $then['delta'],
+                'dir' => $then['dir'],
                 'labels' => array_map(static fn(int $one): string => sprintf('%02d:00–%02d:00', $one, ($one + 1) % 24), $hour),
                 'ticks' => array_map(static fn(int $one): string => ($one % 3 === 0) ? sprintf('%02d', $one) : '', $hour),
                 'series' => $rows,
             ],
-            getStatRhythmSpan('week', _STATISTIC_D7, $week, (count($older) === 7) ? $change(array_sum(array_column($older, 'h')), array_sum(array_column($week, 'h'))) : ''),
-            getStatRhythmSpan('month', _STATISTIC_D30, $data['run'], ''),
+            getStatRhythmSpan('week', _STATISTIC_D7, $week, $change((count($older) === 7) ? array_sum(array_column($older, 'h')) : 0, array_sum(array_column($week, 'h')))),
+            getStatRhythmSpan('month', _STATISTIC_D30, $data['run'], $change(0, 0)),
         ],
     ];
 }
@@ -291,7 +294,7 @@ function getStatView(array $data): array {
             $tile(_UNIQUE, $hosts, sprintf(_STATISTIC_PERDAY, filterDecimal($hosts / max(1, $sum['days']), 0)), getStatDelta($data['then'], $sum, 'u')),
             $tile(_HITS, $sum['h'], sprintf(_STATISTIC_PERHOST, filterDecimal($per, ($per < 10) ? 1 : 0)), getStatDelta($data['then'], $sum, 'h')),
             $tile(_HOME, $sum['home'], _STATISTIC_HOMEIN, getStatDelta($data['then'], $sum, 'home')),
-            $tile(_AUDIENCE, $sum['aud'], _STATISTIC_SELF, ['is_good' => true] + getStatDelta($data['then'], $sum, 'aud')),
+            $tile(_AUDIENCE, $sum['aud'], _STATISTIC_SELF, getStatDelta($data['then'], $sum, 'aud')),
         ],
         'meta' => ['sl-stat-refcat' => sprintf(_STATISTIC_INSEEK, $sum['shares']['search'])],
         'parts' => [

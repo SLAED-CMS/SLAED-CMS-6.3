@@ -1,5 +1,16 @@
 # Versions
 
+## 2026-11-09
+
+### The site theme is aurora
+
+- **The theme `lite` is `aurora`** — it outgrew the name of the light theme of 6.2 and takes the dawn of the release
+  Phoenix: the folder `public/templates/aurora`, the setting `theme` of `config/global.php`, the themes an update
+  replaces whole, the warning of «Тема оформления» in six languages, the help, the tests, the tools and the demo. Its own
+  fragment `lite-head-banner` is `aurora-head-banner`. The look and the markup are unchanged.
+- **Breaking:** a path under `templates/lite/` in a theme or module of its own has to follow; a member whose saved
+  theme is `lite` sees the theme of the site, as with any theme that is not there.
+
 ## 2026-11-08
 
 ### A tab of the panel is one word, and the note of «Обновления» is one paragraph

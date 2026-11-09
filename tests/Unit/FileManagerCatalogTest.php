@@ -439,7 +439,7 @@ final class FileManagerCatalogTest extends TestCase
     #[Test]
     public function theAttributeThatHidesBeatsEveryClass(): void
     {
-        foreach (['admin', 'lite'] as $skin) {
+        foreach (['admin', 'aurora'] as $skin) {
             $base = $this->getFile('public/templates/'.$skin.'/assets/css/base.css');
             $note = 'The theme '.$skin.' has no reset for the attribute that hides, so a class with a display keeps a hidden element on the screen';
             $this->assertMatchesRegularExpression('#\[hidden\] \{\s*display: none !important;#', $base, $note);

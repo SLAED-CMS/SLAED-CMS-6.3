@@ -40,7 +40,7 @@ final class TreeWalkTest extends TestCase
         foreach ([self::$root, self::$root.'/public/templates'] as $dir) {
             foreach (getTreeFiles($dir) as $item) $seen[] = str_replace('\\', '/', $item->getPathname());
         }
-        $this->assertContains(self::$root.'/public/templates/lite/assets/css/base.css', $seen, 'The walk lost a real theme');
+        $this->assertContains(self::$root.'/public/templates/aurora/assets/css/base.css', $seen, 'The walk lost a real theme');
         $this->assertSame([], preg_grep('#/templates/scratch-[0-9a-f]{8}/#', $seen), 'The walk entered a scratch theme');
         $this->assertSame([], preg_grep('#^'.preg_quote(self::$root, '#').'/storage/#', $seen), 'The walk entered storage');
         $this->assertSame([], preg_grep('#^'.preg_quote(self::$root, '#').'/uploads/#', $seen), 'The walk entered uploads');
@@ -65,7 +65,7 @@ final class TreeWalkTest extends TestCase
     {
         $this->assertTrue(isTreeSkipped(self::$root.'/public/templates/scratch-0123abcd'));
         $this->assertTrue(isTreeSkipped(str_replace('/', '\\', self::$root).'\\storage\\cache'));
-        $this->assertFalse(isTreeSkipped(self::$root.'/public/templates/lite'));
+        $this->assertFalse(isTreeSkipped(self::$root.'/public/templates/aurora'));
         $this->assertFalse(isTreeSkipped(self::$root.'/public/templates/scratch-notours'));
     }
 }

@@ -1,0 +1,26 @@
+<nav class="sl-pager" aria-label="{{ _PAGENAV }}{% if is_top %}: {{ _TOP }}{% endif %}">
+  <div class="sl-pager-main">
+    <div class="sl-pager-nav">
+      {{{ prev }}}
+      <span class="sl-seg sl-seg-pager" data-sl-knob="pager">
+        <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+        <span class="sl-seg-run sl-pager-pages">
+          {{{ items }}}
+        </span>
+      </span>
+      {{{ next }}}
+    </div>
+    <div class="sl-pager-side">
+      <span class="sl-pager-sep" aria-hidden="true"></span>
+      {% if is_top %}
+      <a href="#sl-list-end" title="{{ _PAGEEND }}" aria-label="{{ _PAGEEND }}" class="sl-but-mini"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>
+      {% else %}
+      <a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+      {% endif %}
+      {% if not is_list %}
+      {% include 'fragments/pager-keys.html' %}
+      {% endif %}
+    </div>
+  </div>
+  <p class="sl-pager-info"><span class="sl-visually-hidden">{{ page_label }} </span><b>{{ page_of }}</b>{% if range_text %}{% include 'fragments/pager-rows.html' %}{% endif %}{% if count %} · <span class="sl-visually-hidden">{{ overall }} </span><b>{{ count }}</b>{% endif %}</p>
+</nav>

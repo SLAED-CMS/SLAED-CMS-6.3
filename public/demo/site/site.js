@@ -1,4 +1,4 @@
-/* The site etalon of the stand (demo/site/): the live news feed of the lite theme seen by a signed-in administrator, with
+/* The site etalon of the stand (demo/site/): the live news feed of the aurora theme seen by a signed-in administrator, with
    the block "Администрация" (variant 08) first in its column and the floating menu (variant 09) over it. The panel etalon
    (../admin/) holds the same menu and block; the two stand on one address, so the panel's Options and the menu's shared
    choices (its position, its pins, the growth of its icons) act here at once. The stand never calls the server */
@@ -144,7 +144,7 @@
       ' style="--sl-dock-c: ' + tone + '"')).join('');
     const own = OWN.some((o) => o[4]);
     return app('sl-dock-plain', '/admin.php', 'Панель администратора',
-      '<img src="/templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><b class="sl-dock-badge sl-dock-count sl-dock-home-badge" title="Ждут внимания: ' + WAITING
+      '<img src="/templates/aurora/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><b class="sl-dock-badge sl-dock-count sl-dock-home-badge" title="Ждут внимания: ' + WAITING
         + '">' + WAITING + '</b>')
       + '<div class="sl-dock-body" id="sl-dock-body" data-sl-dock-body' + (fold ? ' hidden style="display: none"' : '') + '>'
       + app('sl-dock-page sl-dock-here', '/admin.php?name=node&amp;type=news', 'Эта страница в панели · вы на ней', ICO('newspaper'),
@@ -160,7 +160,7 @@
       + btn('sl-dock-watch', 'Кто на сайте: 2 — подробная статистика', '<span>2</span>', ' data-sl-open="sl-stats" style="--sl-d-adm: 50%; --sl-d-people: 50%; --sl-d-bots: 50%"')
       + btn('sl-dock-stack', 'Свои ссылки: ' + OWN.length, ICO('folder2-open') + (own ? '<b class="sl-dock-badge" title="Одна ссылка не работает">!</b>' : ''),
       ' data-sl-dock-pop="stack" aria-controls="sl-dock-pop-stack" aria-expanded="false"')
-      + btn('sl-dock-me', 'SLAED CMS', '<img src="/templates/lite/images/avatars/presets/038.svg" alt="">',
+      + btn('sl-dock-me', 'SLAED CMS', '<img src="/templates/aurora/images/avatars/presets/038.svg" alt="">',
       ' data-sl-dock-pop="me" aria-controls="sl-dock-pop-me" aria-expanded="false"')
       + '<span class="sl-dock-sep"></span>'
       + app('sl-dock-plain sl-dock-out', '/admin.php?op=logout', 'Выход', ICO('box-arrow-right'))
@@ -231,7 +231,7 @@
     box.innerHTML = pop('launch', getDockLaunch(), true)
       + pop('queue', '<p class="sl-dock-cap">' + ICO('bell') + ' Ждут внимания<small>Всего ' + WAITING + ' · в панели это колокольчик и «Ждут внимания»</small></p>' + qlist)
       + pop('stack', '<p class="sl-dock-cap">' + ICO('folder2-open') + ' Свои ссылки<small>Добавляются в настройках блока «Администрация»</small></p>' + grid)
-      + pop('me', '<div class="sl-dock-me-head"><img src="/templates/lite/images/avatars/presets/038.svg" alt=""><b>SLAED CMS</b><small>Суперадминистратор</small></div>'
+      + pop('me', '<div class="sl-dock-me-head"><img src="/templates/aurora/images/avatars/presets/038.svg" alt=""><b>SLAED CMS</b><small>Суперадминистратор</small></div>'
         + '<dl class="sl-dock-facts"><dt>Вошёл</dt><dd>сегодня, 20:31</dd><dt>Прошлый вход</dt><dd>вчера, 21:14</dd><dt>IP-адрес</dt><dd>127.0.0.1</dd><dt>До конца '
         + 'сеанса</dt><dd>47 мин</dd></dl>'
         + '<div class="sl-dock-row">Положение меню <span class="sl-dock-pair"><button type="button" data-sl-dock-dir="row" aria-pressed="' + (dir === 'row')

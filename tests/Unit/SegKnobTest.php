@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 # The segmented switch and the travelling plate of its chosen cell, read off the shipped script, the two themes and the mode fragment without writing to the site
 final class SegKnobTest extends TestCase
 {
-    private const THEMES = ['admin', 'lite'];
+    private const THEMES = ['admin', 'aurora'];
     private const SITEJS = 'public/plugins/system/slaed.js';
 
     private static array $files = [];
@@ -93,12 +93,12 @@ final class SegKnobTest extends TestCase
             $note = 'Theme '.$name.' does not declare the tokens of the plain switch in its API block';
             $this->assertStringContainsString('--sl-seg-knob-bg:', $base, $note);
         }
-        $lite = $this->getFile('public/templates/lite/assets/css/theme.css');
+        $aurora = $this->getFile('public/templates/aurora/assets/css/theme.css');
         $note = 'The site header switch has no face of its own';
-        $this->assertStringContainsString('.sl-seg-mode {', $lite, $note);
+        $this->assertStringContainsString('.sl-seg-mode {', $aurora, $note);
         $note = 'The step ladder of the old knob is back beside the measured one';
-        $this->assertStringNotContainsString('sl-mode-knob', $lite, $note);
-        $tpl = $this->getFile('public/templates/lite/fragments/mode-switch.html');
+        $this->assertStringNotContainsString('sl-mode-knob', $aurora, $note);
+        $tpl = $this->getFile('public/templates/aurora/fragments/mode-switch.html');
         $note = 'The mode switch or the view switch of a Node list is not a rail the script knows, so its plate never travels';
         $this->assertStringContainsString('<span class="sl-seg {% if is_view %}sl-seg-view{% else %}sl-seg-mode{% endif %}" data-sl-knob="{{ field }}"', $tpl, $note);
         $this->assertStringContainsString("'modes' => \$list, 'field' => 'mode']", $this->getFile('core/system.php'), $note);

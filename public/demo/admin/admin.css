@@ -745,7 +745,7 @@
 
 /* Three tokens the admin theme takes into base.css together with the cockpit, their first consumer, so the audit never
    sees them dead: the hero step of the one font ladder of both themes (tools/ui-contract.php), the size of a dashboard
-   number, the tight tracking the lite theme sets that number with, and the width of a gauge, a lite component already */
+   number, the tight tracking the aurora theme sets that number with, and the width of a gauge, a aurora component already */
 :root {
   --sl-font-hero: 38px;
   --sl-track-tight: -1px;

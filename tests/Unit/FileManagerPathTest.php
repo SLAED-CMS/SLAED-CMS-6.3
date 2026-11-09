@@ -447,7 +447,7 @@ final class FileManagerPathTest extends TestCase
         foreach (['.htaccess', 'public/index.php', 'public/admin.php', 'public/setup.php', 'public/update.php', 'public/.htaccess'] as $one) {
             $this->assertTrue($fm->getFileData($one)['critical'], $one.' is not marked critical');
         }
-        foreach (['public/robots.txt', 'public/templates/lite/index.php', 'public/plugins/editors/toastui/driver.php'] as $one) {
+        foreach (['public/robots.txt', 'public/templates/aurora/index.php', 'public/plugins/editors/toastui/driver.php'] as $one) {
             $this->assertFalse($fm->getFileData($one)['critical'], $one.' is marked critical');
         }
         $root = self::$work.'/hosting';

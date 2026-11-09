@@ -111,7 +111,9 @@ pages show the columns of the module; the builder shows them there with a link t
 owner form and stores none. A module whose output carries its
 own `h1` sets `$sitevars['has_own_title']` after `setHead()` — `setHead()` rebuilds
 that array — and `layouts/home.html` then skips the site name heading; `layouts/app.html`
-never prints one. `modules/presentation` is the module that does this.
+never prints one. `modules/presentation` is the module that does this. A Node list run as the
+home page keeps the site name as the one `h1` and prints its own title as `h2` (`is_home` of
+`getNodeHead()`); the first page of that type at its own address names the site root as canonical.
 
 Frontend module access checks are performed before including module files:
 
@@ -515,7 +517,9 @@ nothing else and counts no view.
 - The query addresses of the removed 6.2 modules go through `_node_legacy`: `getNodeLegacyUrl()` answers the current
   registry path, and its callers — the not-found branch of `setNodeView()`, an unknown operation of a type and the
   unknown name of `public/index.php` — pass it to `setSeoMove()` as `url`.
-- `getSeoRoute()` serializes the same address as the canonical one; page 2 and on carry their own `?page=N`. The
+- `getSeoRoute()` serializes the same address as the canonical one; page 2 and on carry their own `?page=N`.
+  `getTplPagerView()` keeps the largest page count of the request, and `setFoot()` answers 404 to a `?page=N` above it,
+  so a page without a list, or a number past its last page, has no copy under another address. The
   sitemap and the feed write `getPublicUrl()` of `getSeoUrl()`; `addSitemapTask()` writes the absolute
   `Sitemap: <homeurl>/sitemap.xml` into `public/robots.txt`, replacing a line naming `sitemap.xml` or adding one.
 
@@ -609,7 +613,7 @@ from its description, and the one type the core owns is the module slot (`Layout
 A section is `id`, `type`, `on`, the fields of "Показ" — `who` (the scale 0–3 of `_blocks.view`), `lang`, `from`,
 `till`, `anchor`, `phone`, `desk` — and the values of its type by the keys of its description; the slot carries
 `module`, empty for the home module of the settings. The delivered file is the layout of slaed.net as its stand
-publishes it: every menu of lite filled, every key of the parts of lite, a home page with its slot, a page 404 that is
+publishes it: every menu of aurora filled, every key of the parts of aurora, a home page with its slot, a page 404 that is
 not indexed. A new installation opens with it; an update writes the whole file only to a site that lacks it and
 otherwise adds just the keys the site does not have (`Update::getConfigMerge()`), its pages and menus staying the
 site's. `LayoutTest` holds the shape of the delivery, its counter and the addresses of its menus.
@@ -631,7 +635,7 @@ site's. `LayoutTest` holds the shape of the delivery, its counter and the addres
   section stands in `fragments/section.html` of the theme; a section whose fragment prints nothing loses its frame and
   its number.
 - **The chrome.** `setHead()` gives every page of the site `parts` (`getThemeData()`) and `menus` (`getMenu()`, as
-  deep as the theme declares); `getThemeHeadVars()` of lite prints the title band of a page with `band`.
+  deep as the theme declares); `getThemeHeadVars()` of aurora prints the title band of a page with `band`.
 - **The page 404.** `setError(404)` of `core/security.php` prints the page `notfound` while it has a section the
   visitor sees, with the code 404 kept; an empty page, an error inside it, the panel, an endpoint `go=` and an htmx
   request get the standard page of the error.
@@ -692,7 +696,7 @@ The active template runtime is `Template` in:
 
 Current theme directories:
 - `templates/admin`
-- `templates/lite`
+- `templates/aurora`
 
 Page output should be finalized through `setHead()` and `setFoot()` unless the
 route is a deliberate helper endpoint that returns JSON, upload output, or

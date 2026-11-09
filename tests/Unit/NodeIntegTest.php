@@ -186,7 +186,7 @@ final class NodeIntegTest extends TestCase
         }
         $pres = self::getFile('modules/presentation/index.php');
         foreach (['getNodeModeType($mode)', "\$read('article')", "\$read('docs')", "\$read('files')"] as $one) $this->assertStringContainsString($one, $pres);
-        $this->assertStringContainsString("getNodeModeType('faq')", self::getFile('public/templates/lite/index.php'));
+        $this->assertStringContainsString("getNodeModeType('faq')", self::getFile('public/templates/aurora/index.php'));
         $this->assertStringContainsString('`param` VARCHAR(255) NOT NULL DEFAULT \'\'', self::getFile('storage/update/sql/table.sql'));
         $this->assertStringContainsString("CALL addcol('{prefix}_blocks', 'param'", self::getFile('storage/update/sql/table_update6_3.sql'));
     }

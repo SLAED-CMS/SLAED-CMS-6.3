@@ -195,7 +195,7 @@ database on any failure. The reference is `docs/UPDATE.md`; the help of the page
   is no key of `config/global.php` any more, and the settings form no longer writes it.
 - `public/index.php`, `public/admin.php` and `public/setup.php` call `getSiteGate()` of `core/gate.php` first, before
   the core; an entry of your own that loads the core does the same, or it opens while an installation is under way.
-- An update replaces the language files of the shipped modules and the themes `admin` and `lite` whole: keep edits in
+- An update replaces the language files of the shipped modules and the themes `admin` and `aurora` whole: keep edits in
   a theme of your own. Every other changed core file stops an installation until "перезаписать" is ticked; a PHP file of
   your own in `admin/`, `core/`, `lang/` or `public/` is reported by "Сверить файлы".
 - An update adds the options a site lacks to `config/` and keeps every value the site saved; code of your own reads a
@@ -303,7 +303,7 @@ When upgrading custom modules:
 Themes currently present in the repository:
 
 - `admin`
-- `lite`
+- `aurora`
 
 A custom theme directory of an older release has to be reviewed against the structure of these two before it is used.
 
@@ -334,7 +334,7 @@ Use this checklist when reviewing custom modules, custom admin code, or local pa
 
 - [ ] Read `$conf['version']` or `SL_VERSION`, never a `version` key of `config/global.php`
 - [ ] Read every new option with a fallback
-- [ ] Keep theme and language edits out of `admin`, `lite` and the shipped language files
+- [ ] Keep theme and language edits out of `admin`, `aurora` and the shipped language files
 - [ ] Review local config overrides
 - [ ] Re-check file permissions after deployment
 

@@ -1439,7 +1439,7 @@ define('_UPDATE_REJECTED','Archive non acceptée');
 define('_UPDATE_STAGEOK','La version %s est téléchargée, vérifiée et décompressée.');
 define('_UPDATE_FAULT','Dernier refus');
 define('_UPDATE_LANGS','Une mise à jour depuis le panneau remplace entièrement les fichiers de langue de la version : les modifications faites ici sont perdues, les anciens fichiers restent dans la sauvegarde de l\'installation.');
-define('_UPDATE_THEMES','Une mise à jour depuis le panneau remplace entièrement les thèmes admin et lite : les modifications faites ici sont perdues, les anciens fichiers restent dans la sauvegarde de l\'installation. Les autres thèmes ne sont pas touchés.');
+define('_UPDATE_THEMES','Une mise à jour depuis le panneau remplace entièrement les thèmes admin et aurora : les modifications faites ici sont perdues, les anciens fichiers restent dans la sauvegarde de l\'installation. Les autres thèmes ne sont pas touchés.');
 define('_UPDATE_TEST','Installation d\'essai');
 define('_UPDATE_INSTALL','Installer');
 define('_UPDATE_INSTHINT','Pendant l\'installation le site est fermé : elle sauvegarde la base de données, déplace les fichiers, exécute les étapes de la base et ajoute les nouveaux réglages, étape par étape, chacune dans sa propre requête. Avant le début, la page affiche une seule fois un code de secours.');

@@ -620,7 +620,7 @@ button.sl-dock-row:hover {
   content: "";
 }
 
-/* А6 The owner's links as the rows of the site's user block (sl-block-pm of lite) */
+/* А6 The owner's links as the rows of the site's user block (sl-block-pm of aurora) */
 .sl-adm-own {
   margin-top: var(--sl-space-3);
 }

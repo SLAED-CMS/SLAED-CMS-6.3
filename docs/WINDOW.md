@@ -12,7 +12,7 @@ The platform does the hard parts. `showModal()` gives the focus trap, the top la
 `plugins/system/slaed.js` writes only what the platform does not give: the scroll lock, the animated exit, the
 placing, the stacking, the drag, and the key a non-modal dialog does not answer.
 
-The component is declared once and byte-identically in `templates/lite/assets/css/theme.css` and
+The component is declared once and byte-identically in `templates/aurora/assets/css/theme.css` and
 `templates/admin/assets/css/theme.css`. Both copies consume theme tokens from `base.css`, so the same block
 produces a different window in each theme by design — the corner, the elevation and the head plate of the two
 themes differ because their tokens differ.
@@ -43,7 +43,7 @@ and must not float with the content.
 
 `.sl-modal-act` is an action of a window head, of the capsule `sl-editor-pill` and of the floating menu, and of nothing
 else. The copy button of a code head (`fragments/code-block.html`, the link window of the builder) is `.sl-code-copy`, a
-tool of the code: a quiet square of `--sl-size-chip`, larger under a finger; in `lite` a press flashes green by the copy
+tool of the code: a quiet square of `--sl-size-chip`, larger under a finger; in `aurora` a press flashes green by the copy
 feedback of the theme (`.sl-is-copied`).
 
 ## Axes
@@ -156,21 +156,21 @@ actions `move_text`, `full_text` with `restore_text` and `close_text` (or `close
 
 | Window | Built by | Frame and parts | Theme |
 |---|---|---|---|
-| Confirmation `#sl-confirm` | `getWindowSet()` | `window`, `window-body-confirm`, `window-foot-confirm` | lite, admin |
-| Watch `#sl-stats`, windowed | `getWindowSet()`, super administrator with sessions on | `window`, `partials/session-stats.html` as bar, body and foot | lite, admin |
-| Share sheet `#sl-share-sheet` | `getWindowSet()` | `window`, `window-body-share` | lite |
-| QR code `#sl-share-qr` | `getWindowSet()` | `window`, `window-body-qr`, `window-foot-qr` | lite |
-| Gallery and image viewer | `getWindowShot()` | `window`, `window-body-shot`, `window-foot-shot` | lite, admin |
+| Confirmation `#sl-confirm` | `getWindowSet()` | `window`, `window-body-confirm`, `window-foot-confirm` | aurora, admin |
+| Watch `#sl-stats`, windowed | `getWindowSet()`, super administrator with sessions on | `window`, `partials/session-stats.html` as bar, body and foot | aurora, admin |
+| Share sheet `#sl-share-sheet` | `getWindowSet()` | `window`, `window-body-share` | aurora |
+| QR code `#sl-share-qr` | `getWindowSet()` | `window`, `window-body-qr`, `window-foot-qr` | aurora |
+| Gallery and image viewer | `getWindowShot()` | `window`, `window-body-shot`, `window-foot-shot` | aurora, admin |
 | Options `#sl-settings` | `getAdminSettingsWindow()` | `window`, the rows of `fragments/settings-row.html`, `window-foot-options` | admin |
 | Icon picker `#sl-icon-window` | `getAdminIconWindow()` | `window`, `window-bar-icons`, `window-body-icons` | admin |
 | File editor of the file desk, static | `getAdminFileEditor()` | `window`, `window-foot-edit` | admin |
-| Insert options of an editor | `getEditorFileKit()` | `window`, `window-body-insert`, `window-foot-insert` | lite, admin |
+| Insert options of an editor | `getEditorFileKit()` | `window`, `window-body-insert`, `window-foot-insert` | aurora, admin |
 | Quick navigation (Ctrl+K) `#sl-palette` | the panel layout | `fragments/palette.html` | admin |
 | End of session `#sl-session`, static | the panel layout | written in `layouts/admin.html` | admin |
-| File Manager | `getFileManagerWindow()` | `partials/file-manager.html` | lite, admin |
-| Emoji panel | `Editor::getEmojiPanel()` | `partials/emoji-panel.html` | lite, admin |
-| Editor palette | `Editor::getFrame()` | `fragments/editor-kit.html` | lite, admin |
-| Editor comparison | `Editor::getFrame()` | `fragments/editor-kit.html` | lite, admin |
+| File Manager | `getFileManagerWindow()` | `partials/file-manager.html` | aurora, admin |
+| Emoji panel | `Editor::getEmojiPanel()` | `partials/emoji-panel.html` | aurora, admin |
+| Editor palette | `Editor::getFrame()` | `fragments/editor-kit.html` | aurora, admin |
+| Editor comparison | `Editor::getFrame()` | `fragments/editor-kit.html` | aurora, admin |
 
 `getWindowSet()` prints what every page carries — the notice of `fragments/toast.html` (not a window), the watch
 window, the confirmation and, on the site, the share sheet, the QR code and the image viewer; `setFoot()` of the panel

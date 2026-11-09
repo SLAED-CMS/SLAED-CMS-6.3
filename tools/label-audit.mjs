@@ -69,7 +69,7 @@ const PANEL = new Set(['theme', 'sysfiles', 'fmedit', 'tplconfig', 'passwd', 'lo
 // Addresses the walk asks for outright instead of waiting to be linked to them. The registration and lost-password
 // forms are linked only from the page a guest is shown, so whether the member side ever opened them depended on the
 // walk - measured, `site:account:newuser` was in one baseline and not in the next, for no change anybody made. They
-// are also the lite form rows batch 1 rewrites, so they are the last thing that should be reached by luck
+// are also the aurora form rows batch 1 rewrites, so they are the last thing that should be reached by luck
 const SEED = ['/index.php?name=account&op=newuser', '/index.php?name=account&op=passlost'];
 const REC = new Set(['id', 'cid', 'pid', 'qid']);
 const LOOSE = new Set([...REC, 'name', 'op', 'num', 'cat', 'token', 'sid', 'page', 'uname', 'redirect', 'go', 'prov',
@@ -111,7 +111,7 @@ function getRouteOp(url) {
 // One route, named by what it renders rather than by which record it happened to open, and by who was looking. The
 // side is told rather than read off the address because one address is two screens: signed in, index.php?name=account
 // is a profile, and the registration and lost-password forms redirect away from it entirely. Walking the site only as
-// a member never opens the three forms a guest is shown, and those are lite form rows like any other
+// a member never opens the three forms a guest is shown, and those are aurora form rows like any other
 function getRouteSig(href, side) {
   const url = new URL(href);
   const { name, op, rec: bound } = getRouteOp(url) || { name: 'home', op: '', rec: false };

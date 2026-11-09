@@ -776,7 +776,7 @@
       const qone = site ? btn('queue', 'v-qone', d.waiting ? `Ждут внимания · ${d.waiting}` : 'Всё проверено', ico('bell-fill'), '', d.waiting ? `<b class="v-badge" data-ab-n="waiting">${d.waiting}</b>` : '') : '';
       const min = vGet('ab.dock.min.' + d.ctx, '0') === '1';
       const sum = site && d.waiting ? `<b class="v-badge v-home-badge" data-ab-n="waiting">${d.waiting}</b>` : '';
-      return `${app({ ...d.home, tip: site ? 'Панель администратора' : 'Главная панели' }, 'v-plain', '<img src="../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">' + sum)}
+      return `${app({ ...d.home, tip: site ? 'Панель администратора' : 'Главная панели' }, 'v-plain', '<img src="../templates/aurora/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">' + sum)}
     <div class="v-body" id="v-fold-body" data-v-body${min ? ' hidden style="display: none"' : ''}>
     ${site ? app({ ...d.page.admin, tip: 'Эта страница в панели · вы на ней' }, 'v-run', ico(d.page.admin.icon), ' style="--v-c: #0ea5e9" aria-current="page"') : ''}
     ${pins ? '<span class="v-sep v-pin"></span>' + pins : ''}

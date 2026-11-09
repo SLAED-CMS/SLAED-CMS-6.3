@@ -726,7 +726,7 @@
       case 'logo':
         // As "Конфигурации" picks site_logo: the files of the theme's logos in a select, the picture under it follows the pick
         return row(`<select id="${id}" class="sl-select" ${data} data-sl-image-replace="${id}-img">${SB_LOGOS.map(([v]) => `<option value="${esc(v)}"${v === value ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>`, true) +
-          `<div class="sl-div-item"><div class="sl-div-label"><span>Логотип сайта</span></div><div class="sl-div-field"><img src="../templates/lite/images/logos/${esc(value)}" id="${id}-img" alt="Логотип сайта" class="sb-logo-img"></div></div>`;
+          `<div class="sl-div-item"><div class="sl-div-label"><span>Логотип сайта</span></div><div class="sl-div-field"><img src="../templates/aurora/images/logos/${esc(value)}" id="${id}-img" alt="Логотип сайта" class="sb-logo-img"></div></div>`;
       default:
         return '';
     }

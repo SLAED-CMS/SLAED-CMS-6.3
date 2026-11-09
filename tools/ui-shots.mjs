@@ -745,7 +745,7 @@ async function setFloor(page, item, view, mode, report) {
 // settled shot before it is reported, with the first elements its DOM moved
 async function setOneShot(page, item, view, mode, tag, pairs, report) {
   if (job === 'contrast') {
-    for (const pair of await getContrastPairs(page, item.name + tag, mode)) pairs.push({ theme: item.theme || 'lite', ...pair });
+    for (const pair of await getContrastPairs(page, item.name + tag, mode)) pairs.push({ theme: item.theme || 'aurora', ...pair });
     return;
   }
   const tail = '-' + view.name + (mode === 'auto' ? '' : '-' + mode);
@@ -799,7 +799,7 @@ async function setOneShot(page, item, view, mode, tag, pairs, report) {
 // rather than during it - which is why it is a database write and not a header the runner could send
 async function checkNewTheme(browser, report) {
   if (!user || !pass) throw new Error('the HTTP half needs a session: set ' + conf.env.user + ' and ' + conf.env.pass);
-  const made = getProbeAnswer('theme', 'make', args.get('etalon') === undefined || args.get('etalon') === true ? 'lite' : args.get('etalon'));
+  const made = getProbeAnswer('theme', 'make', args.get('etalon') === undefined || args.get('etalon') === true ? 'aurora' : args.get('etalon'));
   let back = null;
   try {
     back = getProbeAnswer('theme', 'pick', user, made.name).was;

@@ -42,7 +42,7 @@ final class ThemeFileTest extends TestCase
     {
         $root = dirname(__DIR__, 2).'/public/templates/';
         $this->assertStringContainsString('plugins/system/sound.js', (string)self::$said['script']);
-        foreach (['admin' => ['success', 'error', 'warn', 'queue', 'win'], 'lite' => ['success', 'error', 'warn', 'queue', 'win', 'inbox', 'send']] as $theme => $list) {
+        foreach (['admin' => ['success', 'error', 'warn', 'queue', 'win'], 'aurora' => ['success', 'error', 'warn', 'queue', 'win', 'inbox', 'send']] as $theme => $list) {
             foreach ($list as $voice) $this->assertFileExists($root.$theme.'/sound/'.$voice.'.mp3');
         }
     }

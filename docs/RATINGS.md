@@ -260,7 +260,8 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
 count, `$scor` sum). `$typ`: `0` a list or inline place, `1` the detail view, `2` the inner block alone (the answer
 of a vote). `$stl = '1'` selects the thumbs fragment `rating-like`, otherwise the stars fragment `rating-bar`.
 `$obj` is appended to the DOM id `rep<id>` so one account shown several times on a page keeps unique ids. The
-average shown is `Rating::getAverage()` with two digits.
+average shown is `Rating::getAverage()` with two digits. The thumbs pill wears the lean of that average: green above
+3, red below, neutral at 3 and without votes.
 
 The block is live only when the mark is set, the rule has `active = '1'`, `$typ` is not `2`, and either `$typ` is
 `1` or the rule has `detail != '1'`. Without an active rule and without votes it renders nothing; with votes it
@@ -342,7 +343,7 @@ goes through the one endpoint.
 | `modules/node/index.php`, material view | `getRatingAsync(1, $node->id, 'node.<name>', ...)` when `features.rating` | `node.<name>` | stars, detail |
 | `NodeView` (`core/classes/node/view.php`) | key `rating` = `Rating::getAverage($node->score, $node->ratings)` | `node.<name>` | six-digit average, no widget |
 
-The Node list also sorts by `rating`. The fragments are `templates/lite/fragments/rating-bar.html`,
+The Node list also sorts by `rating`. The fragments are `templates/aurora/fragments/rating-bar.html`,
 `rating-like.html` and `rating-box.html`; the wrapper is the `div` partial with `is_rate`.
 
 ## 8.0 carry-over

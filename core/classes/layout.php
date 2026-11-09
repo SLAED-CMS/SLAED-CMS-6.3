@@ -437,6 +437,7 @@ final class Layout {
             };
             if ($type === 'select' && $out[$key] !== '') $out[$key.'_'.$out[$key]] = true;
             if ($type === 'url' && preg_match('#^https?://#i', $out[$key]) === 1) $out[$key.'_ext'] = true;
+            if (!empty($one['tel']) && is_string($out[$key]) && preg_match('/\d/', $out[$key]) === 1) $out[$key.'_tel'] = 'tel:'.preg_replace('/[^+\d]/', '', $out[$key]);
         }
         return $out;
     }

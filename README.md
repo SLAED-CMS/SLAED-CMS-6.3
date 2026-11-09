@@ -187,9 +187,9 @@ composer quality
 Bundled themes currently present in the repository:
 
 - `templates/admin`
-- `templates/lite`
+- `templates/aurora`
 
-`templates/lite` is the bundled frontend theme in the current repository. Both themes carry a local copy of Bootstrap Icons under `assets/vendor/bootstrap-icons/` — the icon stylesheet and its WOFF2 font, nothing else of Bootstrap. Icons are rendered through the theme's `fragments/bootstrap-icon.html`.
+`templates/aurora` is the bundled frontend theme in the current repository. Both themes carry a local copy of Bootstrap Icons under `assets/vendor/bootstrap-icons/` — the icon stylesheet and its WOFF2 font, nothing else of Bootstrap. Icons are rendered through the theme's `fragments/bootstrap-icon.html`.
 
 ### Routing and Entry Flow
 
@@ -252,7 +252,7 @@ slaed-cms/
 
 - Current runtime code and actively modernized components coexist in the repository.
 - New template work targets `core/classes/template.php`, the shared `$tpl` runtime object, and HTML files under `templates/*`.
-- Current theme directories are `admin` and `lite`.
+- Current theme directories are `admin` and `aurora`.
 - Current module directories are `account`, `changelog`, `contact`, `forum`, `node`, `presentation`, `recommend`, `rss`, `search`, `sitemap`, `users`, and `voting`.
 - Public documentation aims to describe the current repository state, not a future fully completed migration.
 

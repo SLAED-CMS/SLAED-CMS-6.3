@@ -218,7 +218,7 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   `public/sitemap.xml` is not in git at all.
 - **What the archive leaves out** (owner, 2026-10-18: a release carries only what a site runs). `export-ignore` in
   `.gitattributes` keeps in the repository and on the stand, out of every archive: the modules of slaed.net `master` and
-  `changelog` with the templates `changelog*.html` only the changelog renders in `lite`, `public/update.php`
+  `changelog` with the templates `changelog*.html` only the changelog renders in `aurora`, `public/update.php`
   (the owner's internal tool) and `storage/update/sql/table_update6_3.sql`; `tests/`, `tools/`, `docs/`; the stands
   `public/demo/` and `public/phoenix/`; the files of development of the root — `composer.json` (the
   build reads the PHP of the manifest from the tag through `git show`, not from the archive), `package.json`,
@@ -233,7 +233,7 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   the result must return the same array without those keys, or the build stops); the stand keeps its rows. The names
   of such a module live in its own language files, read by `getModuleLabel()`; its jobs in its `scheduler.php`. The
   module `presentation` shows the commits of the changelog only while `modules/changelog/` is there. The CSS of the
-  changelog stays in `lite`, whose tokens of `base.css` are a frozen API; the panel draws the changelog as a list of the canon.
+  changelog stays in `aurora`, whose tokens of `base.css` are a frozen API; the panel draws the changelog as a list of the canon.
 - A site installed from git, without `files.json`, updates from the panel with a warning: old files are not deleted,
   changed files are not recognized.
 
@@ -388,7 +388,7 @@ An installation keeps what the site saved and brings what is new; at runtime not
 | `config/<name>.php` | always a site file | missing options are added |
 | `public/robots.txt` | always a site file | put only when absent |
 | `lang/`, `admin/lang/`, `modules/<module>/lang/`, `modules/<module>/admin/lang/` of shipped modules | replaced whole | replaced whole, the old file in the backup of the installation |
-| `public/templates/admin`, `public/templates/lite` | replaced | replaced, the old file in the backup of the installation |
+| `public/templates/admin`, `public/templates/aurora` | replaced | replaced, the old file in the backup of the installation |
 | other themes `public/templates/<name>` | untouched | untouched |
 | all other code | replaced | installation stops until "перезаписать" is ticked |
 

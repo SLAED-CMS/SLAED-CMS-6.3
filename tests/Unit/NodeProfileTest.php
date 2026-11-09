@@ -395,9 +395,9 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([303, true, 11], $run['made']);
         $this->assertSame([200, true, 200, 404], $run['pages']);
         $this->assertSame([200, true, 10], $run['cat']);
-        $home = (string)preg_replace('#/news$#', '', $run['canon'][0]);
+        $home = (string)preg_replace('#/news\?page=2$#', '', $run['canon'][1]);
         $this->assertMatchesRegularExpression('#^http://127\.0\.0\.1:\d+$#', $home);
-        $want = ['/news', '/news?page=2', '/news/probe-category', '/news/showcase-1'];
+        $want = ['/', '/news?page=2', '/news/probe-category', '/news/showcase-1'];
         $this->assertSame(array_map(fn($v) => $home.$v, $want), $run['canon']);
     }
 

@@ -67,7 +67,7 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("\$act = HOME_PATH.'index.php?go=1&op='", $view);
         $this->assertStringContainsString('deleteComment&id=', $view);
         $this->assertSame(3, substr_count($view, "'is_post' => true"), 'A moderation action is still reachable as a plain link');
-        $this->assertStringNotContainsString('token=', $this->getFile('public/templates/lite/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
+        $this->assertStringNotContainsString('token=', $this->getFile('public/templates/aurora/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
     }
 
     #[Test]
@@ -112,7 +112,7 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString('data-sl-reqkey', $code);
         $this->assertStringContainsString('getRandomValues', $code);
         $this->assertStringContainsString('form.reset()', $code);
-        foreach (['public/templates/lite/fragments/button.html', 'public/templates/admin/fragments/button.html'] as $file) {
+        foreach (['public/templates/aurora/fragments/button.html', 'public/templates/admin/fragments/button.html'] as $file) {
             $this->assertStringNotContainsString('hx_on_after', $this->getFile($file), $file.' still resets on every request');
         }
     }
