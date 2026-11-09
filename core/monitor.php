@@ -831,15 +831,16 @@ function getMonitorCache(string $key, int $ttl, callable $make): array {
     return $seen[$key] = $data;
 }
 
-# The one writer of monitor.json: with $fresh a sample past ten seconds is retaken by whoever gets the lock without waiting; a failed Windows probe keeps the old one
+# The one writer of monitor.json: with $fresh a sample whose probe began an interval of the panel ago is retaken by whoever gets the lock; a failed Windows probe keeps the old one
 function getMonitorSample(bool $fresh = false): array {
     global $db;
     $store = getMetricStore();
-    $lock = ($fresh && time() - intval($store['sampled_at'] ?? 0) >= 10) ? getSchedulerLockHandle('monitor-sample') : false;
+    $lock = ($fresh && time() - intval($store['probe_at'] ?? 0) >= getLiveEvery('panel')) ? getSchedulerLockHandle('monitor-sample') : false;
     if ($lock !== false) {
         try {
             $store = getMetricStore();
-            if (time() - intval($store['sampled_at'] ?? 0) >= 10 && !(PHP_OS_FAMILY === 'Windows' && !empty(getWindowsProbe()['failed']))) {
+            $at = time();
+            if ($at - intval($store['probe_at'] ?? 0) >= getLiveEvery('panel') && !(PHP_OS_FAMILY === 'Windows' && !empty(getWindowsProbe()['failed']))) {
                 [$cpu] = getCpuLoad();
                 $cpud = getCpuDetails();
                 $mem = getMemoryInfo();
@@ -855,6 +856,7 @@ function getMonitorSample(bool $fresh = false): array {
                     $store['uploads'] = getDirectorySizeBytes(defined('UPLOADS_DIR') ? (string)UPLOADS_DIR : BASE_DIR.'/uploads');
                     $store['uploads_at'] = time();
                 }
+                $store['probe_at'] = $at;
                 $store['sampled_at'] = time();
                 setMetricStore($store);
             }
@@ -1126,7 +1128,8 @@ function getStatLoadHours(array $pts): array {
     return $out;
 }
 
-# One line of the counter by its field names: a day of an old archive stops at the eighth field, so its hours, load and session maps are empty; null for a line that is no day
+# One line of the counter by its field names: a day of an old archive stops at the eighth field, so its hours, load and session maps are empty,
+# and its browsers carry a major version, joined here into the family; null for a line that is no day
 function getStatRow(string $line): ?array {
     $pts = explode('|', trim($line));
     if (count($pts) < 8 || !preg_match('#^(\d{2})\.(\d{2})\.(\d{4})$#', $pts[0], $hit)) return null;
@@ -1136,6 +1139,12 @@ function getStatRow(string $line): ?array {
     foreach ($maps as $key => $idx) {
         $dims[$key] = getCounterField(trim($pts[$idx] ?? ''));
     }
+    $fams = [];
+    foreach ($dims['browsers'] as $name => $num) {
+        $fam = explode(' ', $name)[0];
+        $fams[$fam] = ($fams[$fam] ?? 0) + $num;
+    }
+    $dims['browsers'] = $fams;
     return getStatLoadHours($pts) + [
         'date' => $pts[0], 'month' => $hit[3].'-'.$hit[2], 'day' => (int)$hit[1],
         'week' => (int)date('N', mktime(0, 0, 0, (int)$hit[2], (int)$hit[1], (int)$hit[3])) - 1,

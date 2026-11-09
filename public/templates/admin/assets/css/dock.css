@@ -216,28 +216,11 @@ button.sl-session-donut:focus-visible {
   font-size: var(--sl-font-small);
 }
 
-.sl-stats-kpis {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sl-space-3);
-}
-
-.sl-stats-kpis > div,
 .sl-stats-box {
   padding: var(--sl-space-4);
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
-}
-
-.sl-stats-kpis > div {
-  display: grid;
-  gap: var(--sl-space-1);
-}
-
-.sl-stats-kpis b {
-  font-size: var(--sl-font-h2);
-  line-height: var(--sl-line-tight);
 }
 
 /* The bar of shares under the figures, in the tones of the ring */
@@ -347,7 +330,6 @@ button.sl-session-donut:focus-visible {
   min-height: var(--sl-space-8);
 }
 
-.sl-stats-kpis small,
 .sl-stats-row > span > :is(a, span),
 .sl-stats-where small,
 .sl-dock-me-head small,

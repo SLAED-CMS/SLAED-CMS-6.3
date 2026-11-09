@@ -73,7 +73,7 @@ function setUpdateSteps(string $fail): void {
     $checks = [['turn' => 0, 'text' => _DATABASE, 'note' => _UPDATE_BACKUP]];
     foreach (Update::getStepList($mark) as $ver => $has) {
         $note = implode(' + ', array_keys(array_filter(['SQL' => $has['sql'], 'PHP' => $has['php']])));
-        $checks[] = ['turn' => count($checks), 'text' => $ver, 'note' => ($note !== '') ? $note : _UPDATE_MARK];
+        $checks[] = ['turn' => count($checks), 'text' => $ver, 'note' => ($note !== '') ? $note : mb_ucfirst(_UPDATE_MARK)];
     }
     $alert = ($fail !== '') ? $tpl->getHtmlFrag('alert', ['type' => 'error', 'text' => htmlspecialchars($fail, ENT_QUOTES, 'UTF-8')]) : '';
     $lead = sprintf(_UPDATE_LEAD, SL_VERSION, ($mark !== '') ? $mark : _NO);

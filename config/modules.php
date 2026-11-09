@@ -105,6 +105,17 @@ return [
             'top' => '0',
             'type' => '0',
         ],
+        'favorites' => [
+            'lang' => '_FAVORITES',
+            'icon' => 'star',
+            'active' => '1',
+            'view' => '0',
+            'menu' => '1',
+            'group' => '0',
+            'side' => '0',
+            'top' => '0',
+            'type' => '0',
+        ],
         'fields' => [
             'lang' => '_FIELDS',
             'icon' => 'input-cursor-text',

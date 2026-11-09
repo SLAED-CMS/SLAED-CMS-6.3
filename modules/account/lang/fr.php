@@ -36,7 +36,6 @@ define('_ACCOUNT_SAFE','Protégé');
 define('_ACCOUNT_SECTIONS','Sections des paramètres');
 define('_ACCOUNT_SETUPNOTE','Profil, avatar, mot de passe');
 define('_ACCOUNT_SHOWN','Visible');
-define('_ACCOUNT_STORYNOTE','Combien d\'entrées les listes du site affichent par page.');
 define('_ACCOUNT_SYSTEM','Système');
 define('_ACCOUNT_THEMENOTE','L\'apparence du site pour vous seul. Le choix n\'affecte pas les autres utilisateurs.');
 define('_ACCOUNT_UNDO','Annuler');

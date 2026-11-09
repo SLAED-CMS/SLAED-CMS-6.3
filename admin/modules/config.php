@@ -118,7 +118,7 @@ function getGeoipPanel(): string {
     return $tpl->getHtmlPart('div', ['rows' => $rows]).$stat.$info;
 }
 
-# Render the settings tabs in one form; the cache button stands after it as a form of its own, because the browser drops a nested form
+# Render the settings tabs in one form; the cache button stands in its action row but posts a form of its own by the attribute form, because the browser drops a nested form
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
@@ -158,10 +158,6 @@ function config(): void {
     $yesno = [
         ['value' => '1', 'label' => _YES],
         ['value' => '0', 'label' => _NO],
-    ];
-    $rows[] = [
-        'label_html' => _VERSION,
-        'field_html' => $tpl->getHtmlFrag('link', ['href' => '//slaed.net', 'title' => _VERSION, 'label' => 'SLAED CMS '.$conf['version'], 'is_blank' => true]),
     ];
     $rows[] = ['label_for' => 'f-sitename', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
@@ -453,14 +449,16 @@ function config(): void {
         'label_id' => $labid = getFieldIds('', 'botsact')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno]),
     ];
-    $rows[] = ['label_for' => 'f-live-u', 'label_html' => _LIVE_UPD, 'field_html' => $tpl->getHtmlFrag('input', [
-        'itype' => 'number',
-        'name_attr' => 'live_u',
-        'input_id' => 'f-live-u',
-        'value_attr' => (string)($conf['live_u'] ?? 0),
-        'placeholder_text' => _LIVE_UPD,
-        'is_config' => true,
-    ])];
+    foreach (['site' => _LIVE_SITE, 'panel' => _LIVE_PANEL, 'note' => _LIVE_NOTE] as $kind => $label) {
+        $rows[] = ['label_for' => 'f-live-'.$kind, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'number',
+            'name_attr' => 'live_'.$kind,
+            'input_id' => 'f-live-'.$kind,
+            'value_attr' => (string)getLiveEvery($kind),
+            'placeholder_text' => $label,
+            'is_config' => true,
+        ])];
+    }
     $rows[] = [
         'label_html' => _TIME_DB,
         'label_id' => $labid = getFieldIds('', 'db_t')['label'],
@@ -723,11 +721,26 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('config')],
         ],
         'is_valid' => true,
+        'actions_html' => $tpl->getHtmlFrag('button', [
+            'button_type' => 'submit',
+            'submit_label' => _CACHECLEAR,
+            'icon_name' => 'trash',
+            'is_plain' => true,
+            'button_attr' => 'form="config-clear" data-sl-tab-show="4" data-sl-tab-group="config-main" hidden',
+        ]),
         'submit_label' => _SAVECHANGES,
     ]);
-    $hide = ['name' => 'config', 'op' => 'clearcache', 'tab' => $ctab];
-    $show = 'data-sl-tab-show="4" data-sl-tab-group="config-main" hidden';
-    $clear = getTplPostButton($hide, 'trash', _CACHECLEAR, $show);
+    $clear = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'method' => 'post',
+        'form_attr' => 'id="config-clear" hidden',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'config'],
+            ['nameattr' => 'op', 'valueattr' => 'clearcache'],
+            ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('config')],
+        ],
+    ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form.$clear]);
     setFoot();
 }
@@ -828,7 +841,8 @@ function save(): void {
                 'aspan' => (string)max(1, min(20, getVar('post', 'pager_aspan', 'num', 10))),
             ],
             'session' => getVar('post', 'session', 'num'),
-            'live_u' => getVar('post', 'live_u', 'num'),
+            'live' => array_map(static fn(string $kind): string => (string)getLiveEvery($kind, intval(getVar('post', 'live_'.$kind, 'num'))),
+                ['site' => 'site', 'panel' => 'panel', 'note' => 'note']),
             'db_t' => getVar('post', 'db_t', 'num'),
             'adminfo' => getVar('post', 'adminfo', 'num'),
             'close' => getVar('post', 'close', 'num'),

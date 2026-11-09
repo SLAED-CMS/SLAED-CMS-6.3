@@ -1,8 +1,8 @@
 <div class="sl-vote"{% if live_every %} data-sl-vote-live="{{ live_every }}" data-sl-vote-url="{{ root }}index.php?{{ live_query }}"{% endif %}>
-  {% if live_every or is_closed %}
+  {% if live_every or is_closed or admin_html %}
   <div class="sl-vote-tools" data-sl-float-align="end">
     {% if admin_html %}{{{ admin_html }}}{% endif %}
-    {% include 'fragments/live-chip.html' %}
+    {% if live_every or is_closed %}{% include 'fragments/live-chip.html' %}{% endif %}
   </div>
   {% endif %}
   {% if has_form %}

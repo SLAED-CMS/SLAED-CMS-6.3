@@ -1053,7 +1053,8 @@ CALL rencol('{prefix}_users', 'user_interests', 'interest');
 CALL rencol('{prefix}_users', 'user_sig', 'sig');
 CALL rencol('{prefix}_users', 'user_viewemail', 'viewmail');
 CALL rencol('{prefix}_users', 'user_password', 'password');
-CALL rencol('{prefix}_users', 'user_storynum', 'storynum');
+CALL delcol('{prefix}_users', 'user_storynum');
+CALL delcol('{prefix}_users', 'storynum');
 CALL rencol('{prefix}_users', 'user_blockon', 'blockon');
 CALL rencol('{prefix}_users', 'user_block', 'block');
 CALL rencol('{prefix}_users', 'user_theme', 'theme');
@@ -1122,9 +1123,9 @@ UPDATE `{prefix}_users` SET
   `password` = COALESCE(`password`, ''), `ip` = COALESCE(`ip`, ''), `regdate` = COALESCE(`regdate`, '1970-01-01 00:00:01'),
   `newslet` = COALESCE(`newslet`, 1), `fsmail` = COALESCE(`fsmail`, 1),
   `psmail` = COALESCE(`psmail`, 1), `points` = COALESCE(`points`, 0), `votes` = COALESCE(`votes`, 0), `tvotes` = COALESCE(`tvotes`, 0),
-  `storynum` = COALESCE(`storynum`, 10), `grp` = COALESCE(`grp`, 0), `rank` = COALESCE(`rank`, '')
+  `grp` = COALESCE(`grp`, 0), `rank` = COALESCE(`rank`, '')
 WHERE `password` IS NULL OR `ip` IS NULL OR `regdate` IS NULL OR `newslet` IS NULL OR `fsmail` IS NULL OR `psmail` IS NULL
-  OR `points` IS NULL OR `votes` IS NULL OR `tvotes` IS NULL OR `storynum` IS NULL OR `grp` IS NULL OR `rank` IS NULL;
+  OR `points` IS NULL OR `votes` IS NULL OR `tvotes` IS NULL OR `grp` IS NULL OR `rank` IS NULL;
 # A group below zero names none, as 0 does, before the column turns unsigned
 UPDATE `{prefix}_users` SET `grp` = 0 WHERE `grp` < 0;
 
@@ -1143,7 +1144,6 @@ ALTER TABLE `{prefix}_users`
   MODIFY `points`    INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `votes`     INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `tvotes`    INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `storynum`  TINYINT UNSIGNED NOT NULL DEFAULT 10,
   MODIFY `grp`       INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `rank`      VARCHAR(25) NOT NULL DEFAULT '';
 

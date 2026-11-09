@@ -1338,7 +1338,7 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
   60 s), the age of a backup measured against `dump_age` of `config/security.php`; `getSelfCheckState()` feeds both the
   signal and `getSelfCheckAlert()`. The home draws the lamp and the signals with the page and never calls
   `getCockpitData()` itself — a snapshot costs seconds on Windows — so the rings come from the poll
-  `go=5&op=getCockpitData` at once and every 10 s while the tab is seen; super administrator only.
+  `go=5&op=getCockpitData` at once and then at `getLiveEvery('panel')` while the tab is seen; super administrator only.
 - **Two lamps, two lists.** `getSystemSignals()` of the home checks SLAED itself, `getServerSignalList()` of "Мониторинг" the
   server and its programs: thirteen rows over the one reading `getServerFacts()`, failures first, and a reading that failed
   is neutral. The thresholds of both are the help `admin/info/monitor/ru.md`; `CockpitTest` and `MonitorSignalTest` hold them.
@@ -1349,7 +1349,7 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
   no code calls it.
 - **"Мониторинг" reads one sample.** `monitor()` and `live()` of `admin/modules/monitor.php` build the first paint and the
   answer of `op=live` from `getMonitorView()`, the poll every 4 s; `getMonitorGround()` draws the other windows once. The
-  chart is the 30 points of `addHistory()` with their times (`sys_hist_time`), every 10 s under a viewer and once a minute
+  chart is the 30 points of `addHistory()` with their times (`sys_hist_time`), every `getLiveEvery('panel')` under a viewer and once a minute
   without one.
 - **The pulse is an honest rate apart from its beat.** The figure is the pages per minute of `getStatsToday()`, the
   reckoning by hours that "Затишье" of `getCockpitTone()` uses, as a counter by the minute would write on every request of
@@ -1395,11 +1395,17 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
   administrator sees only the sections and queues of their own modules and types, without own links and without the watch.
 - **The watch window** `#sl-stats` is printed by `getWindowSet()` on every page of a super administrator while
   sessions are on; its body is `getSessionStats()` (`go=5` in the panel, `go=1` on the site, with the token), asked on
-  the first opening and polled every 10 s only while the window is open and seen. It shows the present of `_session`
+  the first opening and polled at `getLiveEvery('panel')` only while the window is open and seen. It shows the present of `_session`
   only, without history.
+- **Live intervals.** `getLiveEvery($kind)` of `core/system.php` is the one source of every timed poll, read from the
+  group `live` of `config/global.php` and held to its bounds: `site` (the blocks of users and the poll, 5–300 s, 0 stops
+  them), `panel` (the cockpits, the statistic, the watch window and the threshold of the server sample, 10–300 s) and
+  `note` (the bell, the queue of the floating menu and the private messages, 30–600 s). A poll of the panel or the site
+  reads its interval from the `data-*-every` of its own box, a notice from `data-sl-live-note` of the root; no script
+  keeps a number of its own.
 - **Voices.** `plugins/system/sound.js` plays `<voice>.mp3` of the theme's `sound/` (`docs/TEMPLATES.md`, "Theme
   Structure"); `getAssetList()` adds it only for a theme that has the folder. The count of private messages of a logged
-  member is polled by `go=1&op=getPrivateCountData` once a minute; a response names its voice by `HX-Trigger`.
+  member is polled by `go=1&op=getPrivateCountData` at `getLiveEvery('note')`; a response names its voice by `HX-Trigger`.
 - **The screensaver** "Возрождение" is the scene `assets/js/phoenix.js` of the theme `admin`, started by the idle timer
   of `admin-ui.js` after the minutes of `slaed-toggle:saver`; it never starts over an open window, and its badge is the
   first two parts of `SL_VERSION` with `SL_CODENAME`.

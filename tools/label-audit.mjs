@@ -58,7 +58,7 @@ const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', '
     'profil', 'profile', 'privat', 'favorites', 'settings', 'docs', 'stat', 'preview', 'reply', 'newtopic', 'quote', 'contact',
     'edithome', 'oauthlist', 'oauthkeys', 'mailconf', 'replace', 'banlist', 'liste', 'rules', 'stats', 'fileadd', 'fileedit', 'subadd', 'addedit']);
 // The screens of the panel a GET only shows. The same words on the site are other handlers, so they open nothing there: support is a write of the node module
-const PANEL = new Set(['favconf', 'theme', 'sysfiles', 'fmedit', 'tplconfig', 'passwd', 'logview', 'logins', 'queue', 'dead', 'types', 'type', 'import', 'support',
+const PANEL = new Set(['theme', 'sysfiles', 'fmedit', 'tplconfig', 'passwd', 'logview', 'logins', 'queue', 'dead', 'types', 'type', 'import', 'support',
     'votes', 'points', 'toplist', 'xsledit']);
 // The parameters that name one record rather than one route. Every one of them is dropped from the signature, and the
 // four that identify a record leave the `#rec` mark behind, so a hundred categories are one route that is known to be

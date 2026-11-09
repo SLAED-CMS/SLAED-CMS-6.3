@@ -366,7 +366,7 @@ namespace Tests\Unit {
                 }
             }
             $this->assertGreaterThanOrEqual(28, count($lists), 'The scan found too few lists to hold anything');
-            foreach (['modules/account/admin/index.php favorites()', 'modules/voting/admin/index.php voting()'] as $name) {
+            foreach (['admin/modules/favorites.php favorites()', 'modules/voting/admin/index.php voting()'] as $name) {
                 $this->assertArrayHasKey($name, $lists);
                 $this->assertStringContainsString("'moment' =>", $lists[$name], $name.' has no date column');
             }

@@ -17,7 +17,6 @@ return [
         'mail_b' => '',
         'minpass' => '8',
         'name_b' => 'alter,drop,insert,outfile,select,truncate,union',
-        'news' => '1',
         'nomail' => '1',
         'prof' => '0',
         'reg' => '1',

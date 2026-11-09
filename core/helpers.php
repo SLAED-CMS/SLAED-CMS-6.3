@@ -308,11 +308,11 @@ function getTplAdminTabs(array $data = []): string {
     ]);
 }
 
-# The rows of one site list: the module's own number under $key, else the general one of the site, capped by the visitor's own number from the cabinet
+# The rows of one site list: the module's own number under $key, else the general one of the site
 function getPageRows(array $own = [], string $key = 'rows'): int {
     global $conf;
     $num = intval($own[$key] ?? 0);
-    return getUserNews(($num > 0) ? $num : max(1, intval($conf['pager']['rows'] ?? 15)));
+    return ($num > 0) ? $num : max(1, intval($conf['pager']['rows'] ?? 15));
 }
 
 # The page numbers of one pager: the panel takes its general span, the site the module's own span, else the general one of the site
@@ -355,6 +355,7 @@ function getTplLongCell(string $text, string $label): array {
 }
 
 # Render one panel list of the canon from the meaning of its rows; the foot sends one field group per action, and a limit brings the rows chip on the general number
+# A list of one view has no switch of density, and with no pager beside it no head row either
 function getTplAdminList(array $data): string {
     global $afile, $tpl, $conf;
     $href = (string)($data['href'] ?? '');
@@ -431,11 +432,12 @@ function getTplAdminList(array $data): string {
             'upto' => intval($data['upto'] ?? 0),
         ];
     }
-    $density = getCookies('density');
+    $one = !empty($data['is_one_view']);
+    $density = $one ? 'standard' : getCookies('density');
     if (!in_array($density, ['full', 'compact', 'cards'], true)) $density = 'standard';
     $views = [];
     $kinds = ['standard' => [_ADM_STD, 'table'], 'full' => [_ADM_FULL, 'text-wrap'], 'compact' => [_ADM_DENSE, 'list'], 'cards' => [_ADM_CARDS, 'grid-3x2-gap']];
-    foreach ($kinds as $key => [$title, $icon]) $views[] = ['key' => $key, 'title' => $title, 'icon_name' => $icon, 'is_now' => $key === $density];
+    if (!$one) foreach ($kinds as $key => [$title, $icon]) $views[] = ['key' => $key, 'title' => $title, 'icon_name' => $icon, 'is_now' => $key === $density];
     $reset = (string)($data['reset_url'] ?? '');
     $calm = !empty($data['is_calm']);
     $none = (string)($data['none_text'] ?? '') ?: ($calm ? _ADM_CLEAN : (($reset !== '') ? _NONE_FOUND : _NO_INFO));
@@ -455,7 +457,7 @@ function getTplAdminList(array $data): string {
             $ladder[] = ['value' => $num, 'key' => $num, 'text' => _ADM_ROWWORD, 'is_now' => !$all && $num === $limit, 'is_home' => $num === $base, 'is_same' => $num >= $count,
                 'hint' => ($num >= $count) ? '= '.$word : sprintf(_ADM_ROWSPG, $fmt((int)ceil($count / $num)))];
         }
-        $ladder[] = ['value' => 'all', 'key' => $word, 'text' => _ADM_ROWSONE, 'is_now' => $all, 'is_off' => $count > LIST_MAX,
+        $ladder[] = ['value' => 'all', 'key' => _ALL, 'text' => _ADM_ROWSONE, 'is_now' => $all, 'is_off' => $count > LIST_MAX,
             'hint' => ($count > LIST_MAX) ? sprintf(_ADM_ROWSCAP, $fmt(LIST_MAX)) : $wide];
         $per = [
             'pick' => $pick, 'base' => $base, 'limit' => $limit, 'page' => $page, 'href' => $href, 'ladder' => $ladder, 'said' => trim(strstr(_PAGERANGE, '%', true)),
@@ -1239,7 +1241,7 @@ function getWindowSet(bool $admin = false): string {
             'full_text' => _EEXPAND,
             'restore_text' => _ERESTORE,
             'close_text' => _CLOSE,
-            'bar_html' => $tpl->getHtmlPart('session-stats', ['is_bar' => true, 'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => 10])]),
+            'bar_html' => $tpl->getHtmlPart('session-stats', ['is_bar' => true, 'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => getLiveEvery('panel')])]),
             'body_html' => $tpl->getHtmlPart('session-stats', [
                 'is_wait' => true,
                 'url' => HOME_PATH.'index.php?go='.($admin ? '5' : '1').'&op=getSessionStats',
@@ -1307,11 +1309,23 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
     ]);
 }
 
-# Build the moderator dial of a content row; the delete half becomes a form with a fresh token, and id[]=5 of the address goes back as fields of key[]
+# Build the moderator dial of a content row; its delete half is one posted item
 function getTplEditMenu(string $edithref, string $delhref, string $title, string $scope): array {
+    return [
+        'is_moder' => true,
+        'dial_title' => _EDITOR,
+        'dial' => [
+            ['href' => $edithref, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+            getTplPostItem($delhref, $scope, 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
+        ],
+    ];
+}
+
+# One posted item of a dial: a form with a fresh token of the scope, and id[]=5 of the address goes back as fields of key[]
+function getTplPostItem(string $href, string $scope, string $icon, string $title, string $confirm = ''): array {
     global $tpl;
     static $seq = 0;
-    $parts = explode('?', $delhref, 2);
+    $parts = explode('?', $href, 2);
     $pars = [];
     parse_str($parts[1] ?? '', $pars);
     unset($pars['token']);
@@ -1322,14 +1336,7 @@ function getTplEditMenu(string $edithref, string $delhref, string $title, string
             $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => is_array($val) ? $key.'[]' : (string)$key, 'value_attr' => (string)$one, 'input_attr' => '']);
         }
     }
-    return [
-        'is_moder' => true,
-        'dial_title' => _EDITOR,
-        'dial' => [
-            ['href' => $edithref, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-            ['href' => $parts[0], 'form_id' => 'sldel'.(++$seq), 'hidden' => $hide, 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?'],
-        ],
-    ];
+    return ['href' => $parts[0], 'form_id' => 'sldel'.(++$seq), 'hidden' => $hide, 'icon_name' => $icon, 'title' => $title, 'confirm_text' => $confirm];
 }
 
 # Format a gender value for display

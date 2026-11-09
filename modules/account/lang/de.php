@@ -36,7 +36,6 @@ define('_ACCOUNT_SAFE','Geschützt');
 define('_ACCOUNT_SECTIONS','Abschnitte der Einstellungen');
 define('_ACCOUNT_SETUPNOTE','Profil, Avatar, Passwort');
 define('_ACCOUNT_SHOWN','Sichtbar');
-define('_ACCOUNT_STORYNOTE','Wie viele Einträge die Listen der Website pro Seite zeigen.');
 define('_ACCOUNT_SYSTEM','System');
 define('_ACCOUNT_THEMENOTE','Wie die Seite nur für Sie aussieht. Andere Nutzer betrifft die Wahl nicht.');
 define('_ACCOUNT_UNDO','Verwerfen');

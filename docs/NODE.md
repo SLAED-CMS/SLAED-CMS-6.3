@@ -2590,7 +2590,10 @@ use it, so a mode overrides `list`, `view`, `card`, `block`, `tree` and each res
 | `event` | `fragments/node/event/card.html`, `partials/node/event/view.html` | the leaf `sl-event-date` of the start: month, day in display figures, hour; chips of the period and the place, and the archive chip of a past event |
 
 The cover of a card is the first image of the role `poster`, then of roles in mode `image` or `gallery`
-(`getNodeCover()`); the same cover becomes `og:image` of the full material. The mode decides the default view of a
+(`getNodeCover()`); the same cover becomes `og:image` of the full material, and without one the first image of the
+intro, then of the body, at full size (`getImgText()`). An SVG never reaches `og:image`: the head takes the raster
+`images/share.png` of the theme instead, as it does for a page without an image of its own while `site_logo` is an
+SVG. The mode decides the default view of a
 list and the templates of the material; which card a list draws is the view of the visitor, see
 [Views of a list](#views-of-a-list).
 

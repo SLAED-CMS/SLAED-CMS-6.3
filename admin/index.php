@@ -132,7 +132,7 @@ function getAdminPanel(): void {
     if (isAdmin(true)) {
         $sigs = getSystemSignals();
         $tone = getCockpitTone($sigs);
-        $every = 10;
+        $every = getLiveEvery('panel');
         $flag = static fn(string $level): array => ['is_ok' => $level === 'ok', 'is_info' => $level === 'info', 'is_warn' => $level === 'warn', 'is_danger' => $level === 'danger'];
         $loud = count(array_filter($sigs, static fn(array $v): bool => $v['level'] !== 'ok'));
         $content .= $tpl->getHtmlPart('cockpit', [

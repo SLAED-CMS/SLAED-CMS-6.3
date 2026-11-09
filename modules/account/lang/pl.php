@@ -36,7 +36,6 @@ define('_ACCOUNT_SAFE','Chronione');
 define('_ACCOUNT_SECTIONS','Sekcje ustawień');
 define('_ACCOUNT_SETUPNOTE','Profil, awatar, hasło');
 define('_ACCOUNT_SHOWN','Widoczny');
-define('_ACCOUNT_STORYNOTE','Ile wpisów pokazują listy serwisu na stronie.');
 define('_ACCOUNT_SYSTEM','System');
 define('_ACCOUNT_THEMENOTE','Jak strona wygląda tylko dla Ciebie. Wybór nie wpływa na innych użytkowników.');
 define('_ACCOUNT_UNDO','Odrzuć');

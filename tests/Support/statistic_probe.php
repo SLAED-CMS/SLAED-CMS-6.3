@@ -16,7 +16,7 @@ function getProbeLine(string $date, int $base, array $hours = []): string {
     if ($hours === []) return $line;
     $list = array_replace(array_fill(0, 24, 0), $hours);
     $load = static fn(int $by): string => implode(',', array_map(static fn(int $num): int => $num * $by, $list));
-    return $line.'|Chrome 1:30,Other:10|Windows:40|desktop:20,mobile:15,bot:5|ru:8,de:2|direct:6,search:3,referrer:1|'.implode(',', $list)
+    return $line.'|Chrome 1:20,Chrome 2:10,Other:10|Windows:40|desktop:20,mobile:15,bot:5|ru:8,de:2|direct:6,search:3,referrer:1|'.implode(',', $list)
         .'|new:6,returning:2|1:4,8+:4|<30s:7,15m+:1|'.$load(70).'|'.$load(20).'|'.$load(2048);
 }
 

@@ -156,8 +156,8 @@ final class DeskKeysTest extends TestCase
         $first = $this->getPart(self::SITEJS, 'function setFirstFocus(box)', 500);
         $note = 'The window opens on nothing, so the first key press goes to the page behind it';
         $this->assertStringContainsString('[data-sl-focus]', $first, $note);
-        $note = 'The window opens on an action of its own head, which reads as a window asking to be shut';
-        $this->assertStringContainsString("one.closest('.sl-modal-title')", $first, $note);
+        $note = 'The window opens on an action of its own head, which reads as a window asking to be shut, or on a tooltip, whose panel the focus opens';
+        $this->assertStringContainsString("one.closest('.sl-modal-title, .sl-float')", $first, $note);
         $esc = $this->getPart(self::SITEJS, 'A window beside the page is not closed by the browser on this key', 600);
         $note = 'The key closes the window under the open fan instead of the fan standing on it';
         $this->assertStringContainsString('.sl-dial.sl-open', $esc, $note);

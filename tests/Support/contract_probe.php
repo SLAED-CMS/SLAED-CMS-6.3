@@ -812,7 +812,7 @@ function getProbeFeedLegacy(int $uid): string {
     $rte = new Route($db);
     $path = fn(string $kind, int $oid): ?string => $rte->getRouteList($kind, [$oid])[$oid] ?? null;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
-    $limit = intval(getUserNews(25));
+    $limit = 25;
     $parts = [];
     $params = [];
     $lists = [];
@@ -1049,7 +1049,7 @@ function getProbeListParity(): array {
     $out = ['admin' => isAdmin(true), 'lists' => []];
     if (!$out['admin']) return $out;
     foreach (['getAccountScope' => 'modules/account/admin/index.php', 'getSearchwhere' => 'modules/search/admin/index.php',
-        'getFavoritesFilter' => 'modules/account/admin/index.php', 'getPrivatFilter' => 'admin/modules/privat.php', 'getVotingFilter' => 'modules/voting/admin/index.php',
+        'getFavoritesFilter' => 'admin/modules/favorites.php', 'getPrivatFilter' => 'admin/modules/privat.php', 'getVotingFilter' => 'modules/voting/admin/index.php',
         'getDeadFilter' => 'admin/modules/newsletter.php'] as $func => $file) {
         $code = (string)file_get_contents(BASE_DIR.'/'.$file);
         $from = strpos($code, "\nfunction ".$func.'(');

@@ -847,7 +847,7 @@ function getBlocks(string $side, string $fly = ''): void {
         if ($flag == 1) {
             $show = !in_array('flyfix', $where, true) || isBlockShown(array_values(array_diff($where, ['infly'])));
             if ($show && Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) {
-                setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
+                setBlockView($side, $bfile, $title, $content, $bid, $url, $param, (string)$bkey); return;
             }
         }
     } else {
@@ -873,7 +873,7 @@ function getBlocks(string $side, string $fly = ''): void {
                     echo getUserBlock();
                     break;
                     default:
-                    if (Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
+                    if (Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) setBlockView($side, $bfile, $title, $content, $bid, $url, $param, (string)$bkey);
                     break;
                 }
             }
@@ -1142,10 +1142,10 @@ function getRefCategory(string $ref): string {
     return checkHostList($host, $conf['statistic']['social'] ?? []) ? 'social' : 'referrer';
 }
 
-# Parse the user agent into browser, operating system and device
+# Parse the user agent into browser with its major version, the family of the browser alone, operating system and device
 function getAgentInfo(string $ua, int $guest): array {
     if ($guest === 1 || getBotInfo($ua)['name'] !== '') {
-        return ['browser' => 'Bot', 'os' => 'Bot', 'device' => 'bot'];
+        return ['browser' => 'Bot', 'family' => 'Bot', 'os' => 'Bot', 'device' => 'bot'];
     }
     $browser = 'Other';
     if (preg_match('#(?:edg|edge)/(\d+)#i', $ua, $out)) {
@@ -1179,7 +1179,7 @@ function getAgentInfo(string $ua, int $guest): array {
     } elseif (preg_match('#ipad#i', $ua) || (preg_match('#android#i', $ua) && !preg_match('#mobile#i', $ua))) {
         $device = 'tablet';
     }
-    return ['browser' => $browser, 'os' => $os, 'device' => $device];
+    return ['browser' => $browser, 'family' => explode(' ', $browser)[0], 'os' => $os, 'device' => $device];
 }
 
 # Refresh the signed v2 visitor stats cookie in the pre-output phase; it carries only approximate session metrics and the country cache, exact unique counts never read client state
@@ -1390,7 +1390,7 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
             $prev = [];
         }
         $ext = explode('|', $wc);
-        $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
+        $ext[8] = updateCounterField($prev[8] ?? '', $info['family']);
         $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
         $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
         $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
@@ -1763,11 +1763,11 @@ function addCacheGcTask(): array {
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files and '.$rows.' logins'];
 }
 
-# Keep the server sample going once a minute while no panel polls it; a sample older than a minute means the writer is stuck or failing, and the run fails with it
+# Keep the server sample going once a minute while no panel polls it; a sample older than the interval of the panel and a minute means the writer is stuck or failing
 function addMonitorSample(): array {
     $snap = getMonitorSample(true);
     $mess = 'Monitor sample of '.($snap['sampled_at'] > 0 ? date('Y-m-d H:i:s', $snap['sampled_at']) : 'never').': CPU '.$snap['cpu_p'].'%, RAM '.$snap['mem']['percent'].'%';
-    return ['status' => (time() - $snap['sampled_at'] > 60) ? 'failed' : 'success', 'message' => $mess];
+    return ['status' => (time() - $snap['sampled_at'] > getLiveEvery('panel') + 60) ? 'failed' : 'success', 'message' => $mess];
 }
 
 # Return the RSS feeds of the site by name, every active Node type with the rss integration; feed links read this list, so none names a feed the route refuses
@@ -1824,9 +1824,11 @@ function setHead(array $seo = []): void {
         $mstamp = $mtime !== '' ? strtotime($mtime) : false;
         $tiso = $tstamp !== false ? date('c', $tstamp) : '';
         $miso = $mstamp !== false ? date('c', $mstamp) : '';
-        $logo = rtrim((string)$conf['homeurl'], '/').'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
+        $tbase = rtrim((string)$conf['homeurl'], '/').'/templates/'.$theme.'/images/';
+        $logo = $tbase.'logos/'.$conf['site_logo'];
+        $share = (preg_match('#\.svgz?$#i', $logo) && is_file(PUBLIC_DIR.'/templates/'.$theme.'/images/share.png')) ? $tbase.'share.png' : $logo;
         $simg = trim((string)($seo['img'] ?? ''));
-        $img = $simg !== '' ? $simg : $logo;
+        $img = ($simg !== '' && !preg_match('#\.svgz?(?:[?&\#]|$)#i', $simg)) ? $simg : $share;
         $kind = $home ? 'website' : trim((string)($seo['kind'] ?? ($seomap['kind'] ?: 'website')));
         $ogmap = ['article' => 'article', 'news' => 'article', 'forum' => 'article', 'product' => 'product', 'profile' => 'profile'];
         $type = $ogmap[$kind] ?? 'website';
@@ -1939,6 +1941,7 @@ function setHead(array $seo = []): void {
             'is_rail' => isThemeFlag('rail'),
             'is_dock_off' => isThemeFlag('dock-off'),
             'sound_url' => getThemeFileUrl('sound/'),
+            'live_note' => getLiveEvery('note'),
             'release' => implode('.', array_slice(explode('.', SL_VERSION), 0, 2)),
             'codename' => SL_CODENAME,
             'lang' => substr(_LOCALE, 0, 2),
@@ -2049,6 +2052,7 @@ function setHead(array $seo = []): void {
         'mode' => getThemeMode(),
         'is_still' => isThemeFlag('still'),
         'sound_url' => getThemeFileUrl('sound/'),
+        'live_note' => getLiveEvery('note'),
         'pm_poll' => (is_user() && $conf['privat']['act']) ? HOME_PATH.'index.php?go=1&op=getPrivateCountData' : '',
         'mode_html' => getThemeModeSwitch(HOME_PATH.'index.php'),
         'lang' => substr(_LOCALE, 0, 2),
@@ -3166,7 +3170,7 @@ function getImageBox(string $file): array {
 }
 
 # Voting view
-function getVotingView(int $id = 0, string $votid = '', bool $force = false): string {
+function getVotingView(int $id = 0, string $votid = '', bool $force = false, array $more = []): string {
     global $db, $afile, $user, $locale, $conf, $tpl;
     if (!$id) $id = getVar('get', 'id', 'num', 0);
     if (!$votid) $votid = filterVar(getVar('get', 'votid', 'text'));
@@ -3246,11 +3250,13 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     }
 
     [$vnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$qwhere, $qpars));
-    $admin = '';
+    $dial = [];
     if (!$force && is_moder('voting')) {
         $edit = HOME_PATH.$afile.'.php?name=voting&op=';
-        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id[]='.$id.'&refer=1', $title, 'voting'));
+        $dial = getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id[]='.$id.'&refer=1', $title, 'voting')['dial'];
     }
+    $dial = $force ? [] : array_merge($dial, $more);
+    $admin = $dial ? $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]) : '';
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('link', [
         'href' => HOME_PATH.'index.php?go=1&op=updateVotingResult&votid='.$votid,
@@ -3297,7 +3303,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'polls_html' => $polls,
         'votes_html' => $votes,
         'comm_html'  => $com,
-        'live_every' => (!$force && $rate && strtotime($end) > time()) ? intval($conf['live_u'] ?? 0) : 0,
+        'live_every' => (!$force && $rate && strtotime($end) > time()) ? getLiveEvery('site') : 0,
         'live_query' => 'go=1&op=getVotingView&id='.$id.'&votid='.$votid,
         'is_closed' => (!$force && $rate && strtotime($end) <= time()),
         'end_label' => _VOTING_END,
@@ -3491,13 +3497,6 @@ function getVariables(): string {
     return $cont;
 }
 
-# Number of user news
-function getUserNews(int $num): int {
-    global $user, $conf;
-    $unum = (int)($user[3] ?? 0);
-    return ($unum > 0 && $unum <= $num && $conf['users']['news'] == 1) ? $unum : $num;
-}
-
 # Random password generation
 function getRandomString(int $m): string {
     $m = intval($m);
@@ -3648,7 +3647,7 @@ function getTheme(): string {
     global $user, $conf;
     $default = defined('ADMIN_FILE') ? 'admin' : ($conf['theme'] ?? 'default');
     if (is_user() && !defined('ADMIN_FILE')) {
-        $utheme = $user[5] ?? '';
+        $utheme = $user[4] ?? '';
         if ($utheme !== '' && checkThemeAssets($utheme)) return $cached = $utheme;
     }
     if (!checkThemeAssets($default)) Logger::addSite('error', 'Active theme incomplete: '.$default, ['theme' => $default]);
@@ -4174,7 +4173,7 @@ function getUserSessionInfo(string $id = ''): string {
             'has_rows' => ($mem > 0 || $bot > 0),
             'rows_query' => 'go=1&op=getUserSessionRows',
             'toggle_id' => 'u-block',
-            'live_every' => intval($conf['live_u'] ?? 0),
+            'live_every' => getLiveEvery('site'),
             'update_target' => 'sinfo',
             'update_query' => 'go=1&op=getUserSessionInfo',
         ]);
@@ -4252,11 +4251,19 @@ function getUserSessionAdminInfo(string $id = ''): string {
     return '';
 }
 
+# The one interval of the live polls of a kind in seconds: the blocks of the site (0 stops them), of the panel and the notices; a given number keeps the same bounds
+function getLiveEvery(string $kind, ?int $num = null): int {
+    global $conf;
+    [$def, $min, $max] = ['site' => [10, 5, 300], 'panel' => [10, 10, 300], 'note' => [60, 30, 600]][$kind];
+    $num ??= intval($conf['live'][$kind] ?? $def);
+    return ($kind === 'site' && $num <= 0) ? 0 : max($min, min($max, $num));
+}
+
 # Answer the watch window of a super administrator: the kinds as a filter that polls itself, the figures, the shares, who is where, the pages and the countries
 function getSessionStats(): void {
     global $db, $conf, $tpl;
     if (!$conf['session'] || !isAdmin(true)) return;
-    $every = 10;
+    $every = getLiveEvery('panel');
     $kind = getVar('get', 'kind', 'var', 'all');
     $map = [3 => 'admin', 2 => 'user', 1 => 'bot', 0 => 'guest'];
     if ($kind !== 'all' && !in_array($kind, $map, true)) $kind = 'all';
@@ -4305,9 +4312,12 @@ function getSessionStats(): void {
         'every' => $every,
         'kinds' => array_map(static fn(string $key): array => ['key' => $key, 'label' => $text[$key], 'icon' => $icon[$key] ?? '', 'num' => $nums[$key],
             'url' => $base.$key, 'is_now' => $key === $kind], array_keys($nums)),
-        'all_num' => $nums['all'],
-        'pages_num' => count($pages),
-        'lands_num' => count($lands),
+        'tiles' => ['items' => [
+            ['label' => _ADM_NOW, 'value' => $nums['all'], 'icon' => 'people', 'note' => implode(' · ', array_map(static fn(string $key): string => $text[$key].' '.$nums[$key],
+                array_filter(array_values($map), static fn(string $key): bool => $nums[$key] > 0)))],
+            ['label' => _ADM_PAGES, 'value' => count($pages), 'icon' => 'file-earmark-text', 'note' => $pages ? _FAVOR_TOP.': '.$top : ''],
+            ['label' => _ADM_LANDS, 'value' => $lands ? count($lands) : '—', 'icon' => 'globe2', 'note' => $lands ? $lands[0]['name'].' · '.$lands[0]['num'] : ''],
+        ]],
         'shares' => array_map(static fn(string $key): array => ['key' => $key, 'pct' => intval(round($nums[$key] / $all * 100))], array_values($map)),
         'rows' => $rows,
         'rows_num' => ($kind === 'all') ? $nums['all'] : $nums[$kind],
@@ -5258,7 +5268,9 @@ function getRssBlock(int $bid): void {
         $content = getRssBody($url) ?? $content;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => time(), 'bid' => $bid]);
     }
-    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2)]);
+    $menu = getBlockMenu($bid, '', (string)$title);
+    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2),
+        'dial_html' => $menu ? $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $menu]) : '']);
 }
 
 # Render the feed page of one address, an empty one refused like a feed that failed; the visitor's address goes through filterDoc(), outcomes cached 900 s
@@ -5818,13 +5830,27 @@ function checkemail(string $mail): array {
     return $stop ?? [];
 }
 
-# Render one block by its kind; a file block that sets its content to null shows nothing, so bad parameters and a lost file stay off but for the super administrator
-function setBlockView(string $side, string $bfile, string $btitle, string $content, int $bid, string $url, string $param = ''): string {
+# The dial of a block for an administrator of the blocks: its form in the panel, off, and a delete for a block that is no system one
+function getBlockMenu(int $bid, string $bkey, string $title): array {
+    global $afile;
+    if (!isAdmin() || !is_admin_modul('blocks')) return [];
+    $base = HOME_PATH.$afile.'.php?name=blocks&op=';
+    $menu = [
+        ['href' => $base.'edit&id='.$bid, 'icon_name' => 'sliders', 'title' => _BLOCKS_SET],
+        getTplPostItem($base.'change&id='.$bid.'&act=1', 'blocks', 'eye-slash', _BLOCKS_HIDE),
+    ];
+    if ($bkey === '') $menu[] = getTplPostItem($base.'delete&id='.$bid, 'blocks', 'x-square', _BLOCKS_DROP, _DELETE.' "'.$title.'"?');
+    return $menu;
+}
+
+# Render one block by its kind; a file block set to null shows only to the super administrator, and one that takes $bmenu into a dial of its own empties it
+function setBlockView(string $side, string $bfile, string $btitle, string $content, int $bid, string $url, string $param = '', string $bkey = ''): string {
     global $tpl, $layout;
     if ($url == '') {
         $btitle = getConst($btitle);
         $bicon = '';
         $bhref = '';
+        $bmenu = getBlockMenu($bid, $bkey, $btitle);
         if ($bfile != '') {
             $path = BASE_DIR.'/blocks/'.$bfile;
             if (file_exists($path)) {
@@ -5835,6 +5861,7 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
             if ($content === null) return '';
         }
         if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM2]);
+        $bdial = $bmenu ? $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $bmenu]) : '';
         switch($side) {
             case 'n':
             echo $content;
@@ -5843,7 +5870,7 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
             return $content;
             break;
             case 'o':
-            return $tpl->getHtmlFrag('block-all', ['title' => $btitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
+            return $tpl->getHtmlFrag('block-all', ['title' => $btitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref, 'dial_html' => $bdial]);
             break;
             default:
             echo $tpl->getHtmlFrag('block-all', [
@@ -5851,6 +5878,7 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
                 'content' => $content,
                 'icon_name' => $bicon,
                 'href' => $bhref,
+                'dial_html' => $bdial,
                 'is_before_content' => $side === 'c',
                 'pick' => ($layout instanceof Layout && $layout->isBuildMode()) ? 'blk:'.$bid : '',
             ]);

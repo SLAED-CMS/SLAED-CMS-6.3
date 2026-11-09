@@ -380,7 +380,7 @@ function checkOpsGateRows(string $ujar, string $png): void {
 
 # The columns of the profile the settings form writes, read before the walk and written back after it, because a save that carried none of them would empty every one
 const PROFCOLS = [
-    'avatar', 'email', 'website', 'viewmail', 'occ', 'origin', 'interest', 'sig', 'storynum',
+    'avatar', 'email', 'website', 'viewmail', 'occ', 'origin', 'interest', 'sig',
     'blockon', 'block', 'theme', 'newslet', 'fsmail', 'psmail', 'birthday', 'gender', 'field',
 ];
 

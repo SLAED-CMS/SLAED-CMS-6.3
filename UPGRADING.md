@@ -95,12 +95,6 @@ from the tab `op=theme`, which views and edits and neither adds nor removes a fi
 first lines. `config/system.php` was read by nothing and is no reserved name any more: move code that still lies in it
 to a block or a module, and leave no such file in `config/`, because the loader requires every PHP file there.
 
-### The Favorites Are a Tab of the Users
-
-The section `name=favorites` is gone: its list is `name=account&op=favorites`, its settings are `name=account&op=favconf`, saved by
-`op=favsave`, and its delete is `op=favdrop`, all under the token of `account`. A bookmark to the old address opens no page. `config/favorites.php`
-stays. An administrator with the right to "Пользователи" now sees the bookmarks and may change their settings.
-
 ### The Word Replacement Is a Tab of the Settings
 
 The section `name=replace` is gone: its page is `name=config&op=replace`, one form per Node type chosen by `&type=<name>`, saved by `op=replacesave` under the token
@@ -203,7 +197,7 @@ database on any failure. The reference is `docs/UPDATE.md`; the help of the page
   the core; an entry of your own that loads the core does the same, or it opens while an installation is under way.
 - An update replaces the language files of the shipped modules and the themes `admin` and `lite` whole: keep edits in
   a theme of your own. Every other changed core file stops an installation until "перезаписать" is ticked; a PHP file of
-  your own in `admin/`, `core/`, `lang/` or `public/` is reported by "Проверить целостность".
+  your own in `admin/`, `core/`, `lang/` or `public/` is reported by "Сверить файлы".
 - An update adds the options a site lacks to `config/` and keeps every value the site saved; code of your own reads a
   new option with a fallback (`$conf['section']['option'] ?? …`), since a site updated by FTP without `config/` lacks it.
 - `public/sitemap.xml` is no file of the repository; the job `sitemap` writes it, and `public/robots.txt` is a site

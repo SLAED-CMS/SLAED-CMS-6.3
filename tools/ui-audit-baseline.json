@@ -371,7 +371,6 @@
             "--sl-statx-max-width",
             "--sl-statx-min-width",
             "--sl-statx-ring",
-            "--sl-statx-width",
             "--sl-success",
             "--sl-success-strong",
             "--sl-success-subtle",

@@ -430,10 +430,11 @@
             })
             .catch(function () {});
     }
-    // С8 The queue on the site asks once a minute while the tab is seen, as the bell of the panel does, and at once after a won queue
+    // С8 The queue on the site asks at the interval of the notices on the root while the tab is seen, as the bell of the panel does, and at once after a won queue
     function setDockPoll(box) {
-        if (!box.getAttribute('data-sl-dock-poll')) return;
-        window.setInterval(function () { if (document.visibilityState === 'visible') setDockFetch(box); }, 60000);
+        var every = Number(document.documentElement.getAttribute('data-sl-live-note'));
+        if (!box.getAttribute('data-sl-dock-poll') || !every) return;
+        window.setInterval(function () { if (document.visibilityState === 'visible') setDockFetch(box); }, every * 1000);
         document.addEventListener('sl-sound', function (event) {
             if (event.detail && event.detail.value === 'win') setDockFetch(box);
         });

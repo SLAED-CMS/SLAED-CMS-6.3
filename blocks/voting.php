@@ -19,8 +19,10 @@ if ($conf['multilingual'] == 1) {
 $mode = intval($conf['voting']['block'] ?? 0);
 $where .= ($mode == 1 || $mode == 3) ? " AND enddate <= now() AND status = '1'" : ' AND enddate >= now()';
 $order = ($mode >= 2) ? 'RAND()' : 'id DESC';
-[$bid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY '.$order.' LIMIT 1', $params)) ?: [''];
-$content = $bid ? $tpl->getHtmlFrag('block-content', [
+# The poll id is kept apart from $bid of the block, and the poll takes the dial of the block into its own
+[$vid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY '.$order.' LIMIT 1', $params)) ?: [''];
+$content = $vid ? $tpl->getHtmlFrag('block-content', [
     'id' => 'repblockvoting',
-    'content' => getVotingView((int)$bid, 'blockvoting'),
+    'content' => getVotingView((int)$vid, 'blockvoting', false, $bmenu ?? []),
 ]) : '';
+if ($vid) $bmenu = [];

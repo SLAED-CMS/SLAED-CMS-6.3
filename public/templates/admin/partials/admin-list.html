@@ -14,20 +14,24 @@
           <div class="sl-alert-acts"><button type="button" class="sl-alert-act" data-sl-list-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ _RETRY }}</button></div>
         </div>
         {% if table_html %}
+        {% if views or top_html %}
         <div class="sl-list-head">
           <div class="sl-list-head-pager" hx-boost="true">
             {{{ top_html }}}
           </div>
           <div class="sl-list-view" data-sl-float-align="end">
+            {% if views %}
             <span class="sl-seg sl-seg-view" data-sl-knob="density" role="group" aria-label="{{ _ADM_VIEW }}">
               {% for item in views %}
               <button type="button" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" data-sl-density="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}"{% if item.is_now %}{% else %} tabindex="-1"{% endif %}><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>
               {% endfor %}
               <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
             </span>
+            {% endif %}
             {% include 'fragments/pager-keys.html' with keys %}
           </div>
         </div>
+        {% endif %}
         {{{ table_html }}}
         {% if pager_html or bulk %}
         <div class="sl-div-actions">

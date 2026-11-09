@@ -1070,10 +1070,10 @@ function passmail(): void {
     }
 }
 
-function setUserLogin(int $uid, string $name, string $pass, int $story, int $blockon, string $theme, string $way = 'login'): void {
+function setUserLogin(int $uid, string $name, string $pass, int $blockon, string $theme, string $way = 'login'): void {
     global $db, $conf, $pnt;
     if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
-    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, getUserToken($pass), $story, $blockon, $theme]);
+    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, getUserToken($pass), $blockon, $theme]);
     $uip = getIp();
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
     getUserLastVisit($uid);
@@ -1094,10 +1094,10 @@ function login(): void {
     if (!$uname || $upass === '') $stop[] = _LOGININCOR;
     if (Captcha::isLoginLimited('user', $uname)) [$stop[], $block] = [_LOGINLIMIT, true];
     $result = $db->getSqlQuery(
-        'SELECT id, name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :name',
+        'SELECT id, name, password, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :name',
         ['name' => $uname]
     );
-    [$uid, $nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
+    [$uid, $nick, $pass, $blockon, $theme] = $db->getSqlRow($result);
     $form = (!$stop && $db->getSqlRowCount($result) == 1 && $uid && $nick == $uname) ? getPassMatch($upass, (string)$pass) : '';
     if (!$stop && $form === '') $stop[] = _LOGININCOR;
     if (!$stop && ($form !== $upass || password_needs_rehash($pass, PASSWORD_BCRYPT))) {
@@ -1105,7 +1105,7 @@ function login(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :pwd WHERE id = :id', ['pwd' => $pass, 'id' => $uid]);
     }
     if (!$stop) {
-        setUserLogin((int)$uid, (string)$nick, (string)$pass, (int)$story, (int)$blockon, (string)$theme);
+        setUserLogin((int)$uid, (string)$nick, (string)$pass, (int)$blockon, (string)$theme);
         setRedirect(getBackUrl() ?: getSeoUrl(['name' => $conf['name']]));
     } else {
         Captcha::registerLoginFailure('user', $uname);
@@ -1361,22 +1361,7 @@ function edithome(): void {
         }
         $secs[] = ['id' => 'avatar', 'icon' => getIconName('profile'), 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
         $extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $info['name']]);
-        $lins = [];
-        if ($conf['users']['news'] == 1) {
-            $sopt = '';
-            $numb = 3;
-            while ($numb <= 20) {
-                $sopt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$numb, 'label_text' => (string)$numb, 'is_selected' => $numb == $info['storynum']]);
-                $numb++;
-            }
-            $lins[] = ['label' => _C_12, 'label_for' => 'f-story', 'hint' => _ACCOUNT_STORYNOTE, 'hint_id' => 'f-story-hint', 'control_html' => $tpl->getHtmlFrag('select', [
-                'name_attr' => 'story',
-                'selectid' => 'f-story',
-                'describedby' => 'f-story-hint',
-                'options_html' => $sopt,
-            ])];
-        }
-        $lins[] = getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet'], _ACCOUNT_NEWSNOTE);
+        $lins = [getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet'], _ACCOUNT_NEWSNOTE)];
         if (is_active('forum')) $lins[] = getSetupSwitch(_FSMAIL, 'fsmail', (string)$info['fsmail'], _ACCOUNT_FSMAILNOTE);
         if (!empty($conf['privat']['act'])) $lins[] = getSetupSwitch(_PSMAIL, 'psmail', (string)$info['psmail'], _ACCOUNT_PSMAILNOTE);
         $tils = [['icon' => getIconName('mail'), 'title' => _ACCOUNT_MAILHEAD, 'width' => 6, 'tone' => 1, 'fields' => $lins]];
@@ -1605,7 +1590,6 @@ function savehome(): void {
             $from = filterCutText(getVar('post', 'from', 'text'), 100);
             $inter = filterCutText(getVar('post', 'inter', 'text'), 150);
             $view = getVar('post', 'view', 'num');
-            $story = getVar('post', 'story', 'num');
             $blockon = getVar('post', 'blockon', 'num');
             $theme = getVar('post', 'theme', 'text');
             if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
@@ -1616,9 +1600,9 @@ function savehome(): void {
             $gender = getVar('post', 'gender', 'num');
             $field = $flds['json'];
             $done = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest,'
-                .' sig = :sig, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail,'
+                .' sig = :sig, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail,'
                 .' psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view,
-                'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
+                'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
                 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             if (!$done) {
                 $stop[] = ['text' => ($db->getSqlTwin() === 'email') ? _ERROR_EMAIL : _ERROR, 'sect' => 'personal'];
@@ -1653,7 +1637,7 @@ function savehome(): void {
                     Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
                 }
             }
-            setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, getUserToken($pass), $story, $blockon, $theme]);
+            setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, getUserToken($pass), $blockon, $theme]);
             if ($stop) {
                 edithome();
                 return;
@@ -1690,8 +1674,8 @@ function savepass(): void {
     if (!$stop && is_user() && $oldpass && $newpass && $repeat) {
         if (($rule = checkPassRule($newpass, $repeat)) === '') {
             $uid = (int)$user[0];
-            [$nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery(
-                'SELECT name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :id',
+            [$nick, $mail, $pass, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery(
+                'SELECT name, email, password, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :id',
                 ['id' => $uid]
             ));
             $good = !empty($pass) && !Captcha::isLoginLimited('user', (string)$nick) && getPassMatch($oldpass, (string)$pass) !== '';
@@ -1711,7 +1695,7 @@ function savepass(): void {
                 $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                 $message = getMailFrame(sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link));
                 $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, getUserToken($hash), $story, $blockon, $theme]);
+                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, getUserToken($hash), $blockon, $theme]);
                 setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);
             } else {
                 $stop[] = _ERROROLD;
@@ -1750,11 +1734,11 @@ function oauthretry(string $msg): void {
 
 function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): void {
     global $db;
-    $row = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
     if (!is_array($row) || empty($row['id'])) oautherror();
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = NOW() WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
     if ($event !== '') Logger::addOauth('info', $event, ['prov' => $prov, 'uid' => $uid]);
-    setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme'], 'oauth');
+    setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['blockon'], (string)$row['theme'], 'oauth');
     setRedirect($redir);
 }
 

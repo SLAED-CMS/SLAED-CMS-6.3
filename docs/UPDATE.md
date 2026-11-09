@@ -339,7 +339,7 @@ scheduler of slaed.net; the shipped `config/scheduler.php` holds neither.
 
 - **The check.** The job `updatecheck` runs once a day at the minute of the day `crc32(sid)` gives, so the sites of one
   host do not reach the master at once; `setup.php` writes the identifier and the cron line with its minute. With the
-  check switched off only the button "Проверить" asks. A master that does not answer is asked again the next day.
+  check switched off only the button "Искать обновления" asks. A master that does not answer is asked again the next day.
   The one external request goes to `Update::HOST` only, HTTPS only, without redirects, the answer limited to 1 MB.
 - **The identifier** is 32 random hex characters with the SHA-256 of `homeurl` beside it in `state.json`: a site copied
   to another address gets a new identifier by itself, and a new identifier rewrites the minute of `updatecheck`.
@@ -353,8 +353,8 @@ scheduler of slaed.net; the shipped `config/scheduler.php` holds neither.
   built from the number by the fixed pattern `https://github.com/SLAED-CMS/SLAED/releases/tag/v<version>`.
 - **The page "Обновления"** (`admin/modules/update.php`) is a module of the core, like "Планировщик": always there,
   never switched off. "Обзор" holds the version, the last check, the version found, the `sid` with "Скопировать" (the
-  owner of a site names it to support) and the buttons "Проверить", "Скачать", "Загрузить архив", "Проверить
-  установку", "Установить", "Вернуть предыдущую версию", "Применить шаги базы", "Проверить целостность"; "Настройки"
+  owner of a site names it to support) and the buttons "Искать обновления", "Скачать", "Загрузить архив", "Пробная
+  установка", "Установить", "Вернуть предыдущую версию", "Применить шаги базы", "Сверить файлы"; "Настройки"
   the channel, the switch of the check with the list of what is sent and where, `keepbak`, the switch of the domain;
   the journal is the link of the header into `admin.log`.
 - **Settings** are `update.check` in `config/update.php`: `upcheck` (1), `channel` (`stable`), `keepbak` (1), `upsite`
@@ -373,7 +373,7 @@ scheduler of slaed.net; the shipped `config/scheduler.php` holds neither.
   loaded only when the extension is missing and answers "invalid" on 32-bit PHP. **Without `zip`** the content comes
   from the stream `phar://` of every entry; `PharData` needs `phar` and `zlib`. With neither `zip` nor that pair the
   installation from the panel is closed and the page explains the manual path. "Обзор" names which path the site takes.
-- **"Проверить целостность"** compares the hashes of the shipped files with `files.json` and lists PHP files in
+- **"Сверить файлы"** compares the hashes of the shipped files with `files.json` and lists PHP files in
   `admin`, `core`, `lang` and `public` that the list does not name (`Update::AUDIT`) — a detector of a break-in. The
   panel entry renamed by the installer (`$conf['security']['afile']`) is compared with the entry `public/admin.php`
   of the list, and a `public/setup.php` deleted by the installer is no missing file.
@@ -516,7 +516,7 @@ An installation never starts by itself.
    version is not rolled back by itself, the administrator decides. A host that does not let the site reach itself —
    the page asks to open the site and press "Всё в порядке" or "Вернуть предыдущую версию".
 
-**"Проверить установку"** runs the pre-check of step 1 over the unpacked `stage/` and shows which files are replaced,
+**"Пробная установка"** runs the pre-check of step 1 over the unpacked `stage/` and shows which files are replaced,
 added and deleted, which were changed on the site, which options of `config/` are added, which steps run and how much
 space is needed; it closes, writes and moves nothing, and names the same list the installation then applies.
 
@@ -652,8 +652,8 @@ symlink and throws in the middle of a walk on a backslash. Files get 0644, folde
   new site takes it: the site answers, its integrity is clean, and its schema is the one every update must reach.
 - **Full and delta:** each archive gets its own run on a fresh site — the full archive of the previous release installed
   clean by its own `setup.php`; the new archive and its signed manifest go to `Update` of that site the way "Загрузить
-  архив" gives them, so the site verifies the signature itself; the panel of the site runs "Проверить установку",
-  installs, runs the self-check and "Проверить целостность", compares the schema with the clean run (columns, keys,
+  архив" gives them, so the site verifies the signature itself; the panel of the site runs "Пробная установка",
+  installs, runs the self-check and "Сверить файлы", compares the schema with the clean run (columns, keys,
   engine, regardless of column order), and goes back by "Вернуть предыдущую версию" to the byte in files and schema.
   Non-empty journals of PHP or database errors make a run red. A database step without the same change in `table.sql`
   shows here.
@@ -760,7 +760,7 @@ not accounting, and is never published or exported.
 **For the owner of a site (DSGVO / GDPR).** The check sends no personal data of a visitor or a user. The domain of the
 site and the technical figures above are data of the operator's own installation; the legitimate interest is security
 updates and support (Art. 6(1)(f) GDPR). An operator who does not want it switches off "Сообщать домен" (the master
-erases the domain with the next check) or the check itself (only "Проверить" then asks). The IP address of the server
+erases the domain with the next check) or the check itself (only "Искать обновления" then asks). The IP address of the server
 reaches slaed.net as with any HTTPS request, but is neither stored with the data nor linked to the domain. Nothing is
 sent to a third party; GitHub is not contacted by a site. A site that wants no contact at all switches the check off and
 updates by "Загрузить архив" and the manual path.

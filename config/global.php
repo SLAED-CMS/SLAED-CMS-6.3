@@ -51,7 +51,11 @@ return [
     'homeurl' => 'https://slaed.loc',
     'ip_link' => 'https://whatismyipaddress.com/ip/',
     'language' => 'ru',
-    'live_u' => '4',
+    'live' => [
+        'site' => '10',
+        'panel' => '10',
+        'note' => '60',
+    ],
     'ltitle' => '1',
     'module' => 'presentation',
     'mtemp' => 'Здравствуйте!

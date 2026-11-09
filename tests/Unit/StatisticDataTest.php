@@ -63,7 +63,7 @@ final class StatisticDataTest extends TestCase
         $this->assertSame(60, $sum['bot']);
         $this->assertSame(420, $sum['aud']);
         $this->assertSame(6, $sum['usr']);
-        $this->assertSame(['Chrome 1' => 90, 'Other' => 30], $sum['dims']['browsers']);
+        $this->assertSame(['Chrome' => 90, 'Other' => 30], $sum['dims']['browsers']);
         $this->assertSame(['desktop' => 60, 'mobile' => 45, 'bot' => 15], $sum['dims']['devices']);
     }
 

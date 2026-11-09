@@ -6,11 +6,7 @@
 <a class="sl-but" href="{{ url }}" title="{{ _STATISTIC }}"><i class="bi bi-graph-up" aria-hidden="true"></i> {{ _STATISTIC }}</a>
 {% else %}
 <span class="sl-seg sl-stats-kinds" id="sl-stats-kinds" data-sl-knob="stats" role="group" aria-label="{{ _ADM_WHERE }}" hx-swap-oob="true">{% for item in kinds %}<button type="button" id="sl-stats-{{ item.key }}" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" hx-get="{{ item.url }}" hx-target="#sl-stats-body" hx-swap="innerHTML" hx-push-url="false"{% if item.is_now %} hx-trigger="click, every {{ every }}s"{% endif %} title="{{ item.label }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}">{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-visually-hidden">{{ item.label }}</span>{% else %}{{ item.label }}{% endif %}<b>{{ item.num }}</b></button>{% endfor %}<span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span>
-<div class="sl-stats-kpis">
-  <div><small>{{ _ADM_NOW }}</small><b>{{ all_num }}</b></div>
-  <div><small>{{ _ADM_PAGES }}</small><b>{{ pages_num }}</b></div>
-  <div><small>{{ _ADM_LANDS }}</small><b>{% if lands_num %}{{ lands_num }}{% else %}&mdash;{% endif %}</b></div>
-</div>
+{% include 'fragments/metric-list.html' with tiles %}
 <div class="sl-stats-shares" aria-hidden="true">{% for share in shares %}<i data-kind="{{ share.key }}" style="--sl-d-part: {{ share.pct }}%"></i>{% endfor %}</div>
 <div class="sl-stats-cols">
   <section class="sl-stats-box" aria-labelledby="sl-stats-where">

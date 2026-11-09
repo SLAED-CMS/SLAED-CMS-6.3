@@ -152,7 +152,7 @@ function getMonitorExts(): string {
 # The whole ground of the page from one reading: the windows are drawn once, and the poll moves only the cockpit and the traffic
 function getMonitorGround(array $snap): string {
     global $afile, $conf, $db, $sgtime, $tpl;
-    $every = 4;
+    $every = getLiveEvery('panel');
     $facts = getServerFacts($snap);
     $view = getMonitorView($snap, $facts);
     $extra = getMonitorRuntimeExtras();
@@ -261,7 +261,7 @@ function getMonitorGround(array $snap): string {
             getMonitorRow(_USER, $health['user']),
             getMonitorRow('SQL mode', str_replace(',', ', ', $health['sql_mode']), true),
         ]),
-        'right_html' => getTplMeter(_ADM_PHPMEM, $peak, $limit, ($limit > 0) ? sprintf(_MONITOR_PEAK, filterSize($peak), filterSize($limit)) : _MONITOR_NOLIMIT).$list([
+        'right_html' => getTplMeter(_ADM_PHPMEM, $peak, $limit, ($limit > 0) ? sprintf(_MONITOR_PEAK, filterSize($peak), filterSize($limit)) : mb_ucfirst(_MONITOR_NOLIMIT)).$list([
             getMonitorRow(_MONITOR_CLIENT, getIp()),
             getMonitorRow(_ADDRESS, getServerValue('REQUEST_URI', ''), true),
             getMonitorRow(_MONITOR_QUERY, getServerValue('QUERY_STRING', ''), true),
@@ -273,12 +273,12 @@ function getMonitorGround(array $snap): string {
             getMonitorRow(_BROWSER, getServerValue('HTTP_USER_AGENT', ''), true),
         ]),
     ]);
-    $guard = $pane(['title' => _SECURITY, 'content_html' => $list([
+    $guard = $pane(['title' => _SECURITY, 'meta' => _MONITOR_DAY, 'content_html' => $list([
         getMonitorRow(_MONITOR_FAILED, filterDecimal((int)$extra['failed24'], 0)),
         getMonitorEvent($extra['seclast24']),
         is_int($extra['sql24']) && $extra['sql24'] > 0 ? getMonitorRow(_MONITOR_DBERR, filterDecimal($extra['sql24'], 0))
             : (is_int($extra['sql24']) ? ['label' => _MONITOR_DBERR, 'text' => _NO, 'is_good' => true] : getMonitorRow(_MONITOR_DBERR, '')),
-        getMonitorRow(_MONITOR_ERRLOG, is_int($extra['error24']) ? sprintf(_MONITOR_RECORDS, filterDecimal($extra['error24'], 0)) : ''),
+        getMonitorRow(_MONITOR_ERRLOG, is_int($extra['error24']) ? filterDecimal($extra['error24'], 0) : ''),
     ])]);
     $folders = $pane([
         'title' => _MONITOR_STORE,

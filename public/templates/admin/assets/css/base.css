@@ -538,7 +538,6 @@
   /* Components: the extended statistics panel - ring, arc, dimension bar and figure columns */
   --sl-statx-max-width: 120px;
   --sl-statx-ring: 12px;
-  --sl-statx-width: 120px;
   --sl-statx-height: 8px;
   --sl-statx-min-width: 40px;
   --sl-t-icon-width: 32px;

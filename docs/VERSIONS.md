@@ -77,8 +77,9 @@ their settings, empty for the general number (`getTplPagerFields()`, `getPagerPo
 numbers of the private messages and the 50 topics of the forum (`listnum`). `num`, `nump`, `snum`, `snump`, `pnum` and
 `perpage` leave; `favorites.num` and `favorites.nump`, read by nothing, leave with them. The members list, the logins
 and «Мои материалы» of the cabinet take the general numbers in place of 50 and 20. The own number of a visitor
-(«Количество публикаций на страницу», 3–20) now caps every list of the site, the Node lists included, as its hint says;
-a Node type keeps its own `list.limit`. The pager of the language editor shows the general window in place of every
+(«Количество публикаций на страницу», 3–20) leaves with its switch `users.news`, the column `storynum` of `_users` and
+its field of the login cookie, which now holds id, name, token, block and theme: a list of the site takes only the number
+of its module or the general one, and a Node type keeps its own `list.limit`. The pager of the language editor shows the general window in place of every
 page.
 
 ### Two more Node profiles ship: events and vacancies, and an ad leaves the site after thirty days
@@ -430,7 +431,7 @@ them to 17–33 frames a second. The laws are `docs/TEMPLATES.md`, "The Cost Of 
 - **Contrast.** `--sl-success-strong` and `--sl-danger-strong` of the admin theme go darker in the light scheme, so a chip holds 4.5:1 on the side block. The found words, the button of a warning, a link of a picked row, a row of the builder that is off, the captions of the file window in both themes, the mood of a lamp, the hours of the dial and a figure in the warning tone come up to the norm. The skin of Toast UI, one file in both themes, paints the Markdown source for both schemes, and a link inside text is underlined.
 - **The file manager.** A long name ends in its ellipsis instead of pushing the table under the properties, a phone scrolls the table in its frame, and the toolbar wraps.
 - **A dead section.** An address of the panel that names no section, or a section the administrator may not open, answers 404 instead of an empty page with 200 (`AdminLogTest`), and "Где ещё настраивается" of the builder leads to "Администраторы", where the editor of an administrator is chosen, not to the removed "Редактор".
-- **The label crawl.** `tools/label-audit.mjs` opens the screens of the panel it passed by (`sysfiles`, `fmedit`, `tplconfig`, `passwd`, `logview`, `logins`, `queue`, `dead`, `types`, `type`, `import`, `support`, `votes`, `points`, `toplist`, `xsledit`, `favconf`, `theme`), which a GET only shows, and only in the panel, as the same words on the site are other handlers. A search term is no part of a route, so no query of a visitor reaches the tracked baseline, which also drops the removed routes.
+- **The label crawl.** `tools/label-audit.mjs` opens the screens of the panel it passed by (`sysfiles`, `fmedit`, `tplconfig`, `passwd`, `logview`, `logins`, `queue`, `dead`, `types`, `type`, `import`, `support`, `votes`, `points`, `toplist`, `xsledit`, `theme`), which a GET only shows, and only in the panel, as the same words on the site are other handlers. A search term is no part of a route, so no query of a visitor reaches the tracked baseline, which also drops the removed routes.
 
 ### The journals are a section of their own, and the settings of two jobs stand on their forms
 
@@ -473,12 +474,6 @@ them to 17–33 frames a second. The laws are `docs/TEMPLATES.md`, "The Cost Of 
 - **Every type.** The types come from `getNodeTypeMap()` instead of `content` and `news`, in a second strip of links. Each type is a form of its own that writes its own key: a form of all types holds a hundred fields per type and can run into `max_input_vars` (1000 by the default of PHP, so from ten types on), which cuts off the rules of the last ones without a word.
 - **The file.** A save drops the empty pairs instead of padding the value to fifty, so a type without rules holds an empty string and the parser returns at once. The key stays, because the merge of an update brings a missing key back with the shipped rules.
 - **Around it.** The two lists of the blocks in the form of a module say that the columns of a builder page apply instead (`_BLOCKS_PAGEHINT`). The help of "Дополнительные поля" is written anew from the code. The dead `case 'mailtest'` of `admin/modules/config.php`, which ended in a fatal error since the mail moved, is gone.
-
-### The favorites are a tab of the users
-
-- **The section.** "Фавориты" leave the menu for the tab of "Пользователи": `op=favorites` lists them, `op=favdrop` deletes, `op=favconf` and `op=favsave` show and store the settings, which `config/favorites.php` keeps. The address `name=favorites`, `admin/modules/favorites.php` and its help are gone, the record of the section drops on the update as a record without a module does.
-- **The rights.** The tab follows the right of the section, so a delegated administrator of "Пользователи" sees the bookmarks and their settings, which until now only the super administrator did: the data is not secret. The journal writes these actions under `account`.
-- **The way to the settings.** The filter bar of the list carries the link "Конфигурации", the keys `link_url` and `link_text` of `fragments/list-filter.html`; the strip stays at seven tabs. `getAccountTabs()` replaces the seven copies of the strip, and "Обнуление параметров" and "Конфигурации" move up by one index.
 
 ### One file manager
 

@@ -1280,7 +1280,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $hidden = str_contains($list(), 'Beta');
     $pdo->exec('UPDATE '.$pre.'nodes SET status = 2 WHERE id = 102');
     $bare = getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=102')['body'].$list();
-    $out['favlist'] = [$shown, $hidden, str_contains(getRouteReply('root', 'GET', 'admin.php?name=account&op=favorites')['body'], 'Beta'),
+    $out['favlist'] = [$shown, $hidden, str_contains(getRouteReply('root', 'GET', 'admin.php?name=favorites')['body'], 'Beta'),
         str_contains($bare, 'op=deleteFavorite') && str_contains($bare, 'op=addFavorite'), (bool)preg_match('#href="[^"]*op=(?:add|delete)Favorite#', $bare)];
     $page = getRouteReply('root', 'GET', 'admin.php?name=node');
     $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => ['105'], 'type' => 'news', 'version' => '1',
@@ -4405,7 +4405,7 @@ function getRoutePublish(PDO $pdo, string $work): array {
         $out['visit'][] = $one['code'].' '.str_replace('http://127.0.0.1:'.$GLOBALS['rport'], '~', $one['head']['location'] ?? '');
     }
     $list = getRouteReply('root', 'GET', 'admin.php?name=layout&op=story')['body'];
-    $out['list'] = [substr_count($list, 'data-sl-lay-act="story-back"'), str_contains($list, 'сейчас на сайте'), str_contains($list, 'root')];
+    $out['list'] = [substr_count($list, 'data-sl-lay-act="story-back"'), str_contains($list, 'Сейчас на сайте'), str_contains($list, 'root')];
     $post('act', ['act' => 'page-add']);
     $back = $post('act', ['act' => 'story-back', 'id' => '1']);
     $out['back'] = [$back['text'] !== '', str_contains($back['body'], 'sl-chip-success'), count($draft()['undo'] ?? [])];

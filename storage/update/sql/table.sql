@@ -570,7 +570,6 @@ CREATE TABLE `{prefix}_users` (
   `sig` TEXT NOT NULL,
   `viewmail` BOOLEAN NOT NULL DEFAULT 0,
   `password` VARCHAR(255) NOT NULL,
-  `storynum` TINYINT UNSIGNED NOT NULL DEFAULT 10,
   `blockon` BOOLEAN NOT NULL DEFAULT 0,
   `block` TEXT NOT NULL,
   `theme` VARCHAR(255) NOT NULL DEFAULT '',

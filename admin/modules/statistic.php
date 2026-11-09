@@ -72,13 +72,13 @@ function getStatStack(string $label, array $map, array $ord, array $names): arra
     return ['label' => $label, 'count' => _STATISTIC_COUNT, 'parts' => getStatRowList($map, $ord, $names), 'empty' => _NO_INFO];
 }
 
-# The change against the same days of the month before; a move inside one per cent reads as flat
+# The change against the same days of the month before and the icon of its state; a move inside one per cent reads as flat
 function getStatDelta(?array $then, array $sum, string $key): array {
-    if ($then === null || !$then[$key]) return ['delta' => _NO_INFO, 'dir' => 'none', 'arrow' => 'dash', 'delta_tip' => _STATISTIC_VS];
+    if ($then === null || !$then[$key]) return ['delta' => _NO_INFO, 'dir' => 'none', 'icon' => 'dash-circle', 'delta_tip' => _STATISTIC_VS];
     $num = (int)round(($sum[$key] - $then[$key]) / $then[$key] * 100);
     $dir = ($num > 1) ? 'up' : (($num < -1) ? 'down' : 'flat');
-    $arrow = ['up' => 'arrow-up-right', 'down' => 'arrow-down-right', 'flat' => 'arrow-right'][$dir];
-    return ['delta' => (($num > 0) ? '+' : (($num < 0) ? '−' : '')).abs($num).'%', 'dir' => $dir, 'arrow' => $arrow, 'delta_tip' => _STATISTIC_VS];
+    $icon = ['up' => 'arrow-up-circle', 'down' => 'arrow-down-circle', 'flat' => 'arrow-right-circle'][$dir];
+    return ['delta' => (($num > 0) ? '+' : (($num < 0) ? '−' : '')).abs($num).'%', 'dir' => $dir, 'icon' => $icon, 'delta_tip' => _STATISTIC_VS];
 }
 
 # The day of a row as the tips name it: its date of the month and the short word of its weekday
@@ -164,7 +164,7 @@ function getStatClock(array $data): array {
     ];
 }
 
-# The log of days: the columns of the old table, the total first, the largest of a column marked
+# The figures of the list of days: the total first, a date of the month without its year, the largest of a column marked
 function getStatTable(array $data): array {
     $load = static fn(?float $gen, ?float $sql, ?float $mem): array => [
         ($gen === null) ? '—' : filterDecimal($gen, 0).' ms',
@@ -182,9 +182,7 @@ function getStatTable(array $data): array {
     $num = count($list);
     $sum = $data['sum'];
     return [
-        'can_pick' => true,
         'pick' => $data['is_pick'] ? $data['at'] : -1,
-        'cols' => [_DATE, _UNIQUE, _HITS, _HOME, _REFERERS, _BOTSOPT, _AUDIENCE, _USERS, _GENERATION, _ADM_QUERIES, _ADM_MEMORY],
         'total' => [
             'label' => _STATISTIC_TOTAL,
             'cells' => [
@@ -193,10 +191,10 @@ function getStatTable(array $data): array {
             ],
         ],
         'rows' => array_map(static fn(array $row, array $nums, int $i): array => [
-            'label' => $row['date'],
+            'label' => substr($row['date'], 0, 5),
             'week' => explode(',', _STATISTIC_WDAYS)[$row['week']] ?? '',
             'is_end' => $row['week'] > 4,
-            'run_text' => ($data['is_live'] && $i === $num - 1) ? _STATISTIC_RUNS : '',
+            'run_text' => ($data['is_live'] && $i === $num - 1) ? _TODAY : '',
             'cells' => [...$whole(array_slice($nums, 0, 7)), ...$load($nums[7], $nums[8], $nums[9])],
             'tops' => array_map(static fn(int|float|null $val, int $col): bool => $num > 1 && $val !== null && $val > 0 && $val === $tops[$col], $nums, array_keys($nums)),
         ], $data['rows'], $list, array_keys($list)),
@@ -272,6 +270,7 @@ function getStatView(array $data): array {
         : ['value' => round($num, $digits), 'text' => filterDecimal($num, $digits)];
     $tile = static fn(string $label, int $num, string $note, array $more = []): array => ['label' => $label, 'value' => filterDecimal($num, 0), 'num' => $num, 'note' => $note]
         + $more;
+    $per = $hosts ? $sum['h'] / $hosts : 0;
     $devs = ['desktop' => _STATISTIC_DESK, 'mobile' => _STATISTIC_PHONE, 'tablet' => _STATISTIC_TABLET, 'bot' => _STATISTIC_BOT];
     $refs = ['direct' => _STATISTIC_DIRECT, 'search' => _SEARCH, 'social' => _STATISTIC_SOCIAL, 'ai' => _STATISTIC_AI, 'referrer' => _STATISTIC_SITES];
     $kinds = getStatBotTypes();
@@ -290,11 +289,11 @@ function getStatView(array $data): array {
         'state' => getStatState($data),
         'tiles' => [
             $tile(_UNIQUE, $hosts, sprintf(_STATISTIC_PERDAY, filterDecimal($hosts / max(1, $sum['days']), 0)), getStatDelta($data['then'], $sum, 'u')),
-            $tile(_HITS, $sum['h'], sprintf(_STATISTIC_PERHOST, filterDecimal($hosts ? $sum['h'] / $hosts : 0, 1))),
-            $tile(_HOME, $sum['home'], _STATISTIC_HOMEIN),
+            $tile(_HITS, $sum['h'], sprintf(_STATISTIC_PERHOST, filterDecimal($per, ($per < 10) ? 1 : 0)), getStatDelta($data['then'], $sum, 'h')),
+            $tile(_HOME, $sum['home'], _STATISTIC_HOMEIN, getStatDelta($data['then'], $sum, 'home')),
             $tile(_AUDIENCE, $sum['aud'], _STATISTIC_SELF, ['is_good' => true] + getStatDelta($data['then'], $sum, 'aud')),
         ],
-        'meta' => ['sl-stat-refcat' => sprintf(_STATISTIC_INSEEK, $sum['shares']['search']), 'sl-stat-table' => sprintf(_STATISTIC_DAYN, $sum['days'])],
+        'meta' => ['sl-stat-refcat' => sprintf(_STATISTIC_INSEEK, $sum['shares']['search'])],
         'parts' => [
             'sl-stat-clock' => getStatClock($data),
             'sl-stat-days' => [
@@ -324,7 +323,7 @@ function getStatView(array $data): array {
                 'days' => array_map(
                     static fn(string $name, string $cap, int $i): array => ['name' => $name, 'cap' => $cap, 'is_end' => $i > 4],
                     explode(',', _STATISTIC_WDAYS),
-                    explode(',', _STATISTIC_WFULL),
+                    array_map('mb_ucfirst', explode(',', _STATISTIC_WFULL)),
                     range(0, 6),
                 ),
                 'hours' => array_map(static fn(int $one): string => ($one % 3) ? '' : sprintf('%02d', $one), range(0, 23)),
@@ -438,7 +437,7 @@ function getStatGround(array $data): string {
     global $afile, $tpl;
     $view = getStatView($data);
     $strip = getStatStrip($data);
-    $every = 10;
+    $every = getLiveEvery('panel');
     $series = static fn(string $id, string $kind, array $one): string => $tpl->getHtmlFrag('series', [
         'id' => $id,
         'kind' => $kind,
@@ -468,8 +467,19 @@ function getStatGround(array $data): string {
             'content_html' => $pane(['title' => _STATISTIC_PAGES, 'is_fill' => true, 'content_html' => $part('sl-stat-pages', 'rows')]),
             'side_html' => $bars(_STATISTIC_HOSTS, 'sl-stat-hosts'),
         ])
-        .$pane(['title' => _STATISTIC_BOTS, 'content_html' => $part('sl-stat-bottype', 'stack').$part('sl-stat-bots', 'rows')])
-        .$pane(['title' => _STATISTIC_LOG, 'icon' => 'journal-text', 'meta' => $view['meta']['sl-stat-table'], 'content_html' => $part('sl-stat-table', 'table')]);
+        .$pane(['title' => _STATISTIC_BOTS, 'content_html' => $part('sl-stat-bottype', 'stack').$part('sl-stat-bots', 'rows')]);
+    $days = $view['parts']['sl-stat-table'];
+    $cells = static fn(array $nums): array => array_map(static fn(string $val): array => ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $val], $nums);
+    $rows = [['is_no_sort' => true, 'cells' => [['has_content_text' => true, 'content_text' => $days['total']['label']], ...$cells($days['total']['cells'])]]];
+    foreach ($days['rows'] as $i => $one) {
+        $rows[] = ['attr' => 'data-sl-series-pick="'.$i.'" tabindex="0"', 'cells' => [['has_content_text' => true, 'content_text' => $one['label'], 'attr' => 'data-sort="'.$i.'"'],
+            ...$cells($one['cells'])]];
+    }
+    $cols = [[_DATE], [_UNIQUE], [_HITS], [_HOME], [_REFERERS], [_BOTSOPT], [_AUDIENCE], [_STATISTIC_SIGNED, _USERS], [_STATISTIC_GEN, _GENERATION], [_ADM_QUERIES], [_ADM_MEMORY]];
+    $head = [];
+    foreach ($cols as $col) $head[] = ['content' => $col[0]] + ($head ? ['is_col_count' => true] : []) + (isset($col[1]) ? ['attr' => 'title="'.$col[1].'"'] : []);
+    $list = getTplAdminList(['head' => $head, 'rows' => $rows, 'count' => count($days['rows']), 'key' => 'statistic-days', 'is_one_view' => true]);
+    $journal = $tpl->getHtmlFrag('series', ['id' => 'sl-stat-table', 'kind' => 'table', 'json' => (string)json_encode($days, JSON_UNESCAPED_UNICODE), 'content_html' => $list]);
     unset($view['parts']);
     return $tpl->getHtmlPart('statistic-cockpit', [
         'is_page' => true,
@@ -478,7 +488,7 @@ function getStatGround(array $data): string {
         'every' => $every,
         'is_run' => $data['is_run'],
         'view' => (string)json_encode($view, JSON_UNESCAPED_UNICODE),
-        'content_html' => $tpl->getHtmlFrag('pane-ground', ['content_html' => $ground]),
+        'content_html' => $tpl->getHtmlFrag('pane-ground', ['content_html' => $ground]).$journal,
     ]);
 }
 

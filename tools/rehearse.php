@@ -388,7 +388,7 @@ function getRunUpdate(string $kind, string $zip, string $prev, string $from, arr
         if ($error !== '') return ['error' => $error] + $out;
         $tok = getPageToken(getSiteReply('GET', RPANEL.'.php?name=update'));
         $test = getSiteReply('POST', RPANEL.'.php?name=update&op=test', ['token' => $tok]);
-        if (!str_contains($test['body'], 'sl-alert-success')) return ['error' => '"Check the installation" refused: '.getPageText($test)] + $out;
+        if (!str_contains($test['body'], 'sl-alert-success')) return ['error' => '"Test installation" refused: '.getPageText($test)] + $out;
         $pdo = getBaseLink($rbase);
         $tree = getTreeHash($site);
         $shape = getBaseShape($pdo);
@@ -406,7 +406,7 @@ function getRunUpdate(string $kind, string $zip, string $prev, string $from, arr
         $alive = getSiteAlive($fresh['home']);
         if (!$alive['ok']) return ['error' => 'the new release does not answer: '.json_encode($alive)] + $out;
         $audit = getSiteAudit($site);
-        if (!$audit['ok']) return ['error' => '"Check integrity" after the installation is not clean: '.json_encode($audit)] + $out;
+        if (!$audit['ok']) return ['error' => '"Compare files" after the installation is not clean: '.json_encode($audit)] + $out;
         $plan = getBaseSchema($pdo);
         $odd = array_keys(array_filter(array_merge($clean, $plan), static fn(mixed $one, string $tab): bool => ($clean[$tab] ?? null) !== ($plan[$tab] ?? null),
             ARRAY_FILTER_USE_BOTH));
@@ -447,7 +447,7 @@ function getRunClean(string $zip): array {
         $alive = getSiteAlive($fresh['home']);
         if (!$alive['ok']) return ['error' => 'the site does not answer after its installation: '.json_encode($alive)] + $out;
         $audit = getSiteAudit($site);
-        if (!$audit['ok']) return ['error' => '"Check integrity" after the installation is not clean: '.json_encode($audit)] + $out;
+        if (!$audit['ok']) return ['error' => '"Compare files" after the installation is not clean: '.json_encode($audit)] + $out;
         $logs = getLogLines($site);
         if ($logs !== []) return ['error' => 'the error journals of the site are not empty', 'logs' => $logs] + $out;
         $schema = getBaseSchema(getBaseLink($rbase));

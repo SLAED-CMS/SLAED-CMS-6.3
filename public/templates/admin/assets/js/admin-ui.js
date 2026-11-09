@@ -1264,32 +1264,26 @@
             head.style.setProperty('--sl-d-turn', i);
         });
     }
-    var tilt = { last: null, frame: 0, tile: null };
-    // A home tile or a tile of figures under the hand leans to it and lays its glare where the hand is, once a frame; the theme holds level a home tile whose dial is in use
-    function setTileTilt() {
-        var event = tilt.last;
+    var glare = { last: null, frame: 0, tile: null };
+    // A home tile or a tile of figures under the hand lays its glare where the hand is, once a frame
+    function setTileGlare() {
+        var event = glare.last;
         var tile = !window.isMotionStill() && event.target.closest ? event.target.closest('.sl-menu-grid > .sl-mcard, .sl-metric') : null;
         var box;
-        var left;
-        var top;
-        tilt.frame = 0;
-        if (tilt.tile && tilt.tile !== tile) {
-            ['--sl-d-tilt-x', '--sl-d-tilt-y', '--sl-d-x', '--sl-d-y'].forEach(function (name) { tilt.tile.style.removeProperty(name); });
+        glare.frame = 0;
+        if (glare.tile && glare.tile !== tile) {
+            ['--sl-d-x', '--sl-d-y'].forEach(function (name) { glare.tile.style.removeProperty(name); });
         }
-        tilt.tile = tile;
+        glare.tile = tile;
         if (!tile) return;
         box = tile.getBoundingClientRect();
-        left = event.clientX - box.left;
-        top = event.clientY - box.top;
-        tile.style.setProperty('--sl-d-tilt-x', ((left / box.width - 0.5) * 10).toFixed(2) + 'deg');
-        tile.style.setProperty('--sl-d-tilt-y', ((0.5 - top / box.height) * 12).toFixed(2) + 'deg');
-        tile.style.setProperty('--sl-d-x', Math.round(left) + 'px');
-        tile.style.setProperty('--sl-d-y', Math.round(top) + 'px');
+        tile.style.setProperty('--sl-d-x', Math.round(event.clientX - box.left) + 'px');
+        tile.style.setProperty('--sl-d-y', Math.round(event.clientY - box.top) + 'px');
     }
     document.addEventListener('pointermove', function (event) {
         if (event.pointerType === 'touch') return;
-        tilt.last = event;
-        if (!tilt.frame) tilt.frame = window.requestAnimationFrame(setTileTilt);
+        glare.last = event;
+        if (!glare.frame) glare.frame = window.requestAnimationFrame(setTileGlare);
     }, { passive: true });
     var ripple = '.sl-menu-grid > .sl-mcard > .sl-mcard-link, .sl-admin-sidebar .sl-menu-list-item, .sl-block-sidebar-count-row, .sl-cockpit button';
     // A press on a home tile, a row of the menu or of its counters and a control of the cockpit spreads from the pointer; the forms and the lists take none
@@ -1938,42 +1932,40 @@
         });
         host.replaceChildren(box);
     }
-    // One row of the table of days: its date and weekday, the mark of the running day, a cell a column, the largest of a column bold
-    function getTableRow(one, i, can) {
-        var row = getSeriesNode('tr', (one.is_end ? 'sl-is-end' : '') + (one.is_total ? ' sl-is-total' : ''));
-        var date = row.appendChild(getSeriesNode('td', 'sl-days-date', one.label));
-        if (one.week) date.appendChild(getSeriesNode('span', 'sl-days-week', one.week));
-        if (one.run_text) date.appendChild(getSeriesNode('span', 'sl-chip sl-chip-success', one.run_text));
-        if (can) {
-            row.setAttribute('data-sl-series-pick', i);
-            row.tabIndex = 0;
-        }
-        one.cells.forEach(function (text, j) { row.appendChild(getSeriesNode('td', (one.tops && one.tops[j]) ? 'sl-is-top' : '', text)); });
-        return row;
+    // One row of the list of days: the date with its weekday, or the word of today in its place, the texts of its cells, the largest of a column bold
+    function setTableRow(row, one) {
+        var date = row.cells[0];
+        row.classList.toggle('sl-is-end', !!one.is_end);
+        row.classList.toggle('sl-is-total', !!one.is_total);
+        date.classList.add('sl-days-date');
+        date.replaceChildren(one.label);
+        if (one.run_text || one.week) date.appendChild(getSeriesNode('span', 'sl-days-week' + (one.run_text ? ' sl-is-run' : ''), one.run_text || one.week));
+        one.cells.forEach(function (text, j) {
+            var cell = row.cells[j + 1];
+            if (!cell) return;
+            cell.textContent = text;
+            cell.classList.toggle('sl-is-top', !!(one.tops && one.tops[j]));
+        });
     }
-    // The table of days with its total; a tick writes the texts into the rows that stand, so the focus and the picked row stay
+    // The page draws the list of days in the canon; a tick writes into each row by its day wherever a sort put it, and a new day takes a copy of the day before
     function setSeriesTable(host, data) {
-        var table = host.querySelector(':scope > table');
-        var rows = data.rows;
-        var head;
-        var body;
-        if (!table || table.tBodies[0].rows.length !== rows.length + 1) {
-            table = getSeriesNode('table', 'sl-table-list-sort sl-days-table');
-            head = table.createTHead().appendChild(getSeriesNode('tr'));
-            data.cols.forEach(function (text) { head.appendChild(getSeriesNode('th', '', text)); });
-            body = table.appendChild(getSeriesNode('tbody'));
-            body.appendChild(getTableRow(Object.assign({ is_total: true }, data.total), -1, false));
-            rows.forEach(function (one, i) { body.appendChild(getTableRow(one, i, data.can_pick)); });
-            host.replaceChildren(table);
-        } else {
-            [data.total].concat(rows).forEach(function (one, i) {
-                Array.prototype.forEach.call(table.tBodies[0].rows[i].cells, function (cell, j) {
-                    if (!j) return;
-                    cell.textContent = one.cells[j - 1];
-                    cell.classList.toggle('sl-is-top', !!(one.tops && one.tops[j - 1]));
-                });
-            });
-        }
+        var body = host.querySelector('table > tbody');
+        var rows = {};
+        if (!body) return;
+        Array.prototype.forEach.call(body.rows, function (row) {
+            rows[row.hasAttribute('data-sl-series-pick') ? row.getAttribute('data-sl-series-pick') : 'total'] = row;
+        });
+        if (rows.total) setTableRow(rows.total, Object.assign({ is_total: true }, data.total));
+        data.rows.forEach(function (one, i) {
+            var row = rows[i];
+            if (!row && rows[i - 1]) {
+                row = body.appendChild(rows[i - 1].cloneNode(true));
+                row.setAttribute('data-sl-series-pick', i);
+                row.cells[0].setAttribute('data-sort', i);
+                rows[i] = row;
+            }
+            if (row) setTableRow(row, one);
+        });
         setSeriesPick(typeof data.pick === 'number' ? data.pick : dayat);
     }
     // A point of the dial at a radius from its middle, on the turn of its hour
@@ -2202,15 +2194,16 @@
             })
             .catch(function () {});
     }
-    // The bell asks the server for the queues once a minute, on a hidden tab too, since that is where the count of the title is made
+    // The bell asks the server for the queues at the interval of the notices on the root, on a hidden tab too, since that is where the count of the title is made
     function setQueuePoll() {
         var bell = document.querySelector('[data-sl-bell]');
-        if (!bell) return;
+        var every = Number(document.documentElement.getAttribute('data-sl-live-note'));
+        if (!bell || !every) return;
         queue.sum = Number(bell.querySelector('[data-sl-bell-sum]').textContent) || 0;
         document.querySelectorAll('[data-sl-queue]').forEach(function (chip) {
             queue.mods[chip.getAttribute('data-sl-queue')] = Number(chip.querySelector('[data-sl-queue-n]').textContent) || 0;
         });
-        window.setInterval(function () { setQueueFetch(false); }, 60000);
+        window.setInterval(function () { setQueueFetch(false); }, every * 1000);
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
@@ -2287,10 +2280,10 @@
         });
         box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
     }
-    // Г15 A sample older than half a minute dims the lamp and stops it; the first answer after an idle while may bring an old one the server renews at once, so it never counts
+    // Г15 A sample older than three intervals of its poll dims the lamp and stops it; the first answer after an idle while may bring an old one the server renews at once, so it never counts
     function setCockpitStale(box) {
         var stamp = Number(box.getAttribute('data-sl-live-stamp')) || 0;
-        box.toggleAttribute('data-sl-cockpit-stale', box.slCockpitPolls > 1 && !box.hasAttribute('data-sl-live-paused') && Date.now() - stamp > 30000);
+        box.toggleAttribute('data-sl-cockpit-stale', box.slCockpitPolls > 1 && !box.hasAttribute('data-sl-live-paused') && Date.now() - stamp > box.slCockpitEvery * 3000);
     }
     // Г9 Г15 The cockpit asks for its figures at once and then at its interval while the tab is in sight and the live chip runs; a poll renews no session
     function setCockpitPoll() {
@@ -2298,6 +2291,7 @@
         var busy = false;
         var ask;
         if (!box) return;
+        box.slCockpitEvery = Number(box.getAttribute('data-sl-cockpit-every'));
         ask = function () {
             if (busy || document.hidden || box.hasAttribute('data-sl-live-paused')) return;
             busy = true;
@@ -2308,7 +2302,7 @@
                 .then(function () { busy = false; });
         };
         ask();
-        window.setInterval(ask, (Number(box.getAttribute('data-sl-cockpit-every')) || 10) * 1000);
+        if (box.slCockpitEvery) window.setInterval(ask, box.slCockpitEvery * 1000);
         window.setInterval(function () { setCockpitStale(box); }, 5000);
         document.addEventListener('visibilitychange', ask);
         box.addEventListener('click', function (event) {
@@ -2343,7 +2337,7 @@
             return line;
         }));
     }
-    // A tile of the series: its figure runs to the new value, its note and its change follow; a tile drawn at zero has no figure, and its first text gives way with its unit left
+    // A tile of the series: its figure runs to the new value, its note, its change and the icon of its state follow; a tile drawn at zero has no figure, and its first text gives way with its unit left
     function setMetricTile(tile, one) {
         var num = tile.querySelector('[data-sl-figure]');
         var delta = tile.querySelector('[data-sl-metric-delta]');
@@ -2352,8 +2346,9 @@
         tile.querySelector('[data-sl-metric-note]').textContent = one.note;
         if (!delta) return;
         delta.className = 'sl-metric-delta sl-metric-delta-' + one.dir;
-        delta.firstChild.className = 'bi bi-' + one.arrow;
-        delta.lastChild.textContent = one.delta;
+        delta.textContent = one.delta;
+        ['up', 'down', 'flat', 'none'].forEach(function (dir) { tile.classList.toggle('sl-metric-trend-' + dir, dir === one.dir); });
+        tile.querySelector('.sl-metric-icon').className = 'bi bi-' + one.icon + ' sl-metric-icon';
     }
     // One reading of the counter over the page: the first draw brings no parts, as each host carries its own, and a part whose data did not move is left alone
     function setStatView(page, data) {
@@ -2363,7 +2358,8 @@
         page.querySelectorAll('.sl-metric').forEach(function (tile, i) { if (data.tiles[i]) setMetricTile(tile, data.tiles[i]); });
         Object.keys(data.meta).forEach(function (id) {
             var host = document.getElementById(id);
-            var meta = host ? host.closest('.sl-pane').querySelector('.sl-pane-meta') : null;
+            var pane = host ? host.closest('.sl-pane') : null;
+            var meta = pane ? pane.querySelector('.sl-pane-meta') : null;
             if (meta) meta.textContent = data.meta[id];
         });
         Object.keys(data.parts || {}).forEach(function (id) {
@@ -2429,7 +2425,7 @@
             var box = document.querySelector('[data-sl-stat][data-sl-stat-live]');
             if (box && !document.hidden && !box.querySelector('[data-sl-live-paused]')) setStatFetch();
         };
-        window.setInterval(ask, (Number(page.getAttribute('data-sl-stat-every')) || 10) * 1000);
+        if (Number(page.getAttribute('data-sl-stat-every'))) window.setInterval(ask, Number(page.getAttribute('data-sl-stat-every')) * 1000);
         document.addEventListener('visibilitychange', ask);
         document.addEventListener('click', function (event) {
             if (event.target.closest && event.target.closest('[data-sl-stat] [data-sl-live-toggle]')) window.setTimeout(ask);
@@ -2493,6 +2489,7 @@
         if (!page) return;
         setMonitorView(page, JSON.parse(page.getAttribute('data-sl-monitor-view')));
         page.querySelector('.sl-cockpit').slCockpitPolls = 0;
+        page.querySelector('.sl-cockpit').slCockpitEvery = Number(page.getAttribute('data-sl-monitor-every'));
         ask = function () {
             if (busy || document.hidden || !page.querySelector('[data-sl-live-box]:not([data-sl-live-paused])')) return;
             busy = true;
@@ -2503,7 +2500,7 @@
                 .then(function () { busy = false; });
         };
         ask();
-        window.setInterval(ask, (Number(page.getAttribute('data-sl-monitor-every')) || 4) * 1000);
+        if (Number(page.getAttribute('data-sl-monitor-every'))) window.setInterval(ask, Number(page.getAttribute('data-sl-monitor-every')) * 1000);
         window.setInterval(function () { setCockpitStale(page.querySelector('.sl-cockpit')); }, 5000);
         document.addEventListener('visibilitychange', ask);
         page.addEventListener('click', function (event) {

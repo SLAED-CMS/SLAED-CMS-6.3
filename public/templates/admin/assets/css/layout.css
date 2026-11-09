@@ -278,6 +278,11 @@
   margin-left: auto;
 }
 
+/* The red icon and the main action stand as one pair at the right edge, the main action last */
+.sl-lay-right > .sl-modal-foot > .sl-but-red + .sl-but-blue {
+  margin-left: 0;
+}
+
 /* The acts of a pick stand in sight whole: the capsule takes the width the red icon leaves, not the share an editor gives it */
 .sl-lay-right > .sl-modal-foot > .sl-editor-pill {
   max-width: none;

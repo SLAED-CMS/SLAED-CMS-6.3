@@ -92,7 +92,7 @@ function getMasterReleases(string $head, string $note): string {
         $served = in_array($row['state'], ['beta', 'stable'], true);
         if ($served && $ends - time() < 864000) $warn[] = sprintf(_MASTER_EXPWARN, $ver, date(_TIMESTRING, $ends));
         $state = match ($row['state']) {
-            'pause' => _PAUSE.' - '.(($row['pauseby'] === 'auto') ? sprintf(_MASTER_BYAUTO, $row['pfail'], $row['pok']) : _MASTER_BYOWNER),
+            'pause' => _PAUSE.' — '.(($row['pauseby'] === 'auto') ? sprintf(_MASTER_BYAUTO, $row['pfail'], $row['pok']) : _MASTER_BYOWNER),
             'wait' => _MASTER_WAIT,
             default => $row['state'],
         };
@@ -225,7 +225,7 @@ function getMasterStats(): string {
         .' ORDER BY failver DESC, num DESC');
     $rows = [];
     foreach (($res ? ($db->getSqlRows($res) ?: []) : []) as $row) {
-        $rows[] = [['content_text' => $row['failver']], ['content_text' => sprintf(_MASTER_STEP, $row['failstep'])], ['is_col_count' => true, 'content_text' => $row['num']]];
+        $rows[] = [['content_text' => $row['failver']], ['content_text' => mb_ucfirst(sprintf(_MASTER_STEP, $row['failstep']))], ['is_col_count' => true, 'content_text' => $row['num']]];
     }
     if ($rows) $cont .= getMasterTable([['content' => _MASTER_FAILS], ['content' => _MASTER_STEPS], ['content' => _MASTER_COUNT, 'is_col_count' => true]], $rows);
     return $cont;
@@ -288,10 +288,10 @@ function getMasterKeyList(array $keys): string {
         return ['is_truncate' => true, 'content_text' => $text] + getTplLongCell($text, _MASTER_PRINT);
     };
     $fact = Update::getFactoryKeys();
-    $rows = [[['content_text' => _MASTER_PRIMARY.' - '._MASTER_FACTORY], $print($fact['primary'])],
-        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_FACTORY], $print($fact['recovery'])],
-        [['content_text' => _MASTER_PRIMARY.' - '._MASTER_INFORCE], $print($keys['keys']['primary'])],
-        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_INFORCE], $print($keys['keys']['recovery'])],
+    $rows = [[['content_text' => _MASTER_PRIMARY.' — '._MASTER_FACTORY], $print($fact['primary'])],
+        [['content_text' => _MASTER_RECOVERY.' — '._MASTER_FACTORY], $print($fact['recovery'])],
+        [['content_text' => _MASTER_PRIMARY.' — '._MASTER_INFORCE], $print($keys['keys']['primary'])],
+        [['content_text' => _MASTER_RECOVERY.' — '._MASTER_INFORCE], $print($keys['keys']['recovery'])],
         [['content_text' => 'kseq'], ['content_text' => $keys['keys']['kseq']]]];
     foreach ($keys['list'] as $one) {
         $rows[] = [['content_text' => 'inbox/keys/'.$one['kseq'].'.json'], ['is_truncate' => true, 'content_text' => $one['time'] ? date(_TIMESTRING, $one['time']) : '-']];

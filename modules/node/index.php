@@ -596,10 +596,9 @@ function setNodeList(): void {
         if (isset($mine['fav'])) $query->setNodeFavorite($uid);
         if ($sort !== '' || $dir !== '') $query->setNodeOrder($key, $way);
         $count = $query->getNodeCount();
-        $size = getUserNews($set['limit']);
-        $pages = max(1, (int)ceil($count / $size));
+        $pages = max(1, (int)ceil($count / $set['limit']));
         if ($num > $pages) setNodeDeny(404);
-        $query->setNodePage($num, $size);
+        $query->setNodePage($num, $set['limit']);
         if (($sort !== '' || $dir !== '') && $key === $set['order'] && $way === $set['dir']) setRedirect(getSeoUrl($base + ['page' => $num]), false, 301);
         $list = $count ? $query->getNodeList() : [];
         $hand = $list ? getNodeHandler($type) : null;
@@ -647,7 +646,7 @@ function setNodeList(): void {
             'is_tiles' => $look === 'tiles',
             'date_label' => _DATE,
             'read_label' => _READMORE,
-            'pager_html' => getTplPagerView($num, $pages, getPageSpan(), $link, ['count' => $count, 'limit' => $size]),
+            'pager_html' => getTplPagerView($num, $pages, getPageSpan(), $link, ['count' => $count, 'limit' => $set['limit']]),
             'more_href' => ($look !== 'rail' && $num < $pages) ? $link($num + 1)['href'] : '',
             'more_label' => _NODE_MORE,
             'empty' => ($let !== '' || $mine)
@@ -866,7 +865,9 @@ function setNodeView(): void {
             $card = ['is_views' => false, 'cover' => '', 'is_play' => $type->settings['view']['mode'] === 'media'] + getNodeViewData($type, $tgt, 'card') + getNodeViewVars($type);
             $rels .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $card);
         }
-        $cover = getNodeCover($type, $view);
+        $own = ['node', $node->id];
+        $pic = getImgText($node->intro, 'full', false, $type->name, $own) ?: getImgText($node->body ?? '', 'full', false, $type->name, $own);
+        $cover = getNodeCover($type, $view) ?: ($pic ?: '');
         $hand = getNodeHandler($type);
         $ext = getNodeExtVars($type, $node, $hand ? ($hand->getNodeData($type, [$node], 'view')[$node->id] ?? []) : []);
         $talk = $type->settings['features']['comments'] && $node->comon !== CommentMode::Disabled;

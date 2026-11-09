@@ -434,7 +434,7 @@ function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): 
 function getUserBlock(): string {
     global $db, $user, $tpl, $prs;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
-    $block = (isset($user[4])) ? intval($user[4]) : 0;
+    $block = (isset($user[3])) ? intval($user[3]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
         $userblock = $prs->filterContent($userblock, true, 'profile', 2, '', ['profile', $uid], true);
@@ -1272,7 +1272,7 @@ function getProfileModules(int $uid = 0): array {
 function getProfileLastView(int $uid): string {
     global $db, $conf, $tpl, $prs, $com;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !is_moder('account'))) return '';
-    $limit = intval(getUserNews(25));
+    $limit = 25;
     $mods = getProfileModules($uid);
     $parts = [];
     $params = [];

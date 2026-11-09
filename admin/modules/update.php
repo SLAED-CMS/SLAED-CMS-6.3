@@ -49,8 +49,8 @@ function getUpdateView(): string {
     $cont .= $last['html'];
     $pack = getUpdatePack($state, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable', $last['main'] ? '' : 'main');
     $look = ($pack['acts'] === '' && !$last['main']) ? 'main' : '';
-    $acts = $pack['acts'].getTplPostButton(['name' => 'update', 'op' => 'check'], 'arrow-repeat', _UPDATE_CHECK, '', $look)
-        .getTplPostButton(['name' => 'update', 'op' => 'audit'], 'shield-check', _UPDATE_AUDIT, '', 'check');
+    $acts = getTplPostButton(['name' => 'update', 'op' => 'audit'], 'shield-check', _UPDATE_AUDIT, '', 'check')
+        .getTplPostButton(['name' => 'update', 'op' => 'check'], 'arrow-repeat', _UPDATE_CHECK, '', $look).$pack['acts'];
     $rows = array_merge($rows, $last['rows'], [['label_html' => _FUNCTIONS, 'field_html' => $acts]]);
     $list = $tpl->getHtmlFrag('kv-list', ['items' => array_merge($items, $last['items'], $pack['items'])]).$notes.$last['notes'].$pack['notes'];
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]).$pack['html'];
@@ -117,8 +117,8 @@ function getUpdateLast(array $state): array {
     };
     if (!in_array($done['check'], ['ok', 'down'], true)) $out['notes'] .= getUpdateWarn(_UPDATE_SELFNONE);
     $out['main'] = $done['check'] === 'none';
-    $acts = $out['main'] ? getTplPostButton(['name' => 'update', 'op' => 'selfok'], 'check2-circle', _UPDATE_ALLOK, '', 'main') : '';
-    if ($back) $acts .= getTplPostButton(['name' => 'update', 'op' => 'revert'], 'arrow-counterclockwise', _UPDATE_REVERT, '', 'risk');
+    $acts = $back ? getTplPostButton(['name' => 'update', 'op' => 'revert'], 'arrow-counterclockwise', _UPDATE_REVERT, '', 'risk') : '';
+    if ($out['main']) $acts .= getTplPostButton(['name' => 'update', 'op' => 'selfok'], 'check2-circle', _UPDATE_ALLOK, '', 'main');
     if ($acts !== '') $out['rows'][] = ['label_html' => _UPDATE_LASTRUN, 'field_html' => $acts];
     if ($done['check'] === 'down') $out['html'] = $tpl->getHtmlFrag('alert', ['type' => 'error', 'text' => _UPDATE_DOWN]);
     return $out;

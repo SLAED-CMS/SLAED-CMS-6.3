@@ -1543,7 +1543,7 @@ button.st-cal-day:hover {
 }
 
 .sl-statx-bl {
-  width: var(--sl-statx-width);
+  width: var(--sl-statx-width, 120px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
