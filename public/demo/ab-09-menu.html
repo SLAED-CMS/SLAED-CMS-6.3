@@ -791,7 +791,7 @@
     </div>
     <span class="v-sep v-sep-end"></span>
     <span class="sl-modal-acts v-tools">
-    <button type="button" class="sl-modal-act v-tool v-turn" data-v-turn title="Повернуть меню: горизонтально или вертикально" aria-label="Повернуть меню">${ico('distribute-vertical', 'v-ax-row')}${ico('distribute-horizontal', 'v-ax-col')}</button>
+    <button type="button" class="sl-modal-act v-tool v-turn" data-v-turn title="Повернуть меню: горизонтально или вертикально" aria-label="Повернуть меню">${ico('three-dots-vertical', 'v-ax-row')}${ico('three-dots', 'v-ax-col')}</button>
     <button type="button" class="sl-modal-act v-tool v-fold" data-v-fold aria-controls="v-fold-body" aria-expanded="${!min}" title="Свернуть / Развернуть">${ico('arrows-collapse-vertical', 'v-ax-row v-open')}${ico('arrows-expand-vertical', 'v-ax-row v-shut')}${ico('arrows-collapse', 'v-ax-col v-open')}${ico('arrows-expand', 'v-ax-col v-shut')}</button>
     <button type="button" class="sl-modal-act sl-modal-act-move v-tool v-grip" data-v-grip aria-label="Переместить меню: перетащите куда угодно; стрелки двигают, Home — вниз по центру" title="Перетащите куда угодно">${ico('grip-vertical', 'v-ax-row')}${ico('grip-horizontal', 'v-ax-col')}</button>
     </span>`;
@@ -984,7 +984,7 @@
         const dir = vDir();
         const me = `<div class="v-me-head"><img src="${d.me.ava}" alt=""><b>${esc(d.me.nick)}</b><small>${d.me.role}</small></div>` +
           `<dl class="v-facts"><dt>Вход</dt><dd>сегодня, ${d.me.since}</dd><dt>Прошлый вход</dt><dd>${d.me.last}</dd><dt>Адрес</dt><dd>${d.me.ip}</dd><dt>Сеанс</dt><dd>ещё ${d.me.left}</dd></dl>` +
-          `<div class="v-row">Меню лежит <span class="v-pair"><button type="button" data-v-dir="row" aria-pressed="${dir === 'row'}" title="Поперёк" aria-label="Поперёк">${ico('distribute-horizontal')}</button><button type="button" data-v-dir="col" aria-pressed="${dir === 'col'}" title="Стоймя" aria-label="Стоймя">${ico('distribute-vertical')}</button></span></div>` +
+          `<div class="v-row">Меню лежит <span class="v-pair"><button type="button" data-v-dir="row" aria-pressed="${dir === 'row'}" title="Поперёк" aria-label="Поперёк">${ico('three-dots')}</button><button type="button" data-v-dir="col" aria-pressed="${dir === 'col'}" title="Стоймя" aria-label="Стоймя">${ico('three-dots-vertical')}</button></span></div>` +
           `<button type="button" class="v-row" data-v-home>Вернуть вниз по центру ${ico('arrow-down-circle')}</button>` +
           `<label class="v-row">Увеличивать иконки под курсором <input type="checkbox" class="sl-check" data-v-mag-switch${vGet('ab.dock.mag', '1') === '0' ? '' : ' checked'}></label>` +
           `<button type="button" class="v-row" data-v-fold>Свернуть меню ${ico('arrows-collapse-vertical')}</button>` +

@@ -12,7 +12,7 @@
     <b>{{{ atopic }}}</b><b>{{{ areply }}}</b>
     {% endif %}
   </span>
-  <h1 class="sl-heading">{% if title_html %}{{{ title_html }}}{% else %}{{{ favor }}} {{{ title }}}{% endif %}</h1>
+  <h1 class="sl-heading"{% if share_title %} title="{{ share_title }}"{% endif %}>{% if title_html %}{{{ title_html }}}{% else %}{{{ favor }}} {{{ title }}}{% endif %}</h1>
 </div>
 {% else %}
 <div class="sl-forum-foot">
@@ -26,5 +26,6 @@
     <b>{{{ atopic }}}</b><b>{{{ areply }}}</b>
     {% endif %}
   </span>
+  {% if moder_html %}{{{ moder_html }}}{% endif %}
 </div>
 {% endif %}

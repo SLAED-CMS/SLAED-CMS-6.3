@@ -38,12 +38,13 @@
         root.style.paddingRight = '';
     }
 
-    // The actions of the head are chrome and never the first stop: a window that opens on its own close button reads as a window asking to be shut
+    // The actions of the head are chrome and never the first stop: a window that opens on its own close button reads as a window asking to be shut;
+    // a tooltip is no stop either, since the focus opens its panel over the window
     function setFirstFocus(box) {
         var pick = box.querySelector('[data-sl-focus]');
         if (!pick) {
             Array.prototype.some.call(box.querySelectorAll(WINPICKS), function (one) {
-                if (one.closest('.sl-modal-title')) return false;
+                if (one.closest('.sl-modal-title, .sl-float')) return false;
                 pick = one;
                 return true;
             });
@@ -680,6 +681,20 @@
             for (var i = 0; i < items.length; i++) {
                 if (items[i] !== master && !items[i].disabled) items[i].checked = !!master.checked;
             }
+        });
+        // A count of the checked rows beside the actions of a site list answers every box and the box that checks all
+        document.addEventListener('change', function (event) {
+            var box = event.target;
+            if (!box || box.type !== 'checkbox' || !box.hasAttribute('data-sl-check-item')) return;
+            var scope = box.closest('form') || document;
+            var outs = scope.querySelectorAll('[data-sl-check-count]');
+            if (!outs.length) return;
+            var items = scope.querySelectorAll('[data-sl-check-item]:checked');
+            var num = 0;
+            for (var i = 0; i < items.length; i++) {
+                if (!items[i].closest('[data-sl-check-all]')) num++;
+            }
+            for (var k = 0; k < outs.length; k++) outs[k].textContent = String(num);
         });
     }
 
@@ -3191,12 +3206,13 @@
         if (done !== '') setToast(done);
     }
 
-    // Answer 14: a member's unread messages are asked once a minute, on a hidden tab too; a grown number is heard and counted on the badges
+    // Answer 14: a member's unread messages are asked at the interval of the notices on the root, on a hidden tab too; a grown number is heard and counted on the badges
     function setPrivatPoll() {
         var url = document.documentElement.getAttribute('data-sl-pm-poll');
+        var every = Number(document.documentElement.getAttribute('data-sl-live-note'));
         var mark = document.querySelector('[data-sl-pm-num]');
         var seen = mark ? Number(mark.textContent) || 0 : -1;
-        if (!url) return;
+        if (!url || !every) return;
         window.setInterval(function () {
             fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1', 'X-CSRF-TOKEN': window.getPageToken() } })
                 .then(function (res) { return res.ok ? res.json() : null; })
@@ -3215,7 +3231,7 @@
                     nav.classList.toggle('sl-hidden', !num);
                 })
                 .catch(function () {});
-        }, 60000);
+        }, every * 1000);
     }
 
     // Motion is welcome unless the reader asked for less of it or the options stilled the page; theme scripts and plugins read one answer

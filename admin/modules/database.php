@@ -30,7 +30,7 @@ function getSqltable(array $items): string {
         $tab = ($row['table'] !== '') ? (string)$row['table'] : _NO;
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => (string)(int)$row['num']],
+                ['content_html' => (string)(int)$row['num'], 'is_col_id' => true],
                 ['has_content_text' => true, 'content_text' => (string)$row['type']],
                 ['has_content_text' => true, 'content_text' => $tab],
                 ['has_content_text' => true, 'content_text' => $sql],
@@ -41,7 +41,7 @@ function getSqltable(array $items): string {
     return $tpl->getHtmlFrag('table', [
         'is_fixed' => true,
         'head' => [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _TYPE],
             ['content' => _TABLE],
             ['content' => _DB_SQL, 'nosort' => true],
@@ -81,39 +81,32 @@ function getSqlsum(array $items, string $mode, string $name): string {
     return $tpl->getHtmlFrag('alert', ['messages' => $lines]);
 }
 
-# List every table of the database with its size and free space; a post runs optimize or repair and redirects to its tab, which shows the result per table once
-function database(string $run = ''): void {
-    global $db, $conf, $tpl, $afile;
-    $type = ($run !== '') ? $run : getVar('get', 'type', 'var');
-    $type = in_array($type, ['optimize', 'repair'], true) ? $type : '';
+# List every table of the database with its size and free space; a maintenance run waits in the admin session and shows its summary and marks once
+function database(): void {
+    global $db, $conf, $tpl;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     $keep = $conf['admin_c'].'-dbrun';
-    if ($run !== '') {
-        $warn = !checkAdminPost('database') || $dbname === '';
-        $marks = [];
-        $result = $warn ? false : $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
-        while ($result && $info = $db->getSqlRow($result)) {
-            $name = (string)$info['Name'];
-            if (!preg_match('#^[a-zA-Z0-9_]+$#', $name)) continue;
-            if ($run === 'repair' && $info['Engine'] === 'InnoDB') {
-                $marks[$name] = 'none';
-                continue;
-            }
-            if ($run === 'optimize') $db->getSqlQuery('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
-            $res = $db->getSqlQuery(strtoupper($run).' TABLE `'.$dbname.'`.`'.$name.'`');
-            $marks[$name] = !$res ? 'fail' : (($run === 'optimize' && $info['Engine'] === 'MyISAM' && !$info['Data_free']) ? 'same' : 'done');
+    $run = $_SESSION[$keep] ?? null;
+    unset($_SESSION[$keep]);
+    $isrun = is_array($run);
+    $marks = (array)($run['marks'] ?? []);
+    $words = ['sound' => _DB_SOUND, 'fixed' => _DB_FIXED, 'broken' => _DB_BROKEN, 'done' => _OPTIMIZED, 'same' => _ALREADYOPTIMIZED, 'fail' => _ERROR];
+    $sum = '';
+    if ($isrun) {
+        $count = array_count_values([...array_column($marks, 'fix'), ...array_column($marks, 'opt')]);
+        $acts = (array)($run['acts'] ?? []);
+        $lines = [_DB_MODE.': '.implode(' + ', array_map(fn($v) => ($v === 'check') ? _DB_CHECK : _OPTIMIZE, $acts)), _DB_TABLES.': '.count($marks)];
+        if (in_array('optimize', $acts, true)) {
+            $was = array_sum(array_column($marks, 'was'));
+            $now = array_sum(array_column($marks, 'now'));
+            $lines[] = _DB_FREED.': '.filterSize(max(0, $was - $now));
+            $lines[] = _SIZE.': '.filterSize($was).' → '.filterSize($now);
         }
-        if ($run === 'optimize' && $marks) $db->getSqlQuery('FLUSH TABLES');
-        if (!$warn) $_SESSION[$keep] = $marks;
-        setRedirect($afile.'.php?name=database&type='.$run, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+        foreach ($words as $key => $word) if (!empty($count[$key])) $lines[] = $word.': '.$count[$key];
+        $sum = $tpl->getHtmlFrag('alert', ['type' => (empty($count['fail']) && empty($count['broken'])) ? 'success' : 'error', 'messages' => $lines]);
     }
-    $marks = ($type !== '') ? (array)($_SESSION[$keep] ?? []) : [];
-    if ($type !== '') unset($_SESSION[$keep]);
-    $words = ['done' => [($type === 'repair') ? _OK : _OPTIMIZED, 'is_on'], 'same' => [_ALREADYOPTIMIZED, 'is_off'], 'fail' => [_ERROR, 'is_fail'],
-        'none' => [_NO, 'is_off']];
-    $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _DB_SQL, _MANUAL], 'tab' => ['' => 0, 'optimize' => 1, 'repair' => 2][$type],
-        'part' => [0, 1, 2]]);
+    $ops = ['name=database', 'name=database&op=service', 'name=database&op=dump', 'name=database&op=info'];
+    $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _DB_SERVICE, _DB_SQL, _MANUAL], 'tab' => 0]);
     if ($dbname === '') {
         setHead();
         echo getTplAdminList(['head_html' => $head, 'none_text' => _ERROR]);
@@ -143,24 +136,36 @@ function database(string $run = ''): void {
         $freetag = $tabeng === 'InnoDB'
             ? $tpl->getHtmlFrag('inline-badge', ['is_muted' => !$tabfree, 'label' => filterSize($tabfree)])
             : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
-        $mark = $words[$marks[$name] ?? ''] ?? [];
-        $stattag = ['is_col_status' => true, 'stat' => $mark ? ['text' => $mark[0], $mark[1] => true] : ['text' => _NO]];
-        if ($type === '') {
-            $stattag = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
-                getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
-                getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 2], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
-            ]])];
+        $tail = [['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
+            getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
+            getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 2], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
+        ]])]];
+        if ($isrun) {
+            $one = (array)($marks[$name] ?? []);
+            $fix = (string)($one['fix'] ?? '');
+            $opt = (string)($one['opt'] ?? '');
+            $freed = max(0, intval($one['was'] ?? 0) - intval($one['now'] ?? 0));
+            $said = array_values(array_filter([
+                ($fix === 'sound' && $opt !== '') ? '' : ($words[$fix] ?? ''),
+                ($opt === 'done') ? '−'.filterSize($freed) : ($words[$opt] ?? ''),
+            ]));
+            $text = implode(' · ', $said).((($one['msg'] ?? '') !== '') ? ': '.$one['msg'] : '');
+            $tone = (in_array($fix, ['broken', 'fail'], true) || $opt === 'fail') ? 'is_fail' : (($fix === 'fixed' || $opt === 'done') ? 'is_on' : 'is_off');
+            $tail = [
+                ['is_col_status' => true, 'stat' => ['text' => $said ? implode(' · ', $said) : _NO, $tone => (bool)$said]],
+                ['is_truncate' => true, 'title_text' => $text, 'has_content_text' => true, 'content_text' => $text, 'attr' => 'data-sort="'.$freed.'"'],
+            ];
         }
         $rows[] = ['name' => $name, 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => count($rows) + 1],
-            ['has_content_text' => true, 'content_text' => $name] + getTplLongCell((string)$name, _TABLE),
+            ['has_content_text' => true, 'content_text' => $name],
             ['has_content_text' => true, 'content_text' => $tabeng],
             ['title_text' => $tabloc, 'has_content_text' => true, 'content_text' => $tabloc],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $num],
             ['is_col_date' => true, 'moment' => $info['Create_time']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize($tabsize)],
             ['is_col_count' => true, 'content_html' => $freetag],
-            $stattag,
+            ...$tail,
         ]];
     }
     $tiles = $tpl->getHtmlFrag('metric-list', ['items' => [
@@ -169,17 +174,10 @@ function database(string $run = ''): void {
         ['label' => _DB_TOTAL, 'value' => filterSize($total), 'icon' => 'database'],
         ['label' => _DBFREE, 'value' => filterSize($sumfree), 'icon' => 'recycle'],
     ]]);
-    $note = match ($type) {
-        'optimize' => $tpl->getHtmlFrag('alert', ['is_warn' => true,
-            'text' => _OPTTEXT, 'acts_html' => getTplPostButton(['name' => 'database', 'op' => 'optimize'], 'speedometer2', _OPTIMIZE, '', 'act')]),
-        'repair' => $tpl->getHtmlFrag('alert', ['text' => _REPTEXT,
-            'acts_html' => getTplPostButton(['name' => 'database', 'op' => 'repair'], 'wrench', _REPAIR, '', 'act')]),
-        default => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OPTTEXT]).$tpl->getHtmlFrag('alert', ['text' => _REPTEXT]),
-    };
     setHead();
     echo getTplAdminList([
         'head_html' => $head,
-        'note_html' => $note.$tiles,
+        'note_html' => $sum.$tiles,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TABLE],
@@ -189,7 +187,8 @@ function database(string $run = ''): void {
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _SIZE, 'is_col_count' => true],
             ['content' => _DBFREE, 'is_col_count' => true, 'nosort' => true],
-            ($type !== '') ? ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true] : ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+            ...($isrun ? [['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _DB_RESULT]]
+                : [['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]]),
         ],
         'rows' => $rows,
         'count' => count($rows),
@@ -197,17 +196,114 @@ function database(string $run = ''): void {
     setFoot();
 }
 
+function service(): void {
+    global $afile, $tpl;
+    setHead();
+    $ops = ['name=database', 'name=database&op=service', 'name=database&op=dump', 'name=database&op=info'];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _DB_SERVICE, _DB_SQL, _MANUAL], 'tab' => 1]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _REPTEXT.' '._OPTTEXT]);
+    $rows = [];
+    foreach (['check' => _DB_CHECK, 'optimize' => _OPTIMIZE] as $key => $label) {
+        $rows[] = [
+            'label_html' => $label,
+            'label_id' => $labid = getFieldIds('', $key)['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid,
+                'name' => $key,
+                'value' => '0',
+                'options' => [
+                    ['value' => '1', 'label' => _YES],
+                    ['value' => '0', 'label' => _NO],
+                ],
+            ]),
+        ];
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'database'],
+            ['nameattr' => 'op', 'valueattr' => 'maintain'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('database')],
+        ],
+        'rows' => $rows,
+        'submit_label' => _EXECUTE,
+    ])]);
+    echo $cont;
+    setFoot();
+}
+
+# The server answers a table command in rows, so a failed table is an error row of a query that succeeded; REPAIR does nothing on InnoDB, which only CHECK can judge
+function maintain(): void {
+    global $db, $conf, $afile;
+    $opt = getVar('post', 'optimize', 'num') === 1;
+    $chk = getVar('post', 'check', 'num') === 1;
+    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
+    $warn = !checkAdminPost('database') || $dbname === '';
+    if (!$warn && !$opt && !$chk) setRedirect($afile.'.php?name=database&op=service', false, 302, _DB_NOPICK, true);
+    $ask = static function (string $sql) use ($db): array {
+        $res = $db->getSqlQuery($sql);
+        if (!$res) return [false, (string)($db->getSqlError()['message'] ?? _ERROR)];
+        $isok = false;
+        $text = '';
+        while ($row = $db->getSqlRow($res)) {
+            $type = strtolower((string)($row['Msg_type'] ?? ''));
+            $msg = (string)($row['Msg_text'] ?? '');
+            if ($type === 'status') $isok = in_array($msg, ['OK', 'Table is already up to date'], true);
+            if ($type === 'error' || ($type === 'status' && !$isok)) $text = $msg;
+        }
+        return [$isok && $text === '', $text];
+    };
+    $size = static function (string $name) use ($db, $dbname): int {
+        $res = $db->getSqlQuery('SELECT DATA_LENGTH + INDEX_LENGTH + DATA_FREE AS used FROM information_schema.TABLES WHERE TABLE_SCHEMA = :base AND TABLE_NAME = :name',
+            ['base' => $dbname, 'name' => $name]);
+        $row = $res ? $db->getSqlRow($res) : null;
+        return intval($row['used'] ?? 0);
+    };
+    $tabs = [];
+    $result = $warn ? false : $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
+    while ($result && $info = $db->getSqlRow($result)) {
+        if (preg_match('#^[a-zA-Z0-9_]+$#', (string)$info['Name'])) $tabs[(string)$info['Name']] = (string)$info['Engine'];
+    }
+    $marks = [];
+    foreach ($tabs as $name => $engine) {
+        $path = '`'.$dbname.'`.`'.$name.'`';
+        $one = ['fix' => '', 'opt' => '', 'was' => 0, 'now' => 0, 'msg' => ''];
+        if ($chk) {
+            [$isok, $text] = $ask('CHECK TABLE '.$path);
+            if ($isok) {
+                $one['fix'] = 'sound';
+            } elseif ($engine === 'InnoDB') {
+                $one = ['fix' => 'broken', 'msg' => $text] + $one;
+            } else {
+                [$isok, $back] = $ask('REPAIR TABLE '.$path);
+                $one = ['fix' => $isok ? 'fixed' : 'fail', 'msg' => $isok ? $text : $back] + $one;
+            }
+        }
+        if ($opt && !in_array($one['fix'], ['broken', 'fail'], true)) {
+            $db->getSqlQuery('ANALYZE TABLE '.$path);
+            $one['was'] = $size($name);
+            [$isok, $text] = $ask('OPTIMIZE TABLE '.$path);
+            $one['now'] = $size($name);
+            $one['opt'] = !$isok ? 'fail' : (($one['was'] > $one['now']) ? 'done' : 'same');
+            if (!$isok) $one['msg'] = $text;
+        }
+        $marks[$name] = $one;
+    }
+    if ($opt && $marks) $db->getSqlQuery('FLUSH TABLES');
+    if (!$warn) $_SESSION[$conf['admin_c'].'-dbrun'] = ['acts' => array_keys(array_filter(['check' => $chk, 'optimize' => $opt])), 'marks' => $marks];
+    setRedirect($afile.'.php?name=database', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+}
+
 function dump(): void {
     global $db, $conf, $afile, $tpl;
     $type = getVar('post', 'type', 'var', '');
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
-    $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _DB_SQL, _MANUAL];
+    $ops = ['name=database', 'name=database&op=service', 'name=database&op=dump', 'name=database&op=info'];
+    $tabs = [_HOME, _DB_SERVICE, _DB_SQL, _MANUAL];
     $run = $type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec');
     if ($run && !checkAdminPost('database')) setRedirect($afile.'.php?name=database&op=dump', false, 302, _TOKENMISS, true);
     setHead();
-    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
     if ($run) {
         $parsed = getSqlbatch(getSqlFilled($string));
         if ($parsed['error'] !== '') {
@@ -287,8 +383,8 @@ function dump(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'],
-        'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _DB_SQL, _MANUAL],
+        'ops' => ['name=database', 'name=database&op=service', 'name=database&op=dump', 'name=database&op=info'],
+        'tabs' => [_HOME, _DB_SERVICE, _DB_SQL, _MANUAL],
     ]);
 }
 
@@ -306,8 +402,8 @@ function delete(): void {
 
 switch ($op) {
     default: database(); break;
-    case 'optimize': database('optimize'); break;
-    case 'repair': database('repair'); break;
+    case 'service': service(); break;
+    case 'maintain': maintain(); break;
     case 'dump': dump(); break;
     case 'delete': delete(); break;
     case 'info': info(); break;

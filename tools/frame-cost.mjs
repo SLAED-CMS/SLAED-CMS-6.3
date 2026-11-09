@@ -69,6 +69,7 @@ const states = {
   'pres-pointer': { auth: '', url: '/presentation', run: 'pointer' },
   'pres-nudge': { auth: '', url: '/presentation', run: 'nudge' },
   'pres-scroll': { auth: '', url: '/presentation', run: 'scroll' },
+  'forum-idle': { auth: '', url: '/forum', run: 'idle' },
 };
 
 // One part of a screen for the pixels: where it lies; a live figure cannot move, since the document and the polls answer both variants alike
@@ -88,6 +89,9 @@ const parts = {
   blocks: { auth: '', url: '/presentation', sel: '.sl-pres-blocks-stage' },
   runtime: { auth: '', url: '/presentation', sel: '#runtime' },
   development: { auth: '', url: '/presentation', sel: '#development' },
+  'forum-dot': { auth: '', url: '/forum', sel: '.sl-forum-mark-new', pad: 12 },
+  'avatar-dot': { auth: 'site', url: '/forum', sel: '.sl-live-avatar', pad: 12 },
+  'profile-dot': { auth: 'site', url: '/account', sel: '.sl-profile-status', pad: 12 },
 };
 
 // The median of a list of numbers

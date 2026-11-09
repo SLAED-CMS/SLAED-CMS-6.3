@@ -1194,15 +1194,16 @@ tr.sl-row-collapsed {
   display: none;
 }
 
-/* Tree nodes: indent pads and branch glyph for hierarchical admin lists */
+/* Tree nodes: every level steps one --sl-tree-width, a pad above the first level and the branch glyph on it alike */
 .sl-tree-pad {
   display: inline-block;
   width: var(--sl-tree-width);
 }
 
 .sl-tree-node {
+  display: inline-block;
+  width: var(--sl-tree-width);
   color: var(--sl-text-muted);
-  margin: 0 var(--sl-space-3) 0 var(--sl-space-8);
 }
 
 /* Dial in list tables: the fan overlays sibling cells of its own row; the actions cell anchors the absolute dial even when it is not the last column */
@@ -5606,14 +5607,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     display: inline-block;
   }
 
-  /* A home tile or a tile of figures in hand leans to the pointer under a glare; a home tile whose dial is in use stands level, so the fan holds still under the hand */
-  .sl-menu-grid > .sl-mcard:hover,
-  .sl-metric:hover {
-    transform: perspective(var(--sl-layout-container)) rotateX(var(--sl-d-tilt-y, 0deg)) rotateY(var(--sl-d-tilt-x, 0deg)) translateY(-1px);
-  }
-
+  /* A tile of figures in hand rises on its shadow under a glare */
   .sl-metric {
-    transition: transform var(--sl-time-slow) var(--sl-ease-out), box-shadow var(--sl-time-slow) var(--sl-ease-out);
+    transition: box-shadow var(--sl-time-slow) var(--sl-ease-out);
   }
 
   .sl-metric:hover {
@@ -5634,10 +5630,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-menu-grid > .sl-mcard:hover > .sl-mcard-link {
     border-radius: inherit;
     background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-x, 50%) var(--sl-d-y, 50%), var(--sl-tint-strong), transparent 70%);
-  }
-
-  .sl-menu-grid > .sl-mcard:hover:has(> .sl-dial:is(:hover, .sl-open)) {
-    transform: none;
   }
 
   /* A tick slides the live chart by the time that passed; only the slide moves, the drawing is never replayed */
@@ -6094,7 +6086,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-div-actions:has(> .sl-list-bottom) {
   display: block;
   width: 100%;
-  margin: var(--sl-space-3) 0 var(--sl-space-3) 0;
+  margin: var(--sl-space-3) 0 0 0;
   padding: 0;
   border-radius: 0;
   background-color: transparent;
@@ -6506,6 +6498,30 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
+/* The beat of a glyph inside the flash ring: a sixteen pixel radius may grow by an eighth before it meets the track at nineteen */
+@keyframes sl-alert-ring-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  14% {
+    transform: scale(1.12);
+  }
+
+  28% {
+    transform: scale(1);
+  }
+
+  42% {
+    transform: scale(1.12);
+  }
+
+  56% {
+    transform: scale(1);
+  }
+}
+
 /* A flash springs onto its place, counts its five seconds down on a ring round its tick and leaves collapsing */
 .sl-alert-flash {
   position: relative;
@@ -6552,6 +6568,17 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   stroke-width: var(--sl-flash-ring);
   stroke-dasharray: 100;
   animation: sl-alert-flash-ring var(--sl-flash-dur) linear forwards;
+}
+
+/* Inside the ring every tone is a round glyph: the corners of the triangle and the octagon reach the track, and the beat stays short of it */
+.sl-alert-flash.sl-alert-warn::before,
+.sl-alert-flash.sl-toast-warn::before {
+  content: "\f332";
+}
+
+.sl-alert-flash.sl-alert-error::before {
+  content: "\f622";
+  animation-name: sl-alert-ring-beat;
 }
 
 .sl-alert-flash.sl-is-hiding {
@@ -7723,6 +7750,12 @@ button.sl-but-mini {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   column-gap: var(--sl-space-4);
+  margin-bottom: var(--sl-space-4);
+}
+
+/* The head owns the gap under its tabs: an alert's top margin folds into it, the padding of a box under it would add to it */
+.sl-box:has(> .sl-module-head) + .sl-box {
+  padding-top: 0;
 }
 
 .sl-box > .sl-tabs-nav,
@@ -10346,9 +10379,10 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 }
 
 /* The column is the container the head of a section and its filter bar measure, not the window, as the menu folds */
+/* The column ends one step of the panes above the footer, whatever block comes last */
 .sl-admin-content-inner {
   min-width: 0;
-  padding: 0 0 0 var(--sl-space-3);
+  padding: 0 0 var(--sl-space-4) var(--sl-space-3);
   box-sizing: border-box;
   container-type: inline-size;
 }
@@ -11706,18 +11740,18 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-knob-tone);
 }
 
-/* The change of a tile against the month before, in the tone of its direction */
+/* The change of a tile against the month before, in the tone of its direction: the per cent in the line, the icon of its state at the right */
 .sl-metric-delta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-1);
   font-weight: var(--sl-weight-semibold);
 }
 
 .sl-metric-delta-up { color: var(--sl-success-strong); }
 .sl-metric-delta-down { color: var(--sl-danger-strong); }
-.sl-metric-delta-flat,
+.sl-metric-delta-flat { color: var(--sl-primary-strong); }
 .sl-metric-delta-none { color: var(--sl-text-muted); }
+.sl-metric-trend-up > .sl-metric-icon { color: var(--sl-success); }
+.sl-metric-trend-down > .sl-metric-icon { color: var(--sl-danger); }
+.sl-metric-trend-none > .sl-metric-icon { color: var(--sl-text-muted); }
 
 /* A line of controls in a form row: the post buttons of one field, main first, and the file door, free of the names of the window (docs/WINDOW.md) */
 .sl-div-field:has(> .sl-post-button),
@@ -12772,7 +12806,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-ground {
   position: relative;
   display: grid;
-  gap: var(--sl-space-6);
+  gap: var(--sl-space-4);
   min-width: 0;
 }
 
@@ -12805,7 +12839,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-pane-trio {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sl-space-6);
+  gap: var(--sl-space-4);
 }
 
 .sl-pane-split > :first-child {
@@ -12815,7 +12849,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-pane-side {
   display: flex;
   flex-direction: column;
-  gap: var(--sl-space-6);
+  gap: var(--sl-space-4);
 }
 
 .sl-pane-side > * {
@@ -12937,7 +12971,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-top: var(--sl-space-5);
 }
 
-/* Series tile: the name with the dot of its series, the figure, a line under it and the icon of its figure at its right; not the tile of the home */
+/* Series tile: the name with the dot of its series, the figure with the icon of its figure at its right, and a line under both across the tile; not the tile of the home */
 .sl-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--sl-metric-min-width), 1fr));
@@ -12991,15 +13025,19 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   column-gap: var(--sl-space-5);
 }
 
-.sl-metric:has(> .sl-metric-icon) > :not(.sl-metric-icon) {
+.sl-metric:has(> .sl-metric-icon) > :is(.sl-metric-name, .sl-metric-value) {
   grid-column: 1;
+}
+
+.sl-metric:has(> .sl-metric-icon) > small {
+  grid-column: 1 / -1;
 }
 
 .sl-metric-icon {
   width: var(--sl-t-icon-width);
   text-align: center;
   grid-column: 2;
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   align-self: center;
   font-size: var(--sl-size-icon-lg);
   line-height: 1;
@@ -13227,10 +13265,14 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   border-bottom: 1px solid var(--sl-border);
 }
 
-/* A figure of a tile may be a word a visitor typed: it breaks inside its tile rather than running under the icon */
+/* A figure of a tile may be a word a visitor typed: it breaks inside its tile rather than running under the icon; a counted number keeps its groups on one line */
 .sl-metric-value {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.sl-metric-num {
+  white-space: nowrap;
 }
 
 /* Series extensions by weight: a wanted one framed green with a check or red with a cross, and under its group what a missing one costs */
@@ -13886,19 +13928,19 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   color: var(--sl-success-strong);
 }
 
+/* The list of days fits the content from a laptop up; on a narrower screen it scrolls sideways inside its own block rather than cutting its titles */
 [data-sl-series="table"] {
   overflow-x: auto;
 }
 
-/* The table of days: figures to the right in their column, the total first and bold, weekends and the picked day marked */
-.sl-days-table :is(td, th) {
-  text-align: right;
+/* The list of days is a list of the canon, its figures in their count columns; the total first and bold, weekends and the picked day marked */
+[data-sl-series="table"] table :is(td, th) {
   font-variant-numeric: tabular-nums;
 }
 
-.sl-days-table :is(td, th):first-child {
-  min-width: var(--sl-statx-width);
-  text-align: left;
+/* A figure with its unit is one word: the bold of a total or a peak does not break "333 ms" in two */
+[data-sl-series="table"] td.sl-col-count {
+  white-space: nowrap;
 }
 
 .sl-days-week {
@@ -13907,25 +13949,26 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   color: var(--sl-text-muted);
 }
 
-.sl-days-table tr.sl-is-end .sl-days-week {
+[data-sl-series="table"] tr.sl-is-end .sl-days-week {
   color: var(--sl-danger-strong);
 }
 
-.sl-days-date > .sl-chip {
-  margin-left: var(--sl-space-3);
+/* Today says so in the place of its weekday, in the green of a running day, and keeps the row one line high */
+[data-sl-series="table"] tr .sl-days-week.sl-is-run {
+  color: var(--sl-success-strong);
 }
 
-.sl-days-table tr.sl-is-total > td,
-.sl-days-table td.sl-is-top {
+[data-sl-series="table"] tr.sl-is-total > td,
+[data-sl-series="table"] td.sl-is-top {
   font-weight: var(--sl-weight-bold);
   color: var(--sl-text-strong);
 }
 
-.sl-days-table tr.sl-is-pick > td {
+[data-sl-series="table"] tr.sl-is-pick > td {
   background: var(--sl-tint);
 }
 
-.sl-days-table tr[data-sl-series-pick] {
+[data-sl-series="table"] tr[data-sl-series-pick] {
   cursor: pointer;
 }
 

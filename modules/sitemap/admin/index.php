@@ -203,7 +203,7 @@ function config(): void {
     ];
     foreach (getNodeTypeMap() as $name => $type) {
         $types[] = ['name_attr' => 'ntype[]', 'value_attr' => $name, 'is_checked' => $type->settings['integrations']['sitemap'],
-            'label_text' => getModuleName($name), 'code_text' => $name];
+            'label_text' => getModuleName($name)];
         $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     }
     $mods = array_values(array_diff(scandir(BASE_DIR.'/modules') ?: [], ['.', '..', 'node']));

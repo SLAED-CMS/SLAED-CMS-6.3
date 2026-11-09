@@ -4,8 +4,8 @@
   {{{ heading }}}
 </h2>
 {% endif %}
-<div class="sl-table-shell">
-  <table class="{% if is_topic_list %}sl-table-list sl-ft-topics{% else %}sl-table-list-sort{% endif %}">
+<div class="sl-table-shell sl-forum-shell">
+  <table class="sl-forum-table {% if is_topic_list %}sl-table-list sl-ft-topics{% else %}sl-table-list-sort{% endif %}" data-sl-table-sort>
     {% if is_topic_list %}
     <thead>
       <tr class="sl-table-head">
@@ -14,12 +14,14 @@
         <th class="sl-fl-col-stat">{{ col_poster }}</th>
         <th class="sl-fl-col-stat">{{ col_views }}</th>
         <th>{{ col_last }}</th>
+        {% if check_all %}<th class="sl-col-check" data-sl-check-all data-sort-method="none">{{{ check_all }}}</th>{% endif %}
       </tr>
     </thead>
     {% else %}
     <thead>
       <tr class="sl-table-head">
-        <th colspan="2">{{ col_forum }}</th>
+        <th class="sl-fl-col-icon" data-sort-method="none"></th>
+        <th>{{ col_forum }}</th>
         <th class="sl-fl-col-stat">{{ col_topics }}</th>
         <th class="sl-fl-col-stat">{{ col_messages }}</th>
         <th>{{ col_last }}</th>

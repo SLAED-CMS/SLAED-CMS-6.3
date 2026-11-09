@@ -16,6 +16,7 @@ return [
     # A third was decided on 2026-10-09 with the ranks plan: the site's --sl-rank-height lost its one reader, the rank picture of the profile, when ranks became icons
     # A fourth was decided on 2026-11-04: the panel's six --sl-drift-* names left with the four-dot loader of the live chart, gone 0.2 s into a load
     # A fifth was decided on 2026-11-08: the six --sl-loading-* names of both themes left with the three-dot loader of a list, a file and a site button
+    # A sixth was decided on 2026-11-09: the panel's --sl-statx-width lost its one reader, the floor of the date column, when the list of days dropped the year to fit a laptop
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -304,8 +305,6 @@ return [
             .' a rating star that bursts, plugins/system/slaed.js, and a check row of the installer, templates/admin/pages/setup.html',
         '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
         '--sl-d-usrlevel' => 'user group progress, templates/lite/partials/block-user-info.html',
-        '--sl-d-tilt-x' => 'turn of a home tile or a tile of figures round its upright axis towards the pointer, templates/admin/assets/js/admin-ui.js',
-        '--sl-d-tilt-y' => 'turn of a home tile or a tile of figures round its level axis towards the pointer, templates/admin/assets/js/admin-ui.js',
         '--sl-d-x' => 'horizontal position of a travelling card or packet inside its scene, plugins/presentation/presentation.js, and of the pointer'
             .' inside a home tile, a tile of figures or a pressed control of the panel, templates/admin/assets/js/admin-ui.js',
         '--sl-d-y' => 'vertical position of a travelling card inside its scene, plugins/presentation/presentation.js, and of the pointer'
@@ -412,6 +411,7 @@ return [
         '.sl-long, .sl-set-name',
         '.sl-fm-tile-cap small, .sl-meter-note',
         '.sl-fm-win .sl-fm-main, .sl-pane-two > *',
+        '.sl-editor-diff-body, .sl-pane-side',
         # A utility that puts a gap after any inline element, beside the input of one form field
         # Merging would move the field's definition into the utility block, where nobody editing the field would look
         '.sl-div-field label input, .sl-inline-gap',
@@ -452,7 +452,7 @@ return [
         '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
         # The same shape in lite: the hover of a forum row and one resting note, which met when 0.9 and 0.75 folded onto one step
         # The note is not a hover, and the two share nothing else
-        '.sl-forum-last:hover, .sl-session-note',
+        '.sl-forum-jump:hover, .sl-session-note',
         # The element default every page inherits, a utility that bolds any inline run, and one component label
         # They met when `bold` and `700` became one name; merging would move the element reset into a utility block
         '.sl-label, .sl-text-bold, strong, b',
@@ -495,10 +495,10 @@ return [
         '.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
-        # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read forum row and a nested list
+        # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read topic and a nested list
         # None of them is the markdown source, and a selector list holding all four would name nothing
-        '.sl-forum-old .bi, .sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
-            .'.sl-forum-closed .bi, .sl-list-item > li ul, .sl-list-item > li ul a, '
+        '.sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
+            .'.sl-list-item > li ul, .sl-list-item > li ul a, '
             .'.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
@@ -601,6 +601,9 @@ return [
     # A selector holding the same properties with different values needs no entry: that is one canon carrying many skins, which is what the theme packages are for
     # The key is the `@media context` and the selector joined by two spaces, which is what `--cross` prints
     'divergent' => [
+        '.sl-metric-name' =>
+            'admin shares the capitals of the name with the heads of its windows in one selector list, and lite has no window head to share them with, '
+            .'so its name of a tile carries them in its own rule; the face, the size and the colour are the same',
         # The shorthand and the three longhands are not two spellings of one intent: every longhand a shorthand leaves out is reset to its initial value
         # So `list-style: disc outside` fixes the type where the longhands leave it alone
         'ul' =>

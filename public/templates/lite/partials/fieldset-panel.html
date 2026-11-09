@@ -1,4 +1,4 @@
-<fieldset{% if is_center or is_moder_mass %} class="{% if is_center %}sl-fieldset-center{% endif %}{% if is_moder_mass %}{% if is_center %} {% endif %}sl-moder-mass{% endif %}"{% endif %}>
+<fieldset{% if is_center %} class="sl-fieldset-center"{% endif %}>
   <legend{% if is_info or is_success or is_danger %} class="{% if is_info %}sl-fieldset-legend-info{% elseif is_success %}sl-fieldset-form-legend-success{% elseif is_danger %}sl-fieldset-form-legend-danger{% endif %}"{% endif %}>{{ legend }}</legend>
   {{{ content }}}
 </fieldset>

@@ -331,13 +331,13 @@ function config(): void {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
         $mods[] = ['name_attr' => 'search[]', 'value_attr' => $file, 'is_checked' => in_array($file, $curr, true),
-            'label_text' => getModuleName($file), 'code_text' => $file];
+            'label_text' => getModuleName($file)];
     }
     $types = [];
     $hidden = [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]];
     foreach (getNodeTypeMap() as $name => $type) {
         $types[] = ['name_attr' => 'ntype[]', 'value_attr' => $name, 'is_checked' => $type->settings['integrations']['search'],
-            'label_text' => getModuleName($name), 'code_text' => $name];
+            'label_text' => getModuleName($name)];
         $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     }
     $cfgrows = [

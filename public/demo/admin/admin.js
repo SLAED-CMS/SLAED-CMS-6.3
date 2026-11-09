@@ -1107,7 +1107,7 @@
       + '<span class="sl-dock-sep sl-dock-sep-end"></span>'
       + '<span class="sl-modal-acts sl-dock-tools" data-mark="М5 М6 М7 М8">'
       + '<button type="button" class="sl-modal-act sl-dock-tool sl-dock-turn" data-sl-dock-turn title="Повернуть меню: горизонтально или вертикально" aria-label="Повернуть меню">'
-      + DOCK_ICO('distribute-vertical sl-dock-ax-row') + DOCK_ICO('distribute-horizontal sl-dock-ax-col') + '</button>'
+      + DOCK_ICO('three-dots-vertical sl-dock-ax-row') + DOCK_ICO('three-dots sl-dock-ax-col') + '</button>'
       + '<button type="button" class="sl-modal-act sl-dock-tool sl-dock-fold" data-sl-dock-fold aria-controls="sl-dock-body" aria-expanded="' + (getKept('sl.dock.fold') !== '1')
       + '" title="Свернуть или развернуть меню">'
       + DOCK_ICO('arrows-collapse-vertical sl-dock-ax-row sl-dock-open') + DOCK_ICO('arrows-expand-vertical sl-dock-ax-row sl-dock-shut')

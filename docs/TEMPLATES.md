@@ -530,7 +530,7 @@ The module hands the meaning of each row — its name, its moment, its details, 
 the canon builds the markup from it: the relative date, the "i", the key E, the boxes, the foot "Отмечено: N" with its
 action and "Отметить все N". No list of the canon glues a `popover`, a `stamp`, a `data-sl-edit`, an `hx-boost` or
 the box of a row pick into a cell of its own. The etalon is "Комментарии" (`admin/modules/comments.php`), the shortest full example
-"Фавориты" (`favorites()` of `modules/account/admin/index.php`). "Группы" (the ladder), "Блоки", "Категории" and the file manager are
+"Фавориты" (`admin/modules/favorites.php`). "Группы" (the ladder), "Блоки", "Категории" and the file manager are
 components of their own and stand outside this contract.
 
 | Key | On | The module hands | The canon builds |
@@ -604,6 +604,7 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`logs-logins`, `newsletter-dead`) |
 | `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note or the tiles of a summary above the table (Panel Window), a form under it that has to live inside `#sl-list` (the ban lists) |
 | `is_fixed` | the fixed table layout |
+| `is_one_view` | a list of one view: no switch, the density `standard` whatever the cookie, and with one page no head row at all (the list of days of the statistic) |
 
 - **The filter has one place.** `partials/module-head.html` draws `subtitle_html` and `find` in one block after the
   tabs, so the order of the focus follows the bar. A filter of four fields, or of three with a box to type in, always stands in the bar under the tabs; one or two
@@ -632,15 +633,20 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
   one icon: `is_on` the green check, `is_wait` the clock, `is_fail` the red cross, none of them the grey dashed circle
   of off; `text` is its tip and its name for a screen reader, `_ACT`/`_DEACT` without it. The cell sorts by the tone
   through `data-sort`, and the lamp of a row turned in place (`admin-ui.js`) keeps it. A head with `is_head_status`,
-  `is_head_error`, `is_head_run` (the result of the last run, a clock with an arrow) or `is_head_access` (the rights of
-  an account, a shield), and the head of the options `is_col_actions` (the gear of its dial), shows its icon instead of
+  `is_head_error`, `is_head_run` (the result of the last run, a clock with an arrow), `is_head_access` (the rights of
+  an account, a shield) or `is_head_icon` (the icon of a record, a picture), and the head of the options `is_col_actions` (the gear of its dial), shows its icon instead of
   the word, which stays in its tip and for a screen reader. In the fixed layout a status or an error column is as wide
   as its icon, the options keep the width of the dial; a column of a status or an error is sortable.
 - **A row ends in one order.** The service columns close every list of the site and the panel as error, status,
   options: an error or a result of a run stands right before the status, the status right before the options, and a
   list without options ends in its status. Every column of data — dates, the author, the IP, the browser — stands
   before them. A column of an error or a status never leaves a cell empty: a row without an error, a result or a status
-  yet draws the grey circle of off with `_NO` as its tip.
+  yet draws the grey circle of off with `_NO` as its tip. A column of an icon is as narrow and draws the icon of the
+  record, or the same grey circle through `stat` with `is_mark`, which leaves out `data-sl-lamp`: the lamp a row turns
+  in place is its status alone.
+- **A tree steps one width.** `fragments/tree-node.html` puts a pad of `--sl-tree-width` above the first level and the
+  branch glyph in a box of the same width, so every level, the first one included, steps the same distance; no space
+  stands between the glyph and the tip, since `fragments/popover.html` opens its tip without a newline in both themes.
 - **A centred column keeps its title over its values.** The cells of `sl-col-id`, `-status`, `-date`, `-count`, `-sent`
   and of a last column that is not the options or the boxes have equal sides, and in a sortable table a lane for the
   mark on the right of the title and of every cell alike, so both centre in the same width. A sortable title stands
@@ -649,13 +655,12 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
   holds the longest title of its kind in Russian; a longer one in another language is cut, not laid under the mark.
 - **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; a select with `is_now` sends the
   form on the pick through `admin-ui.js`, and a filter whose every field is such a select shows its OK button only to
-  a browser without scripts (`@media (scripting: enabled)` in `theme.css`). `link_url`
-  with `link_text` draws a plain link beside its button, under it in the bar, which leaves the list for a page of its own (the settings of
-  "Фавориты"); the tabs that change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
+  a browser without scripts (`@media (scripting: enabled)` in `theme.css`). The tabs that change the list in place are
+  the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
   and both pagers stand whenever there is more than one page, the filter applied by the server. The key tip "i"
-  (`fragments/pager-keys.html`, scope `keys`) stands once per list, after the view switch, with pages or without; the
+  (`fragments/pager-keys.html`, scope `keys`) stands once per list, after the view switch, with pages or without, and leaves with the head row of a list of one view on one page; the
   pager of a list (`is_list`) leaves it out, and the row under the table stands only for a pager or a bulk action.
-- **The view is one for every list.** The switch `sl-seg sl-seg-view` writes the cookie `density` through op `option`:
+- **The view is one for every list,** except a list of one view (`is_one_view`). The switch `sl-seg sl-seg-view` writes the cookie `density` through op `option`:
   `standard` (no cookie), `full`, `compact`, `cards`; `getTplAdminList()` writes `data-sl-density` on the table from the
   first byte and the script changes the attribute at once. The sort is kept per `key` by `getToggleState()` and said on
   the line `data-sl-said` of `layouts/admin.html`, which also says the range after every swap; the rows that a filter, a
@@ -732,7 +737,7 @@ under the text to the right — the width of the alert decides, not that of the 
   `admin/modules/*.php` for it, `ViewBridgeSmokeTest::viewRendersAlertActionSlot` renders the fragment with and without
   the slot.
 - **Where it stands.** "Сортировка" of "Категории" (`_CATDRAGSORT`) and "Блоки", "Исправить счётчики" of
-  "Комментарии", "Оптимизация" and "Ремонт" of "База данных", "Отметить все N" with the progress line `sl-alert-meter` (`--sl-d-run`), "Повторить" of a list that
+  "Комментарии", "Отметить все N" with the progress line `sl-alert-meter` (`--sl-d-run`), "Повторить" of a list that
   did not come, and "Отменить" of the toast of the panel. The toast of the site is a pill with `sl-toast-undo`, not an
   alert.
 
@@ -760,8 +765,8 @@ A button of the panel weighs by its role, in four colours and nowhere else:
 
 | Weight | Class | Role | Where |
 |---|---|---|---|
-| main | `sl-but-blue` | the one next step of a screen; the submit of a form by default | "Скачать", then "Установить" of "Обновления", "Проверить" there when nothing else waits; "Вперед" and "Установить" of `setup.php` |
-| check | `sl-but-green` | a check that changes nothing | "Проверить установку", "Проверить целостность", "Проверить парсинг" of a query, the test mail, "Проверить" of the database step of `setup.php` |
+| main | `sl-but-blue` | the one next step of a screen; the submit of a form by default | "Скачать", then "Установить" of "Обновления", "Искать обновления" there when nothing else waits; "Вперед" and "Установить" of `setup.php` |
+| check | `sl-but-green` | a check that changes nothing | "Пробная установка", "Сверить файлы", "Проверить парсинг" of a query, the test mail, "Проверить" of the database step of `setup.php` |
 | risk | `sl-but-red` | a step that cannot be undone | "Вернуть предыдущую версию" of "Обновления" and its rescue code, the discard of the layout screen |
 | plain | `sl-but` | everything else: an alternative path, a picker that opens, a routine step | "Загрузить архив", the icon picker, the edit of a field of the layout screen |
 
@@ -771,8 +776,10 @@ A button of the panel weighs by its role, in four colours and nowhere else:
 - **A module names the weight, never the class.** `getTplPostButton()` takes `$look` `'main'`, `'check'` or
   `'risk'`; `post-button.html` turns the flags `is_main`, `is_check`, `is_risk` into the classes. A submit of
   `button.html` takes `is_green`, `is_danger` or `is_plain`.
-- **The buttons of one row stand in a line.** A field of `div-row.html` holding post buttons lays them out in a
-  wrapping line with the main one first; the submit of a form stays centred in `sl-div-actions`.
+- **The main button stands at the right.** In every row of buttons the blue one is the last: a field of `div-row.html`
+  holding post buttons lays them out in a wrapping line with the main one at the end, the row `sl-div-actions` of a
+  form stays centred with its submit after `actions_html`, a window or a bar of the file manager puts the way back
+  before the main action.
 
 ## Facts Of A Page
 
@@ -901,7 +908,7 @@ switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движе�
 | The glow of a circle, at the share of the gauges of the presentation | `.sl-cockpit-ring .sl-knob-val`, `.sl-cockpit-plate` | `--sl-knob-mix`, not the shared `--sl-ring-mix`; it does not move, so it stands with the rules of the cockpit, outside the block |
 | An arc fills to its share | `.sl-cockpit-ring .sl-knob-val` | `stroke-dasharray` over `--sl-knob-dur` on `--sl-alert-ease`; `partials/cockpit.html` starts it at `0 100`, so the first poll fills it from zero |
 | A figure runs from its value to the new one, swollen and green until it stops, one series in both themes | the rings, the strip, the tiles and the queues of the panel, the figures of the presentation, the shares and votes of a poll | `setFigureRun()` of `plugins/system/slaed.js`, the one run, with `getFigureText()`, `getFigureParts()` and `getFigureValue()` beside it; the first fill from a dash runs and flares too. It sets `sl-is-counting` and runs for the length of the first animation the theme gives it: `sl-figure-lit` over `--sl-figure-dur` holds `--sl-figure-text` and `--sl-figure-shadow`, `sl-figure-fade` takes them off after it, `sl-figure-swell` settles from 1.4 over both; an inline figure is an inline block while it runs. The pulse of the monitor keeps `sl-cockpit-fresh` of its own tone. `slFigure` keeps the goal; a still page, a hidden tab or a theme with no flare writes the value at once |
-| A tile leans to the hand under a glare | `.sl-menu-grid > .sl-mcard`, `.sl-metric` | one `pointermove`, not of a touch, written once a frame by `setTileTilt()`: `--sl-d-tilt-x`, `--sl-d-tilt-y`, `--sl-d-x`, `--sl-d-y`; a home tile whose dial is hovered or open takes `transform: none` |
+| A glare follows the hand over a tile | `.sl-menu-grid > .sl-mcard`, `.sl-metric` | one `pointermove`, not of a touch, written once a frame by `setTileGlare()`: `--sl-d-x`, `--sl-d-y` |
 | A beam crosses the solid heads in their turn | `.sl-dashboard-panel-head`, `.sl-block-sidebar h3`, `.sl-pane-cap` | `setBeamTurns()` writes the place of each head in `--sl-d-turn` |
 | A press spreads from the pointer | `.sl-mcard-link` of the home grid, `.sl-menu-list-item` of `.sl-admin-sidebar`, `.sl-block-sidebar-count-row`, `.sl-cockpit button` | one `pointerdown` appends `span[data-sl-ripple]` with `--sl-d-x`, `--sl-d-y`, removed when `sl-ripple` over `--sl-ripple-dur` ends; not from the dial or the drag handle |
 
@@ -909,7 +916,7 @@ The laws of a move:
 
 - **Duration.** A duration in the CSS of these effects is a component token `-dur` or a multiple of `--sl-alert-dur`,
   each carrying `--sl-time-scale`. The run of a figure is `--sl-figure-dur` of the theme, read off its flare; the scripts ask `isMotionStill()`, so a
-  still panel gets no tilt, ripple or run.
+  still panel gets no glare, ripple or run.
 - **No entry.** A page stands as it is drawn: no tile, part, chart or row of the panel is hidden to come in after the load or after a swap.
 - **The block.** A new effect goes into "Motion over the page" and carries no reduced-motion block of its own. The block
   does not hold every animation of the theme: the knob of the segmented switch and the installer keep blocks of their
@@ -920,7 +927,7 @@ The laws of a move:
   `tools/ui-contract.php`, the component under `components`, the prop under `props`.
 - **No transform over a float.** `slaed.js` places a panel of `.sl-float` as `position: fixed` and `refitFloating()`
   follows the scroll; a `transform` on an ancestor becomes the frame of `fixed`, and the panel opens off its place. So
-  a part animates its pseudo-element, and the tilt holds only a tile, whose dial is a fan inside it, no float.
+  a part animates its pseudo-element.
 - **The ripple stays on the home and the menu.** The forms and the lists of the panel take none, nor do the tiles, the
   segments and the days of the parts below.
 
@@ -967,6 +974,9 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
   parent says `inherit`.
 - **What stays by decision.** `sl-cockpit-alarm` on `box-shadow` and `sl-cockpit-throb` on `filter` run only in the state
   danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it; the lamp of the presentation cockpit glows by the `drop-shadow` of the panel lamp, rastered again under its turning comet, about 12 points of GPU on the top of the presentation (owner, 2026-11-04);
+  the live dot of lite (the user block, the profile, a forum section with new messages) pulses by a ring on `transform`
+  and `opacity` under an opaque dot, its edge up to 37 of 255 from `sl-live-pulse` in the first tenth of the cycle
+  (owner, 2026-11-09);
   the moving acts of Phoenix draw on the canvas, not through `ImageData`. The quiet ground of Phoenix asks for a frame
   every frame while the screensaver is on, so the home then restyles about 120 times a second whatever the CSS does.
 
@@ -987,7 +997,7 @@ holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter(
 | The ground | `pane-ground.html`, `.sl-ground` | `content_html`. Its grid drifts on a layer of its own, `.sl-ground-lines`, by `transform`: the drift measured 5.7% and 14.5% of a core (renderer, GPU) against 4.8% and 13.2% without it and 20.4% and 43.5% by `background-position` |
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
 | A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon` or three lamps without it, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list enters a window by the key `pane` of `getTplAdminList()` and draws the same cap |
-| A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir`, `arrow`, `delta_tip`, `icon`, `is_good`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text |
+| A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `is_good`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
 | Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good`; `chip` with `tone` after the text (section "Facts Of A Page") |
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
 | A meter | `meter.html`, `.sl-meter`, drawn by `getTplMeter()` | a share of a real limit with the role `meter` and `--sl-d-part`; `is_row` is the form inside a table row |
@@ -1153,8 +1163,7 @@ directly with a link builder of their own, the private messages with their htmx 
 takes `getPageSpan($conf[<module>])`, the own `span` of the module or the general `pager.span` (8 shipped), the panel the
 general `pager.aspan` (10 shipped); `getTplPager()` and `getPageNumbers()` take the same when no span is passed. The rows
 of a site list come from `getPageRows($conf[<module>], $key = 'rows')`: the own number of the module, or the general
-`pager.rows` (15 shipped), capped by the visitor's own number of the cabinet (`getUserNews()`, 3–20, while
-`users.news` is on). A Node type keeps its own `list.limit`, capped the same way. The panel form of a module draws its two
+`pager.rows` (15 shipped); a visitor has no number of their own. A Node type keeps its own `list.limit`. The panel form of a module draws its two
 own fields with `getTplPagerFields()` and reads them with `getPagerPost()` (`core/admin.php`): an empty field stores `''`
 and takes the general number, shown as its placeholder; the face is the stand `public/demo/pg-09-final.html`, in the panel `pg-14-admin.html`.
 
@@ -1203,6 +1212,45 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
   page, and the root of each theme scrolls smoothly unless the reader asked for less motion.
 - `tests/Unit/PagerViewTest.php` holds the window, the marks and the range, `tests/Unit/PagerKeysTest.php` the keys and
   the tip.
+
+## Forum List
+
+- **A section wears its category tile.** A row of the forum home (`getForumSectionRow()` in `modules/forum/index.php`,
+  `fragments/forum-category-row.html` of lite) opens with the tile `sl-icat` a material shows for its category: the icon
+  of the category, or the icon of the forum, in the tone `sl-cat-tone-N` of its order, the same 46px and the same lift
+  on hover, which the whole row triggers. The title carries no icon of its own.
+- **The state is a mark on the corner, not a second icon.** `sl-forum-mark-new` is the green live dot of the user
+  block, pulsing on the compositor (its ring by `transform` and `opacity`), for new messages, and `sl-forum-mark-lock`
+  a lock for a closed section; a read section wears no mark. The words of the state stay in the tip of the
+  tile and for a screen reader; the home of the forum carries no key of the marks.
+- **The link to the last message is `sl-forum-jump`.** The list of the last message is `sl-forum-last` and nothing else
+  borrows its name, so a rule of the one never reaches the other.
+- **The last message keeps its lines whole.** Each line of `sl-forum-last` — the date, the topic, the author with the
+  link — stands on one line from the left in both tables, and the column grows to the longest; `--sl-col-last-width`
+  is its floor.
+- **A moderator picks in a column of boxes.** The list of topics ends in `sl-col-check` for a moderator: the head
+  carries the box that checks all (`data-sl-check-all`), each row its box (`data-sl-check-item`), as in the lists of
+  the panel; no box stands inside another column.
+- **The foot row is the same for every reader**: the pager on the left, the buttons of the page on the right. The
+  actions of a moderator take a line of their own under it, on the right, as the bulk panel of a panel list:
+  `getForumModerBar()` (`fragments/forum-moder.html`) puts the count of the checked rows (`data-sl-check-count`, counted
+  by `slaed.js`), one select of the actions and the sections, no wider than `--sl-drop-width`, and one button on the
+  surface, under the list of topics and under one topic alike; `getForumModerForm()` wraps the list or the topic with
+  its foot in one form.
+- **The buttons of the foot keep to the right**, with or without a pager before them; the foot stands `--sl-space-7`
+  above the next block, as a table of sections does above the next heading, and the last table of the home takes none.
+- **A cell keeps the inset of its column title** (`--sl-space-5` by `--sl-space-6`), and a table of sections stands
+  `--sl-space-7` above the next heading, the gap of the blocks.
+- **Titles stay on one line.** The title of a section or a topic, and of a topic beside its buttons, ends in an ellipsis
+  where it does not fit (`sl-cell-ellipsis`); its whole text is the tip of its link or heading.
+- **A column title is parted from the one before** by a short line, as in the panel (`.sl-table-head th + th`, every
+  table head of lite); the title after the empty one over the tiles takes none. A sortable count keeps the lane of its
+  mark on the right of its title and of every cell alike, so it centres without a lane on the left.
+- **The columns sort.** Both tables carry `data-sl-table-sort`: a title sorts by its name (`data-sort`), the counts as
+  numbers, the last message by its time; the column of the tile and the column of boxes do not sort.
+- **On a phone a row is a card.** Under 768px both tables of the forum (`sl-forum-table`) drop their head. A section
+  sets its tile beside the title; a topic sets its box beside the title. The counts follow under the title with the
+  name of their column from `data-label`, the last message closes the card on one wrapping line.
 
 ## Rank
 
@@ -1429,7 +1477,7 @@ schemas of the cards, the swatches, the rings and the toolbar on the page.
   `sl-but` the way back and the secondary, `sl-but-mini sl-is-muted` the small tools of a part, their words in the
   title. Every button carries its icon.
 - **One place for each kind of button.** What is done to the picked part stands only in the foot of the inspector, the
-  small tools at the left, the deletion as a red icon at the right; the action of a field at the right end of its field;
+  small tools at the left, the deletion as a red icon at the right edge, before the main action when the part has one; the action of a field at the right end of its field;
   a new element at the end of its list; the foot of a window the dangerous action at the left, the way back and the main
   action at the right.
 - **One capsule for every group of icons.** The top bar, the foot of the inspector and the toolbar on the page are

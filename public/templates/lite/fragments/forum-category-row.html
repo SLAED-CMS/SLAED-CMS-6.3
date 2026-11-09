@@ -1,10 +1,10 @@
 <tr class="sl-forum-line">
   {% if is_topic_list %}{% else %}
   <td class="sl-fl-col-icon">
-    {{{ icon }}}
+    {% if tile_href %}<a href="{{ tile_href }}" title="{{ state_text }}" class="sl-icat sl-forum-ico sl-cat-tone-{{ tone }}">{% else %}<span title="{{ state_text }}" class="sl-icat sl-forum-ico sl-cat-tone-{{ tone }}">{% endif %}{{{ tile_icon }}}{% if is_new %}<span class="sl-forum-mark sl-forum-mark-new"></span>{% elseif is_closed %}<span class="sl-forum-mark sl-forum-mark-lock"><i class="bi bi-lock-fill" aria-hidden="true"></i></span>{% endif %}<span class="sl-visually-hidden">{{ state_text }}</span>{% if tile_href %}</a>{% else %}</span>{% endif %}
   </td>
   {% endif %}
-  <td class="sl-fl-col-content">
+  <td class="sl-fl-col-content sl-cell-ellipsis" data-sort="{{ sort_title }}">
     {% if is_topic_list %}
     <h3>
       {{{ link }}}
@@ -16,18 +16,12 @@
     <p class="sl-forum-description">{{ desc }}</p>
     {% endif %}
   </td>
-  <td class="sl-fl-col-stat">{% if is_topic_list %}{{ replies }}{% else %}{{ topics }}{% endif %}</td>
-  <td class="sl-fl-col-stat">
-    {% if is_topic_list %}
-    {{{ posts }}}
-    {% else %}
-    {{ posts }}
-    {% endif %}
-  </td>
+  <td class="sl-fl-col-stat" data-label="{% if is_topic_list %}{{ lab_replies }}{% else %}{{ lab_topics }}{% endif %}">{% if is_topic_list %}{{ replies }}{% else %}{{ topics }}{% endif %}</td>
+  <td class="sl-fl-col-stat" data-label="{% if is_topic_list %}{{ lab_poster }}{% else %}{{ lab_posts }}{% endif %}">{% if is_topic_list %}{{{ posts }}}{% else %}{{ posts }}{% endif %}</td>
   {% if is_topic_list %}
-  <td class="sl-fl-col-stat">{{ views }}</td>
+  <td class="sl-fl-col-stat" data-label="{{ lab_views }}">{{ views }}</td>
   {% endif %}
-  <td class="sl-fl-col-last">
+  <td class="sl-fl-col-last" data-sort="{{ last_stamp }}">
     <ul class="sl-forum-last">
       {% if is_topic_list %}
       <li>{{ last_date }}</li>
@@ -47,4 +41,5 @@
       {% endif %}
     </ul>
   </td>
+  {% if check_html %}<td class="sl-col-check">{{{ check_html }}}</td>{% endif %}
 </tr>

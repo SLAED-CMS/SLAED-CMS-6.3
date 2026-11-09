@@ -616,7 +616,8 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
   `home-scene` (one round of Phoenix in windows of 1.5 s by act), `pres-top`, `pres-quiet` (y 7200), `pres-pipeline`,
   `pres-guard`, `pres-system`, `pres-workbench`, `pres-runtime`, `pres-dev`, `pres-live`, `pres-dna`, `pres-archive`,
   `pres-showcase`, `pres-voices`, `pres-pulse` (each section at its start), `pres-pointer`, `pres-nudge`, `pres-scroll`
-  (a wheel of 40 px, 60 a second); `--states=a,b` limits a run.
+  (a wheel of 40 px, 60 a second), `forum-idle` (the forum home as a guest, every section marked new); `--states=a,b`
+  limits a run.
 - **Causes.** `--trace=<state>` names every animation the compositor refuses with its reason (`blink.animations`, opened
   before the load, since an animation names itself once at its start), the element counts of a restyle and the stack
   that forced a layout; `--profile=<state>` gives the hot functions.
@@ -625,7 +626,8 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
   ends, and compares the crops per channel in both schemes, 16 of 255 at most; `--tones=` takes the cockpit through its
   states, `--crops=<dir>` keeps the PNGs. The parts: `cockpit`, `cockpit-stat`, `cockpit-mon`, `led` and `live` (with a
   margin of 8 px, their ring lies outside the box), `hero`, `system` (the map), `blocks` (the block scene), `pipeline`,
-  `guard`, `runtime`, `development`. A part
+  `guard`, `runtime`, `development`, `forum-dot`, `avatar-dot` and `profile-dot` (the live dots of lite, a margin of 12 px).
+  A part
   against itself differs by at most 1 of 255, with the mark of the cockpit state stilled, as its glyph rasters
   differently between two loads; `pipeline` differs by up to 26 of 255 in the light scheme between runs, the cause
   not found, so a crop of it past the tolerance is run again. A motion a script drives stands at one position in all
@@ -658,6 +660,11 @@ The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the 
 | The same, with the halo of the lamp | presentation, top / pointer | 62 → 62 / 71 → 77 | 49 → 59 / 54 → 72 | 33 → 33 / 72 → 83 | 17 → 16 / 15 → 16 | 120 |
 | The aurora on the framed blocks of the panel, drawn by the `--sl-aurora-*` tokens (the pair holds the uncommitted panel CSS of another session too) | panel, idle / pointer | 68 → 63 / 87 → 91 | 81 → 79 / 87 → 98 | 95 → 91 / 165 → 203 | 5 → 5 / 14 → 17 | 120 / 120 → 116 |
 | The presentation pauses by scene and block, not by section; the dashes of the block scene on a layer of their own; the pulse strip sleeps once its line reached its aim (2026-11-07, 5 rounds) | presentation, system / development / guard / top | 50 → 48 / 51 → 35 / 82 → 78 / 65 → 63 | 119 → 61 / 17 → 16 / 55 → 53 / 62 → 61 | 29 → 29 / 37 → 34 / 69 → 61 / 29 → 28 | 2 → 2 / 17 → 11 / 26 → 22 / 14 → 14 | 120 |
+| The live dot of lite (forum sections, user block, profile) pulses by a ring on `transform` and `opacity` instead of `sl-live-pulse` on `box-shadow`; the crops `forum-dot`, `avatar-dot`, `profile-dot` stay within 37 of 255, past the tolerance only at the edge of the halo in the first moments, taken by the owner (2026-11-09, 5 rounds) | forum, idle, 16 dots | 122 → 73 | 96 → 45 | 600 → 86 | 1 → 2 | 116 → 120 |
+
+The style time the forum rings still cost is not their own: the marquee of the head (`step` on `width`) and the two live icons
+of the side blocks (`sl-live-pulse` on `box-shadow`) are refused by the compositor on the same page, and while one
+refused animation runs every composited one restyles too (`--trace=forum-idle`).
 
 The layer of the block wires costs 14 layers more (the nodes above them follow onto layers) and about 9 MB of
 compositor resources, while the raster scratch of Skia falls from about 170 to 130 MB and the tile memory stays near

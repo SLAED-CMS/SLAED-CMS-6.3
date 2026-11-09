@@ -20,6 +20,50 @@ function forumIcon(string $href, string $title, string $state, string $label = '
     ]);
 }
 
+# One section of the forum home: its category tile with the mark of its state, the link, the counts and the last message
+function getForumSectionRow(array $val, string $mod, string $ulast): string {
+    global $conf, $tpl;
+    $open = (bool)$val[5];
+    $canmod = is_moder($conf['name']);
+    $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
+    $tlink = ($open || $canmod) ? $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[2] ?: $val[1], 'label' => $val[1]]) : $val[1];
+    $state = !$open ? _FCLOSED : (($val[21] > $ulast) ? _ISNEWPOST : _NONEWPOST);
+    $icon = getCategoryIcon((string)$val[3]) ?: getCategoryIcon(getIconName($mod));
+    $data = _NO_INFO;
+    $topic = $post = $lpost = '';
+    if ($val[9]) {
+        $data = _DATE.': '.format_time($val[21], _TIMESTRING);
+        $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'route' => $val[22]]);
+        $topic_link = $open ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $val[17], 'label' => cutstr($val[17], 14)]) : cutstr($val[17], 14);
+        $topic = _TOPIC.': '.$topic_link;
+        $post = _POSTER.': '.(($val[18]) ? user_info($val[19], $val[23]) : $val[19]);
+        $lid = ($val[20]) ? $val[20] : $val[9];
+        $lpost = $open
+            ? forumIcon(getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'route' => $val[22], 'last' => 1]).'#'.$lid, _LASTMESSAGE, 'is_forum_jump')
+            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_jump' => true]);
+    }
+    return $tpl->getHtmlFrag('forum-category-row', [
+        'tile_href' => ($open || $canmod) ? $href : '',
+        'tile_icon' => $icon,
+        'tone' => intval($val[6]) % 6,
+        'state_text' => $state,
+        'is_new' => $open && $val[21] > $ulast,
+        'is_closed' => !$open,
+        'link' => $tlink,
+        'sort_title' => $val[1],
+        'last_stamp' => (string)($val[21] ? strtotime((string)$val[21]) : 0),
+        'desc' => $val[2],
+        'topics' => $val[7],
+        'posts' => $val[8],
+        'lab_topics' => _NEWTOPICS,
+        'lab_posts' => _MESSAGES,
+        'date' => $data,
+        'last_topic' => $topic,
+        'last_post' => $post,
+        'last_link' => $lpost,
+    ]);
+}
+
 function forum(): void {
     global $db, $conf, $locale, $tpl, $user;
     $rows = [];
@@ -158,47 +202,7 @@ function forum(): void {
                     } else {
                         $cont = '';
                     }
-                    $ttit = ($val[2]) ? $val[2] : $val[1];
-                    $tlink = ($val[5] || is_moder($conf['name']))
-                        ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $val[0]]), 'title' => $ttit, 'label' => $val[1]])
-                        : $val[1];
-                    $cat_url = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
-                    if (!$val[5]) {
-                        $timg = (is_moder($conf['name']))
-                            ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed')
-                            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
-                    } elseif ($val[21] > $ulast) {
-                        $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
-                    } else {
-                        $timg = forumIcon($cat_url, _NONEWPOST, 'is_forum_old');
-                    }
-                    if ($val[9]) {
-                        $data = _DATE.': '.format_time($val[21], _TIMESTRING);
-                        $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'route' => $val[22]]);
-                        $topic_link = ($val[5]) ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $val[17], 'label' => cutstr($val[17], 14)]) : cutstr($val[17], 14);
-                        $topic = _TOPIC.': '.$topic_link;
-                        $post = ($val[18]) ? user_info($val[19], $val[23]) : $val[19];
-                        $post = _POSTER.': '.$post;
-                        $lid = ($val[20]) ? $val[20] : $val[9];
-                        $lpost = ($val[5])
-                            ? forumIcon(getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'route' => $val[22], 'last' => 1]).'#'.$lid,
-                                _LASTMESSAGE, 'is_forum_last')
-                            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
-                    } else {
-                        $data = _NO_INFO;
-                        $topic = $post = $lpost = '';
-                    }
-                    $cont .= $tpl->getHtmlFrag('forum-category-row', [
-                        'icon' => $timg,
-                        'link' => getCategoryIcon($val[3]).' '.$tlink,
-                        'desc' => $val[2],
-                        'topics' => $val[7],
-                        'posts' => $val[8],
-                        'date' => $data,
-                        'last_topic' => $topic,
-                        'last_post' => $post,
-                        'last_link' => $lpost,
-                    ]);
+                    $cont .= getForumSectionRow($val, (string)$mod, $ulast);
                     echo $cont;
                 } else {
                     $heading = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $val[0]]), 'title' => $val[1], 'label' => $val[1]]);
@@ -212,49 +216,7 @@ function forum(): void {
                     ]);
                     foreach ($rows as $valb) {
                         if ($val[0] == $valb[4] && is_acess($valb[10])) {
-                            $ttit = ($valb[2]) ? $valb[2] : $valb[1];
-                            $tlink = ($valb[5] || is_moder($conf['name']))
-                                ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $valb[0]]), 'title' => $ttit, 'label' => $valb[1]])
-                                : $valb[1];
-                            $cat_url = getSeoUrl(['name' => $mod, 'cat' => $valb[0]]);
-                            if (!$valb[5]) {
-                                $timg = (is_moder($conf['name']))
-                                    ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed')
-                                    : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
-                            } elseif ($valb[21] > $ulast) {
-                                $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
-                            } else {
-                                $timg = forumIcon($cat_url, _NONEWPOST, 'is_forum_old');
-                            }
-                            if ($valb[9]) {
-                                $data = _DATE.': '.format_time($valb[21], _TIMESTRING);
-                                $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'route' => $valb[22]]);
-                                $topic_link = ($valb[5])
-                                    ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $valb[17], 'label' => cutstr($valb[17], 14)])
-                                    : cutstr($valb[17], 14);
-                                $topic = _TOPIC.': '.$topic_link;
-                                $post = ($valb[18]) ? user_info($valb[19], $valb[23]) : $valb[19];
-                                $post = _POSTER.': '.$post;
-                                $lid = ($valb[20]) ? $valb[20] : $valb[9];
-                                $lpost = ($valb[5])
-                                    ? forumIcon(getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'route' => $valb[22], 'last' => 1]).'#'.$lid,
-                                        _LASTMESSAGE, 'is_forum_last')
-                                    : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
-                            } else {
-                                $data = _NO_INFO;
-                                $topic = $post = $lpost = '';
-                            }
-                            $cont .= $tpl->getHtmlFrag('forum-category-row', [
-                                'icon' => $timg,
-                                'link' => getCategoryIcon($valb[3]).' '.$tlink,
-                                'desc' => $valb[2],
-                                'topics' => $valb[7],
-                                'posts' => $valb[8],
-                                'date' => $data,
-                                'last_topic' => $topic,
-                                'last_post' => $post,
-                                'last_link' => $lpost,
-                            ]);
+                            $cont .= getForumSectionRow($valb, (string)$mod, $ulast);
                         }
                     }
                     $cont .= $tpl->getHtmlFrag('forum-category-table', []);
@@ -263,7 +225,6 @@ function forum(): void {
                 $cnt++;
             }
         }
-        $show = true;
         unset($cont);
         if ($id) {
             if (!$cnt) {
@@ -299,8 +260,9 @@ function forum(): void {
                             'icon_name' => 'plus-lg', 'label' => _OPEN]);
                     $cat_link = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $rows[0][0]]), 'title' => $rows[0][1], 'label' => $rows[0][1]]);
                     $cont = $tpl->getHtmlFrag('forum-topic-view', ['open' => true, 'button' => $newbt, 'title_html' => $cat_link]);
+                    $topicList = '';
+                    $moder = '';
                     if ($db->getSqlRowCount($query) > 0) {
-                        $mark = 0;
                         $canmod = is_moder($conf['name']);
                         $pop = (int)$conf['forum']['pop'];
                         $slabels = [
@@ -323,6 +285,8 @@ function forum(): void {
                             'col_poster' => _POSTER,
                             'col_views' => _TVIEWS,
                             'col_last' => _FORUM_LAST,
+                            'check_all' => $ismod ? $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'is_check' => true,
+                                'input_attr' => 'title="'._CHECKALL.'" aria-label="'._CHECKALL.'"']) : '',
                         ]);
                         while ([
                             $id,
@@ -360,51 +324,34 @@ function forum(): void {
                             $tlink = $canlink ? $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label_html' => $badge, 'label' => $title]) : $badge.' '.$title;
                             $lpost = $canlink
                                 ? forumIcon(getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'route' => $tpath, 'last' => 1]).'#'.$lid,
-                                    _LASTMESSAGE, 'is_forum_last')
-                                : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
+                                    _LASTMESSAGE, 'is_forum_jump')
+                                : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_jump' => true]);
                             $ldata = _DATE.': '.format_time($ltime, _TIMESTRING);
                             $post = ($nick) ? user_info($nick, $upath) : $uname.' ('._ANONYM.')';
                             $lposter = ($luid) ? _POSTER.': '.user_info($lname, $lpath) : _POSTER.': '.$lname;
-                            if ($ismod) {
-                                $itemCheck = $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_legacy_check' => true]);
-                                if (!$mark) {
-                                    $markAll = $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_plain' => true]);
-                                    $checkb = $tpl->getHtmlPart('compact-list', ['items' => [
-                                        ['content_html' => _CHECKALL.' '.$markAll.' | '.$itemCheck, 'is_break_before' => true],
-                                    ]]);
-                                } else {
-                                    $checkb = $itemCheck;
-                                }
-                                $mark++;
-                            } else {
-                                $checkb = '';
-                            }
+                            $checkb = $ismod ? $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true,
+                                'input_attr' => 'aria-label="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"']) : '';
                             $topicList .= ($view)
                                 ? $tpl->getHtmlFrag('forum-category-row', [
                                     'is_topic_list' => true,
                                     'link' => $tlink,
+                                    'sort_title' => $title,
+                                    'last_stamp' => (string)strtotime((string)$ltime),
                                     'replies' => $comments,
+                                    'lab_replies' => _POSTS,
+                                    'lab_poster' => _POSTER,
+                                    'lab_views' => _TVIEWS,
                                     'posts' => $post,
                                     'views' => $counter,
                                     'last_date' => $ldata,
                                     'last_poster' => $lposter,
-                                    'last_link' => $lpost.$checkb,
+                                    'last_link' => $lpost,
+                                    'check_html' => $checkb,
                                 ])
                                 : '';
                         }
                         $topicList .= $tpl->getHtmlFrag('forum-category-table', []);
-                        if ($ismod) {
-                            $topicList .= $tpl->getHtmlPart('fieldset-panel', ['legend' => _CHECKOP, 'is_moder_mass' => true, 'content' => tmoder(1)
-                                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
-                                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
-                                .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
-                            $cont .= $tpl->getHtmlPart('form-wrap', [
-                                'action' => getSeoUrl(['name' => $conf['name']]),
-                                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']).$topicList,
-                            ]);
-                        } else {
-                            $cont .= $topicList;
-                        }
+                        $moder = $ismod ? getForumModerBar((int)$catid) : '';
                     } else {
                         if ((int)$num > 1) setError(404);
                         $cont .= $tpl->getHtmlFrag('empty', []);
@@ -420,7 +367,8 @@ function forum(): void {
                         'url_extra' => ['cat' => $catid],
                         'prefix'    => 'new/',
                     ]);
-                    $cont .= $tpl->getHtmlFrag('forum-topic-view', ['button' => $newbt, 'pager' => $pnum]);
+                    $topicList .= $tpl->getHtmlFrag('forum-topic-view', ['button' => $newbt, 'pager' => $pnum, 'moder_html' => $moder]);
+                    $cont .= $moder ? getForumModerForm($topicList) : $topicList;
                     $b_can = $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_success' => true, 'text' => _ISCAN]);
                     $b_not = $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_danger' => true, 'text' => _NOTCAN]);
                     $infov = ($isview) ? sprintf(_ACINFOV, $b_can) : sprintf(_ACINFOV, $b_not);
@@ -453,19 +401,12 @@ function forum(): void {
                     $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 5]);
                     $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
                 }
-                $show = false;
             } else {
                 $cont = $tpl->getHtmlFrag('forum-category-table', []);
             }
         } else {
             $cont = '';
         }
-        if ($show) $cont .= $tpl->getHtmlFrag('forum-list-info', [
-            'is_category_info' => true,
-            'new'    => $tpl->getHtmlFrag('inline-badge', ['title_text' => _ISNEWPOST, 'is_forum_new' => true, 'label' => _ISNEWPOST]),
-            'nonew'  => $tpl->getHtmlFrag('inline-badge', ['title_text' => _NONEWPOST, 'is_forum_old' => true, 'label' => _NONEWPOST]),
-            'closed' => $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'is_forum_closed' => true, 'label' => _FCLOSED]),
-        ]);
         echo $cont;
     } else {
         setHead(['title' => _FORUM, 'kind' => 'collection']);
@@ -823,30 +764,9 @@ function view(): void {
             }
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]],
                 getPageSpan($conf['forum']), $num, '', 'page');
-            $cont .= $tpl->getHtmlFrag('forum-topic-view', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum]);
-            if ($ismod) {
-                $selmm = tmoder(1)
-                    .$tpl->getHtmlFrag('form-submit', [
-                        'button_type' => 'submit',
-                        'op' => 'move',
-                        'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => ''])
-                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']),
-                        'name' => '',
-                        'val' => '',
-                        'select' => false,
-                        'show_preview' => false,
-                        'show_delete' => false,
-                        'label_preview' => _PREVIEW,
-                        'label_save' => _SEND,
-                        'label_delete' => _DELETE,
-                        'label' => _OK,
-                    ]);
-                $cont .= $tpl->getHtmlPart('form-wrap', [
-                    'action' => getSeoUrl(['name' => $conf['name']]),
-                    'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => ''])
-                        .$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'content' => $selmm]),
-                ]);
-            }
+            $foot = $tpl->getHtmlFrag('forum-topic-view', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum,
+                'moder_html' => $ismod ? getForumModerBar((int)$rows[0][2], (int)$topic) : '']);
+            $cont .= $ismod ? getForumModerForm($foot) : $foot;
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         }
         echo $cont;
@@ -1096,6 +1016,29 @@ function add(): void {
     }
     echo $cont;
     setFoot();
+}
+
+# The actions of a moderator under a list of topics or one topic, as the bulk panel of a panel list: the count, one select, one button
+function getForumModerBar(int $cat, int $topic = 0): string {
+    global $tpl;
+    $hidden = $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
+        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$cat, 'input_attr' => ''])
+        .($topic ? $tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']) : '');
+    return $tpl->getHtmlFrag('forum-moder', [
+        'picked_label' => $topic ? '' : _EDITOR_MARKED,
+        'select_html' => tmoder(1),
+        'hidden_html' => $hidden,
+        'submit_html' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
+    ]);
+}
+
+# The form of a moderator round a list or a topic with its foot row, so the boxes of the rows and the actions post together
+function getForumModerForm(string $html): string {
+    global $conf, $tpl;
+    return $tpl->getHtmlPart('form-wrap', [
+        'action' => getSeoUrl(['name' => $conf['name']]),
+        'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']).$html,
+    ]);
 }
 
 function tmoder(int $typ): string {

@@ -291,7 +291,8 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             $cid = $cat['id'];
             $pnum = $nums[$cid] ?? 0;
             $subs = $kids[$cid] ?? 0;
-            $img = $cat['img'] ? getCategoryIcon($cat['img']) : $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _NO]);
+            $img = getCategoryIcon((string)$cat['img']);
+            $icon = ($img !== '') ? ['content_html' => $img, 'is_col_status' => true] : ['is_col_status' => true, 'stat' => ['text' => _NO, 'is_mark' => true]];
             $tips = [
                 ['label' => _DESCRIPTION, 'value' => (string)($cat['intro'] ?: _NO), 'is_last' => false],
                 ['label' => _CATEGORIES, 'value' => (string)($subs ?: _NO), 'is_last' => $cat['lang'] === ''],
@@ -322,11 +323,11 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     .' data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"',
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => (string)$cid],
+                        ['content_html' => (string)$cid, 'is_col_id' => true],
                         ['content_html' => $name],
                         ['content_html' => (string)$pnum],
-                        ['content_html' => $img],
                         ['content_html' => $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$num],
+                        $icon,
                         ['is_col_status' => true, 'stat' => $turn],
                         ['content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]), 'is_col_actions' => true],
                     ],
@@ -339,11 +340,11 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             .' data-sl-drag-token="'.getSiteToken('categories').'" data-sl-drag-target="repajax_cat"',
         'disable_sort' => true,
         'head' => [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _CATEGORY],
             ['content' => _NODE],
-            ['content' => _ICON],
             ['content' => _POSITION],
+            ['content' => _ICON, 'is_col_status' => true, 'is_head_icon' => true],
             ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
@@ -506,7 +507,7 @@ function getAdminBlockList(): string {
             'attr' => $isfly ? '' : 'data-sl-drag-id="'.$bid.'" data-sl-drag-group="'.$bpos.'" data-sl-drag-scope="'.$bpos.'"',
             'cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string) $bid],
+                    ['content_html' => (string)$bid, 'is_col_id' => true],
                     ['content_html' => $tpl->getHtmlFrag('popover', [
                         'items' => $tips,
                         'label_text' => getConst($title),
@@ -550,7 +551,7 @@ function getAdminBlockList(): string {
             .' data-sl-drag-token="'.getSiteToken('blocks').'" data-sl-drag-target="repajax_block"',
         'disable_sort' => true,
         'head' => [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE],
             ['content' => _TYPE],
             ['content' => _ACCESS],

@@ -343,6 +343,27 @@ h1.sl-title {
   color: var(--sl-text-strong);
 }
 
+/* A short line parts two column titles, as in the panel, as tall as the text between the insets of the title. Lite has
+   no sticky head, so the line is a box of its own and the background of the title stays the one its text is read on. The title over the forum tile has no text, so the
+   title after it takes no line */
+.sl-table-head th + th {
+  position: relative;
+}
+
+.sl-table-head th + th::before {
+  content: "";
+  position: absolute;
+  top: var(--sl-space-5);
+  bottom: var(--sl-space-4);
+  left: 0;
+  width: 1px;
+  background-color: var(--sl-text-subtle);
+}
+
+.sl-table-head th.sl-fl-col-icon + th::before {
+  content: none;
+}
+
 .sl-table-head th:first-child {
   border-radius: var(--sl-radius-2) 0 0 0;
 }
@@ -479,7 +500,9 @@ td.sl-cell-ellipsis {
   max-width: 0;
 }
 
-.sl-cell-ellipsis > a:last-child {
+/* The title of a forum section or topic is the same truncating line, its whole text the tip of its link */
+.sl-cell-ellipsis > a:last-child,
+.sl-cell-ellipsis > h3 {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1290,7 +1313,8 @@ a.sl-crumb:hover + .sl-crumb-sep {
 }
 
 .sl-icat:hover,
-.sl-card-image:hover {
+.sl-card-image:hover,
+.sl-forum-line:hover .sl-forum-ico {
   box-shadow: var(--sl-shadow-xs);
 }
 
@@ -1303,7 +1327,8 @@ a.sl-crumb:hover + .sl-crumb-sep {
 }
 
 .sl-icat:hover .bi,
-.sl-card-image:hover .bi {
+.sl-card-image:hover .bi,
+.sl-forum-line:hover .sl-forum-ico > .bi {
   transform: scale(1.1);
 }
 
@@ -1932,7 +1957,7 @@ button.sl-but-mini:hover,
   transition-delay: calc(var(--sl-dial-dur) * 5);
 }
 
-.sl-forum-last:hover {
+.sl-forum-jump:hover {
   opacity: var(--sl-fade-subtle);
 }
 
@@ -2149,10 +2174,19 @@ button.sl-but-mini:hover,
 }
 
 /* Tables: list-wrap and list-row layouts */
+/* A forum cell keeps the inset of its column title, and a table of sections stands apart from the next by the gap of the blocks */
 .sl-forum-line td {
   border-bottom: 1px solid var(--sl-border);
-  padding: var(--sl-space-2);
+  padding: var(--sl-space-5) var(--sl-space-6);
   font-size: var(--sl-font-small);
+}
+
+.sl-forum-shell {
+  margin-bottom: var(--sl-space-7);
+}
+
+.sl-forum-shell:last-child {
+  margin-bottom: 0;
 }
 
 /* Associations: assoc-wrap and assoc-item layout */
@@ -4629,7 +4663,8 @@ dialog.sl-editor-emoji-panel {
   position: relative;
 }
 
-.sl-vote-tools {
+.sl-vote-tools,
+.sl-block-tools {
   position: absolute;
   top: 0.5px;
   right: 0;
@@ -4643,10 +4678,17 @@ dialog.sl-editor-emoji-panel {
   position: static;
 }
 
-.sl-block .sl-vote-tools {
-  top: 12px;
-  right: 15px;
+/* The tools of a block stand in its head at the right, on the padding of the block: the gear of its administrator, and the live chip of a poll */
+.sl-block .sl-vote-tools,
+.sl-block-tools {
+  top: var(--sl-space-6);
+  right: var(--sl-space-6);
   min-height: var(--sl-size-chip);
+}
+
+/* A block whose content keeps its own live chip in that corner, as the users online do, sets its gear left of the chip at the gap of the tools */
+.sl-block:has(.sl-live-tools) > .sl-block-tools {
+  margin-right: calc(var(--sl-size-chip) + var(--sl-space-3));
 }
 
 /* Voting status glyph: success play while active, warning stop when ended; bare inline glyph shares .sl-tip-icon typography so it pixel-snaps like the info tip */
@@ -4706,6 +4748,78 @@ dialog.sl-editor-emoji-panel {
 
   100% {
     box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* The live dot - the user block, the profile, a forum section with new messages - pulses on the compositor: the dot
+   over a ring of the same box, its border transparent, that grows by transform and fades by opacity to the reach of
+   sl-live-pulse, the box plus twice --sl-pulse-ring. On box-shadow sixteen forum dots cost 66 points of the GPU.
+   A translucent chip (sl-live-icon) keeps sl-live-pulse, since a ring under it would darken it */
+.sl-forum-mark-new::before,
+.sl-forum-mark-new::after,
+.sl-profile-status::before,
+.sl-profile-status::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sl-radius-circle);
+}
+
+.sl-forum-mark-new::before,
+.sl-forum-mark-new::after,
+.sl-live-avatar::before,
+.sl-live-avatar::after {
+  border: var(--sl-live-dot-border) solid transparent;
+}
+
+.sl-profile-status::before,
+.sl-profile-status::after {
+  border: var(--sl-profile-dot-border) solid transparent;
+}
+
+.sl-forum-mark-new::before,
+.sl-live-avatar::before {
+  background: color-mix(in srgb, var(--sl-success) var(--sl-pulse-mix), transparent);
+  animation: sl-live-ring var(--sl-pulse-dur) var(--sl-ease-out) infinite;
+}
+
+.sl-profile-status::before {
+  background: color-mix(in srgb, var(--sl-success) var(--sl-pulse-mix), transparent);
+  animation: sl-profile-ring var(--sl-pulse-dur) var(--sl-ease-out) infinite;
+}
+
+.sl-forum-mark-new::after,
+.sl-live-avatar::after,
+.sl-profile-status::after {
+  border-color: var(--sl-bg);
+  background: var(--sl-success);
+}
+
+/* 16px of the live dot with its border to 32px */
+@keyframes sl-live-ring {
+  0% {
+    transform: scale(0.97);
+    opacity: 1;
+  }
+
+  70%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* 22px of the profile dot with its border to 38px */
+@keyframes sl-profile-ring {
+  0% {
+    transform: scale(0.97);
+    opacity: 1;
+  }
+
+  70%,
+  100% {
+    transform: scale(1.73);
+    opacity: 0;
   }
 }
 
@@ -5224,7 +5338,7 @@ dialog.sl-editor-emoji-panel {
   flex-direction: column;
 }
 
-.sl-user-card .sl-live-tools { top: -38px; right: 0; }
+.sl-user-card .sl-live-tools { top: -34px; right: 0; }
 
 .sl-block-user-ava {
   display: grid;
@@ -6150,6 +6264,91 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
+/* Series tile, as in the panel: the name in capitals, the figure with the icon of its figure at its right, and a line under both across the tile */
+.sl-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--sl-metric-min-width), 1fr));
+  gap: var(--sl-space-5);
+}
+
+.sl-metric {
+  position: relative;
+  display: grid;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.sl-metric-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  line-height: var(--sl-line-normal);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.sl-metric-dot {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+}
+
+.sl-metric small {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-muted);
+}
+
+.sl-metric-value {
+  font-size: var(--sl-font-h1);
+  line-height: var(--sl-line-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-text-strong);
+}
+
+/* A figure of a tile may be a word: it breaks inside its tile rather than running under the icon; a counted number keeps its groups on one line */
+.sl-metric-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sl-metric-num {
+  white-space: nowrap;
+}
+
+.sl-metric:has(> .sl-metric-icon) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--sl-space-5);
+}
+
+.sl-metric:has(> .sl-metric-icon) > :is(.sl-metric-name, .sl-metric-value) {
+  grid-column: 1;
+}
+
+.sl-metric:has(> .sl-metric-icon) > small {
+  grid-column: 1 / -1;
+}
+
+.sl-metric-icon {
+  width: var(--sl-t-icon-width);
+  text-align: center;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: var(--sl-size-icon-lg);
+  line-height: 1;
+  color: var(--sl-primary);
+}
+
 /* A running figure, as in the panel: setFigureRun() of slaed.js runs it as long as its glow holds; a transform needs a box, so an inline figure is one while it runs */
 @media (prefers-reduced-motion: no-preference) {
   .sl-is-counting {
@@ -6237,7 +6436,6 @@ dialog.sl-editor-emoji-panel {
   .sl-empty,
   .sl-profile-proof,
   .sl-preview,
-  .sl-moder-mass,
   .sl-msg-card {
     position: relative;
   }
@@ -6265,7 +6463,6 @@ dialog.sl-editor-emoji-panel {
   .sl-empty::before,
   .sl-profile-proof::before,
   .sl-preview::before,
-  .sl-moder-mass::before,
   .sl-msg-card::before,
   .sl-pres-cockpit::before,
   .sl-pres-card::before,
@@ -6330,7 +6527,6 @@ dialog.sl-editor-emoji-panel {
   .sl-empty:hover::before,
   .sl-profile-proof:hover::before,
   .sl-preview:hover::before,
-  .sl-moder-mass:hover::before,
   .sl-msg-card:hover::before,
   .sl-pres-cockpit:hover::before,
   .sl-pres-card:hover::before,
@@ -7683,15 +7879,14 @@ td.sl-fl-col-icon {
   padding-right: 0;
 }
 
-.sl-fl-col-icon img {
-  display: block;
-  width: var(--sl-forum-width);
-  height: var(--sl-forum-width);
-  object-fit: contain;
+/* The last message keeps each of its lines whole and starts them at the left in both tables; the column grows to the longest */
+.sl-forum-table td.sl-fl-col-last {
+  width: var(--sl-col-last-width);
+  text-align: left;
 }
 
-.sl-fl-col-last {
-  width: var(--sl-col-last-width);
+.sl-forum-last li {
+  white-space: nowrap;
 }
 
 .sl-fl-col-user {
@@ -7719,10 +7914,11 @@ td.sl-fl-col-stat {
   white-space: nowrap;
 }
 
-/* A sortable count title keeps the lane of its mark on both sides, so it stands over the middle of its chips and clear of the mark */
-th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
+/* A sortable count keeps the lane of its mark on the right of its title and of every cell alike, as the panel does, so the title
+   stands over the middle of its numbers at the width of the longer and leaves the rest of the row to the title of a topic */
+[data-sl-table-sort] :is(th, td).sl-fl-col-stat {
   padding-right: var(--sl-space-8);
-  padding-left: var(--sl-space-8);
+  padding-left: var(--sl-space-2);
 }
 
 .sl-fl-col-content h4,
@@ -7747,30 +7943,128 @@ th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
   margin-top: calc(var(--sl-space-2) * -1);
 }
 
-.sl-forum-cat-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-3) var(--sl-space-8);
+/* A section of the forum wears the category tile of a material; a mark on its corner says new messages with the live dot of the user block, or a closed section; a read one wears none */
+.sl-icat.sl-forum-ico {
+  position: relative;
+  float: none;
+  margin: 0 auto;
 }
 
-.sl-forum-cat-info .sl-grid {
-  display: block;
-  width: auto;
-  margin: 0;
-  min-width: 0;
-  flex: 1 1 0;
+.sl-forum-mark {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  width: var(--sl-live-dot-width);
+  height: var(--sl-live-dot-height);
+  border-radius: var(--sl-radius-circle);
 }
 
-.sl-forum-cat-info img {
-  vertical-align: middle;
-  margin: -1px var(--sl-space-2) 0 0;
+.sl-forum-mark-new {
+  padding: var(--sl-live-dot-border);
+}
+
+.sl-forum-mark.sl-forum-mark-lock {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+  border: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+  color: var(--sl-text-subtle);
+}
+
+.sl-icat .sl-forum-mark .bi {
+  font-size: var(--sl-font-micro);
+  line-height: 1;
+  color: inherit;
+  transform: none;
+}
+
+/* The phone: a forum table is a list of cards, the counts and the last message under the title */
+@media (max-width: 768px) {
+  .sl-forum-table,
+  .sl-forum-table tbody {
+    display: block;
+  }
+
+  .sl-forum-table thead {
+    display: none;
+  }
+
+  .sl-forum-table .sl-forum-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sl-space-2) var(--sl-space-5);
+    padding: var(--sl-space-5) 0;
+    border-bottom: 1px solid var(--sl-border);
+  }
+
+  .sl-forum-table .sl-forum-line td {
+    display: block;
+    width: auto;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  /* A topic: the title beside its box, then the counts in one wrapping line, then the last message */
+  .sl-forum-table .sl-fl-col-content,
+  .sl-forum-table .sl-fl-col-last {
+    flex: 1 0 100%;
+    min-width: 0;
+  }
+
+  .sl-forum-table .sl-forum-line:has(.sl-col-check) .sl-fl-col-content {
+    flex-basis: calc(100% - var(--sl-col-check-width) - var(--sl-space-5));
+  }
+
+  .sl-forum-table .sl-forum-line td.sl-col-check {
+    order: -1;
+    margin-left: auto;
+  }
+
+  .sl-forum-table .sl-forum-line .sl-fl-col-content {
+    order: -2;
+  }
+
+  /* A section: its tile stands beside the title, the counts and the last message under the title */
+  .sl-forum-table .sl-forum-line:has(.sl-fl-col-icon) {
+    display: grid;
+    grid-template-columns: var(--sl-size-tile) repeat(2, auto) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .sl-forum-table .sl-fl-col-icon {
+    grid-row: 1 / span 3;
+  }
+
+  .sl-forum-table .sl-forum-line:has(.sl-fl-col-icon) :is(.sl-fl-col-content, .sl-fl-col-last) {
+    grid-column: 2 / -1;
+  }
+
+  .sl-forum-table .sl-fl-col-stat[data-label]::before {
+    content: attr(data-label) ":";
+    margin-right: var(--sl-space-2);
+    color: var(--sl-text-muted);
+  }
+
+  .sl-forum-table .sl-forum-last {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--sl-space-5);
+  }
 }
 
 .sl-forum-top .sl-pull-right,
 .sl-forum-foot .sl-pull-right {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--sl-space-3);
+  justify-content: flex-end;
+  gap: var(--sl-space-3) var(--sl-space-5);
+  min-width: 0;
 }
 
 /* The head of a topic is one row: the title on the left and its buttons on the right share one middle line, and the row takes the margin of the title */
@@ -7786,6 +8080,9 @@ th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
 .sl-forum-top .sl-heading {
   min-width: 0;
   margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .sl-forum-top .sl-pull-right {
@@ -7799,7 +8096,7 @@ th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
   align-items: center;
   justify-content: space-between;
   gap: var(--sl-space-3) var(--sl-space-5);
-  margin-bottom: var(--sl-space-11);
+  margin-bottom: var(--sl-space-7);
 }
 
 /* The pager shares the foot with the topic buttons; a container of inline size has no width of its own, so it is given one and wraps under them when the line is short */
@@ -7827,9 +8124,10 @@ th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
   text-align: left;
 }
 
+/* The buttons of the foot keep to the right, with or without a pager before them */
 .sl-forum-foot .sl-pull-right {
   float: none;
-  margin: 0;
+  margin: 0 0 0 auto;
 }
 
 .sl-forum-list-info {
@@ -7862,11 +8160,37 @@ th.sl-fl-col-stat:is(.sl-sort, .sl-sort-asc, .sl-sort-desc) {
   margin: calc(var(--sl-space-2) * -1) var(--sl-space-2) 0 0;
 }
 
-.sl-moder-mass {
-  border-radius: var(--sl-radius-2);
-  border: 1px solid var(--sl-border);
-  padding: var(--sl-space-4) var(--sl-space-6);
-  margin-bottom: var(--sl-space-11);
+/* The actions of a moderator take a line of their own under the pager and the buttons every reader sees, and stand on the
+   right as the bulk panel of a panel list: the count of the checked rows, the select and its button on a surface rounded
+   as the buttons are */
+.sl-forum-moder {
+  display: flex;
+  flex: 1 0 100%;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.sl-forum-moder-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+  padding: var(--sl-space-3) var(--sl-space-3) var(--sl-space-3) var(--sl-space-6);
+  border-radius: var(--sl-radius-pill);
+  background-color: var(--sl-surface);
+}
+
+/* The bar keeps one line, a pill as the buttons are: on a narrow screen the select gives way, never the count or the button */
+.sl-forum-moder select {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: var(--sl-drop-width);
+}
+
+.sl-forum-picked {
+  color: var(--sl-text-muted);
+  white-space: nowrap;
 }
 
 .sl-forum-post {
@@ -8183,10 +8507,7 @@ a.sl-chip-neutral {
 
 /* Plain icon controls (not chips): the plus action + forum/topic state glyphs */
 .sl-plus .bi,
-.sl-forum-new .bi,
-.sl-forum-old .bi,
-.sl-forum-closed .bi,
-.sl-forum-last .bi,
+.sl-forum-jump .bi,
 .sl-topic-new .bi,
 .sl-topic-old .bi,
 .sl-topic-popular-new .bi,
@@ -8211,11 +8532,9 @@ a.sl-chip-neutral {
   font-size: var(--sl-font-small);
 }
 
-.sl-forum-old .bi,
 .sl-topic-old .bi,
 .sl-topic-popular-old .bi,
-.sl-topic-closed .bi,
-.sl-forum-closed .bi {
+.sl-topic-closed .bi {
   color: var(--sl-text-subtle);
 }
 
@@ -8308,13 +8627,13 @@ a.sl-chip-neutral {
     padding: var(--sl-space-5) var(--sl-space-6);
   }
 
-  .sl-grid {
-    margin: 0 0 var(--sl-space-7) 0;
+  .sl-block .sl-vote-tools,
+  .sl-block-tools {
+    top: var(--sl-space-5);
   }
 
-  .sl-forum-line td {
-    padding-top: var(--sl-space-3);
-    padding-bottom: var(--sl-space-3);
+  .sl-grid {
+    margin: 0 0 var(--sl-space-7) 0;
   }
 }
 
@@ -9869,6 +10188,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: inline-block;
 }
 
+.sl-live-avatar::before,
 .sl-live-avatar::after {
   content: "";
   position: absolute;
@@ -9876,10 +10196,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   bottom: 0;
   width: var(--sl-live-dot-width);
   height: var(--sl-live-dot-height);
-  border: var(--sl-live-dot-border) solid var(--sl-bg);
   border-radius: var(--sl-radius-circle);
-  background: var(--sl-success);
-  animation: sl-live-pulse var(--sl-pulse-dur) var(--sl-ease-out) infinite;
 }
 
 .sl-fresh {
@@ -10614,10 +10931,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   bottom: 12px;
   width: var(--sl-profile-dot-width);
   height: var(--sl-profile-dot-height);
-  border: var(--sl-profile-dot-border) solid var(--sl-bg);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-success);
-  animation: sl-live-pulse var(--sl-pulse-dur) var(--sl-ease-out) infinite;
+  padding: var(--sl-profile-dot-border);
 }
 
 .sl-profile-name {
