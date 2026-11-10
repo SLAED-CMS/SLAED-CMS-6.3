@@ -172,7 +172,6 @@ final class ThemeContractTest extends TestCase
         $list = [
             'public/templates/admin/layouts/admin.html',
             'public/templates/admin/layouts/bare.html',
-            'public/templates/aurora/layouts/admin.html',
             'public/templates/aurora/layouts/bare.html',
             'public/templates/aurora/partials/site-header.html',
         ];

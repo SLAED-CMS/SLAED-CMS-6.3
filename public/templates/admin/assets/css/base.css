@@ -177,7 +177,6 @@
   --sl-panel-height: 32px;
   --sl-pager-height: 30px;
   --sl-placeholder-height: 64px;
-  --sl-thumb-height: 48px;
   --sl-field-bg: var(--sl-bg);
   --sl-field-border: var(--sl-border-strong);
   --sl-field-radius: var(--sl-radius-1);
@@ -505,9 +504,6 @@
   --sl-row-bg: color-mix(in srgb, var(--sl-success) 25%, transparent);
   --sl-search-min-width: 120px;
   --sl-search-max-width: 220px;
-  --sl-search-sort-width: 110px;
-  --sl-search-order-width: 165px;
-  --sl-search-filter-width: 140px;
   /* The plain segmented switch: a sunken track, cells over it and a raised plate under the chosen one */
   --sl-seg-height: var(--sl-size-control);
   --sl-seg-pad-x: 0;

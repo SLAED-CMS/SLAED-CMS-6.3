@@ -326,12 +326,9 @@ Do not:
 
 ### Admin Semantic Wrapper Variants
 
-`templates/admin/partials/div.html` owns two specialized wrappers through semantic flags:
+`templates/admin/partials/div.html` owns one specialized wrapper through a semantic flag: `is_menu_grid` always renders the `sl-menu-grid` wrapper, including an empty grid.
 
-- `is_searchbox` renders `sl-searchbox` only when trusted `content_html` is non-empty
-- `is_menu_grid` always renders the `sl-menu-grid` wrapper, including an empty grid
-
-The branch order is `is_searchbox`, `is_menu_grid`, generic `content_html`, then generic `rows`. The generic content contract and the `rows`-driven `sl-div-grid` contract remain independent. PHP callers pass renderer-produced `content_html` and flags; they do not pass wrapper CSS classes.
+The branch order is `is_menu_grid`, generic `content_html`, then generic `rows`. The generic content contract and the `rows`-driven `sl-div-grid` contract remain independent. PHP callers pass renderer-produced `content_html` and flags; they do not pass wrapper CSS classes.
 
 Frontend theme assets referenced by a partial must use an explicitly passed and escaped `theme` value. Page/layout variables are not implicitly injected into direct `getHtmlPart()` calls.
 
@@ -353,7 +350,6 @@ Current template-related tests include:
 - `tests/Unit/AdminLoginBridgeFlowTest.php`
 - `tests/Unit/AdminPageRenderFlowTest.php`
 - `tests/Unit/AdminPreviewBridgeFlowTest.php`
-- `tests/Unit/AdminSearchboxBridgeFlowTest.php`
 - `tests/Unit/ViewBridgeSmokeTest.php`
 
 ## Assets
@@ -467,7 +463,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **A caption stands at the top of its field.** `.sl-form-row` and `.sl-value-row` of the site and `.sl-div-item` of the panel align to `start`; the first line of a caption meets the line of a single field (on the site by a top padding of half the field height less one line, in the panel by a caption line as high as a control), so a text area, a list or a picture keeps its caption at its top. A baseline alignment was tried and refused: a text area and a picture have no baseline, and the caption fell to their foot
 - **Every chip that shows a value names it.** A size, a count, a date, a status or a module in a chip carries a `title` of an existing constant (`_SIZE`, `_NODE_DLOADS`, `_ALLMATERIALS`, `_COMMENTS`, `_VOTES`, `_DATE`, `_STATUS`, `_MODUL`, `_RATING`, `_CATEGORY`), so a hover says what the figure is; a chip that is a button with its own words needs none
 - **Every button bursts when pressed.** `setPressBurst()` of `slaed.js` gives each `.sl-but*` and `.sl-but-mini` the burst of the favourite star (`.sl-is-burst`: the ring, the pop of the icon, two spark sets), in both themes on the same tokens `--sl-fav-*` and `--sl-spark-shadow`; the star and the rating keep their own burst on the answer of the server, and `--sl-time-scale` 0 stills it
-- **Every button carries its icon.** `fragments/button.html` of both themes is a `<button>`, never an `<input>`, so a `bi` glyph stands before its words; without `icon_name` it takes the arrow of `is_back`, the turn of `reset_url`, the refresh of `reload_query` (the site) and the check of a confirming action otherwise. A caller names `icon_name` when the action means more than to confirm: send, add, delete, log in, upload. A pill a template writes itself, a link with a pill flag (`is_navi_button`, `is_navi_lower`, `is_account_button`, `is_button_blue`, `is_footer_button`) and the `acts` of `form-submit.html` carry their glyph the same way. A text a builder types in place stands in a `<span>` of its own beside the glyph, since typing replaces everything inside the element that carries `data-sl-text`
+- **Every button carries its icon.** `fragments/button.html` of both themes is a `<button>`, never an `<input>`, so a `bi` glyph stands before its words; without `icon_name` it takes the arrow of `is_back`, the turn of `reset_url` and the check of a confirming action otherwise. A caller names `icon_name` when the action means more than to confirm: send, add, delete, log in, upload. A pill a template writes itself, a link with a pill flag (`is_navi_button`, `is_navi_lower`, `is_account_button`, `is_button_blue`, `is_footer_button`) and the `acts` of `form-submit.html` carry their glyph the same way. A text a builder types in place stands in a `<span>` of its own beside the glyph, since typing replaces everything inside the element that carries `data-sl-text`
 
 ## Editor Fragments
 
@@ -830,8 +826,7 @@ stays an alert.
 | `title_text` | a title with a meaning of its own (`_NODE_NOTYPES`, `_NOCOMMENTS`, `_UPLOADS_EMPTY`) | `_ADM_CLEAN` calm, `_NONE_FOUND` found, `_NO_INFO` else |
 | `text` | one line under the title | none |
 | `icon_name` | a Bootstrap Icons name | `check2-circle` calm, `search` found, `inbox` else |
-| `act_url` | the button: the address without the filter for a found place, the form of a new entry for an empty one | none |
-| `act_text`, `act_icon` | the words and the icon of the button | `_FRESET` and `arrow-counterclockwise` found, `_ADD` and `plus-lg` else |
+| `act_url` | the button: the address without the filter for a found place, the form of a new entry for an empty one; its words and icon are `_FRESET` and `arrow-counterclockwise` found, `_ADD` and `plus-lg` else | none |
 | `act_target` | the id selector a part swaps into, for a button that answers with htmx and leaves the address | a plain link |
 
 - **Three kinds, one face.** Empty without a condition is `_NO_INFO`; a type, a tab of a status, a category or a
@@ -1501,7 +1496,7 @@ A new theme is made by copying an etalon and editing one file: `templates/<theme
 - **Canon is CSS, `fragments/` and `partials/`.** `layouts/` and `pages/` are outside it: the page shells of a panel and a site differ by nature.
 - **Breakpoints are canon, not API.** `@media` cannot read a custom property, so a theme decides how things look at a breakpoint, never where it sits.
 - **`assets/editors/*/skin.css`** consumes tokens, declares no API, and is byte-identical in both themes — `EditorWindowTest` enforces that, so it is edited in both in one commit.
-- **`checkThemeAssets()`** in `core/system.php` defines the files a theme must ship; the same list is mirrored under `skeleton` in `tools/ui-contract.php`.
+- **`checkThemeAssets()`** in `core/system.php` defines the assets a theme must ship before the runtime selects it. A frontend theme carries five templates besides, which `TemplateValidationTest` asks for: `fragments/title.html`, `partials/content-list.html`, `partials/node/view.html`, `pages/module.html` and `layouts/app.html`. Both lists are mirrored under `skeleton` in `tools/ui-contract.php`. `pages/home.html` and `layouts/home.html` belong to a frontend theme too: `setFoot()` renders the home page through them by name, though the skeleton does not list them.
 
 Axes, ladders, the allowlist, categorical sets, declared component names, the ramp and the ratchet list live in `tools/ui-contract.php`. That file is the contract: it is committed, and it is what every tool reads.
 

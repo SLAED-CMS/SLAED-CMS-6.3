@@ -196,7 +196,7 @@ class TemplateValidationTest extends TestCase
         $required = [
             'fragments/title.html',
             'partials/content-list.html',
-            'partials/view.html',
+            'partials/node/view.html',
             'pages/module.html',
             'layouts/app.html',
         ];

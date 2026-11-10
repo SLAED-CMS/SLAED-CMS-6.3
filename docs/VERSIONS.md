@@ -1,5 +1,71 @@
 # Versions
 
+## 2026-11-10
+
+### One gallery partial draws both galleries of the presentation, and a row written once stands in its parent
+
+- **`partials/presentation-gallery.html` of `aurora` draws the brand archive and the showcase of sites** — the flag
+  `is_brand` of the archive chooses the section `archive` with its picture tiles and the walk of the `view` window,
+  and without it the partial is the section `showcase` over `fragments/presentation-site.html`. The commit, the
+  module and the voice of the presentation are written in `partials/presentation-dev.html`,
+  `presentation-modules.html` and `presentation-voices.html`, and `partials/forum-teaser.html` walks its topics
+  itself. The pages answer the same markup as before.
+- **Breaking:** seven templates of `aurora` are gone — `partials/presentation-archive.html` and
+  `presentation-sites.html`, `fragments/presentation-brand.html`, `presentation-commit.html`,
+  `presentation-module.html`, `presentation-voice.html` and `forum-teaser-item.html`. Code of its own that renders one
+  of them by name gets nothing and a line in the log. `partials/forum-teaser.html` takes `items` as a list of rows
+  (`hidden`, `href`, `title`, `poster`, `when`) with `by` and `when_label` beside `label`, no longer as a string of
+  markup.
+
+### The base view and card of aurora draw the Node modes that carried a copy of them
+
+- **The view and the card of a material read the flag of its display mode** — `is_docs`, `is_faq`, `is_files`,
+  `is_media`, `is_support` and `is_event` of `getNodeViewVars()`, the one of `view.mode` true and none for `default`
+  and `article`. `partials/node/view.html` of `aurora` draws `docs`, `faq`, `files` and `media` from it,
+  `fragments/node/card.html` draws `files`, `support` and `event`; the pages answer the same markup as before.
+- **Breaking:** seven templates of `aurora` are gone — `partials/node/docs/view.html`, `faq/view.html`,
+  `files/view.html` and `media/view.html`, `fragments/node/files/card.html`, `support/card.html` and
+  `event/card.html`. Code of its own that renders one of them by name gets nothing and a line in the log. The modes
+  keep `fragments/node/docs/card.html`, `faq/card.html` and `media/card.html`, `partials/node/event/view.html` and
+  `support/view.html`, and a theme of its own may carry any `node/<mode>/<file>` as before.
+
+### The themes drop the templates nothing renders and the keys nothing sends
+
+- **Seventeen templates no caller rendered are gone** — twelve of `aurora` (`fragments/block-center-link`, `card`,
+  `grid`, `image-preview` and `related-item`, `partials/fieldset-panel`, `related` and `view`, `pages/admin`, `error`
+  and `login`, `layouts/admin`) and five of `admin` (`fragments/edit-actions`, `label`, `lines`, `meta-refresh` and
+  `save-action`). The single record a frontend theme has to ship is `partials/node/view.html`, in the place of
+  `partials/view.html`. The pages of the site and the panel answer the same markup as before.
+- **A key no producer sends has no branch** in the fragments of both themes, and the rules and tokens only those
+  branches and templates read left the stylesheets with them.
+- **Breaking:** a module of its own that renders a removed template gets nothing and a line in the log, and these keys
+  are no longer read. `aurora`: `is_level_three`, `is_level_four`, `title_class` of `title`; `is_faq`, `is_amount`,
+  `col_id`, `col_title`, `col_cat`, `col_poster`, `body_class`, `head_class`, `title_class` of `table`; `row_class`,
+  the `heading_html` of a cell and the row without `cells` of `table-row`; `select` with its labels of `form-submit`;
+  `enctype`, `extrafields`, `is_calculator`, `no_action` of `form-add`; `has_back_button`, `back_title`,
+  `is_card_post`, `is_form_value` of `span`; `is_download`, `is_hits`, `badge_attr` of `inline-badge`; `button_class`,
+  `button_id`, `reload_query` of `button`; `form_class`, `is_inline` of `form-wrap`; `is_private_message`,
+  `meta_title` of `forum-post`; `is_calculator` of `input`; `is_related_date` of `date-badge`; `is_mini` of
+  `post-button`; `before_html` of `content-list`; `module_link` of `session-row`; `label_class` of `checkbox` and
+  `label`; `login` of `layouts/bare`. `admin`: `is_searchbox`, `is_rate_box` of `div`; `actions`, `form_class` of
+  `form`; `is_save_action`, `is_search_filter`, `is_search_order`, `is_search_sort` of `select`; `is_search_filter` of
+  `input`; `is_chlog_primary`, `is_chlog_secondary`, `button_class`, `button_id` of `button`; `is_note`,
+  `is_post_icon`, `is_red`, `badge_attr` of `inline-badge`; `show_toggle`, `show_fallback` with the keys they read
+  of `image-preview`; `is_catflex_box`, `is_catflex_cont` of `block-content`; `has_back_button`, `back_title` of
+  `span`; `is_mini` of `link` and `post-button`; `row_class` of `div-row` and `table-row`. Both: `details_html`,
+  `heading_html` of `message-block`; `act_icon`, `act_text` of `empty`; `class_attr`, `init_attr` of `tabs`;
+  `row_class` of `code-row`; `content_id` of `block-sidebar`.
+- **Breaking:** the classes `.sl-card-aside`, `.sl-related-item`, `.sl-related-list`, `.sl-related-meta`,
+  `.sl-fieldset-center`, `.sl-fieldset-legend-info`, `.sl-fieldset-form-legend-success`,
+  `.sl-fieldset-form-legend-danger`, `.sl-view-error` with its four parts, `.sl-table-faq`, `.sl-table-amount`,
+  `.sl-calculator-field` and `.sl-copyright` of `aurora`, `.sl-associated-option`, `.sl-red`, `.sl-post-icon`,
+  `.sl-save-action-select`, `.sl-search-sort-select`, `.sl-search-order-select` and `.sl-search-filter-field` of
+  `admin`, and `.sl-image-preview-toggle`, `-popup`, `-mini` and `-thumb` of both are gone. So are the tokens
+  `--sl-aside-width`, `--sl-calc-width`, `--sl-col-amount-width`, `--sl-preview-width`, `--sl-preview-height`,
+  `--sl-preview-max-width` and `--sl-preview-max-height` of `aurora` and `--sl-thumb-height`,
+  `--sl-search-sort-width`, `--sl-search-order-width` and `--sl-search-filter-width` of `admin`; a theme of its own
+  that overrides them is no longer read.
+
 ## 2026-11-09
 
 ### The site theme is aurora

@@ -222,7 +222,6 @@ Current unit test files include:
 - `AdminLoginBridgeFlowTest.php`
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
-- `AdminSearchboxBridgeFlowTest.php`
 - `ApiEntryTest.php`
 - `ApiRouterTest.php`
 - `BackupContractTest.php`

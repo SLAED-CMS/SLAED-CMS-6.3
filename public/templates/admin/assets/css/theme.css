@@ -640,7 +640,6 @@
 }
 
 /* Utilities: text color and weight helpers */
-.sl-red,
 .sl-text-danger {
   color: var(--sl-danger);
 }
@@ -1025,7 +1024,6 @@ button[type="submit"].sl-but-back {
 .sl-infly::before,
 .sl-flyfix::before,
 .sl-plus::before,
-.sl-post-icon::before,
 .sl-date::before,
 .sl-cat::before,
 .sl-views::before {
@@ -1041,7 +1039,6 @@ button[type="submit"].sl-but-back {
 
 /* Meta glyphs: plus toggle and list meta icons share sizing and colour; contextual toggle override lives in the forms section */
 .sl-plus::before,
-.sl-post-icon::before,
 .sl-date::before,
 .sl-cat::before,
 .sl-views::before {
@@ -1061,10 +1058,6 @@ button[type="submit"].sl-but-back {
 
 .sl-plus.sl-is-open::before {
   content: "\f2e5";
-}
-
-.sl-post-icon::before {
-  content: "\f4da";
 }
 
 .sl-views::before {
@@ -1290,11 +1283,6 @@ tr.sl-row-collapsed {
 /* A row of a tree is indented by its depth, which the row carries as a custom property rather than as one class per level */
 [style*="--sl-d-depth"] {
   margin-left: min(calc(var(--sl-d-depth, 0) * var(--sl-space-8)), 50%);
-}
-
-.sl-save-action-select {
-  width: auto;
-  margin-right: var(--sl-space-3);
 }
 
 /* Debug output: code and diagnostics */
@@ -5849,40 +5837,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-bottom: var(--sl-space-3);
 }
 
-.sl-image-preview-toggle {
-  position: relative;
-}
-
-.sl-image-preview-popup {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: var(--sl-z-popover);
-}
-
-.sl-image-preview-mini {
-  cursor: pointer;
-  display: block;
-  width: var(--sl-size-icon-md);
-  height: var(--sl-size-icon-md);
-  border-radius: var(--sl-radius-3);
-  overflow: hidden;
-  transition: all var(--sl-time-slow);
-}
-
-.sl-image-preview-thumb {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.sl-image-preview-mini:hover {
-  width: var(--sl-thumb-height);
-  height: var(--sl-thumb-height);
-  border-radius: var(--sl-radius-circle);
-}
-
 .sl-ratings-inner-row {
   grid-template-columns: 3fr 1fr;
 }
@@ -6092,8 +6046,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background-color: transparent;
 }
 
-.sl-div-actions .sl-inline-gap,
-.sl-div-actions .sl-save-action-select {
+.sl-div-actions .sl-inline-gap {
   margin-right: 0;
 }
 
@@ -7961,32 +7914,6 @@ button.sl-but-mini {
 
 .sl-inline-gap {
   margin-right: var(--sl-space-3);
-}
-
-.sl-associated-option {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  margin: 0 var(--sl-space-5) var(--sl-space-3) 0;
-}
-
-/* Search module admin: filter control widths */
-.sl-search-sort-select {
-  width: var(--sl-search-sort-width);
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.sl-search-order-select {
-  width: var(--sl-search-order-width);
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.sl-search-filter-field {
-  width: var(--sl-search-filter-width);
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 .sl-ratings-days {
@@ -10672,10 +10599,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 /* Responsive fallbacks: form widths and tables */
 @media (max-width: 900px) {
   .sl-form-control,
-  .sl-select-config,
-  .sl-search-sort-select,
-  .sl-search-order-select,
-  .sl-search-filter-field {
+  .sl-select-config {
     width: 100%;
   }
 }

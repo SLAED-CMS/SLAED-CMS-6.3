@@ -1,11 +1,14 @@
-<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-card">
-  <h2 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{% if href %}<a href="{{ href }}" title="{{ title }}">{{ title }}</a>{% else %}{{ title }}{% endif %}{% if fresh_html %} {{{ fresh_html }}}{% endif %}</h2>
+<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-card{% if is_files %} sl-node-file{% endif %}">
+  <h2 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{% if is_files %}<i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i> {% endif %}{% if href %}<a href="{{ href }}" title="{{ title }}">{{ title }}</a>{% else %}{{ title }}{% endif %}{% if fresh_html %} {{{ fresh_html }}}{% endif %}</h2>
   <div class="sl-meta">
     <ul class="sl-pull-right">
+      {% if is_support and ext.state_label %}
+      <li><span title="{{ ext.state_title }}" class="sl-chip {% if ext.is_closed %}sl-chip-neutral{% elseif ext.is_author %}sl-chip-warn{% else %}sl-chip-info{% endif %}"><i class="bi bi-life-preserver" aria-hidden="true"></i> {{ ext.state_label }}</span></li>
+      {% endif %}
       {% if is_comm %}
       <li><a href="{{ href }}#comm" title="{{ comm_label }}" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comnum }}</a></li>
       {% endif %}
-      {% if download.hits %}
+      {% if download.hits and not is_support and not is_event %}
       <li><span title="{{ hits_label }}" class="sl-chip sl-download"><i class="bi bi-download" aria-hidden="true"></i> {{ download.hits }}</span></li>
       {% endif %}
       {% if is_views %}
@@ -19,7 +22,16 @@
       {% endif %}
     </ul>
     <ul>
-      {% if is_date and date %}
+      {% if is_event and ext.starts_text %}
+      <li><time datetime="{{ ext.starts_iso }}" title="{{ ext.starts_label }}" class="sl-chip sl-chip-info"><i class="bi bi-calendar-event" aria-hidden="true"></i> {{ ext.starts_text }}{% if ext.ends_text %} – {{ ext.ends_text }}{% endif %}</time></li>
+      {% endif %}
+      {% if is_event and ext.place %}
+      <li><span title="{{ ext.place_label }}" class="sl-chip sl-chip-neutral"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ ext.place }}</span></li>
+      {% endif %}
+      {% if is_event and ext.is_past %}
+      <li><span class="sl-chip sl-chip-neutral"><i class="bi bi-archive" aria-hidden="true"></i> {{ ext.past_label }}</span></li>
+      {% endif %}
+      {% if is_date and date and not is_event %}
       <li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</time></li>
       {% endif %}
       {% if is_category and chref %}
@@ -28,17 +40,26 @@
     </ul>
   </div>
   <div class="sl-entry-content">
-    {% if cover %}
+    {% if is_event and ext.day %}
+    <time datetime="{{ ext.starts_iso }}" title="{{ ext.starts_label }}" class="sl-event-date"><span class="sl-event-month">{{ ext.month }}</span><span class="sl-event-day">{{ ext.day }}</span>{% if ext.time %}<span class="sl-event-time">{{ ext.time }}</span>{% endif %}</time>
+    {% endif %}
+    {% if cover and not is_support %}
     <a href="{{ href }}" title="{{ title }}" class="sl-card-image"><img src="{{ cover }}" alt="{{ title }}" loading="lazy"></a>
-    {% elseif cicon_html %}
+    {% elseif cicon_html and not is_event %}
     <a href="{{ chref }}" title="{{ ctitle }}" class="sl-card-image sl-cat-tone-{{ ctone }}">{{{ cicon_html }}}</a>
     {% endif %}
     {{{ intro_html }}}
   </div>
-  {% if rating_html or read_label %}
+  {% if rating_html or read_label or is_files %}
   <div class="sl-meta-foot">
     {% if rating_html %}
     <div class="sl-rate-box sl-pull-right">{{{ rating_html }}}</div>
+    {% endif %}
+    {% if is_files and download.href %}
+    <a href="{{ download.href }}" title="{{ download_label }}" class="sl-but"><i class="bi bi-download" aria-hidden="true"></i> {{ download_label }}</a>
+    {% endif %}
+    {% if is_files and download.stext %}
+    <span title="{{ _SIZE }}" class="sl-chip sl-chip-info">{{ download.stext }}</span>
     {% endif %}
     {% if href and read_label %}
     <a href="{{ href }}" title="{{ title }}" class="sl-but"><i class="bi bi-arrow-right" aria-hidden="true"></i> {{ read_label }}</a>

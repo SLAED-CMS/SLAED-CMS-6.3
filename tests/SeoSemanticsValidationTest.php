@@ -50,14 +50,14 @@ final class SeoSemanticsValidationTest extends TestCase
 
     public function testSemanticComponentsRequireExplicitBooleanContexts(): void
     {
-        $card = file_get_contents($this->base.'/public/templates/aurora/fragments/card.html');
+        $card = file_get_contents($this->base.'/public/templates/aurora/fragments/node/card.html');
         $vote = file_get_contents($this->base.'/public/templates/aurora/partials/voting-widget.html');
         $pop = file_get_contents($this->base.'/public/templates/aurora/fragments/popover.html');
         $layout = file_get_contents($this->base.'/public/templates/aurora/layouts/app.html');
 
-        $this->assertMatchesRegularExpression('#\{% if is_detail %\}\s*<h1#', $card);
-        $this->assertMatchesRegularExpression('#\{% elseif is_nested %\}\s*<h3#', $card);
-        $this->assertMatchesRegularExpression('#\{% else %\}\s*<h2#', $card);
+        $this->assertSame(1, substr_count($card, '<h2 class="sl-title">'));
+        $this->assertStringNotContainsString('<h1', $card);
+        $this->assertStringNotContainsString('<h3', $card);
         $this->assertStringNotContainsString('card-title.html', $card);
         $this->assertMatchesRegularExpression('#\{% if is_page %\}\s*<h1#', $vote);
         $this->assertMatchesRegularExpression('#\{% elseif is_section %\}\s*<h2#', $vote);
@@ -66,20 +66,13 @@ final class SeoSemanticsValidationTest extends TestCase
         $this->assertSame(1, substr_count($layout, '<main'));
     }
 
-    public function testCardHeadingContextsRenderWithoutDedicatedTitleFragment(): void
+    public function testCardHeadingRendersWithoutDedicatedTitleFragment(): void
     {
         if (!class_exists('Template', false)) require_once $this->base.'/core/classes/template.php';
         $tpl = new Template('aurora');
-        $data = ['id' => '1', 'title_href' => '/item', 'title_attr' => 'Card', 'title_text' => 'Card'];
-        $detail = $tpl->getHtmlFrag('card', $data + ['is_detail' => true]);
-        $nested = $tpl->getHtmlFrag('card', $data + ['is_nested' => true]);
-        $list = $tpl->getHtmlFrag('card', $data);
-        $this->assertStringContainsString('<h1 class="sl-title">', $detail);
-        $this->assertStringContainsString('<h3 class="sl-title">', $nested);
-        $this->assertStringContainsString('<h2 class="sl-title">', $list);
-        $this->assertSame(1, substr_count($detail, '>Card</a>'));
-        $this->assertSame(1, substr_count($nested, '>Card</a>'));
-        $this->assertSame(1, substr_count($list, '>Card</a>'));
+        $card = $tpl->getHtmlFrag('node/card', ['id' => '1', 'href' => '/item', 'title' => 'Card']);
+        $this->assertStringContainsString('<h2 class="sl-title">', $card);
+        $this->assertSame(1, substr_count($card, '>Card</a>'));
     }
 
     public function testLocaleIdentifiersUseRealLanguageRegionPairs(): void

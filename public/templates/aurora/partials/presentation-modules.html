@@ -20,7 +20,7 @@
         </svg>
         <div class="sl-pres-map-core"><i class="sl-pres-orbit"><i></i></i><img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="SLAED" width="64" height="64"></div>
         {% for item in mods %}
-        {% include 'fragments/presentation-module.html' with item %}
+        <a class="sl-pres-mod{% if item.is_on %} sl-is-on{% else %} sl-is-off{% endif %}" href="{{ item.href }}" data-sl-pres-mod="{{ item.note }}"><i class="sl-pres-dot"></i><b>{{ item.label }}</b><small>{{ item.note }}</small></a>
         {% endfor %}
       </div>
       <div class="sl-pres-detail">

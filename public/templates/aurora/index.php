@@ -17,20 +17,18 @@ function setTemplateSeason(): string {
 # Query recent forum topics and render via forum-teaser partial
 function setTemplateForum(): string {
     global $db, $tpl;
-    $items = '';
+    $items = [];
     $result = getForumTopics('id, title, ltime, luid, lname, lpost, status', '97, 98, 99, 100, 101', 3);
     while ([$id, $title, $time, $luid, $lname, $lpost, $status, $path, , $lpath] = $db->getSqlRow($result)) {
-        $items .= $tpl->getHtmlFrag('forum-teaser-item', [
+        $items[] = [
             'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
             'href' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]).'#'.$lpost,
             'title' => getDecodedText($title),
-            'by' => _POSTEDBY,
             'poster' => $luid ? user_info($lname, $lpath) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
-            'when_label' => _DATE,
             'when' => format_time($time, _TIMESTRING),
-        ]);
+        ];
     }
-    return $tpl->getHtmlPart('forum-teaser', ['items' => $items, 'label' => _FORUM]);
+    return $tpl->getHtmlPart('forum-teaser', ['items' => $items, 'label' => _FORUM, 'by' => _POSTEDBY, 'when_label' => _DATE]);
 }
 
 # The header marquee: the latest material of the first active type in the faq mode of this theme; the mode is a theme name, so the core knows no type here

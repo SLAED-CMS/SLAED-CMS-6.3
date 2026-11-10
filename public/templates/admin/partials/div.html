@@ -1,13 +1,7 @@
-{% if is_searchbox %}
-{% if content_html %}
-<div class="sl-searchbox">
-  {{{ content_html }}}
-</div>
-{% endif %}
-{% elseif is_menu_grid %}
+{% if is_menu_grid %}
 <div class="sl-menu-grid">{{{ content_html }}}</div>
 {% elseif content_html %}
-<div{% if id %} id="{{ id }}"{% endif %}{% if class or is_collapsible or is_rate_box %} class="{% if class %}{{ class }}{% endif %}{% if is_collapsible %}{% if class %} {% endif %}sl-collapsible{% endif %}{% if is_rate_box %} rate-box pull-right{% endif %}"{% endif %}{% if title %} title="{{ title }}"{% endif %}{% if labelledby %} aria-labelledby="{{ labelledby }}"{% endif %}{% if describedby %} aria-describedby="{{ describedby }}"{% endif %}{% if is_collapsible and id %} data-sl-toggle="{{ id }}"{% endif %}{% if attr %} {{{ attr }}}{% endif %}>
+<div{% if id %} id="{{ id }}"{% endif %}{% if class or is_collapsible %} class="{% if class %}{{ class }}{% endif %}{% if is_collapsible %}{% if class %} {% endif %}sl-collapsible{% endif %}"{% endif %}{% if title %} title="{{ title }}"{% endif %}{% if labelledby %} aria-labelledby="{{ labelledby }}"{% endif %}{% if describedby %} aria-describedby="{{ describedby }}"{% endif %}{% if is_collapsible and id %} data-sl-toggle="{{ id }}"{% endif %}{% if attr %} {{{ attr }}}{% endif %}>
   {{{ content_html }}}
 </div>
 {% else %}

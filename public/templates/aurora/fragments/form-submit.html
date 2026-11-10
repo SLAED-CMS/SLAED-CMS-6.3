@@ -1,10 +1,1 @@
-{% if extra %}{{{ extra }}}{% endif %}{% if name %}<input type="hidden" name="{{ name }}" value="{{ val }}">{% endif %}{% if op %}<input type="hidden" name="op" value="{{ op }}">{% endif %}{% if select %}<select name="posttype" class="sl-field sl-field--auto"{% if select_label %} aria-label="{{ select_label }}"{% endif %}>
-  {% if show_preview %}
-  <option value="preview">{{ label_preview }}</option>
-  {% endif %}
-  <option value="save">{{ label_save }}</option>
-  {% if show_delete %}
-  <option value="delete">{{ label_delete }}</option>
-  {% endif %}
-</select>
-{% endif %}{% if acts %}{% for act in acts %}<button type="submit" class="sl-but" name="{{ act.name }}" value="{{ act.value }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i> {{ act.label }}</button>{% endfor %}{% else %}{% include 'fragments/button.html' %}{% endif %}
+{% if extra %}{{{ extra }}}{% endif %}{% if name %}<input type="hidden" name="{{ name }}" value="{{ val }}">{% endif %}{% if op %}<input type="hidden" name="op" value="{{ op }}">{% endif %}{% if acts %}{% for act in acts %}<button type="submit" class="sl-but" name="{{ act.name }}" value="{{ act.value }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i> {{ act.label }}</button>{% endfor %}{% else %}{% include 'fragments/button.html' %}{% endif %}

@@ -7,30 +7,7 @@
     {{{ links }}}
   </head>
   <body>
-    {% if login %}
-    <div>
-      <div></div>
-      <div>
-        <div>
-          <div>
-            <h1><a href="//slaed.net" target="_blank" class="sl-hidden" title="SLAED CMS">SLAED CMS</a></h1>
-          </div>
-          <div><b title="{{ login }}">{{ login }}</b></div>
-        </div>
-        <div>
-    {% endif %}
     {% block content %}{% endblock %}
-    {% if login %}
-        </div>
-        <div>
-          <div class="sl-copyright">
-            {{{ license }}}
-          </div>
-        </div>
-      </div>
-      <div></div>
-    </div>
-    {% endif %}
     {{{ scripts }}}
   </body>
 </html>

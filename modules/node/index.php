@@ -405,14 +405,21 @@ function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): arr
     ];
 }
 
-# The labels and switches the standard templates of a material read beside the prepared data
+# The labels and switches the standard templates of a material read beside the prepared data; a mode without a file of its own is drawn by the base file from its flag
 function getNodeViewVars(NodeType $type): array {
     $show = $type->settings['list']['show'];
+    $mode = $type->settings['view']['mode'];
     return [
         'is_date' => in_array('date', $show, true),
         'is_author' => in_array('author', $show, true),
         'is_category' => in_array('category', $show, true),
         'is_views' => in_array('views', $show, true),
+        'is_docs' => $mode === 'docs',
+        'is_faq' => $mode === 'faq',
+        'is_files' => $mode === 'files',
+        'is_media' => $mode === 'media',
+        'is_support' => $mode === 'support',
+        'is_event' => $mode === 'event',
         'date_label' => _DATE,
         'views_label' => _READS,
         'author_label' => _POSTEDBY,

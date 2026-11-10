@@ -4703,7 +4703,7 @@
   margin-bottom: 0;
 }
 
-/* Gallery: partials/presentation-archive.html and presentation-sites.html, one picture treatment with the principles */
+/* Gallery: partials/presentation-gallery.html, one picture treatment with the principles */
 .sl-pres-tile-open::before,
 .sl-pres-shot::before,
 .sl-pres-principle::after {

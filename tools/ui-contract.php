@@ -17,6 +17,8 @@ return [
     # A fourth was decided on 2026-11-04: the panel's six --sl-drift-* names left with the four-dot loader of the live chart, gone 0.2 s into a load
     # A fifth was decided on 2026-11-08: the six --sl-loading-* names of both themes left with the three-dot loader of a list, a file and a site button
     # A sixth was decided on 2026-11-09: the panel's --sl-statx-width lost its one reader, the floor of the date column, when the list of days dropped the year to fit a laptop
+    # A seventh was decided on 2026-11-10 with the templates plan: eleven names left with the dead templates and the unsent key branches that were their one reader
+    # They are the site's --sl-aside-width, --sl-calc-width, --sl-col-amount-width and four --sl-preview-*, the panel's --sl-thumb-height and three --sl-search-*-width
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -209,11 +211,11 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'adm', 'alert', 'alert-act', 'archive', 'arrow', 'aside', 'aurora', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini',
+        'adm', 'alert', 'alert-act', 'archive', 'arrow', 'aurora', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini',
         'builder', 'builder-pick', 'builder-thumb', 'bullet',
         'cab-act', 'cab-msg', 'cab-ring',
-        'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
-        'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
+        'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
+        'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
         'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut',
         'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'empty', 'entry', 'f-title', 'fav', 'feedback',
@@ -229,8 +231,8 @@ return [
         'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn', 'pres-photo', 'pres-rain',
-        'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
-        'rail', 'rank', 'ratings', 'ring', 'ripple', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
+        'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
+        'rail', 'rank', 'ratings', 'ring', 'ripple', 'row', 'scroll', 'search', 'seg', 'seg-knob', 'select', 'set', 'sep',
         'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'stats', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'solid', 'solid-bad', 'solid-good', 'solid-link', 'solid-warn',
         'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob', 'switch-on',
@@ -462,10 +464,10 @@ return [
         # A status tone has one colour and many marks, and once every mark took the base tone of its family instead of a tint step, the marks of one status met
         # A hidden-text frame, a hot topic, a moderated topic and a category tone are four components: a list holding them names nothing and hides each from its reader
         # Two of the three also reach across a file the list cannot cross
-        '.sl-fieldset-form-legend-success, .sl-text-success, .sl-profile-proof:nth-child(2) i, '
+        '.sl-text-success, .sl-profile-proof:nth-child(2) i, '
             .'.sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio:has(input:checked), '
             .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-fm-win .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
-        '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
+        '.sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
             .'.sl-profile-wide.sl-is-warn h3 i, .sl-fm-win .sl-fm-job.sl-is-fail > .bi',
         '.sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, .sl-topic-hot .bi, .sl-topic-admin .bi',
         # A category tone and the tone a kept message wears are one colour under two names on purpose: a category of the catalogue and a state of a message
@@ -534,9 +536,6 @@ return [
         # The foot of a reply box, a group of radios, the door of a file row and the foot of a Node file card all wrap their children on one line
         # They are two toolbars, a form control and a form row, and joining them would file four components under a selector list naming none of them
         '.sl-file-door, .sl-node-file .sl-meta-foot, .sl-pmf-reply-foot, .sl-radio-group',
-        # Two pictures that fill the box they are given: a preview and the thumbnail of a related entry
-        # Merging would file two components under one selector list that names neither of them
-        '.sl-image-preview-thumb, .sl-related-img-inner',
         # The two footer lines: two element defaults of the footer at the small step in the muted tone
         '.sl-generates, .sl-license',
         # The two parts of a speed dial beside the control of a live chip: three buttons stripped of their browser chrome, which is need
@@ -659,9 +658,6 @@ return [
         '.sl-bulk-bar' =>
             'the panel bar is a strip inside a list, drawn with one rule above it; the site bar is a card of its own with a border and a radius, standing '
             .'away from what it acts on',
-        '.sl-image-preview-mini:hover' =>
-            'the panel thumbnail grows into a circle under the pointer and the site thumbnail is already round, so only one of them has a radius left to '
-            .'change',
         '.sl-alert' =>
             'the panel notice is one line high with its text justified in the theme\'s text tone; the site notice is a block that lifts off the page. The '
             .'tint law and the tone are shared, the geometry is each theme\'s own',
@@ -763,7 +759,7 @@ return [
         'frontend' => [
             'fragments/title.html' => 'TemplateValidationTest: the title of a module page',
             'partials/content-list.html' => 'TemplateValidationTest: the list a module renders its rows into',
-            'partials/view.html' => 'TemplateValidationTest: the single record a module opens',
+            'partials/node/view.html' => 'TemplateValidationTest: the single record a module opens',
             'pages/module.html' => 'TemplateValidationTest: the page shell a module is drawn in',
             'layouts/app.html' => 'TemplateValidationTest: the document every ordinary page opens',
         ],
@@ -788,7 +784,7 @@ return [
             .'one-time notice of getFlashHtml() as a plain notice at the top of its content. Under that the panel prints the text as handed and the site wraps it in '
             .'a paragraph, because the site notice is a block of running text and the panel notice is one line - the same split the .sl-alert rules already carry',
         'fragments/block-content.html' =>
-            'a class map, and the map is each theme own vocabulary: three named containers in the panel against fifteen on the site, with the four they share '
+            'a class map, and the map is each theme own vocabulary: one named container of the panel alone against twelve of the site alone, with the four they share '
             .'spelled the same way. Unifying means one theme emitting class names nothing in it styles, which is how a dead class enters a package hundreds of '
             .'themes are copied from',
         'fragments/button.html' =>
@@ -796,8 +792,8 @@ return [
             .'such caller and stays on the input it has always drawn. On top of that the panel picks a tone class per button and the site has one button, so the '
             .'ladder that reads the tone flags has nothing to map to there',
         'fragments/checkbox.html' =>
-            'the same box under two form systems: the panel wraps it in the label class its radio uses and can set a code sample beside the text, the site names '
-            .'its own label class per call and carries a plain shape that takes no class at all. The check-all hook is the one thing both spell, and they spell it '
+            'the same box under two form systems: the panel wraps it in the label class its radio uses and can set a code sample beside the text, the site wraps '
+            .'it in a bare label and carries a plain shape that takes no class at all. The check-all hook is the one thing both spell, and they spell it '
             .'the same way',
         'fragments/dial.html' =>
             'two mechanisms under one name, which the .sl-dial rules already answer for: the panel dial drives the file manager through data-sl-fm-act, -file, -arg '
@@ -808,18 +804,15 @@ return [
             .'the site menu marks the page it stands on, carries the queue the panel keeps in its bell and opens all the sections with a star each, since the site '
             .'has no palette, and keeps a place of its own by data-sl-dock-site. The keys of the two are one set and each theme draws its half',
         'fragments/inline-badge.html' =>
-            'two badge vocabularies: fourteen names the panel maps and twenty the site does, with no name in both. The site badge tells a reader what a topic is - '
-            .'new, hot, closed, moderated - and carries the glyph for it; the panel badge tells a moderator what a record is. A union would be thirty-four branches '
-            .'of which each theme reaches its own half',
+            'two badge vocabularies: twelve names the panel maps and eighteen the site does, with the two status names alone in both. The site badge tells a reader '
+            .'what a topic is - new, hot, closed, moderated - and carries the glyph for it; the panel badge tells a moderator what a record is. A union would be '
+            .'twenty-eight branches of which each theme reaches its own half',
         'fragments/input.html' =>
             'the field look is where the two themes part: the site gives every input one sl-field class and modifies it, the panel names the context the input sits '
-            .'in instead - a config row, a ratings day box, a search filter, a translation target. The keys do not collide and no producer sets one the other theme '
+            .'in instead - a config row, a ratings day box, a translation target. The keys do not collide and no producer sets one the other theme '
             .'knows, so this is two class maps and not one contract spelled twice',
-        'fragments/label.html' =>
-            'the panel label is a real label element with a for, a title and a prefix, because a panel form associates its control by id; the site label defaults '
-            .'to one class and takes text or markup and nothing else. One caller feeds the site file and it passes neither for nor title',
         'fragments/link.html' =>
-            'the largest of the two vocabularies: twelve names the panel maps against thirty-three the site does, and not one is in both. The site link is the '
+            'the largest of the two vocabularies: eleven names the panel maps against thirty-three the site does, and not one is in both. The site link is the '
             .'whole card, cart, category and login language of a public page; the panel link is a row action. This is the pair the plan measured at over a hundred '
             .'lines, and it is two contracts rather than one contract with two spellings',
         'fragments/pager-keys.html' =>
@@ -834,10 +827,10 @@ return [
             .'hint has no producer on the site',
         'fragments/post-button.html' =>
             'a post button of the panel weighs by its role - the next step, a check that changes nothing, a step that cannot be undone - as the buttons of an '
-            .'update and its rollback do; the site posts only the actions of an alert and of the dial, has no step of that weight and no red button to draw it',
+            .'update and its rollback do; the site posts only the actions of an alert and a plain button, has no step of that weight and no red button to draw it',
         'fragments/select.html' =>
-            'the panel select renders its options from an array as well as from ready markup, and names the context it sits in - config, search sort, search order, '
-            .'save action; the site takes ready markup only and gives every select the one sl-field class. Two class maps and two option contracts, and no producer '
+            'the panel select renders its options from an array as well as from ready markup, and names the context it sits in - a config row, an inline gap; '
+            .'the site takes ready markup only and gives every select the one sl-field class. Two class maps and two option contracts, and no producer '
             .'crosses them',
         'fragments/span.html' =>
             'one flag in the panel against twenty-two on the site. The site span is the chip language of a public page - price, reads, votes, cart total, the four '
@@ -845,11 +838,11 @@ return [
             .'both spell, and after this batch they spell it the same way',
         'fragments/table-row.html' =>
             'two row contracts: the panel row takes cells already rendered and adds the sort and grouping hooks its tables need, the site row builds its own cells '
-            .'from a list and knows what a title, a category and a moderator column are. The site file is over a hundred lines because the row is where a public '
-            .'list decides what a record looks like; the panel decides that in the module',
+            .'from a list and knows what a status lamp, a link, an avatar and a forum figure are, because the row is where a public list decides what a record '
+            .'looks like; the panel decides that in the module',
         'fragments/table.html' =>
-            'the panel table is one shape - a sortable list inside a card, optionally unwrapped - and the site table is nine, from a cart to an FAQ to an avatar '
-            .'grid. The site also splits on an open flag so a looped row lands inside the tbody, which the panel has no producer for. The head is the same split '
+            'the panel table is one shape - a sortable list inside a card, optionally unwrapped - and the site table is three: a plain table, a list that may sort and a '
+            .'form table. The site also splits on an open flag so a looped row lands inside the tbody, which the panel has no producer for. The head is the same split '
             .'again: ready markup in the panel, a column list on the site',
         'fragments/tabs-link.html' =>
             'one link with one extra in the panel: a tab that opens a pane in place carries the dot of the form canon, which marks a pane holding '
@@ -868,7 +861,7 @@ return [
             .'with an h2 and no icon, because a heading rank follows the document it sits in and the two documents are the page shells canon does not cover. The '
             .'collapse hook is the same name in both',
         'partials/div.html' =>
-            'the panel container knows what it is wrapping - a search box, a menu grid, a radio group, a collapsible, a rate box - and the site container is a div '
+            'the panel container knows what it is wrapping - a menu grid, a collapsible - and the site container is a div '
             .'with an id, a title and at most one of two classes. The row form differs the same way: the panel includes its own row fragment, the site writes the '
             .'row inline',
         'partials/foot-controls.html' =>

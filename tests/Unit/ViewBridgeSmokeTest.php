@@ -103,28 +103,27 @@ namespace Tests\Unit {
         }
 
         #[Test]
-        public function viewRendersErrorPageWithBareLayout(): void
+        public function viewRendersMessagePageWithBareLayout(): void
         {
             $tpl = new \Template('aurora');
-            $html = $tpl->getHtmlPage('error', [
+            $html = $tpl->getHtmlPage('message', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
+                'homeurl' => 'https://slaed.loc',
                 'title' => 'Error',
                 'message_html' => '<div class="view-frag-message">Hello</div>',
-                'meta' => '<meta http-equiv="refresh" content="3; url=index.php?test=1">',
-                'url' => 'index.php?test=1',
-                'url_text' => 'Continue',
-                'time' => 3,
-                'time_text' => '3 sec',
+                'meta' => '<meta name="robots" content="noindex, follow">',
+                'search' => 'Search',
+                'home' => 'Home',
             ], 'bare');
 
             $this->assertNotSame('', $html);
             $this->assertStringContainsString('<!doctype html>', $html);
-            $this->assertMatchesRegularExpression('/<title>\s*Error\s*<\/title>/', $html);
+            $this->assertMatchesRegularExpression('/<title>\s*Error — SLAED\s*<\/title>/u', $html);
+            $this->assertStringContainsString('<h1 class="sl-msg-title">Error</h1>', $html);
             $this->assertStringContainsString('view-frag-message', $html);
-            $this->assertStringContainsString('Continue', $html);
-            $this->assertStringContainsString('3 sec', $html);
-            $this->assertStringContainsString('<meta http-equiv="refresh" content="3; url=index.php?test=1">', $html);
+            $this->assertStringContainsString('placeholder="Search"', $html);
+            $this->assertStringContainsString('<meta name="robots" content="noindex, follow">', $html);
         }
 
         #[Test]
@@ -145,16 +144,11 @@ namespace Tests\Unit {
                 'text' => 'Warn',
                 'is_warn' => true,
             ]);
-            $page = $tpl->getHtmlPage('error', [
+            $page = $tpl->getHtmlPage('message', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
                 'title' => 'Error',
                 'message_html' => '<div class="view-frag-message">Warn</div>',
-                'meta' => '<meta http-equiv="refresh" content="1; url=index.php">',
-                'url' => 'index.php',
-                'url_text' => 'Home',
-                'time' => 1,
-                'time_text' => '1 sec',
             ], 'bare');
 
             $this->assertNotSame('', $part);

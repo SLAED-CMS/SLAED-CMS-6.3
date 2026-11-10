@@ -5,7 +5,20 @@
       <div class="sl-pres-panel-head"><span><i class="bi bi-chat-quote" aria-hidden="true"></i>{{ over }}</span><b class="sl-pres-pill" data-sl-tone="success">{{ pill }}</b></div>
       <div class="sl-pres-voices-track">
         {% for item in items %}
-        {% include 'fragments/presentation-voice.html' with item %}
+        <article class="sl-pres-voice"{% if item.tone %} data-sl-tone="{{ item.tone }}"{% endif %}>
+          <p>{{ item.text }}</p>
+          <i class="sl-pres-voice-sep"></i>
+          <div class="sl-pres-voice-person">
+            <span class="sl-pres-voice-ava">{{ item.initials }}</span>
+            <div><strong>{{ item.name }}</strong><small>{{ item.site }}{% if item.role %} · {{ item.role }}{% endif %}</small></div>
+            {% if item.since %}
+            <div class="sl-pres-since"><span>{{ item.since_label }}</span><b>{{ item.since }}</b></div>
+            {% endif %}
+          </div>
+          {% if item.marks %}
+          <div class="sl-pres-voice-marks">{% for mark in item.marks %}<span><i class="bi bi-{{ mark.icon }}" aria-hidden="true"></i>{{ mark.label }}</span>{% endfor %}</div>
+          {% endif %}
+        </article>
         {% endfor %}
       </div>
     </div>

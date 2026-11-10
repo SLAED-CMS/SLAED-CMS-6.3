@@ -651,7 +651,7 @@ function getPresentationData(): array {
         'pipeline' => $pipeline,
         'dna' => ['head' => $head(8, 'fingerprint', _PRES_H_DNA, _PRES_L_DNA), 'items' => getPresentationDna()],
         'archive' => $gallery + [
-            'head' => $head(9, getIconName('save'), _PRES_H_HISTORY, _PRES_L_HISTORY), 'title' => _PRES_H_HISTORY,
+            'head' => $head(9, getIconName('save'), _PRES_H_HISTORY, _PRES_L_HISTORY), 'title' => _PRES_H_HISTORY, 'is_brand' => true,
             'over' => _PRES_BR_COLLECT, 'count' => sprintf(_PRES_BR_COUNT, count($brand)), 'items' => $brand, 'last' => (string)max(count($brand) - 1, 0),
         ],
         'sites' => $gallery + [

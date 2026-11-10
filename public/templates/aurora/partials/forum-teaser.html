@@ -2,7 +2,23 @@
 <div class="sl-grid">
   <p title="{{ label }}" class="sl-font sl-f-title">{{ label }}</p>
   <ul class="sl-list-item">
-    {{{ items }}}
+    {% for item in items %}
+    <li{% if item.hidden %} class="sl-hidden"{% endif %}>
+      <a href="{{ item.href }}" title="{{ item.title }}">{{ item.title }}</a>
+      <br>
+      <span class="sl-forum-meta">
+        <span class="sl-forum-meta-item">
+          <span class="sl-visually-hidden">{{ by }}:</span>
+          {{{ item.poster }}}
+        </span>
+        <span class="sl-forum-meta-item">
+          <i class="bi bi-clock-history sl-forum-meta-icon" aria-hidden="true"></i>
+          <span class="sl-visually-hidden">{{ when_label }}:</span>
+          {{ item.when }}
+        </span>
+      </span>
+    </li>
+    {% endfor %}
   </ul>
 </div>
 {% endif %}

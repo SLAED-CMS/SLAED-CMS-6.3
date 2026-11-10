@@ -18,10 +18,6 @@
 {% endif %}
 {% elseif is_level_two %}
 <h2>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h2>
-{% elseif is_level_three %}
-<h3 class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h3>
-{% elseif is_level_four %}
-<h4>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h4>
 {% else %}
-<div class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</div>
+<div class="sl-title">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</div>
 {% endif %}

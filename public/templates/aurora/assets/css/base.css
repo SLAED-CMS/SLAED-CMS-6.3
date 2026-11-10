@@ -315,7 +315,6 @@
   --sl-alert-act-ring: 3px;
   --sl-alert-act-mix: 18%;
   --sl-arrow-width: 8px;
-  --sl-aside-width: 170px;
   --sl-ava-border: 4px;
   /* The disc the avatar stands on: the halo it wears against the page, and the lift under it */
   --sl-avatar-shadow: 0 0 0 4px var(--sl-bg), var(--sl-panel-shadow);
@@ -332,7 +331,6 @@
   --sl-cab-msg-height: 28px;
   --sl-cab-ring-width: 112px;
   --sl-cab-ring-height: 112px;
-  --sl-calc-width: 65px;
   --sl-card-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.42));
   --sl-changelog-width: 1400px;
   --sl-changelog-body-border: 4px;
@@ -357,7 +355,6 @@
   --sl-dock-width: 600px;
   --sl-dock-max-width: 340px;
   --sl-dock-max-height: min(72vh, 560px);
-  --sl-col-amount-width: 15%;
   --sl-col-check-width: 36px;
   --sl-col-form-width: 35%;
   --sl-col-last-width: 140px;
@@ -527,10 +524,6 @@
   /* A site screenshot card and a brand archive tile row */
   --sl-site-height: 270px;
   --sl-brand-height: 210px;
-  --sl-preview-width: 24px;
-  --sl-preview-height: 24px;
-  --sl-preview-max-width: 48px;
-  --sl-preview-max-height: 48px;
   --sl-profile-ava-width: 112px;
   --sl-profile-ava-height: 112px;
   --sl-profile-dot-border: 3px;

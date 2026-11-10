@@ -5,10 +5,10 @@
       {% if is_comm %}
       <li><a href="{{ href }}#comm" title="{{ comm_label }}" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comnum }}</a></li>
       {% endif %}
-      {% if is_views %}
+      {% if is_views and not is_docs and not is_faq %}
       <li><span title="{{ views_label }}" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> {{ views }}</span></li>
       {% endif %}
-      {% if is_author and author %}
+      {% if is_author and author and not is_docs and not is_faq %}
       <li><span title="{{ author_label }}" class="sl-chip sl-chip-info sl-post-icon">{% if ahref %}<a href="{{ ahref }}" title="{{ author }}" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> {{ author }}</a>{% else %}<i class="bi bi-person" aria-hidden="true"></i> {{ author }}{% endif %}</span></li>
       {% endif %}
       {% if is_live %}
@@ -24,6 +24,14 @@
       {% endif %}
     </ul>
   </div>
+  {% if is_files or is_media %}
+  {{{ assets_html }}}
+  {% endif %}
+  {% if is_media and fields_html %}
+  <div class="sl-section">
+    {{{ fields_html }}}
+  </div>
+  {% endif %}
   <div class="sl-entry-content">
     {{{ poll_html }}}
     {% if cicon_html %}
@@ -35,13 +43,15 @@
     <div id="repnode{{ id }}body" data-sl-quick>
       {{{ body_html }}}
     </div>
-    {% if fields_html %}
+    {% if fields_html and not is_media %}
     <div class="sl-section">
       {{{ fields_html }}}
     </div>
     {% endif %}
   </div>
+  {% if not is_files and not is_media %}
   {{{ assets_html }}}
+  {% endif %}
   {% if rating_html or files_html %}
   <div class="sl-meta-foot">
     {% if rating_html %}
@@ -54,7 +64,7 @@
   {% if rels_html %}
   <section>
     <h2 class="sl-related-title">{{ rels_label }}</h2>
-    <div class="sl-section">
+    <div class="{% if is_media %}sl-node-tiles{% else %}sl-section{% endif %}">
       {{{ rels_html }}}
     </div>
   </section>

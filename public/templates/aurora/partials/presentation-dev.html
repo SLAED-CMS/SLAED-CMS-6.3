@@ -7,7 +7,11 @@
         {% if has_commits %}
         <div class="sl-pres-commits">
           {% for item in commits %}
-          {% include 'fragments/presentation-commit.html' with item %}
+          <a class="sl-pres-commit{% if item.is_on %} sl-is-on{% endif %}" href="{{ item.href }}"{% if item.is_ext %} target="_blank" rel="noopener"{% endif %} data-sl-pres-text="{{ item.text }}">
+            <span class="sl-pres-sha">{{ item.short }}</span>
+            <div><b>{{ item.title }}</b>{% if item.has_tags %}<span class="sl-pres-tags">{% for tag in item.tags %}<span>{{ tag }}</span>{% endfor %}</span>{% endif %}</div>
+            <div class="sl-pres-when"><time datetime="{{ item.iso }}">{{ item.date }}</time><small>{{ item.note }}</small></div>
+          </a>
           {% endfor %}
         </div>
         {% else %}

@@ -249,7 +249,6 @@ final class NodeSupportTest extends TestCase
         $this->assertLessThan(strpos($body, 'INSERT INTO'), strpos($body, '$this->setNodeLock('), 'addComment inserts before it locks the material');
         $this->assertStringContainsString('LOCK IN SHARE MODE', $com, 'The live counter is not read with a locking read');
         $this->assertFileExists($root.'/public/templates/aurora/partials/node/support/view.html');
-        $this->assertFileExists($root.'/public/templates/aurora/fragments/node/support/card.html');
     }
 
     # The public form carries no comment mode, so a moderator who sends a request on the site gets open comments as a member does, never a refusal of comon

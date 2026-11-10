@@ -281,9 +281,9 @@ For new template work:
 Current modern runtime methods:
 
 ```php
-$tpl->getHtmlPage('error', $data);
-$tpl->getHtmlPart('login', $data);
-$tpl->getHtmlFrag('message', $data);
+$tpl->getHtmlPage('message', $data);
+$tpl->getHtmlPart('login-nav', $data);
+$tpl->getHtmlFrag('alert', $data);
 ```
 
 ### SEO Head Overrides

@@ -150,7 +150,8 @@ Large views live in `templates/<theme>/partials/node/`, repeated elements in
 `fragments/node/card.html`, `block.html`, `image.html`, `gallery.html`, `download.html`, `player.html`,
 `link.html` and `tree.html`. A display mode other than `default` may override any base file but `head.html` and
 `hints.html`, which are rendered by their own name, with `node/<mode>/<file>`; `getNodeTplName()` picks the mode file
-when the theme has it and the base file otherwise. The `aurora` theme ships the modes `docs`, `faq`, `files`, `media` and `support`.
+when the theme has it and the base file otherwise. The files the `aurora` theme ships for a mode are listed in
+[Display modes of the aurora theme](#display-modes-of-the-aurora-theme).
 
 ## Code layout
 
@@ -2579,15 +2580,20 @@ use it, so a mode overrides `list`, `view`, `card`, `block`, `tree` and each res
 
 ### Display modes of the aurora theme
 
-| `view.mode` | Files | Output |
+| `view.mode` | Files of its own | Output |
 |---|---|---|
-| `default`, `article` | base files | the base set is the article |
-| `docs` | `fragments/node/docs/card.html`, `partials/node/docs/view.html` | table-of-contents row: title, category chip, one-line plain intro; view without author and views chips |
-| `faq` | `fragments/node/faq/card.html`, `partials/node/faq/view.html` | native `<details>` accordion: question in `<summary>`, intro answer and a read-more link; view without author and views chips |
-| `files` | `fragments/node/files/card.html`, `partials/node/files/view.html` | card with direct download button, size and hits of the first `download`-mode resource; view shows resources above the text |
-| `media` | `fragments/node/media/card.html`, `partials/node/media/view.html` | tile grid of the common list; tile with cover, play icon, title and the `year` field (or the date); view shows player and gallery, then fields, then text; related as tiles |
-| `support` | `fragments/node/support/card.html`, `partials/node/support/view.html` | state chip; view adds state and priority chips, the owner's close/reopen form and the staff card link |
-| `event` | `fragments/node/event/card.html`, `partials/node/event/view.html` | the leaf `sl-event-date` of the start: month, day in display figures, hour; chips of the period and the place, and the archive chip of a past event |
+| `default`, `article` | none | the base set is the article |
+| `docs` | `fragments/node/docs/card.html` | table-of-contents row: title, category chip, one-line plain intro; the base view without author and views chips |
+| `faq` | `fragments/node/faq/card.html` | native `<details>` accordion: question in `<summary>`, intro answer and a read-more link; the base view without author and views chips |
+| `files` | none | the base card with the file mark, a direct download button, the size and the hits of the first `download`-mode resource; the base view shows resources above the text |
+| `media` | `fragments/node/media/card.html` | tile grid of the common list; tile with cover, play icon, title and the `year` field (or the date); the base view shows player and gallery, then fields, then text; related as tiles |
+| `support` | `partials/node/support/view.html` | the base card with the state chip, without cover and download count; view adds state and priority chips, the owner's close/reopen form and the staff card link |
+| `event` | `partials/node/event/view.html` | the leaf `sl-event-date` of the start: month, day in display figures, hour; chips of the period and the place, and the archive chip of a past event, in the base card and in the view |
+
+A mode without a file of its own is drawn by the base file from the flag of the mode (`is_docs`, `is_faq`, `is_files`,
+`is_media`, `is_support`, `is_event`, see [Template keys](#template-keys)); a theme of its own may still carry
+`node/<mode>/<file>` for any of them. The views of `event` and `support` carry no `data-sl-quick` wrapper round their
+text: a type with an extension has no quick edit (`getNodeQuickItems()`).
 
 The cover of a card is the first image of the role `poster`, then of roles in mode `image` or `gallery`
 (`getNodeCover()`); the same cover becomes `og:image` of the full material, and without one the first image of the
@@ -2633,7 +2639,8 @@ Parser output), `value_href` (`url`, or `mailto:` for `email`), `items` (select 
 ### Template keys
 
 Shared view labels (`getNodeViewVars()`): `is_date`, `is_author`, `is_category`, `is_views` (from `list.show`),
-`date_label`, `views_label`, `author_label`, `read_label`, `download_label`, `hits_label`.
+`is_docs`, `is_faq`, `is_files`, `is_media`, `is_support`, `is_event` (the one of `view.mode` is true, none for
+`default` and `article`), `date_label`, `views_label`, `author_label`, `read_label`, `download_label`, `hits_label`.
 
 Material facts (`getNodeMetaVars()`), read from the row and from caches the request already holds, so a list adds no
 statement per material: `is_live` (a stored material, not a preview or a light related target), `is_comm` and

@@ -16,17 +16,13 @@
             {{{ post_count }}}
           </div>
           {% endif %}
-          <span class="sl-grey">{{{ date }}} {{{ ip }}} {{ meta_title }}</span>
+          <span class="sl-grey">{{{ date }}} {{{ ip }}}</span>
         </div>
         <div class="sl-entry-content">
           {{{ text }}}
-          {% if is_private_message %}
-          <small>{{{ sig }}}</small>
-          {% else %}
           <div class="sl-sig">
             {{{ sig }}}
           </div>
-          {% endif %}
         </div>
         {% if btn_warn or btn_thank %}
         <div class="sl-fp-moder">{{{ btn_warn }}}{{{ btn_thank }}}</div>

@@ -142,8 +142,6 @@ final class NodeEventTest extends TestCase
         $table = (string)file_get_contents($root.'/storage/update/sql/table.sql');
         $this->assertMatchesRegularExpression('/CREATE TABLE `\{prefix\}_node_event` \(\n  `nid` INT UNSIGNED NOT NULL,\n  `starts` DATETIME NOT NULL,\n'
             .'  `ends` DATETIME DEFAULT NULL,\n  `place` VARCHAR\(255\) NOT NULL DEFAULT \'\',\n  PRIMARY KEY \(`nid`\),\n  KEY `starts` \(`starts`, `nid`\),/', $table);
-        foreach (['fragments/node/event/card.html', 'partials/node/event/view.html'] as $one) {
-            $this->assertFileExists($root.'/public/templates/aurora/'.$one, 'The aurora theme misses the template '.$one.' of the display mode event');
-        }
+        $this->assertFileExists($root.'/public/templates/aurora/partials/node/event/view.html', 'The aurora theme misses the view of the display mode event');
     }
 }

@@ -5,6 +5,6 @@
   <p>{{ text }}</p>
   {% endif %}
   {% if act_url %}
-  <a class="sl-but" href="{{ act_url }}"{% if act_target %} hx-get="{{ act_url }}" hx-target="{{ act_target }}" hx-swap="innerHTML" hx-push-url="false"{% endif %}><i class="bi bi-{% if act_icon %}{{ act_icon }}{% elseif is_found %}arrow-counterclockwise{% else %}plus-lg{% endif %}" aria-hidden="true"></i> {% if act_text %}{{ act_text }}{% elseif is_found %}{{ _FRESET }}{% else %}{{ _ADD }}{% endif %}</a>
+  <a class="sl-but" href="{{ act_url }}"{% if act_target %} hx-get="{{ act_url }}" hx-target="{{ act_target }}" hx-swap="innerHTML" hx-push-url="false"{% endif %}><i class="bi bi-{% if is_found %}arrow-counterclockwise{% else %}plus-lg{% endif %}" aria-hidden="true"></i> {% if is_found %}{{ _FRESET }}{% else %}{{ _ADD }}{% endif %}</a>
   {% endif %}
 </div>
