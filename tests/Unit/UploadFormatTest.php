@@ -14,7 +14,7 @@ final class UploadFormatTest extends TestCase
     private const DOCS = ['pdf'];
     private const ARCHIVE = ['7z', 'gz', 'rar', 'tar', 'zip'];
     private const GONE = ['bmp', 'gzip', 'm4b', 'm4p', 'm4r', 'm4v', 'ogv', 'ogx', 'spx', 'swf', 'wave', '7zip'];
-    private const VISITOR = 'gif,jpg,jpeg,png,webp,avif,zip,rar';
+    private const VISITOR = 'avif,gif,jpeg,jpg,png,webp,rar,zip';
 
     # The configuration files are read as they lie in the repository and the type policy from the class through reflection; nothing restates it from memory
     # The render half runs through tests/Support/format_probe.php, which boots the real core and drives Parser::filterAttach() over the shipped config/filetype.php
@@ -216,7 +216,8 @@ final class UploadFormatTest extends TestCase
             $this->assertStringNotContainsString('screens', $html, 'The '.$name.' family rendered the dead screens class');
         }
         $this->assertStringContainsString('class="sl-attach sl-attach-left"', $runs['image'], 'The image family lost its styling hook or its alignment');
-        $this->assertStringContainsString('style="max-width:500px"', $runs['image'], 'The image family did not receive the configured thumbnail width');
+        $wide = $this->getConfig('uploads')['uploads']['width'];
+        $this->assertStringContainsString('style="max-width:'.$wide.'px"', $runs['image'], 'The image family did not receive the configured thumbnail width');
         $this->assertStringContainsString('<audio controls preload="metadata"', $runs['audio'], 'The audio family is not rendered through <audio>');
         $this->assertStringContainsString('width="100" height="80"', $runs['video'], 'The video family did not receive the dimensions of the tag');
         $this->assertStringContainsString('<a href="/uploads/presentation/render.pdf">Render</a></object>', $runs['document'], 'The document family lost its link fallback');

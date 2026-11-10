@@ -42,11 +42,10 @@ function getSearchState(): array {
     ];
 }
 
-function getSearchModList(array $mods, string $curr): string {
-    global $tpl;
-    $cont = '';
+function getSearchModList(array $mods, string $curr): array {
+    $cont = [];
     foreach ($mods as $mod) {
-        $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $mod, 'label_text' => getModuleName($mod), 'is_selected' => $mod === $curr]);
+        $cont[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod), 'is_selected' => $mod === $curr];
     }
     return $cont;
 }
@@ -54,11 +53,10 @@ function getSearchModList(array $mods, string $curr): string {
 # One-row search panel: module select, query input, submit
 function getSearchForm(array $state): string {
     global $conf, $tpl;
-    $all_opt = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false]);
     $mod_html = $tpl->getHtmlFrag('select', [
         'name_attr' => 'mod',
         'aria_label' => _MODUL,
-        'options_html' => $all_opt.getSearchModList($state['mods'], (string)$state['mod']),
+        'options' => [['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false], ...getSearchModList($state['mods'], (string)$state['mod'])],
     ]);
     $word_html = $tpl->getHtmlFrag('input', [
         'itype' => 'text',

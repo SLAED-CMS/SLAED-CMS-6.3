@@ -471,21 +471,20 @@ function getLayoutNodes(int $now, string $find): array {
 }
 
 # The options of the choice of a record: none, the one held - named gone when it no longer answers, so a save of another field keeps it - then the found ones by type
-function getLayoutNodeHtml(int $now, string $find): string {
-    global $tpl;
+function getLayoutNodeOpts(int $now, string $find): array {
     $rows = getLayoutNodes($now, $find);
-    $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _LAYOUT_PICKNODE, 'is_selected' => $now === 0]);
+    $opts = [['value_attr' => '', 'label_text' => _LAYOUT_PICKNODE, 'is_selected' => $now === 0]];
     if ($now > 0 && !isset($rows[$now])) {
-        $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$now, 'label_text' => sprintf(_LAYOUT_NODEGONE, $now), 'is_selected' => true]);
+        $opts[] = ['value_attr' => (string)$now, 'label_text' => sprintf(_LAYOUT_NODEGONE, $now), 'is_selected' => true];
     }
     $groups = [];
     foreach ($rows as $id => $row) {
-        $one = $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => sprintf(_LAYOUT_NUMBERED, $id, $row['title']), 'is_selected' => $id === $now]);
-        if ($id === $now) $html .= $one;
-        else $groups[$row['type']] = ($groups[$row['type']] ?? '').$one;
+        $one = ['value_attr' => (string)$id, 'label_text' => sprintf(_LAYOUT_NUMBERED, $id, $row['title']), 'is_selected' => $id === $now];
+        if ($id === $now) $opts[] = $one;
+        else $groups[$row['type']][] = $one;
     }
-    foreach ($groups as $type => $part) $html .= $tpl->getHtmlFrag('select-optgroup', ['label_text' => getModuleName($type), 'options_html' => $part]);
-    return $html;
+    foreach ($groups as $type => $part) $opts[] = ['is_group' => true, 'label_text' => getModuleName($type), 'options' => $part];
+    return $opts;
 }
 
 # The values of one part of a layout file by a list of fields, each checked as the inspector checks it; a refused value is named with its place
@@ -638,33 +637,33 @@ function getLayoutRows(array $list, array $vals, string $base, string $tab = '',
                 'hint_id' => $fid.'-hint', 'field_html' => $none.$tpl->getHtmlFrag('check-list', ['labelledby' => $fid, 'describedby' => $fid.'-hint', 'items' => $items])];
         } elseif ($type === 'blockref') {
             $now = is_scalar($val) ? (string)intval($val) : '0';
-            $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _LAYOUT_PICKBLK, 'is_selected' => !isset($blks[$now])]);
+            $picks = [['value_attr' => '', 'label_text' => _LAYOUT_PICKBLK, 'is_selected' => !isset($blks[$now])]];
             foreach ([_LAYOUT_FREEBLK => true, _LAYOUT_OTHERBLK => false] as $group => $free) {
-                $part = '';
+                $part = [];
                 foreach ($blks as $bid => $blk) {
                     if ($blk['new'] || $blk['kind'] === 'sys' || in_array('infly', $blk['which'], true) !== $free) continue;
                     $word = sprintf(_LAYOUT_NUMBERED, $bid, getConst($blk['title']));
-                    $part .= $tpl->getHtmlFrag('select-option', ['value_attr' => $bid, 'label_text' => $word, 'is_selected' => $bid === $now]);
+                    $part[] = ['value_attr' => $bid, 'label_text' => $word, 'is_selected' => $bid === $now];
                 }
-                if ($part !== '') $html .= $tpl->getHtmlFrag('select-optgroup', ['label_text' => $group, 'options_html' => $part]);
+                if ($part) $picks[] = ['is_group' => true, 'label_text' => $group, 'options' => $part];
             }
-            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'describedby' => $fid.'-hint', 'options_html' => $html]);
+            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'describedby' => $fid.'-hint', 'options' => $picks]);
             $row['hint_html'] = htmlspecialchars(_LAYOUT_BLOCKHINT, ENT_QUOTES, 'UTF-8');
             $row['hint_id'] = $fid.'-hint';
         } elseif ($type === 'noderef') {
-            $html = getLayoutNodeHtml(is_scalar($val) ? intval($val) : 0, '');
+            $picks = getLayoutNodeOpts(is_scalar($val) ? intval($val) : 0, '');
             $row['field_html'] = $tpl->getHtmlFrag('layout-field', ['kind_find' => true, 'select_id' => $fid, 'find_url' => getLayoutUrl(['op' => 'find', 'key' => $key]),
                 'find_text' => _LAYOUT_FINDNODE,
-                'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'describedby' => $fid.'-hint', 'options_html' => $html])]);
+                'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'describedby' => $fid.'-hint', 'options' => $picks])]);
             $row['hint_html'] = htmlspecialchars(_LAYOUT_NODEHINT, ENT_QUOTES, 'UTF-8');
             $row['hint_id'] = $fid.'-hint';
         } elseif ($type === 'choice') {
             $now = is_bool($val) ? ($val ? '1' : '0') : (is_scalar($val) ? (string)$val : '');
-            $html = '';
+            $picks = [];
             foreach ($opts as $opt) {
-                $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => $opt['value'], 'label_text' => $opt['label'], 'is_selected' => $opt['value'] === $now]);
+                $picks[] = ['value_attr' => $opt['value'], 'label_text' => $opt['label'], 'is_selected' => $opt['value'] === $now];
             }
-            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'options_html' => $html]);
+            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'options' => $picks]);
         } elseif ($type === 'icon') {
             $row['field_html'] = $tpl->getHtmlPart('icon-picker', ['name_attr' => $name, 'value_attr' => is_string($val) ? $val : '', 'label_text' => $label,
                 'placeholder_text' => $label, 'button_label' => _LAYOUT_PICK]);
@@ -672,19 +671,19 @@ function getLayoutRows(array $list, array $vals, string $base, string $tab = '',
         } elseif ($type === 'url' && $addrs !== []) {
             $now = is_string($val) ? $val : '';
             $seen = false;
-            $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _LAYOUT_NOWHERE, 'is_selected' => $now === '']);
+            $picks = [['value_attr' => '', 'label_text' => _LAYOUT_NOWHERE, 'is_selected' => $now === '']];
             foreach ($addrs as $group => $opts) {
-                $part = '';
+                $part = [];
                 foreach ($opts as $addr => $word) {
                     $seen = $seen || $addr === $now;
-                    $part .= $tpl->getHtmlFrag('select-option', ['value_attr' => $addr, 'label_text' => $word, 'is_selected' => $addr === $now]);
+                    $part[] = ['value_attr' => $addr, 'label_text' => $word, 'is_selected' => $addr === $now];
                 }
-                if ($part !== '') $html .= $tpl->getHtmlFrag('select-optgroup', ['label_text' => $group, 'options_html' => $part]);
+                if ($part) $picks[] = ['is_group' => true, 'label_text' => $group, 'options' => $part];
             }
-            $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => '__own', 'label_text' => _LAYOUT_OWNADDR, 'is_selected' => !$seen && $now !== '']);
+            $picks[] = ['value_attr' => '__own', 'label_text' => _LAYOUT_OWNADDR, 'is_selected' => !$seen && $now !== ''];
             $pick = 'addr-'.$fid;
             $row['field_html'] = $tpl->getHtmlFrag('layout-field', ['kind_addr' => true, 'when_name' => $pick,
-                'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $pick, 'selectid' => $fid, 'options_html' => $html, 'select_attr' => 'data-sl-lay-addr']),
+                'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $pick, 'selectid' => $fid, 'options' => $picks, 'select_attr' => 'data-sl-lay-addr']),
                 'input_html' => $tpl->getHtmlFrag('input', ['name_attr' => $name, 'value_attr' => $now, 'maxlength_num' => 2048, 'placeholder_text' => 'https://',
                     'input_attr' => 'data-sl-lay-own aria-label="'.htmlspecialchars(_LAYOUT_OWNADDR, ENT_QUOTES, 'UTF-8').'"'])]);
         } elseif ($type === 'markdown' || $type === 'code') {
@@ -1471,16 +1470,16 @@ function getLayoutConfRows(array $dft): array {
     $name = (string)($dft['conf']['sitename'] ?? $conf['sitename'] ?? '');
     $logo = (string)($dft['conf']['site_logo'] ?? $conf['site_logo'] ?? '');
     $path = 'templates/'.(string)($conf['theme'] ?? '').'/images/logos/';
-    $opts = '';
+    $opts = [];
     foreach (scandir(PUBLIC_DIR.'/'.$path) ?: [] as $file) {
         if (!preg_match('/\.(gif|png|jpe?g|svg|webp)$/i', $file)) continue;
-        $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $path.$file, 'label_text' => $file, 'is_selected' => $file === $logo]);
+        $opts[] = ['value_attr' => $path.$file, 'label_text' => $file, 'is_selected' => $file === $logo];
     }
     return [
         ['label_for' => 'f-lay-sitename', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'conf[sitename]', 'input_id' => 'f-lay-sitename',
             'value_attr' => $name, 'maxlength_num' => 255])],
         ['label_for' => 'f-lay-logo', 'label_html' => _LAYOUT_LOGO, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'conf[site_logo]', 'selectid' => 'f-lay-logo',
-            'options_html' => $opts, 'imgtar' => 'f-lay-logo-img']).$tpl->getHtmlFrag('image-preview', ['src_attr' => HOME_PATH.$path.$logo, 'image_id' => 'f-lay-logo-img',
+            'options' => $opts, 'imgtar' => 'f-lay-logo-img']).$tpl->getHtmlFrag('image-preview', ['src_attr' => HOME_PATH.$path.$logo, 'image_id' => 'f-lay-logo-img',
             'alt_text' => _LAYOUT_LOGO, 'title_text' => _LAYOUT_LOGO, 'is_popup' => false])],
     ];
 }
@@ -2489,12 +2488,13 @@ function source(): void {
 }
 
 function find(): void {
+    global $tpl;
     $find = mb_substr(trim((string)getVar('get', 'find', 'word', '')), 0, 100);
     $key = getVar('get', 'key', 'var', '');
     $now = (preg_match(Layout::FIELD, $key) === 1) ? intval(getVar('get', 'field['.$key.']', 'num', 0)) : 0;
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
-    echo getLayoutNodeHtml($now, $find);
+    echo $tpl->getHtmlFrag('select-options', ['options' => getLayoutNodeOpts($now, $find)]);
     exit;
 }
 

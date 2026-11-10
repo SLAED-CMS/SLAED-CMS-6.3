@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for the theme-creation gate described in docs/TEMPLATES.md: the runtime file list a theme package has to satisfy
-# It boots the real core like index.php, so checkThemeAssets() reads the shipped editor manifests rather than a list a fixture invented
+# It boots the real core like index.php, so getThemeFaults() reads the shipped editor manifests rather than a list a fixture invented
 # The caller hands the theme names to ask about; the scratch copy itself is built and removed through tests/Support/theme_scratch.php
 # That is the one lifecycle both halves of the theme-creation gate share: the static half in ThemeCreationTest and the HTTP half of the screenshot runner
 # The screenshot runner has no PHP of its own and reaches the lifecycle through the `make`, `pick` and `gone` jobs below
@@ -16,10 +16,13 @@ require_once __DIR__.'/probe_boot.php';
 require_once BASE_DIR.'/core/system.php';
 require_once __DIR__.'/theme_scratch.php';
 
-# The runtime verdict for every theme name the caller asked about, keyed by the name so a missing one is visible rather than silent
+# The reasons the runtime refuses each theme name the caller asked about, none for an accepted one; an error instead when checkThemeAssets() disagrees with them
 function getProbeThemes(array $list): array {
     $out = [];
-    foreach ($list as $name) $out[(string)$name] = checkThemeAssets((string)$name);
+    foreach ($list as $name) {
+        $out[(string)$name] = getThemeFaults((string)$name);
+        if (checkThemeAssets((string)$name) !== ($out[(string)$name] === [])) return ['error' => 'checkThemeAssets() disagrees with getThemeFaults() about '.$name];
+    }
     return $out;
 }
 

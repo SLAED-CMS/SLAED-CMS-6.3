@@ -21,14 +21,24 @@ function ratings(): void {
     $flags = ['in' => ['active', _C_21], 'view' => ['detail', _C_22], 'guest' => ['guests', _RATINGS_GUESTS]];
     $blocks = '';
     $types = getNodeTypeMap();
-    $scopes = ['account' => getModuleName('account'), 'forum' => getModuleName('forum')];
-    foreach ($types as $name => $type) {
-        $label = (str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title;
-        $scopes['node.'.$name] = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
-    }
+    $scopes = ['account' => getModuleTitle('account'), 'forum' => getModuleTitle('forum')];
+    foreach (array_keys($types) as $name) $scopes['node.'.$name] = getModuleTitle($name);
     foreach (array_keys($scopes) as $i => $val) {
         $rule = str_starts_with($val, 'node.') ? $types[substr($val, 5)]->rating : ($conf['ratings'][$val] ?? []);
-        $rows = [[
+        $days = (string)intdiv(intval($rule['period'] ?? 0), 86400);
+        $rows = [];
+        $chips = [];
+        foreach ($flags as $key => [$name, $label]) {
+            $flag = (string)($rule[$name] ?? '0');
+            if ($flag === '1') $chips[] = ['tone' => 'success', 'label' => $label];
+            $rows[] = [
+                'label_html' => $label,
+                'is_ratings_inner' => true,
+                'label_id' => $labid = getFieldIds('', $i.$key)['label'],
+                'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => $i.$key, 'value' => $flag, 'options' => $yesno]),
+            ];
+        }
+        array_splice($rows, 1, 0, [[
             'label_for' => 'f-time-'.$i,
             'label_html' => _VOTING_TIME,
             'is_ratings_inner' => true,
@@ -36,22 +46,18 @@ function ratings(): void {
                 'itype' => 'number',
                 'input_id' => 'f-time-'.$i,
                 'name_attr' => 'time['.$i.']',
-                'value_attr' => (string)intdiv(intval($rule['period'] ?? 0), 86400),
+                'value_attr' => $days,
                 'is_config' => true,
                 'is_ratings_days' => true,
             ]),
-        ]];
-        foreach ($flags as $key => [$name, $label]) {
-            $rows[] = [
-                'label_html' => $label,
-                'is_ratings_inner' => true,
-                'label_id' => $labid = getFieldIds('', $i.$key)['label'],
-                'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => $i.$key, 'value' => (string)($rule[$name] ?? '0'), 'options' => $yesno]),
-            ];
-        }
+        ]]);
         $blocks .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'ratings'.$i,
-            'label_html' => $scopes[$val].' - '.$val,
+            'block_id' => 'rt-'.str_replace('.', '-', $val),
+            'is_fold' => true,
+            'title' => _DETAILS.': '.$scopes[$val],
+            'label_html' => htmlspecialchars($scopes[$val], ENT_QUOTES, 'UTF-8'),
+            'facts' => [['text' => sprintf(_RATINGS_SUM, $days)]],
+            'chips' => $chips,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
         ]);
     }

@@ -21,6 +21,9 @@ define('LIST_MAX', 1000);
 # The characters from which a value of a narrow column counts as cut: shorter ones fit it, and a mark on every row would say nothing
 define('CELL_LONG', 16);
 
+# The versions of the theme contract this release accepts, as the `api` of a theme.json names them; a release that leaves the contract alone leaves the list alone
+define('THEME_API', ['8.0']);
+
 # Frozen salt for verifying legacy md5 password hashes; never change it or stored legacy hashes stop matching
 define('PASS_SALT', 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==');
 
@@ -3652,7 +3655,10 @@ function getTheme(): string {
         $utheme = $user[4] ?? '';
         if ($utheme !== '' && checkThemeAssets($utheme)) return $cached = $utheme;
     }
-    if (!checkThemeAssets($default)) Logger::addSite('error', 'Active theme incomplete: '.$default, ['theme' => $default]);
+    if (!checkThemeAssets($default)) {
+        $why = implode(', ', array_map(static fn($v) => $v['code'].' '.$v['name'], getThemeFaults($default)));
+        Logger::addSite('error', 'Active theme incomplete: '.$default, ['theme' => $default, 'faults' => $why]);
+    }
     return $cached = $default;
 }
 
@@ -3690,11 +3696,23 @@ function getThemeModeSwitch(string $action): string {
     return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'modes' => $list, 'field' => 'mode']);
 }
 
-# Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests
+# Whether the runtime accepts a theme folder, remembered for the request; the reasons of a refusal are getThemeFaults()
 function checkThemeAssets(string $name): bool {
     static $cache = [];
-    if (isset($cache[$name])) return $cache[$name];
+    return $cache[$name] ??= getThemeFaults($name) === [];
+}
+
+# List why a theme folder is refused, as rows of code and name in the order an author mends them; the skeleton of tools/ui-contract.php mirrors every name asked here
+function getThemeFaults(string $name): array {
     $base = PUBLIC_DIR.'/templates/'.$name.'/';
+    $out = [];
+    $man = is_file($base.'theme.json') ? json_decode((string)file_get_contents($base.'theme.json'), true) : null;
+    if (!is_array($man)) $out[] = ['code' => 'manifest', 'name' => 'theme.json'];
+    foreach (is_array($man) ? ['api', 'version'] : [] as $key) {
+        if (!is_string($man[$key] ?? null) || $man[$key] === '') $out[] = ['code' => 'field', 'name' => $key];
+    }
+    $api = is_array($man) ? ($man['api'] ?? '') : '';
+    if (is_string($api) && $api !== '' && !in_array($api, THEME_API, true)) $out[] = ['code' => 'api', 'name' => $api];
     $need = [
         'assets/css/base.css',
         'assets/css/theme.css',
@@ -3705,19 +3723,20 @@ function checkThemeAssets(string $name): bool {
         'images/avatars/system/deleted.svg',
     ];
     foreach ($need as $file) {
-        if (!is_file($base.$file)) return $cache[$name] = false;
+        if (!is_file($base.$file)) $out[] = ['code' => 'file', 'name' => $file];
     }
-    if (!is_dir($base.'images/avatars/presets')) return $cache[$name] = false;
+    if (!is_dir($base.'images/avatars/presets')) $out[] = ['code' => 'file', 'name' => 'images/avatars/presets'];
     foreach (glob(PUBLIC_DIR.'/plugins/editors/*/manifest.json') ?: [] as $file) {
-        $man = Editor::getManifest(basename(dirname($file)));
-        $dec = (array)($man['theme'] ?? []);
+        $edit = Editor::getManifest(basename(dirname($file)));
+        $dec = (array)($edit['theme'] ?? []);
         if (!$dec) continue;
-        if (!empty($dec['skin']) && !is_file($base.'assets/editors/'.$man['id'].'/skin.css')) return $cache[$name] = false;
+        $skin = 'assets/editors/'.$edit['id'].'/skin.css';
+        if (!empty($dec['skin']) && !is_file($base.$skin)) $out[] = ['code' => 'file', 'name' => $skin];
         foreach ((array)($dec['partials'] ?? []) as $part) {
-            if (!is_file($base.'partials/'.$part.'.html')) return $cache[$name] = false;
+            if (!is_file($base.'partials/'.$part.'.html')) $out[] = ['code' => 'file', 'name' => 'partials/'.$part.'.html'];
         }
     }
-    return $cache[$name] = true;
+    return $out;
 }
 
 # Return the line of page generation time and database query count and time for the foot
@@ -5231,22 +5250,22 @@ function getRankView(string $rank, string $title): string {
     return $tpl->getHtmlFrag('rank', ['title' => $title, 'color' => $data['color'], 'marks' => $marks]);
 }
 
-# Format select RSS
-function rss_select(): string {
-    global $conf, $tpl;
+# List the feeds of the RSS settings as the options of a select
+function rss_select(): array {
+    global $conf;
     $fieldc = explode('||', $conf['rss']['rss']);
     $url = getVar('post', 'url', 'url', '');
-    $cont = '';
+    $cont = [];
     foreach ($fieldc as $val) {
         if ($val != '') {
             preg_match("#(.*)\|(.*)\|(.*)#i", $val, $out);
             if ($out[1] != '0' && $out[2] != '0') {
                 $link = (!preg_match("#http\:\/\/#i", $out[2])) ? $conf['homeurl'].'/'.$out[2] : $out[2];
-                $cont .= $tpl->getHtmlFrag('select-option', [
+                $cont[] = [
                     'value_attr' => $link,
                     'label_text' => $out[1],
                     'is_selected' => $url == $out[2],
-                ]);
+                ];
             }
         }
     }

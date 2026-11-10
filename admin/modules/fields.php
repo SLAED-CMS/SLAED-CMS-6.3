@@ -58,17 +58,17 @@ function getFieldInput(array $post): array {
 }
 
 # One block of the form from a stored or posted definition; a stored field keeps its name and type, as the name keys every stored value and another type refuses them
-function getFieldBlock(string $area, int $pos, string $name, array $def, bool $kept, bool $hide): string {
+function getFieldBlock(string $area, int $pos, string $name, array $def, bool $kept, bool $fold): string {
     global $tpl, $fld;
     $base = 'def['.$area.']['.$pos.']';
     $slug = str_replace('.', '-', $area);
     $fid = 'f-'.$slug.'-'.$pos.'-';
     $show = fn(mixed $val): string => is_array($val) ? implode(',', array_filter($val, 'is_scalar')) : (is_bool($val) ? ($val ? '1' : '0') : (is_scalar($val) ? (string)$val : ''));
     $opts = is_array($def['options'] ?? null) ? $def['options'] : [];
-    $types = '';
+    $types = [];
     foreach ($fld->getFieldTypeList() as $type => $info) {
         if ($kept && $type !== ($def['type'] ?? '')) continue;
-        $types .= $tpl->getHtmlFrag('select-option', ['value_attr' => $type, 'label_text' => constant($info['title']), 'is_selected' => $type === ($def['type'] ?? 'text')]);
+        $types[] = ['value_attr' => $type, 'label_text' => constant($info['title']), 'is_selected' => $type === ($def['type'] ?? 'text')];
     }
     $line = fn(string $key, string $label, string $val, array $more = []): array => [
         'label_for' => $fid.$key,
@@ -99,7 +99,7 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
         $num++;
     }
     $head = [['content' => _FIELDS_KEY, 'nosort' => 1], ['content' => _TITLE, 'nosort' => 1], ['content' => _POSITION, 'nosort' => 1], ['content' => _FIELDS_ON, 'nosort' => 1]];
-    $pick = $tpl->getHtmlFrag('select', ['name_attr' => $base.'[type]', 'selectid' => $fid.'type', 'options_html' => $types, 'is_config' => true]);
+    $pick = $tpl->getHtmlFrag('select', ['name_attr' => $base.'[type]', 'selectid' => $fid.'type', 'options' => $types, 'is_config' => true]);
     $grid = $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $irows, 'is_wrapless' => true]);
     $lead = $line('name', _FIELDS_KEY, $name, ['is_readonly' => $kept, 'maxlength_num' => 32]);
     if ($kept) $lead['field_html'] .= $tpl->getHtmlFrag('hidden', ['name_attr' => $base.'[orig]', 'value_attr' => $name]);
@@ -119,13 +119,19 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
         $line('sort', _POSITION, $show($def['sort'] ?? ($pos + 1) * 10)),
     ];
     if ($kept) $rows[] = $flag('drop', _DELETE, false);
+    $head = $kept ? (getConst($show($def['title'] ?? '')) ?: $name) : _FIELD;
+    $facts = $kept ? [['text' => $types[0]['label_text'] ?? ''], ['text' => $name], ['text' => _POSITION.': '.$show($def['sort'] ?? '')]] : [];
+    $chips = $kept ? [] : [['tone' => 'neutral', 'label' => _ADD]];
+    foreach ([_FIELDIN => !empty($def['req']), _FIELDS_MULTI => !empty($def['multi']), _FIELDS_ON => !isset($def['active']) || !empty($def['active'])] as $text => $on) {
+        if ($kept && $on) $chips[] = ['tone' => 'success', 'label' => $text];
+    }
     return $tpl->getHtmlPart('toggle-form-block', [
         'block_id' => 'fi-'.$slug.'-'.$pos,
-        'is_toggle_block' => true,
-        'is_hidden' => $hide,
-        'toggle_target_id' => $kept ? 'fi-'.$slug.'-'.($pos + 1) : '',
-        'title' => _ADD,
-        'label_html' => $kept ? _FIELD.' '.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _FIELD,
+        'is_fold' => $fold,
+        'title' => _DETAILS.': '.$head,
+        'label_html' => htmlspecialchars($fold ? $head : trim(_FIELD.' '.$name), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+        'facts' => $facts,
+        'chips' => $chips,
         'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
     ]);
 }
@@ -151,7 +157,7 @@ function fields(array $sent = [], string $fail = ''): void {
         foreach ($list as $def) {
             $kept = !empty($def['kept']);
             if (!$kept && ($def['name'] ?? '') === '' && ($def['title'] ?? '') === '') continue;
-            $blok .= getFieldBlock($area, $pos, $def['name'] ?? '', $def, $kept, false);
+            $blok .= getFieldBlock($area, $pos, $def['name'] ?? '', $def, $kept, $kept && !$sent);
             $pos++;
         }
         $blok .= getFieldBlock($area, $pos, '', [], false, $pos > 0).$tpl->getHtmlFrag('hidden', ['name_attr' => 'done['.$area.']', 'value_attr' => '1']);

@@ -1,9 +1,3 @@
 <select name="{{ name_attr }}" class="sl-select{% if select_class %} {{ select_class }}{% elseif is_config %} sl-select-config{% endif %}{% if is_inline_gap %} sl-inline-gap{% endif %}"{% if selectid %} id="{{ selectid }}"{% endif %}{% if imgtar %} data-sl-image-replace="{{ imgtar }}"{% endif %}{% if describedby %} aria-describedby="{{ describedby }}"{% endif %}{% if aria_label %} aria-label="{{ aria_label }}"{% endif %}{% if select_attr %} {{{ select_attr }}}{% endif %}>
-  {% if options %}
-  {% for item in options %}
-  {% include 'fragments/select-option.html' with item %}
-  {% endfor %}
-  {% else %}
-  {{{ options_html }}}
-  {% endif %}
+  {% include 'fragments/select-options.html' %}
 </select>

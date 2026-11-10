@@ -208,12 +208,12 @@ function edit(): void {
     ]);
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&type='.$mtype : ''), 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search]);
-    $grpopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NONE, 'is_selected' => (int)$group === 0]);
+    $grpopts = [['value_attr' => '0', 'label_text' => _NONE, 'is_selected' => (int)$group === 0]];
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
         $result2 = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups');
         while ([$gid, $gname] = $db->getSqlRow($result2)) {
-            $grpopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$gid, 'label_text' => $gname, 'is_selected' => (int)$gid === (int)$group]);
+            $grpopts[] = ['value_attr' => (string)$gid, 'label_text' => $gname, 'is_selected' => (int)$gid === (int)$group];
         }
     }
     $rows = [
@@ -248,37 +248,37 @@ function edit(): void {
             'name_attr' => 'view',
             'selectid' => 'f-view',
             'is_config' => true,
-            'options_html' =>
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2]),
+            'options' =>
+                [['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0],
+                ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1],
+                ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2]],
         ])],
         [
             'label_for' => 'f-group',
             'label_html' => _UGROUP,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts, 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options' => $grpopts, 'is_config' => true]),
         ],
         ['label_for' => 'f-side', 'label_html' => _BLOCKS_SIDE,
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'side',
             'selectid' => 'f-side',
             'is_config' => true,
-            'options_html' =>
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _BLOCKS_MOD0, 'is_selected' => (int)$side === 0]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _BLOCKS_MOD1, 'is_selected' => (int)$side === 1]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MOD2, 'is_selected' => (int)$side === 2]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$side === 3]),
+            'options' =>
+                [['value_attr' => '0', 'label_text' => _BLOCKS_MOD0, 'is_selected' => (int)$side === 0],
+                ['value_attr' => '1', 'label_text' => _BLOCKS_MOD1, 'is_selected' => (int)$side === 1],
+                ['value_attr' => '2', 'label_text' => _BLOCKS_MOD2, 'is_selected' => (int)$side === 2],
+                ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$side === 3]],
         ])],
         ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP,
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'top',
             'selectid' => 'f-top',
             'is_config' => true,
-            'options_html' =>
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _BLOCKS_MODC0, 'is_selected' => (int)$top === 0]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _BLOCKS_MODC1, 'is_selected' => (int)$top === 1]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MODC2, 'is_selected' => (int)$top === 2]).
-                $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MODC3, 'is_selected' => (int)$top === 3]),
+            'options' =>
+                [['value_attr' => '0', 'label_text' => _BLOCKS_MODC0, 'is_selected' => (int)$top === 0],
+                ['value_attr' => '1', 'label_text' => _BLOCKS_MODC1, 'is_selected' => (int)$top === 1],
+                ['value_attr' => '2', 'label_text' => _BLOCKS_MODC2, 'is_selected' => (int)$top === 2],
+                ['value_attr' => '3', 'label_text' => _BLOCKS_MODC3, 'is_selected' => (int)$top === 3]],
         ])],
         [
             'label_html' => _SHOWINMENU,

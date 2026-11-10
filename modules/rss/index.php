@@ -23,15 +23,15 @@ function info(): void {
     $rssnum = ($num) ? '&num='.$num : '';
     $rsslink = $conf['homeurl'].'/index.php?go=rss'.$rssmod.$rsscat.$rssnum;
     
-    $modsOptions = '';
+    $mopts = [];
     foreach ($mods as $key => $val) {
-        $modsOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod]);
+        $mopts[] = ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod];
     }
-    $numOptions = '';
+    $nopts = [];
     $lim = 1;
     while ($lim <= $conf['rss']['max']) {
         $rsslim = ($num) ? $num : $conf['rss']['min'];
-        $numOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$lim, 'label_text' => (string)_RSS_INFO_MENG.' - '.$lim, 'is_selected' => $lim == $rsslim]);
+        $nopts[] = ['value_attr' => (string)$lim, 'label_text' => (string)_RSS_INFO_MENG.' - '.$lim, 'is_selected' => $lim == $rsslim];
         $lim++;
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT, 'kind' => 'utility']);
@@ -40,17 +40,17 @@ function info(): void {
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-mod',
         'label' => _RSS_INFO_TIP,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mod', 'selectid' => 'f-mod', 'options_html' => $modsOptions, 'select_attr' => 'OnChange="submit()"']),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mod', 'selectid' => 'f-mod', 'options' => $mopts, 'select_attr' => 'OnChange="submit()"']),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-cat',
         'label' => _CATEGORIES,
-        'field_html' => getTplCategorySelect($mod, $cat, 'cat', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _RSS_INFO_ALL, 'is_selected' => true])),
+        'field_html' => getTplCategorySelect($mod, $cat, 'cat', '', [['value_attr' => '', 'label_text' => _RSS_INFO_ALL, 'is_selected' => true]]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-num',
         'label' => _RSS_INFO_MENG,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'num', 'selectid' => 'f-num', 'options_html' => $numOptions]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'num', 'selectid' => 'f-num', 'options' => $nopts]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-rsscode',
@@ -78,7 +78,7 @@ function info(): void {
             'fields' => $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-url-pick',
                 'label' => _SELECTASITE,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'selectid' => 'f-url-pick', 'options_html' => rss_select()]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'selectid' => 'f-url-pick', 'options' => rss_select()]),
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'name' => 'send', 'val' => '1', 'label' => _OK]),
         ]);

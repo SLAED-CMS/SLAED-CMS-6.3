@@ -494,10 +494,10 @@ function config(): void {
         'name_attr' => 'error',
         'selectid' => 'f-error',
         'is_config' => true,
-        'options_html' =>
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => $conf['security']['error'] == 0])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _SEC_VIEW_1, 'is_selected' => $conf['security']['error'] == 1])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _SEC_VIEW_2, 'is_selected' => $conf['security']['error'] == 2]),
+        'options' =>
+            [['value_attr' => '0', 'label_text' => _NO, 'is_selected' => $conf['security']['error'] == 0],
+            ['value_attr' => '1', 'label_text' => _SEC_VIEW_1, 'is_selected' => $conf['security']['error'] == 1],
+            ['value_attr' => '2', 'label_text' => _SEC_VIEW_2, 'is_selected' => $conf['security']['error'] == 2]],
     ]);
     $rows = [
         ['label_for' => 'f-error', 'label_html' => _SEC_VIEW, 'field_html' => $errorhtml],
@@ -598,11 +598,11 @@ function config(): void {
         'label_id' => $labid = getFieldIds('', 'cap_active')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_active', 'value' => (string)(int)!empty($cap['active']), 'options' => $yesno]),
     ];
-    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'altcha', 'label_text' => 'ALTCHA', 'is_selected' => (string)($cap['provider'] ?? 'altcha') === 'altcha']);
+    $opts = [['value_attr' => 'altcha', 'label_text' => 'ALTCHA', 'is_selected' => (string)($cap['provider'] ?? 'altcha') === 'altcha']];
     $rows[] = [
         'label_for' => 'f-cap-provider',
         'label_html' => _CAPTCHA_PROVIDER,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_provider', 'selectid' => 'f-cap-provider', 'options_html' => $opts, 'is_config' => true]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_provider', 'selectid' => 'f-cap-provider', 'options' => $opts, 'is_config' => true]),
     ];
     $rows[] = [
         'label_html' => _CAPTCHA_REGISTER,
@@ -620,13 +620,13 @@ function config(): void {
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_comments', 'value' => (string)(int)!empty($cap['comments']), 'options' => $yesno]),
     ];
     $capmode = [['value' => 'never', 'label' => _CAPTCHA_NEVER], ['value' => 'after-fail', 'label' => _CAPTCHA_AFTERFAIL], ['value' => 'always', 'label' => _CAPTCHA_ALWAYS]];
-    $opts = '';
+    $opts = [];
     foreach ($capmode as $item) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $item['value'],
             'label_text' => $item['label'],
             'is_selected' => (string)($cap['login_user'] ?? 'after-fail') === $item['value'],
-        ]);
+        ];
     }
     $rows[] = [
         'label_for' => 'f-cap-login-user',
@@ -637,17 +637,17 @@ function config(): void {
             'describedby' => $hntid,
             'name_attr' => 'cap_login_user',
             'selectid' => 'f-cap-login-user',
-            'options_html' => $opts,
+            'options' => $opts,
             'is_config' => true,
         ]),
     ];
-    $opts = '';
+    $opts = [];
     foreach ($capmode as $item) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $item['value'],
             'label_text' => $item['label'],
             'is_selected' => (string)($cap['login_admin'] ?? 'always') === $item['value'],
-        ]);
+        ];
     }
     $rows[] = [
         'label_for' => 'f-cap-login-admin',
@@ -658,17 +658,17 @@ function config(): void {
             'describedby' => $hntid,
             'name_attr' => 'cap_login_admin',
             'selectid' => 'f-cap-login-admin',
-            'options_html' => $opts,
+            'options' => $opts,
             'is_config' => true,
         ]),
     ];
-    $opts = '';
+    $opts = [];
     foreach ([['low', _CAPTCHA_LOW], ['normal', _CAPTCHA_NORMAL], ['high', _CAPTCHA_HIGH]] as $item) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $item[0],
             'label_text' => $item[1],
             'is_selected' => (string)($cap['difficulty'] ?? 'normal') === $item[0],
-        ]);
+        ];
     }
     $rows[] = [
         'label_for' => 'f-cap-difficulty',
@@ -679,7 +679,7 @@ function config(): void {
             'describedby' => $hntid,
             'name_attr' => 'cap_difficulty',
             'selectid' => 'f-cap-difficulty',
-            'options_html' => $opts,
+            'options' => $opts,
             'is_config' => true,
         ]),
     ];

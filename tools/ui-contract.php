@@ -404,7 +404,8 @@ return [
     # Counts the ratchet holds: none of these may grow against the stored baseline
     # The counts `tokens` and `single` are recorded but not ratcheted, because extracting an axis into the API block raises both on purpose
     # A component token that one component reads is correct at one use
-    'ratchet' => ['count', 'bare', 'dup', 'names', 'dead', 'alias', 'unsat', 'unmet', 'scoped', 'classes', 'important', 'contrast', 'clash'],
+    # The count `raw` is every `{{{ key }}}` of the theme's templates whose key does not end in `_html`: a string printed as it is under a name that does not say markup
+    'ratchet' => ['count', 'bare', 'dup', 'names', 'dead', 'alias', 'unsat', 'unmet', 'scoped', 'classes', 'important', 'contrast', 'clash', 'raw'],
 
     # Rule bodies repeated under selectors that do not belong together, each with the reason it is not merged
     # The key is the group's selectors sorted and joined by ', ', which is what checkDupBlocks() compares
@@ -744,8 +745,9 @@ return [
     # The skeleton of a theme package: what a directory has to hold before the runtime and the tests accept it as a theme
     # It is the union of two lists that are not the same list, and each entry names its gate, because a skeleton nobody can trace to a gate grows entries nobody dares delete
     'skeleton' => [
-        # Demanded of every theme by checkThemeAssets() in core/system.php, which the runtime calls before it selects one
+        # Demanded of every theme by checkThemeAssets() in core/system.php, which the runtime calls before it selects one and which asks getThemeFaults() for the list
         'any' => [
+            'theme.json' => 'checkThemeAssets: the manifest, whose `api` names the contract version the theme meets and whose `version` is its own',
             'assets/css/base.css' => 'checkThemeAssets: the API block, the marker and the element styles - the one file a new theme edits',
             'assets/css/theme.css' => 'checkThemeAssets: the components, holding no literal visual value',
             'assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css' => 'checkThemeAssets: the icon face every component draws its glyph from',
@@ -828,10 +830,12 @@ return [
         'fragments/post-button.html' =>
             'a post button of the panel weighs by its role - the next step, a check that changes nothing, a step that cannot be undone - as the buttons of an '
             .'update and its rollback do; the site posts only the actions of an alert and a plain button, has no step of that weight and no red button to draw it',
+        'fragments/select-options.html' =>
+            'the loop over the options and their groups is the same; the site prints the label of a group in its bold sl-label and the panel leaves a group '
+            .'to the browser, so the one difference is that class',
         'fragments/select.html' =>
-            'the panel select renders its options from an array as well as from ready markup, and names the context it sits in - a config row, an inline gap; '
-            .'the site takes ready markup only and gives every select the one sl-field class. Two class maps and two option contracts, and no producer '
-            .'crosses them',
+            'both selects draw their options from data through select-options; the panel names the context it sits in - a config row, an inline gap, a picture '
+            .'it replaces - and the site gives every select the one sl-field class with its account variant. Two class maps, and no producer crosses them',
         'fragments/span.html' =>
             'one flag in the panel against twenty-two on the site. The site span is the chip language of a public page - price, reads, votes, cart total, the four '
             .'message markers - each carrying its own glyph; the panel span is a drag handle and a few text tones. The hidden and dimmed names are the one thing '

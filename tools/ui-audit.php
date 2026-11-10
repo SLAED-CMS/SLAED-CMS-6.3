@@ -6,7 +6,7 @@
 
 # The theme audit measures what `.rules/theme.md` demands and `tools/ui-contract.php` declares
 # It is the authority over every number written about the themes, including in docs/TEMPLATES.md
-# Usage: php tools/ui-audit.php --theme=admin [--count|--bare|--dist=padding|--dup|--names|--ramp|--cross|--markup]
+# Usage: php tools/ui-audit.php --theme=admin [--count|--bare|--dist=padding|--dup|--names|--ramp|--raw|--cross|--markup]
 # Usage: php tools/ui-audit.php --file=public/templates/admin/assets/css/theme.css --migrating
 # Usage: php tools/ui-audit.php --store rewrites tools/ui-audit-baseline.json from the current tree
 
@@ -1067,6 +1067,25 @@ function getMarkupKind(string $text): string {
     return '';
 }
 
+# Raw outputs of templates whose key does not end in `_html`, matched as Template::filterRaw() compiles them, after the notes the engine drops first
+function checkRawKeys(array $list): array {
+    $out = ['sites' => [], 'keys' => [], 'all' => 0];
+    foreach ($list as $path => $text) {
+        $text = str_replace("\r\n", "\n", $text);
+        $text = (string)preg_replace_callback('/\{\#.*?\#\}/s', fn($m) => preg_replace('/[^\n]/', ' ', $m[0]), $text);
+        if (!preg_match_all('/\{\{\{\s*([_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)\s*\}\}\}/', $text, $hits, PREG_OFFSET_CAPTURE)) continue;
+        $offs = getLineIndex($text);
+        foreach ($hits[1] as $hit) {
+            $out['all']++;
+            if (str_ends_with($hit[0], '_html')) continue;
+            $out['sites'][] = ['file' => $path, 'line' => getLineNumber($offs, $hit[1]), 'key' => $hit[0]];
+            $out['keys'][$hit[0]] = ($out['keys'][$hit[0]] ?? 0) + 1;
+        }
+    }
+    arsort($out['keys']);
+    return $out;
+}
+
 # Contrast of two colours by the WCAG relative luminance formula
 function getContrastRatio(array $one, array $two): float {
     $lum = static function (array $rgb): float {
@@ -1111,6 +1130,9 @@ function getThemeAudit(string $name): array {
     $unmet = checkUnmetNames($model);
     $class = checkClassUse($model);
     $fail = checkContrastPairs($name);
+    $tpl = [];
+    foreach (getRepoFiles(['html'], [$model['conf']['root']]) as $path) $tpl[$path] = getFileText($path);
+    $raw = checkRawKeys($tpl);
     $text = '';
     foreach ($model['files'] as $file) $text .= $file['body']."\n";
     return [
@@ -1123,6 +1145,7 @@ function getThemeAudit(string $name): array {
         'unmet' => $unmet,
         'classes' => $class,
         'contrast' => $fail,
+        'raw' => $raw,
         'totals' => [
             'count' => count($cnt['sites']),
             'bare' => count($bare['sites']),
@@ -1139,6 +1162,7 @@ function getThemeAudit(string $name): array {
             'important' => substr_count($text, '!important'),
             'tokens' => count($model['api']),
             'contrast' => count($fail),
+            'raw' => count($raw['sites']),
         ],
     ];
 }
@@ -1271,7 +1295,7 @@ if (isset($args['cross'])) {
 }
 
 $want = isset($args['theme']) && is_string($args['theme']) ? [$args['theme']] : array_keys($cont['themes']);
-$only = isset($args['count']) || isset($args['bare']) || isset($args['dup']) || isset($args['names']) || isset($args['ramp']) || isset($args['dist']);
+$only = isset($args['count']) || isset($args['bare']) || isset($args['dup']) || isset($args['names']) || isset($args['ramp']) || isset($args['dist']) || isset($args['raw']);
 $fail = 0;
 $store = ['generated' => gmdate('Y-m-d\TH:i:s\Z'), 'themes' => []];
 $base = getBaselineData();
@@ -1334,6 +1358,15 @@ foreach ($want as $name) {
     if (isset($args['names'])) {
         echo "\n[".$name.'] grammar violations: '.$data['totals']['names']."\n";
         foreach ($data['names'] as $item) echo '  '.str_pad($item['name'], 40).$item['why']."\n";
+        continue;
+    }
+    if (isset($args['raw'])) {
+        echo "\n[".$name.'] raw outputs whose key does not end in _html: '.$data['totals']['raw'].' of '.$data['raw']['all'];
+        echo ' raw outputs, '.count($data['raw']['keys'])." keys\n";
+        echo "  by key:\n";
+        foreach ($data['raw']['keys'] as $key => $hits) echo '    '.str_pad($key, 30).$hits."\n";
+        echo "  places:\n";
+        foreach ($data['raw']['sites'] as $site) echo '    '.$site['file'].':'.$site['line'].'  {{{ '.$site['key'].' }}}'."\n";
         continue;
     }
 

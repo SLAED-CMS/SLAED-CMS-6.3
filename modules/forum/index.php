@@ -1046,21 +1046,21 @@ function tmoder(int $typ): string {
     global $conf, $tpl;
     $mass = [_FMODC => 's0', _FMODCA => 's1', _FMODCR => 's2', _FMODCW => 's3', _FMODCH => 's4', _FMODCO => 's5'];
     $mass = ($typ) ? array_merge($mass, [_DELETE => 'd']) : $mass;
-    $opts1 = '';
-    foreach ($mass as $vn => $vv) $opts1 .= $tpl->getHtmlFrag('select-option', ['value_attr' => $vv, 'label_text' => $vn, 'is_selected' => false]);
-    $opts = $tpl->getHtmlFrag('forum-optgroup', ['label' => _OPMOD, 'is_label' => true, 'options_html' => $opts1]);
-    $opts .= $tpl->getHtmlFrag('forum-optgroup', ['label' => _MOVETO, 'is_label' => true, 'options_html' => getTplCategorySelect($conf['name'], 0, '', '', '', '1')]);
-    return $tpl->getHtmlFrag('select', ['name_attr' => 'tmove', 'options_html' => $opts, 'select_attr' => 'title="'._CHECKOP.'"']);
+    $acts = [];
+    foreach ($mass as $vn => $vv) $acts[] = ['value_attr' => $vv, 'label_text' => $vn, 'is_selected' => false];
+    $opts = [['is_group' => true, 'label_text' => _OPMOD, 'options' => $acts],
+        ['is_group' => true, 'label_text' => _MOVETO, 'options' => getTplCategorySelect($conf['name'], 0, '', '', [], '1')]];
+    return $tpl->getHtmlFrag('select', ['name_attr' => 'tmove', 'options' => $opts, 'select_attr' => 'title="'._CHECKOP.'"']);
 }
 
 function pmoder(int|string $status, int $subh): string {
     global $conf, $tpl;
     $mass = ($subh) ? [_CLOSE => 0, _OPEN => 1] : [_FMODC => 0, _FMODCA => 1, _FMODCR => 2, _FMODCW => 3, _FMODCH => 4, _FMODCO => 5];
-    $opts = '';
+    $opts = [];
     foreach ($mass as $vn => $vv) {
-        $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$vv, 'label_text' => $vn, 'is_selected' => $status == $vv]);
+        $opts[] = ['value_attr' => (string)$vv, 'label_text' => $vn, 'is_selected' => $status == $vv];
     }
-    return $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options_html' => $opts, 'select_attr' => 'title="'._CHECKOP.'"']);
+    return $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options' => $opts, 'select_attr' => 'title="'._CHECKOP.'"']);
 }
 
 # A named post or topic brings its own category and topic through getForumPlace(), so neither the rights nor the counters can be pointed at another category

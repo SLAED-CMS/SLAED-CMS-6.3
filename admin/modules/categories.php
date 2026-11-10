@@ -109,7 +109,7 @@ function add(): void {
         $rows0[] = [
             'label_for' => 'f-lang',
             'label_html' => _LANGUAGE,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions()]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions()]),
         ];
     }
     $rows1 = [
@@ -247,7 +247,7 @@ function subadd(): void {
             $rows0[] = [
                 'label_for' => 'f-lang',
                 'label_html' => _LANGUAGE,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions()]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions()]),
             ];
         }
         $rows1 = [
@@ -440,7 +440,7 @@ function edit(): void {
         $rows0[] = [
             'label_for' => 'f-lang',
             'label_html' => _LANGUAGE,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions($lang)]),
         ];
     }
     $rows1 = [

@@ -1914,6 +1914,57 @@ pre code.hljs {
   margin-bottom: 0;
 }
 
+/* Folding block: the gap under the cap belongs to the folding rows, so a folded block is its cap alone, centred */
+.sl-toggle-form-block > .sl-toggle-form-block-title:has(+ .sl-collapsible) {
+  min-height: var(--sl-chip-height);
+  margin-bottom: 0;
+}
+
+.sl-toggle-form-block > .sl-collapsible > .sl-div-grid {
+  margin-top: var(--sl-space-3);
+}
+
+/* Facts and chips of a cap: the name and every fact take a fixed share of the width, so one fact stands in one column down the screen, and the chips keep the right edge */
+.sl-toggle-form-block-title:has(> .sl-muted) {
+  flex-wrap: wrap;
+}
+
+.sl-toggle-form-block-title:has(> .sl-muted) > .sl-toggle-form-block-label {
+  flex: 0 0 22%;
+}
+
+.sl-toggle-form-block-title > .sl-muted {
+  flex: 0 0 11%;
+}
+
+.sl-toggle-form-block-title > .sl-toggle-form-block-label + .sl-muted {
+  flex-basis: 16%;
+}
+
+.sl-toggle-form-block-chips {
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+}
+
+@media (max-width: 1200px) {
+  .sl-toggle-form-block-title:has(> .sl-muted) > .sl-toggle-form-block-label {
+    flex: 1 1 auto;
+    max-width: calc(100% - var(--sl-size-icon-sm) - var(--sl-space-3));
+  }
+
+  .sl-toggle-form-block-title > .sl-muted,
+  .sl-toggle-form-block-title > .sl-toggle-form-block-label + .sl-muted {
+    flex: 0 1 auto;
+  }
+
+  .sl-toggle-form-block-chips {
+    flex: 1 1 auto;
+  }
+}
+
 /* The side panel keeps the rows of a block stacked, the caption over its field, as its narrow column asks */
 .sl-div-side .sl-toggle-form-block .sl-div-grid,
 .sl-div-side .sl-toggle-form-block .sl-div-item {
@@ -5252,7 +5303,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-chip-neutral {
-  background: var(--sl-bg-muted);
   color: var(--sl-text);
 }
 

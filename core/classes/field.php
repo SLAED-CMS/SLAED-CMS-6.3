@@ -402,11 +402,11 @@ final class Field {
                 }
                 return $tpl->getHtmlFrag('check-list', ['labelledby' => $base['input_id'].'-label', 'describedby' => $base['describedby'], 'items' => $boxes]);
             }
-            $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => !$pick]);
+            $list = [['value_attr' => '', 'label_text' => _NO, 'is_selected' => !$pick]];
             foreach ($live as $key => $item) {
-                $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $this->getFieldText($item['title']), 'is_selected' => isset($pick[$key])]);
+                $list[] = ['value_attr' => $key, 'label_text' => $this->getFieldText($item['title']), 'is_selected' => isset($pick[$key])];
             }
-            $more = ['selectid' => $base['input_id'], 'options_html' => $html, 'select_attr' => $rule['req'] ? 'required' : ''];
+            $more = ['selectid' => $base['input_id'], 'options' => $list, 'select_attr' => $rule['req'] ? 'required' : ''];
             return $tpl->getHtmlFrag('select', $more + $base);
         }
         if ($control === 'checkbox') {

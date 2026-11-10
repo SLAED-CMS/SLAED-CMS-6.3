@@ -16,40 +16,40 @@ function getSitemapTabs(int $tab): array {
 
 function getSitemapFreqSelect(string $name, string $value): string {
     global $tpl;
-    $opts = '';
+    $opts = [];
     foreach ([
         '0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY,
         'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER,
     ] as $key => $label) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => (string)$key,
             'label_text' => $label,
             'is_selected' => $value === (string)$key,
-        ]);
+        ];
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'selectid' => 'f-'.$name,
         'is_config' => true,
-        'options_html' => $opts,
+        'options' => $opts,
     ]);
 }
 
 function getSitemapPrioritySelect(string $name, string $value): string {
     global $tpl;
-    $opts = '';
+    $opts = [];
     foreach (['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'] as $val) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $val,
             'label_text' => $val,
             'is_selected' => $value === $val,
-        ]);
+        ];
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'selectid' => 'f-'.$name,
         'is_config' => true,
-        'options_html' => $opts,
+        'options' => $opts,
     ]);
 }
 

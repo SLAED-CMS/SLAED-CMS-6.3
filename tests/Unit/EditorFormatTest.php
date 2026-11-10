@@ -87,7 +87,7 @@ final class EditorFormatTest extends TestCase
         $GLOBALS['tpl'] = new class {
             public function getHtmlFrag(string $name, array $data = []): string
             {
-                return ($name === 'select-option') ? $data['value_attr'].' ' : (string)($data['options_html'] ?? '');
+                return implode('', array_map(static fn(array $v): string => $v['value_attr'].' ', $data['options'] ?? []));
             }
         };
         $list = [

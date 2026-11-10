@@ -132,11 +132,8 @@ final class FieldViewTest extends TestCase
             'price' => ['title' => 'Price', 'type' => 'decimal', 'options' => ['scale' => 3]] + $set['name'],
         ];
         $rows = (new Field())->getFieldForm(self::getTemplate(), $set, []);
-        $this->assertSame(3, substr_count($rows['kind']['field_html'], 'select-option'));
-        $this->assertMatchesRegularExpression(
-            '/^\[select:\{.*"options_html":"\[select-option:\{\\\\"value_attr\\\\":\\\\"\\\\",\\\\"label_text\\\\":\\\\"No\\\\",\\\\"is_selected\\\\":true/',
-            $rows['kind']['field_html']
-        );
+        $this->assertSame(3, substr_count($rows['kind']['field_html'], '"value_attr"'));
+        $this->assertMatchesRegularExpression('/^\[select:\{.*"options":\[\{"value_attr":"","label_text":"No","is_selected":true\}/', $rows['kind']['field_html']);
         $this->assertStringContainsString('"select_attr":"required"', $rows['kind']['field_html']);
         $this->assertStringContainsString('"itype":"number"', $rows['price']['field_html']);
         $this->assertStringContainsString('step=\"0.001\"', $rows['price']['field_html']);

@@ -127,8 +127,33 @@ namespace Tests\Unit {
         public function theRuntimeAcceptsTheNewThemeAsAPackage(): void
         {
             $said = $this->getProbeVerdict([self::$name, 'scratch-no-such-theme']);
-            $this->assertTrue($said[self::$name], 'checkThemeAssets() refuses the copy, so the etalon is missing a file the runtime demands of every theme');
-            $this->assertFalse($said['scratch-no-such-theme'], 'checkThemeAssets() accepts a theme that is not there, so it proves nothing about the one that is');
+            $this->assertSame([], $said[self::$name], 'checkThemeAssets() refuses the copy, so the etalon is missing a file the runtime demands of every theme');
+            $this->assertNotSame([], $said['scratch-no-such-theme'], 'checkThemeAssets() accepts a theme that is not there, so it proves nothing about the one that is');
+        }
+
+        # The manifest of the copy is spoiled and put back inside one test, as every other test of the class reads the same copy
+        #[Test]
+        public function theRuntimeNamesTheReasonItRefusesAManifestFor(): void
+        {
+            $file = self::$path.'/theme.json';
+            $kept = (string)file_get_contents($file);
+            $alien = ['code' => 'api', 'name' => '7.0'];
+            $cases = [
+                'a copy without the manifest' => [null, [['code' => 'manifest', 'name' => 'theme.json']]],
+                'a copy whose manifest is not JSON' => ['{"api": "8.0",', [['code' => 'manifest', 'name' => 'theme.json']]],
+                'a copy of another contract version' => ['{"api": "7.0", "version": "1.0.0"}', [$alien]],
+                'a copy naming no version of its own' => ['{"api": "7.0"}', [['code' => 'field', 'name' => 'version'], $alien]],
+            ];
+            try {
+                foreach ($cases as $what => [$text, $want]) {
+                    $text === null ? unlink($file) : file_put_contents($file, $text);
+                    $said = $this->getProbeVerdict([self::$name]);
+                    $this->assertSame($want, $said[self::$name], $what.' is refused for another reason than its own, or is not refused at all');
+                }
+            } finally {
+                file_put_contents($file, $kept);
+            }
+            $this->assertSame([], $this->getProbeVerdict([self::$name])[self::$name], 'the manifest put back no longer passes, so the cases above spoiled more than they restored');
         }
 
         # Ask the real core, in its own process, what it makes of these theme packages
@@ -150,12 +175,12 @@ namespace Tests\Unit {
         {
             $skel = getContract()['skeleton'];
             $said = getFileText('core/system.php');
-            $body = substr($said, (int)strpos($said, 'function checkThemeAssets('));
+            $body = substr($said, (int)strpos($said, 'function getThemeFaults('));
             $body = substr($body, 0, (int)strpos($body, '
 }'));
             foreach (array_keys($skel['any']) as $one) {
                 $want = rtrim($one, '/');
-                $this->assertStringContainsString("'".$want."'", $body, $want.' is in the skeleton and checkThemeAssets() never looks for it');
+                $this->assertStringContainsString("'".$want."'", $body, $want.' is in the skeleton and getThemeFaults() never looks for it');
             }
             $rule = getFileText('tests/TemplateValidationTest.php');
             foreach (array_keys($skel['frontend']) as $one) {

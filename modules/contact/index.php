@@ -20,7 +20,7 @@ function contact(): void {
         $semail = getVar('post', 'semail', 'text');
     }
     $message = getVar('post', 'message', 'text');
-    $asend = '';
+    $asend = [];
     if ($conf['contact']['admins']) {
         $wlang = '';
         $params = [];
@@ -33,7 +33,7 @@ function contact(): void {
             while ([$id, $aname, $atitle] = $db->getSqlRow($result)) {
                 $aname = substr($aname, 0, 25);
                 $atitle = substr($atitle, 0, 50);
-                $asend .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => $aname.' - '.$atitle, 'is_selected' => false]);
+                $asend[] = ['value_attr' => (string)$id, 'label_text' => $aname.' - '.$atitle, 'is_selected' => false];
             }
         }
     }
@@ -49,7 +49,7 @@ function contact(): void {
     $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-id',
         'label' => _TO,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'selectid' => 'f-id', 'options_html' => $asend]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'selectid' => 'f-id', 'options' => $asend]),
     ]) : '';
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-sname',

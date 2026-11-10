@@ -236,7 +236,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
+    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
         [
             'label_for' => 'f-key',

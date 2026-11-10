@@ -1,5 +1,5 @@
 {
-    "generated": "2026-11-10T10:42:14Z",
+    "generated": "2026-11-10T15:55:16Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -16,7 +16,8 @@
             "classes": 0,
             "important": 14,
             "tokens": 377,
-            "contrast": 0
+            "contrast": 0,
+            "raw": 67
         },
         "aurora": {
             "count": 0,
@@ -33,7 +34,8 @@
             "classes": 0,
             "important": 10,
             "tokens": 461,
-            "contrast": 0
+            "contrast": 0,
+            "raw": 154
         }
     },
     "api": {

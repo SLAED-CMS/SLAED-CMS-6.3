@@ -1441,8 +1441,8 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
     return $tpl->getHtmlPart('div', $wrap + ['is_rate' => true, 'content_html' => $body]);
 }
 
-# Render the category select; the indent walk stops at an unseen parent and after as many steps as there are categories, so a stored loop never hangs
-function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', string $clas = '', string $empty = '', string $raw = ''): string {
+# Render the category select, or list its options for $raw; the indent walk stops at an unseen parent and after as many steps as there are categories, so a stored loop never hangs
+function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', string $clas = '', array $empty = [], string $raw = ''): string|array {
     global $db, $conf, $tpl;
     $mod = filterVar($mod);
     $conf['name'] = $conf['name'] ?? $mod;
@@ -1468,22 +1468,22 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
                 $cont[$key] = $pref.$cont[$key];
                 $flag = intval($mass[$flag][1]);
             }
-            $opts .= $tpl->getHtmlFrag('select-option', [
+            $opts[] = [
                 'value_attr' => (string)$key,
                 'label_text' => $cont[$key],
                 'is_selected' => $id == $key,
-            ]);
+            ];
         }
         return !$raw ? $tpl->getHtmlFrag('select', [
             'name_attr' => $name,
             'selectid' => 'f-'.$name,
             'select_class' => $clas,
             'title' => _CATEGORIES,
-            'options_html' => $opts,
+            'options' => $opts,
         ]) : $opts;
     }
-    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
-    return '';
+    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options' => $empty]);
+    return $raw ? [] : '';
 }
 
 # Render the shared category breadcrumb trail; rich mode emits tone-aware crumbs, plain mode keeps flat links for the head banner
@@ -1525,19 +1525,18 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
     return $rich ? implode('', $crumbs) : implode(' '.$symbol.' ', $crumbs);
 }
 
-# Render language options from installed language files
-function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
-    global $tpl;
+# List the installed languages as the options of a select, led by the one for all languages unless $typ is set
+function getTplLanguageOptions(string $lang = '', string $typ = ''): array {
     $dir = opendir(BASE_DIR.'/lang');
-    $cont = !$typ ? $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
+    $cont = !$typ ? [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]] : [];
     while (false !== ($file = readdir($dir))) {
         if (preg_match('#^(.+)\.php#', $file, $match)) {
             $langf = $match[1];
-            $cont .= $tpl->getHtmlFrag('select-option', [
+            $cont[] = [
                 'value_attr' => $langf,
                 'label_text' => getLangName($langf),
                 'is_selected' => $lang == $langf,
-            ]);
+            ];
         }
     }
     closedir($dir);

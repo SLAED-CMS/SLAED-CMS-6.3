@@ -182,21 +182,21 @@ function config(): void {
     $path = 'templates/'.$conf['theme'].'/images/logos/';
     $dir = PUBLIC_DIR.'/'.$path;
     $list = is_dir($dir) ? scandir($dir) : [];
-    $opts = '';
+    $opts = [];
     if (is_array($list)) {
         foreach ($list as $entry) {
             if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-                $opts .= $tpl->getHtmlFrag('select-option', [
+                $opts[] = [
                     'value_attr' => $path.$entry,
                     'label_text' => $entry,
                     'is_selected' => $conf['site_logo'] == $entry,
-                ]);
+                ];
             }
         }
     }
     $rows[] = ['label_for' => 'img_replace', 'label_html' => _LOGO, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'site_logo',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
         'selectid' => 'img_replace',
         'imgtar' => 'picture',
@@ -213,21 +213,21 @@ function config(): void {
     $adlogo = $conf['admin_logo'] ?? 'slaed-logo-wordmark-gradient-blue.svg';
     if (!is_file(PUBLIC_DIR.'/'.$path.$adlogo)) $adlogo = 'slaed-logo-wordmark-gradient-blue.svg';
     $list = is_dir($dir) ? scandir($dir) : [];
-    $opts = '';
+    $opts = [];
     if (is_array($list)) {
         foreach ($list as $entry) {
             if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-                $opts .= $tpl->getHtmlFrag('select-option', [
+                $opts[] = [
                     'value_attr' => $path.$entry,
                     'label_text' => $entry,
                     'is_selected' => $adlogo == $entry,
-                ]);
+                ];
             }
         }
     }
     $rows[] = ['label_for' => 'admin_img_replace', 'label_html' => _ADMINLOGO, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'admin_logo',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
         'selectid' => 'admin_img_replace',
         'imgtar' => 'admin_picture',
@@ -322,22 +322,22 @@ function config(): void {
         'is_config' => true,
     ])];
     $list = is_dir(PUBLIC_DIR.'/templates') ? scandir(PUBLIC_DIR.'/templates') : [];
-    $opts = '';
+    $opts = [];
     if (is_array($list)) {
         foreach ($list as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
-                $opts .= $tpl->getHtmlFrag('select-option', [
+                $opts[] = [
                     'value_attr' => $file,
                     'label_text' => $file,
                     'is_selected' => $file == $conf['theme'],
-                ]);
+                ];
             }
         }
     }
     $rows[] = ['label_for' => 'f-theme', 'label_html' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'theme',
         'selectid' => 'f-theme',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
     ])];
     $fids = getFieldIds('f-module');
@@ -355,18 +355,18 @@ function config(): void {
     ];
     $list = timezone_identifiers_list();
     $name = $conf['gtime'] ?? '';
-    $opts = '';
+    $opts = [];
     foreach ($list as $val) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $val,
             'label_text' => $val,
             'is_selected' => $name === $val,
-        ]);
+        ];
     }
     $rows[] = ['label_for' => 'f-gtime', 'label_html' => _GTIME, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'gtime',
         'selectid' => 'f-gtime',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
     ])];
     $vars = explode(',', $conf['variables']);
@@ -385,38 +385,38 @@ function config(): void {
     foreach ($vals as $key => $val) $boxes[] = ['name_attr' => 'variables[]', 'value_attr' => (string)$key, 'label_text' => $val, 'is_checked' => !empty($vars[$key])];
     $rows[] = ['label_html' => _VARIABLES, 'label_id' => $labid = getFieldIds('', 'variables')['label'],
         'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => $boxes])];
-    $opts = $tpl->getHtmlFrag('select-option', [
+    $opts = [[
         'value_attr' => '0',
         'label_text' => _MVADMIN,
         'is_selected' => $conf['var_view'] == '0',
-    ]).$tpl->getHtmlFrag('select-option', [
+    ], [
         'value_attr' => '1',
         'label_text' => _MVALL,
         'is_selected' => $conf['var_view'] == '1',
-    ]);
+    ]];
     $rows[] = ['label_for' => 'f-var-view', 'label_html' => _VAR_VIEW, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'var_view',
         'selectid' => 'f-var-view',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
     ])];
-    $opts = $tpl->getHtmlFrag('select-option', [
+    $opts = [[
         'value_attr' => '0',
         'label_text' => _SYNTAXP,
         'is_selected' => $conf['syntax'] == '0',
-    ]).$tpl->getHtmlFrag('select-option', [
+    ], [
         'value_attr' => '1',
         'label_text' => _SYNTAXPN,
         'is_selected' => $conf['syntax'] == '1',
-    ]).$tpl->getHtmlFrag('select-option', [
+    ], [
         'value_attr' => '2',
         'label_text' => _SYNTAXSH,
         'is_selected' => $conf['syntax'] == '2',
-    ]);
+    ]];
     $rows[] = ['label_for' => 'f-syntax', 'label_html' => _SYNTAX, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'syntax',
         'selectid' => 'f-syntax',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
     ])];
     $rows[] = ['label_for' => 'f-admcol', 'label_html' => _ADMCOL, 'field_html' => $tpl->getHtmlFrag('input', [
@@ -562,16 +562,16 @@ function config(): void {
     ];
     $tabb = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $list = is_dir(BASE_DIR.'/lang') ? scandir(BASE_DIR.'/lang') : [];
-    $opts = '';
+    $opts = [];
     if (is_array($list)) {
         foreach ($list as $file) {
             if (preg_match('/^(.+)\.php/', $file, $matches)) {
                 $name = $matches[1];
-                $opts .= $tpl->getHtmlFrag('select-option', [
+                $opts[] = [
                     'value_attr' => $name,
                     'label_text' => getLangName($name),
                     'is_selected' => $conf['language'] == $name,
-                ]);
+                ];
             }
         }
     }
@@ -579,7 +579,7 @@ function config(): void {
     $rows[] = ['label_for' => 'f-language', 'label_html' => _SELLANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'language',
         'selectid' => 'f-language',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
     ])];
     $rows[] = [
@@ -599,19 +599,19 @@ function config(): void {
     ];
     $tabc = $tpl->getHtmlPart('div', ['rows' => $rows]).getGeoipPanel();
     $rows = [];
-    $opts = $tpl->getHtmlFrag('select-option', [
+    $opts = [[
         'value_attr' => '0',
         'label_text' => _NO,
         'is_selected' => $conf['censor'] == 0,
-    ]).$tpl->getHtmlFrag('select-option', [
+    ], [
         'value_attr' => '1',
         'label_text' => _MATCHANY,
         'is_selected' => $conf['censor'] == 1,
-    ]);
+    ]];
     $rows[] = ['label_for' => 'f-censor', 'label_html' => _CENSORMODE, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'censor',
         'selectid' => 'f-censor',
-        'options_html' => $opts,
+        'options' => $opts,
         'is_config' => true,
     ])];
     $rows[] = ['label_for' => 'f-censor-r', 'label_html' => _CENSORREPLACE, 'field_html' => $tpl->getHtmlFrag('input', [

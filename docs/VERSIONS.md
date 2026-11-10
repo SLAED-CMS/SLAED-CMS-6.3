@@ -2,6 +2,59 @@
 
 ## 2026-11-10
 
+### The settings blocks fold into one series, and the upload rules ship the limits of today
+
+- **`partials/toggle-form-block.html` of `admin` folds under the flag `is_fold`** — the cap carries the name, the
+  list `facts` as columns of a fixed share of the width and the list `chips` at the right edge; the rows wait under
+  the "+" of the cap, and the browser keeps the choice. The upload rules and the attachment templates of the file
+  manager, the ratings, the extra fields and the file roles of a Node type draw their blocks this way.
+- **The upload rules are edited by meaning** — the formats are checkboxes by family, the size of a file and the quota
+  are megabytes, the access switches come first, and a label is a statement that stands as a chip in the cap. A folder
+  is named by what it holds (`account` the private messages, `profile` the profile, `layout` the site builder), and
+  every path reads from `uploads/`.
+- **The shipped rules** — the record `all`, every Node type and the builder take 25 MB a file, 4096 pixels a side and
+  a quota of 1 GB; the visitor folders 5 MB, 4096 pixels, 512 MB and five files a send. A thumbnail is 320 pixels wide,
+  the default box of an attachment is 640 by 360, and a guest sees 20 files in the editor window. The formats of the
+  visitor folders are as they were.
+- **The neutral chip of `admin` takes its tint from its own colour**, as every other tone does, so it is seen in the
+  dark scheme.
+
+### The options of a select arrive as data, and the template walks them
+
+- **`fragments/select.html` of both themes draws its options from the array `options`** — an item is `value_attr`,
+  `label_text`, `is_selected` and `is_hidden`, and an item with `is_group` is a group with its own `options`. PHP no
+  longer glues the list out of calls of `select-option`: 154 calls in 28 files and every sender of `options_html` pass
+  the array. The HTML of the selects is the same up to whitespace on 111 routes of the panel and the site.
+- **`fragments/select-options.html` is the one place of that loop** — the select includes it, and `find()` of the site
+  builder answers the search of a record with it, the options without their select. `docs/TEMPLATES.md`, "Screen
+  From Data", is the standard, and `testSelectOptionsArriveAsData()` holds it.
+- **Breaking:** the key `options_html` of `fragments/select.html` is gone, and so are `fragments/select-optgroup.html`
+  of `admin` and `fragments/forum-optgroup.html` of `aurora`; `partials/account-home.html` reads `rss_options` instead
+  of `rss_options_html`. `getTplLanguageOptions()` and `rss_select()` return the array of options,
+  `getTplCategorySelect()` takes `$empty` as that array and returns it when `$raw` is set. A theme of its own adds
+  `fragments/select-options.html` and includes it from its select; a module of its own passes `options`.
+
+### The audit holds raw output under a name that does not say markup
+
+- **The count `raw` of `tools/ui-audit.php` is every `{{{ key }}}` of a theme whose key does not end in `_html`** — 154
+  in `aurora` and 67 in `admin`, stored in `tools/ui-audit-baseline.json` and ratcheted: a template that adds one fails
+  `ThemeContractTest`, and with it `npm run ui:gates` and the commit hook. `php tools/ui-audit.php --theme=<theme> --raw`
+  prints the keys and the places. No key is renamed and the engine is as it was.
+
+### A theme carries a manifest, and the core names the reason it refuses one
+
+- **`theme.json` in the root of a theme names the contract it meets** — two strings, `api` (the release whose theme
+  contract the package follows, `8.0`) and `version` (the theme's own). The core accepts the versions `THEME_API` of
+  `core/system.php` lists, and a release that leaves the contract alone leaves the list alone. `admin` and `aurora`
+  ship theirs; the name of a theme stays the name of its folder, so a copy of an etalon is a theme at once.
+- **`getThemeFaults()` answers why a folder is not a theme** — the manifest, its fields, the contract version, then
+  every missing file by name; `checkThemeAssets()` is that list being empty. The theme area of the file manager
+  prints the reasons above the files of the chosen theme, and the line `Active theme incomplete` of the site log
+  carries them as `faults`.
+- **Breaking:** a theme without `theme.json`, with one that is not JSON, without `api` or `version`, or with an `api`
+  the release does not list is refused: it leaves the theme lists of the panel and of the profile, and a member who
+  chose it sees the theme of the site. A theme of its own adds the file `{"api": "8.0", "version": "<its own>"}`.
+
 ### One gallery partial draws both galleries of the presentation, and a row written once stands in its parent
 
 - **`partials/presentation-gallery.html` of `aurora` draws the brand archive and the showcase of sites** — the flag

@@ -38,7 +38,7 @@ function getUploadsFolders(): array {
 function getUploadsSearch(string $mod): string {
     global $afile, $tpl;
     $opts = [];
-    foreach (getUploadsFolders() as $file) $opts[] = ['value_attr' => $file, 'label_text' => getUploadUrl($file) ?: $file, 'is_selected' => $mod === $file];
+    foreach (getUploadsFolders() as $file) $opts[] = ['value_attr' => $file, 'label_text' => basename(UPLOADS_DIR).'/'.$file, 'is_selected' => $mod === $file];
     return $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
         'label' => _SEARCH,
@@ -112,12 +112,22 @@ function getUploadsThemes(string $templ): string {
     ]);
 }
 
-# The head of a screen of the system or the theme area; a shipped theme warns on every one of them, as an update replaces the file being edited here
+# The head of a screen of the system or the theme area; a refused theme names its reasons and a shipped one warns that an update replaces the file being edited here
 function getUploadsFileHead(): string {
     global $tpl;
     if (getAdminFileMode() !== 'theme') return getTplAdminTabs(getUploadsTabs() + ['tab' => 1]);
     $templ = getAdminFileTheme();
     $cont = getTplAdminTabs(getUploadsTabs() + ['tab' => 2, 'subtitle_html' => getUploadsThemes($templ)]);
+    $list = [];
+    foreach (getThemeFaults($templ) as $row) {
+        $list[] = match ($row['code']) {
+            'manifest' => _UPLOADS_THMAN,
+            'field' => sprintf(_UPLOADS_THKEY, $row['name']),
+            'api' => sprintf(_UPLOADS_THAPI, $row['name'], implode(', ', THEME_API)),
+            default => sprintf(_UPLOADS_THFILE, $row['name']),
+        };
+    }
+    if ($list) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPLOADS_THBAD, 'messages' => $list]);
     if (in_array($templ, Update::THEMES, true)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_THEMES]);
     return $cont.checkPerms(PUBLIC_DIR.'/templates/'.$templ);
 }
@@ -372,28 +382,37 @@ function tplconfig(): void {
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = [...explode(',', $conf['uploads']['typ']), 'full'];
     $blocks = '';
-    for ($i = 0; $i < count($typm); $i++) {
-        $form = ($typm[$i] === 'full') ? _EDITOR_FULLSIZE.' (size=full)' : $typm[$i];
-        $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', [
-            'rows' => [[
-                'label_html' => '',
-                'field_html' => _TPFOR.': '.$form,
-                'is_full' => true,
-            ], [
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _UPLOADS_VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
+    foreach ($typm as $i => $type) {
+        $form = ($type === 'full') ? _EDITOR_FULLSIZE.' (size=full)' : $type;
+        $text = (string)($conf['filetype'][$type] ?? '');
+        $kind = ($type === 'full') ? 'image' : FileManager::getFileKind(false, $type);
+        $facts = [['text' => $names[$kind] ?? '']];
+        foreach (explode(' · ', sprintf(_EDITOR_SIZE, ($text === '') ? 0 : substr_count($text, "\n") + 1, mb_strlen($text))) as $one) {
+            $facts[] = ['text' => mb_strtoupper(mb_substr($one, 0, 1)).mb_substr($one, 1)];
+        }
+        $blocks .= $tpl->getHtmlPart('toggle-form-block', [
+            'block_id' => 'upt-'.$type,
+            'is_fold' => true,
+            'title' => _DETAILS.': '.$form,
+            'label_html' => htmlspecialchars($form, ENT_QUOTES, 'UTF-8'),
+            'facts' => $facts,
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
                 'label_html' => '',
                 'field_html' => Editor::getCode([
                     'id' => 'code_'.$i,
                     'name' => 'tmp[]',
                     'label' => _TPFOR.': '.$form,
                     'lang' => 'html',
-                    'text' => $conf['filetype'][$typm[$i]] ?? '',
+                    'text' => $text,
                     'vars' => $vars,
                     'lint' => true,
-                    'preview' => getTemplateSample($typm[$i]),
+                    'preview' => getTemplateSample($type),
                 ]),
                 'is_full' => true,
-            ]],
-        ])]);
+            ]]]),
+        ]);
     }
     $tplv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -426,123 +445,94 @@ function tplsave(): void {
 
 function config(): void {
     global $afile, $conf, $tpl;
+    require_once BASE_DIR.'/core/classes/filemanager.php';
     setHead();
     $cont = getTplAdminTabs(getUploadsTabs() + ['tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
-    $serv = getUploadService();
-    $typs = implode(', ', $serv::getSupportedTypes());
-    $directory = '';
-    foreach (getUploadsFolders() as $file) {
-        if ($file === basename(NODE_DIR)) continue;
-        $name = basename($file);
-        $directory .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $name,
-            'label_text' => getUploadUrl($file) ?: $file,
-            'is_selected' => $conf['uploads']['dir'] == $name,
-        ]);
-    }
-    $tarea = $tpl->getHtmlFrag('textarea', [
-        'name_attr' => 'ttyp',
-        'input_id' => 'f-ttyp',
-        'describedby' => 'f-ttyp-hint',
-        'is_config' => true,
-        'is_required' => true,
-        'value_text' => $conf['uploads']['typ'],
-    ]);
-    $rows = [
-        [
-            'label_for' => 'f-dir',
-            'label_html' => _DIRDEF,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'is_config' => true, 'options_html' => $directory]),
-        ],
-        ['label_for' => 'f-ttyp', 'label_html' => _TPFORM, 'hint_html' => _TPFORMIN.' '.$typs, 'hint_id' => getFieldIds('f-ttyp')['hint'], 'field_html' => $tarea],
-        [
-            'label_for' => 'f-twidth',
-            'label_html' => _TPWIDTH,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'twidth',
-                'input_id' => 'f-twidth',
-                'is_config' => true,
-                'is_required' => true,
-                'value_attr' => (string)$conf['uploads']['width'],
-            ]),
-        ],
-        [
-            'label_for' => 'f-theight',
-            'label_html' => _TPHEIGHT,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'theight',
-                'input_id' => 'f-theight',
-                'is_config' => true,
-                'is_required' => true,
-                'value_attr' => (string)$conf['uploads']['height'],
-            ]),
-        ],
-    ];
-    $tabone = $tpl->getHtmlPart('div', ['rows' => $rows]);
-    $blocks = '';
-    $mods = getUploadModuleList();
-    $types = getNodeTypeMap();
-    $limit = function (string $name, string $label, mixed $val, string $hint = '') use ($tpl): array {
+    $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _UPLOADS_VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
+    $kinds = array_fill_keys(array_keys($names), []);
+    $exts = getUploadService()::getSupportedTypes();
+    sort($exts);
+    foreach ($exts as $ext) $kinds[FileManager::getFileKind(false, $ext)][] = $ext;
+    $boxes = function (string $name, string $list, string $label) use ($tpl, $kinds, $names): array {
+        $ids = getFieldIds('', $name);
+        $have = explode(',', $list);
+        $out = '';
+        foreach ($names as $kind => $text) {
+            $line = '';
+            foreach ($kinds[$kind] as $ext) {
+                $line .= $tpl->getHtmlFrag('checkbox', ['name_attr' => $name.'[]', 'value_attr' => $ext, 'label_text' => $ext, 'is_checked' => in_array($ext, $have, true)]);
+            }
+            $out .= $tpl->getHtmlFrag('span', ['label' => $text, 'content_html' => $line, 'is_line_break' => true]);
+        }
+        return ['label_html' => $label, 'label_id' => $ids['label'],
+            'field_html' => $tpl->getHtmlFrag('block-content', ['is_radio_group' => true, 'switch' => false, 'labelledby' => $ids['label'], 'content' => $out])];
+    };
+    $limit = function (string $name, string $label, mixed $val, string $hint = '', string $attr = 'min="0"') use ($tpl): array {
         $ids = getFieldIds('', $name);
         $row = ['label_for' => $ids['input'], 'label_html' => $label];
         if ($hint !== '') $row += ['hint_html' => $hint, 'hint_id' => $ids['hint']];
         return $row + ['field_html' => $tpl->getHtmlFrag('input', ['describedby' => ($hint !== '') ? $ids['hint'] : '', 'itype' => 'number', 'input_id' => $ids['input'],
-            'name_attr' => $name.'[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $val])];
+            'name_attr' => $name, 'is_config' => true, 'input_attr' => $attr, 'value_attr' => $val])];
     };
-    $i = 0;
-    foreach ($mods as $val) {
-        if ($val != '') {
-            $rul = getUploadRuleData($val);
-            $modn = htmlspecialchars(getModuleTitle($val), ENT_QUOTES, 'UTF-8');
-            $fids = getFieldIds('', 'ftype');
-            $tfld = $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'type[]',
-                'input_id' => $fids['input'],
-                'describedby' => $fids['hint'],
-                'is_config' => true,
-                'is_required' => true,
-                'value_attr' => $rul['extensions'],
-            ]);
-            $mrows = [
-                ['label_html' => _MODUL, 'field_html' => $modn],
-                ['label_for' => $fids['input'], 'label_html' => _FTYPE, 'hint_html' => $typs, 'hint_id' => $fids['hint'], 'field_html' => $tfld],
-                $limit('allsize', _FSIZEALL._FIN, $rul['maxquota']),
-                $limit('size', _FSIZE._FIN, $rul['maxbytes']),
-                $limit('width', _AWIDTH._AIN, $rul['maxwidth']),
-                $limit('height', _AHEIGHT._AIN, $rul['maxheight']),
-                $limit('up', _FILEUP, $rul['maxfiles']),
-                $limit('gdwidth', _GDWIDTH, $rul['thumbwidth']),
-                $limit('asum', _EDFILEA, $rul['moderfiles'], _CONFINES),
-                $limit('usum', _EDFILEU, $rul['userfiles'], _CONFINES),
-                $limit('gsum', _EDFILEG, $rul['guestfiles'], _CONFINES),
-                [
-                    'label_html' => _F_8,
-                    'label_id' => $labid = getFieldIds('', $i.'upload')['label'],
-                    'field_html' => getTplRadioGroup([
-                        'labelledby' => $labid,
-                        'name' => $i.'upload',
-                        'value' => $rul['userupload'],
-                        'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-                    ]),
-                ],
-                [
-                    'label_html' => _F_9,
-                    'label_id' => $labid = getFieldIds('', $i.'upguest')['label'],
-                    'field_html' => getTplRadioGroup([
-                        'labelledby' => $labid,
-                        'name' => $i.'upguest',
-                        'value' => $rul['guestupload'],
-                        'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-                    ]),
-                ],
-            ];
-            $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $mrows])]);
-            $i++;
+    $mega = static fn(int $size): string => rtrim(rtrim(number_format($size / 1048576, 2, '.', ''), '0'), '.');
+    $dirs = [];
+    foreach (getUploadsFolders() as $file) {
+        if ($file === basename(NODE_DIR)) continue;
+        $name = basename($file);
+        $dirs[] = ['value_attr' => $name, 'label_text' => basename(UPLOADS_DIR).'/'.$file, 'is_selected' => $conf['uploads']['dir'] == $name];
+    }
+    $blocks = $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'upb-catalog', 'label_html' => _UPLOADS_CATALOG, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
+        'label_for' => 'f-dir',
+        'label_html' => _DIRDEF,
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'is_config' => true, 'options' => $dirs]),
+    ]]])]);
+    $tform = $boxes('ttyp', $conf['uploads']['typ'], _TPFORM);
+    $blocks .= $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'upb-output', 'label_html' => _UPLOADS_OUTPUT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [
+        $tform + ['hint_html' => sprintf(_TPFORMIN, _UPLOADS_TPLS)],
+        $limit('twidth', _TPWIDTH, $conf['uploads']['width'], '', 'min="1"'),
+        $limit('theight', _TPHEIGHT, $conf['uploads']['height'], '', 'min="1"'),
+    ]])]);
+    $mods = getUploadModuleList();
+    $types = getNodeTypeMap();
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $rooms = ['account' => _PRIVAT, 'layout' => _LAYOUT_BUILDER, 'profile' => _ACCOUNT];
+    $radio = static fn(string $name, string $labid, int $val): string => getTplRadioGroup(['labelledby' => $labid, 'name' => $name, 'value' => $val, 'options' => $yesno]);
+    foreach ($mods as $i => $val) {
+        $rul = getUploadRuleData($val);
+        $name = $rooms[$val] ?? getModuleTitle($val);
+        $ulab = getFieldIds('', $i.'upload')['label'];
+        $glab = getFieldIds('', $i.'upguest')['label'];
+        $mrows = [
+            ['label_html' => _F_8, 'label_id' => $ulab, 'field_html' => $radio($i.'upload', $ulab, $rul['userupload'])],
+            ['label_html' => _F_9, 'label_id' => $glab, 'field_html' => $radio($i.'upguest', $glab, $rul['guestupload'])],
+            $boxes($i.'ext', $rul['extensions'], _FTYPE),
+            $limit('size[]', _FSIZE._FIN, $mega($rul['maxbytes']), '', 'min="0.01" step="0.01"'),
+            $limit('width[]', _AWIDTH._AIN, $rul['maxwidth'], '', 'min="1"'),
+            $limit('height[]', _AHEIGHT._AIN, $rul['maxheight'], '', 'min="1"'),
+            $limit('up[]', _FILEUP, $rul['maxfiles'], '', 'min="1"'),
+            $limit('allsize[]', _FSIZEALL._FIN, $mega($rul['maxquota']), '', 'min="0.01" step="0.01"'),
+            $limit('gdwidth[]', _GDWIDTH._AIN, $rul['thumbwidth'], '', 'min="1"'),
+            $limit('asum[]', _EDFILEA, $rul['moderfiles'], _CONFINES),
+            $limit('usum[]', _EDFILEU, $rul['userfiles']),
+            $limit('gsum[]', _EDFILEG, $rul['guestfiles']),
+        ];
+        $sum = sprintf(_UPLOADS_SUM, count(explode(',', $rul['extensions'])), filterSize($rul['maxbytes']), filterSize($rul['maxquota']));
+        $facts = [['text' => basename(UPLOADS_DIR).'/'.getUploadFolder($val)]];
+        foreach (explode(' · ', $sum) as $one) $facts[] = ['text' => $one];
+        $chips = [];
+        foreach ([_F_8 => $rul['userupload'], _F_9 => $rul['guestupload']] as $text => $on) {
+            if ($on === 1) $chips[] = ['tone' => 'success', 'label' => $text];
         }
+        $blocks .= $tpl->getHtmlPart('toggle-form-block', [
+            'block_id' => 'upb-'.$val,
+            'is_fold' => true,
+            'title' => _DETAILS.': '.$name,
+            'label_html' => htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+            'facts' => $facts,
+            'chips' => $chips,
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $mrows]),
+        ]);
     }
     $hidden = [
         ['nameattr' => 'name', 'valueattr' => 'uploads'],
@@ -554,7 +544,7 @@ function config(): void {
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
-        'content_html' => $tpl->getHtmlPart('box', ['content_html' => $tabone]).$blocks,
+        'content_html' => $blocks,
         'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
@@ -578,13 +568,15 @@ function configsave(): void {
         }
         return $keep ? implode(',', $keep) : $back;
     };
-    $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
-    $ttyp = getVar('post', 'ttyp', 'text');
-    $xttyp = $filter($ttyp ? strtolower(strtr($ttyp, $protect)) : '', 'gif,jpg,jpeg,png');
-    $twidth = getVar('post', 'twidth', 'num', 500);
-    $xtwidth = (!$twidth) ? 500 : $twidth;
-    $theight = getVar('post', 'theight', 'num', 500);
-    $xtheight = (!$theight) ? 500 : $theight;
+    $bytes = static function (mixed $val, int $back): int {
+        $num = (int)round(min((float)str_replace(',', '.', is_string($val) ? $val : '0'), 1e9) * 1048576);
+        return ($num > 0) ? $num : $back;
+    };
+    $xttyp = $filter(implode(',', array_filter(getVar('post', 'ttyp[]'), 'is_string')), 'gif,jpg,jpeg,png');
+    $twidth = getVar('post', 'twidth', 'num', 640);
+    $xtwidth = (!$twidth) ? 640 : $twidth;
+    $theight = getVar('post', 'theight', 'num', 360);
+    $xtheight = (!$theight) ? 360 : $theight;
     $dir = getVar('post', 'dir', 'var');
     $cont = [];
     $cont['dir'] = is_string($dir) ? $dir : '';
@@ -592,7 +584,6 @@ function configsave(): void {
     $cont['width'] = (string)$xtwidth;
     $cont['height'] = (string)$xtheight;
     $mods = getUploadModuleList();
-    $type = getVar('post', 'type[]');
     $allsize = getVar('post', 'allsize[]');
     $size = getVar('post', 'size[]');
     $width = getVar('post', 'width[]');
@@ -608,13 +599,13 @@ function configsave(): void {
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
-            $xtype = $filter((empty($type[$i]) || !is_string($type[$i])) ? '' : strtolower(strtr($type[$i], $protect)), 'gif,jpg,jpeg,png,zip,rar');
-            $xallsize = (!intval($allsize[$i] ?? 0)) ? 104857600 : intval($allsize[$i]);
-            $xsize = (!intval($size[$i] ?? 0)) ? 1048576 : intval($size[$i]);
-            $xwidth = (!intval($width[$i] ?? 0)) ? 500 : intval($width[$i]);
-            $xheight = (!intval($height[$i] ?? 0)) ? 500 : intval($height[$i]);
+            $xtype = $filter(implode(',', array_filter(getVar('post', $i.'ext[]'), 'is_string')), 'gif,jpeg,jpg,png,rar,zip');
+            $xallsize = $bytes($allsize[$i] ?? '', 536870912);
+            $xsize = $bytes($size[$i] ?? '', 5242880);
+            $xwidth = (!intval($width[$i] ?? 0)) ? 4096 : intval($width[$i]);
+            $xheight = (!intval($height[$i] ?? 0)) ? 4096 : intval($height[$i]);
             $xup = (!intval($up[$i] ?? 0)) ? 10 : intval($up[$i]);
-            $xgdwidth = (!intval($gdwidth[$i] ?? 0)) ? 150 : intval($gdwidth[$i]);
+            $xgdwidth = (!intval($gdwidth[$i] ?? 0)) ? 320 : intval($gdwidth[$i]);
             $xasum = intval($asum[$i] ?? 0);
             $xusum = intval($usum[$i] ?? 0);
             $xgsum = intval($gsum[$i] ?? 0);

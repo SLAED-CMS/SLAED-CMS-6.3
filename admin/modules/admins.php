@@ -152,7 +152,7 @@ function add(): void {
         ._PASSWORD.': [pass]';
     $mailtext = replace_break(str_replace('[text]', $txt, $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
-        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions((string)$lang)])
+        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions((string)$lang)])
         : '';
     $nameField = $aid
         ? $tpl->getHtmlFrag('input', [

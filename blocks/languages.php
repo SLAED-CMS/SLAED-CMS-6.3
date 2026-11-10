@@ -28,16 +28,16 @@ if ($conf['flags'] == 1) {
     $cont = $tpl->getHtmlFrag('lang-switch', ['action' => HOME_PATH.'index.php', 'hidden' => $hide, 'langs' => $langs]);
     $content = $tpl->getHtmlFrag('block-content', ['is_block_flags' => true, 'content' => $cont]);
 } else {
-    $opts = '';
+    $opts = [];
     foreach ($langlist as $lang) {
         if ($lang === '') continue;
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $lang,
             'label_text' => getLangName($lang),
             'is_selected' => $lang == $locale,
-        ]);
+        ];
     }
-    $sel = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_attr' => 'onchange="this.form.submit()"', 'options_html' => $opts]);
+    $sel = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_attr' => 'onchange="this.form.submit()"', 'options' => $opts]);
     $content = $tpl->getHtmlPart('form-wrap', [
         'action' => HOME_PATH.'index.php',
         'method' => 'post',

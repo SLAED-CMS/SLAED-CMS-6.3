@@ -354,15 +354,15 @@ function add(bool $fresh = false): void {
         ]),
     ];
     if ($conf['users']['theme']) {
-        $themeopts = '';
+        $themeopts = [];
         $themecount = 0;
         foreach (scandir(PUBLIC_DIR.'/templates') as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
-                $themeopts .= $tpl->getHtmlFrag('select-option', [
+                $themeopts[] = [
                     'value_attr' => $file,
                     'label_text' => $file,
                     'is_selected' => $file == $theme,
-                ]);
+                ];
                 $themecount++;
             }
         }
@@ -370,7 +370,7 @@ function add(bool $fresh = false): void {
             $rows[] = [
                 'label_for' => 'f-theme',
                 'label_html' => _THEME,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'selectid' => 'f-theme', 'options_html' => $themeopts]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'selectid' => 'f-theme', 'options' => $themeopts]),
             ];
         }
     }
@@ -388,7 +388,7 @@ function add(bool $fresh = false): void {
         $rows[] = [
             'label_for' => 'f-lang',
             'label_html' => _LANGUAGE,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions($lang)]),
         ];
     }
     $rows[] = [
@@ -438,28 +438,28 @@ function add(bool $fresh = false): void {
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
-    $grpopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO]);
+    $grpopts = [['value_attr' => '0', 'label_text' => _NO]];
     $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
     while ([$grid, $grname] = $db->getSqlRow($result)) {
-        $grpopts .= $tpl->getHtmlFrag('select-option', [
+        $grpopts[] = [
             'value_attr' => (string)$grid,
             'label_text' => $grname,
             'is_selected' => $grid == $group,
-        ]);
+        ];
     }
     $gender = intval($gender ?? 0);
-    $genderopts = '';
+    $genderopts = [];
     foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
-        $genderopts .= $tpl->getHtmlFrag('select-option', [
+        $genderopts[] = [
             'value_attr' => (string)$key,
             'label_text' => $val,
             'is_selected' => $key == $gender,
-        ]);
+        ];
     }
     $rows[] = [
         'label_for' => 'f-group',
         'label_html' => _SPEC_GROUP,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options' => $grpopts]),
     ];
     $rows[] = [
         'label_html' => _BIRTHDAY,
@@ -468,7 +468,7 @@ function add(bool $fresh = false): void {
     $rows[] = [
         'label_for' => 'f-gender',
         'label_html' => _GENDER,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'selectid' => 'f-gender', 'is_config' => true, 'options_html' => $genderopts]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'selectid' => 'f-gender', 'is_config' => true, 'options' => $genderopts]),
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'account', 'new' => !$uid]));
     $rows[] = [
@@ -808,13 +808,13 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(getAccountTabs() + ['subtitle_html' => getAccountSearch(), 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
-    $minpassopts = '';
+    $minpassopts = [];
     for ($n = 3; $n <= 10; $n++) {
-        $minpassopts .= $tpl->getHtmlFrag('select-option', [
+        $minpassopts[] = [
             'value_attr' => (string)$n,
             'label_text' => (string)$n,
             'is_selected' => $n == $conf['users']['minpass'],
-        ]);
+        ];
     }
     $rows = [
         [
@@ -886,7 +886,7 @@ function config(): void {
         [
             'label_for' => 'f-minpass',
             'label_html' => _PASSWDLEN,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'minpass', 'selectid' => 'f-minpass', 'options_html' => $minpassopts, 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'minpass', 'selectid' => 'f-minpass', 'options' => $minpassopts, 'is_config' => true]),
         ],
         [
             'label_for' => 'f-enter',
@@ -894,9 +894,9 @@ function config(): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'enter',
                 'selectid' => 'f-enter',
-                'options_html' =>
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0']).
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']),
+                'options' =>
+                    [['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0'],
+                    ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']],
                 'is_config' => true,
             ]),
         ],

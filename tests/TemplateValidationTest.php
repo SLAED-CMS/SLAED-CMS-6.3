@@ -465,6 +465,29 @@ class TemplateValidationTest extends TestCase
         $this->assertSame([], $errors, 'A caller of the select fragment names input_id, which neither theme reads');
     }
 
+    # PHP glued the options of a select out of calls of the option atom; both themes draw them from the array options, and the fragment select-options is the one place of that loop
+    public function testSelectOptionsArriveAsData(): void
+    {
+        foreach (['admin', 'aurora'] as $theme) {
+            $base = self::$templatesPath.'/'.$theme.'/fragments/';
+            $frag = (string)file_get_contents($base.'select.html');
+            $this->assertStringContainsString("{% include 'fragments/select-options.html' %}", $frag, 'The select of '.$theme.' draws no options from data');
+            $this->assertStringContainsString('{% for item in options %}', (string)file_get_contents($base.'select-options.html'), 'The option list of '.$theme.' walks no array');
+            foreach (glob(self::$templatesPath.'/'.$theme.'/{fragments,partials,pages,layouts}/*.html', GLOB_BRACE) ?: [] as $file) {
+                $this->assertStringNotContainsString('options_html', (string)file_get_contents($file), basename($file).' of '.$theme.' reads the options as a string');
+            }
+        }
+        $errors = [];
+        foreach (getTreeFiles(self::$basePath) as $file) {
+            $path = str_replace('\\', '/', $file->getPathname());
+            if ($file->getExtension() !== 'php' || preg_match('#/(tests|plugins)/#', $path)) continue;
+            $code = (string)file_get_contents($path);
+            if (!preg_match_all("#getHtmlFrag\('select-option'|'[a-z_]*options_html'#", $code, $hits, PREG_OFFSET_CAPTURE)) continue;
+            foreach ($hits[0] as [, $at]) $errors[] = substr($path, strlen(self::$basePath) + 1).':'.(substr_count(substr($code, 0, $at), "\n") + 1);
+        }
+        $this->assertSame([], $errors, 'A caller glues the options of a select in PHP instead of passing the array options');
+    }
+
     # A button glued to the text of an alert wrapped under a long sentence at the left and wore the bevel of a form button
     # Every action of a panel alert stands in its slot acts_html, and both alert fragments draw that slot after the body
     public function testAlertActionsStandInTheirSlot(): void

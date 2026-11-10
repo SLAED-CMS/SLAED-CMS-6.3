@@ -542,10 +542,10 @@ function delete(): void {
     setHead();
     $cont = getSearchnavi('', 3);
     $modeopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => 'all', 'label_text' => _SEARCHCLEAR, 'is_selected' => true])
-        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'mod', 'label_text' => _SEARCHBYMOD])
-        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'days', 'label_text' => _SEARCHBYDAY])
-        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'empty', 'label_text' => _SEARCHEMPTY]);
+        [['value_attr' => 'all', 'label_text' => _SEARCHCLEAR, 'is_selected' => true],
+        ['value_attr' => 'mod', 'label_text' => _SEARCHBYMOD],
+        ['value_attr' => 'days', 'label_text' => _SEARCHBYDAY],
+        ['value_attr' => 'empty', 'label_text' => _SEARCHEMPTY]];
     $rows = [
         [
             'label_for' => 'f-cmod', 'label_html' => _MODUL,
@@ -557,7 +557,7 @@ function delete(): void {
         ],
         [
             'label_for' => 'f-mode', 'label_html' => _DELETE,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'selectid' => 'f-mode', 'options_html' => $modeopts]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'selectid' => 'f-mode', 'options' => $modeopts]),
         ],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlPart('form', [

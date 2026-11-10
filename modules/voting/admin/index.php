@@ -8,18 +8,18 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file acces
 
 function getVotingCommentSelect(int $selected): string {
     global $tpl;
-    $opts = '';
+    $opts = [];
     foreach ([_DEACTIVATE, _APOSTMOD, _APOSTNOMOD] as $idx => $label) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => (string)$idx,
             'label_text' => $label,
             'is_selected' => $selected === $idx,
-        ]);
+        ];
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'acomm',
         'selectid' => 'f-acomm',
-        'options_html' => $opts,
+        'options' => $opts,
     ]);
 }
 
@@ -32,22 +32,22 @@ function getVotingModList(string $keep = ''): array {
 
 function getVotingModuleSelect(string $modul = ''): string {
     global $tpl;
-    $opts = $tpl->getHtmlFrag('select-option', [
+    $opts = [[
         'value_attr' => '',
         'label_text' => _NO,
         'is_selected' => $modul === '',
-    ]);
+    ]];
     foreach (getVotingModList($modul) as $val) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts[] = [
             'value_attr' => $val,
             'label_text' => getModuleTitle($val),
             'is_selected' => $modul === $val,
-        ]);
+        ];
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'modul',
         'selectid' => 'f-modul',
-        'options_html' => $opts,
+        'options' => $opts,
     ]);
 }
 
@@ -56,9 +56,9 @@ function getVotingStatusSelect(int|string $status): string {
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'status',
         'selectid' => 'f-status',
-        'options_html' =>
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VCLOSED, 'is_selected' => (string)$status === '1'])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VDEACT, 'is_selected' => (string)$status === '0']),
+        'options' =>
+            [['value_attr' => '1', 'label_text' => _VCLOSED, 'is_selected' => (string)$status === '1'],
+            ['value_attr' => '0', 'label_text' => _VDEACT, 'is_selected' => (string)$status === '0']],
     ]);
 }
 
@@ -67,9 +67,9 @@ function getVotingTypeSelect(int|string $typ): string {
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'typ',
         'selectid' => 'f-typ',
-        'options_html' =>
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VOPEN, 'is_selected' => (string)$typ === '1'])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VCLOSE, 'is_selected' => (string)$typ === '0']),
+        'options' =>
+            [['value_attr' => '1', 'label_text' => _VOPEN, 'is_selected' => (string)$typ === '1'],
+            ['value_attr' => '0', 'label_text' => _VCLOSE, 'is_selected' => (string)$typ === '0']],
     ]);
 }
 
@@ -79,11 +79,11 @@ function getVotingBlockSelect(string $bval): string {
         'name_attr' => 'block',
         'selectid' => 'f-block',
         'is_config' => true,
-        'options_html' =>
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VLASTACT, 'is_selected' => $bval === '0'])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VLASTCLO, 'is_selected' => $bval === '1'])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _VRANACT, 'is_selected' => $bval === '2'])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _VRANCLO, 'is_selected' => $bval === '3']),
+        'options' =>
+            [['value_attr' => '0', 'label_text' => _VLASTACT, 'is_selected' => $bval === '0'],
+            ['value_attr' => '1', 'label_text' => _VLASTCLO, 'is_selected' => $bval === '1'],
+            ['value_attr' => '2', 'label_text' => _VRANACT, 'is_selected' => $bval === '2'],
+            ['value_attr' => '3', 'label_text' => _VRANCLO, 'is_selected' => $bval === '3']],
     ]);
 }
 
@@ -260,7 +260,7 @@ function add(): void {
     if ($conf['multilingual'] == 1) {
         $rows[] = [
             'label_for' => 'f-lang', 'label_html' => _LANGUAGE,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions($lang)]),
         ];
     }
     $rows[] = ['label_for' => 'f-acomm', 'label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];

@@ -361,19 +361,19 @@ class Editor {
     public static function getSelect(string $name, string $selected, string $type, string $role, string $selectAttr = ''): string {
         global $tpl;
         $list = self::getEditorList($type, $role);
-        $html = '';
+        $opts = [];
         foreach ($list as $id => $man) {
-            $html .= $tpl->getHtmlFrag('select-option', [
+            $opts[] = [
                 'value_attr' => $id,
                 'label_text' => (string)($man['label'] ?? $id),
                 'is_selected' => $id === $selected,
-            ]);
+            ];
         }
         return $tpl->getHtmlFrag('select', [
             'name_attr' => $name,
             'select_class' => '',
             'select_attr' => $selectAttr,
-            'options_html' => $html,
+            'options' => $opts,
         ]);
     }
 

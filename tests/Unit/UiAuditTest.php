@@ -367,6 +367,31 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
+    public function testARawOutputCountsUnlessItsKeyEndsInHtml(): void
+    {
+        $path = 'tests/Fixtures/ui/rawkeys.html';
+        $raw = checkRawKeys([$path => getFileText($path)]);
+        $this->assertSame(7, $raw['all'], 'seven raw outputs compile: the one inside the note is gone, {{ label }} is escaped, and a key with a capital is no key');
+        $why = 'the last segment decides: row.cells_html says markup, item.body_html.text and the bare word html do not';
+        $this->assertSame(['title', 'row.attrs', 'item.body_html.text', 'title', 'html'], array_column($raw['sites'], 'key'), $why);
+        $this->assertSame([5, 7, 8, 10, 11], array_column($raw['sites'], 'line'), 'the note of two lines keeps its line ends, so a place is the line of the file');
+        $this->assertSame(['title' => 2, 'row.attrs' => 1, 'item.body_html.text' => 1, 'html' => 1], $raw['keys'], 'a key printed twice is one key and two places');
+    }
+
+    # The count is true only while the audit matches what Template::filterRaw() compiles, so the engine is asked about the same fixture
+    #[Test]
+    public function testTheAuditCountsTheRawOutputsTheEngineCompiles(): void
+    {
+        if (!class_exists('Template', false)) require_once dirname(__DIR__, 2).'/core/classes/template.php';
+        $path = 'tests/Fixtures/ui/rawkeys.html';
+        $text = getFileText($path);
+        $tpl = (new \ReflectionClass('Template'))->newInstanceWithoutConstructor();
+        $code = $text;
+        foreach (['filterPad', 'filterLine', 'filterNote', 'filterRaw'] as $step) $code = (new \ReflectionMethod($tpl, $step))->invoke($tpl, $code);
+        $this->assertSame(substr_count($code, '$this->getRaw('), checkRawKeys([$path => $text])['all'], 'the audit and the engine disagree on what a raw output is');
+    }
+
+    #[Test]
     public function testContrastIsMeasuredByTheWcagFormula(): void
     {
         $this->assertEqualsWithDelta(21.0, getContrastRatio([0, 0, 0], [255, 255, 255]), 0.01);

@@ -699,7 +699,7 @@ function profil(): void {
         'rss_head' => ['icon' => getIconName('rss'), 'title' => _RSS],
         'rss_action' => getSeoUrl(['name' => $conf['name'], 'op' => 'rss']),
         'rss_select_label' => _SELECTASITE,
-        'rss_options_html' => (($conf['rss']['use'] ?? 0) == 1) ? rss_select() : '',
+        'rss_options' => (($conf['rss']['use'] ?? 0) == 1) ? rss_select() : [],
         'rss_url_label' => _ORTYPEURL,
         'ok_label' => _OK,
         'activity_html' => getProfileLastView($uid),
@@ -741,9 +741,9 @@ function privat(): void {
         $list = ($typ == 4) ? 1 : $typ;
         $box = match ($list) {2 => PrivatBox::Outbox, 3 => PrivatBox::Saved, default => PrivatBox::Inbox};
         $pick = getPrivatPick();
-        $sorts = '';
+        $sorts = [];
         foreach (['' => _PRBYNEW, 'old' => _PRBYOLD, 'unread' => _PRBYUNS, 'name' => _PRBYMATE] as $key => $lab) {
-            $sorts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab, 'is_selected' => $pick['sort'] === $key]);
+            $sorts[] = ['value_attr' => $key, 'label_text' => $lab, 'is_selected' => $pick['sort'] === $key];
         }
         $face = $prv->getBoxFacets($uid, $box);
         $chips = [
@@ -767,7 +767,7 @@ function privat(): void {
                 'reset_label' => (string)_PRRESET,
                 'chips' => $chips,
                 'sort_html' => $tpl->getHtmlFrag('select', [
-                    'name_attr' => 'sort', 'title' => _SORT, 'options_html' => $sorts, 'select_attr' => 'id="prsort"',
+                    'name_attr' => 'sort', 'title' => _SORT, 'options' => $sorts, 'select_attr' => 'id="prsort"',
                 ]),
                 'tools_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'account', 'input_attr' => ''])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'privat', 'input_attr' => ''])
@@ -1209,16 +1209,16 @@ function edithome(): void {
         }
         $secs = [];
         $flds = [['label' => _BIRTHDAY, 'control_html' => getTplAddDateTime(['name' => 'user_birthday', 'label' => _BIRTHDAY, 'time' => $bday, 'with' => false, 'max' => 10])]];
-        $gopt = '';
+        $gopt = [];
         foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
-            $gopt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $key == (int)$info['gender']]);
+            $gopt[] = ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $key == (int)$info['gender']];
         }
         $flds[] = ['label' => _GENDER, 'label_for' => 'f-gender', 'control_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'gender',
             'selectid' => 'f-gender',
             'is_account' => true,
             'select_attr' => $mark('gender'),
-            'options_html' => $gopt,
+            'options' => $gopt,
         ])];
         $flds[] = ['label' => _YOUREMAIL, 'label_for' => 'f-mail', 'control_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'email',
@@ -1388,13 +1388,13 @@ function edithome(): void {
                 'required' => '0',
             ]),
         ];
-        $topt = '';
+        $topt = [];
         $tcnt = 0;
         if ($conf['users']['theme']) {
             foreach (scandir(PUBLIC_DIR.'/templates') ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
                 if (!is_dir(PUBLIC_DIR.'/templates/'.$file) || !checkThemeAssets($file)) continue;
-                $topt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $info['theme']]);
+                $topt[] = ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $info['theme']];
                 $tcnt++;
             }
         }
@@ -1403,7 +1403,7 @@ function edithome(): void {
                 'name_attr' => 'theme',
                 'selectid' => 'f-theme',
                 'describedby' => 'f-theme-hint',
-                'options_html' => $topt,
+                'options' => $topt,
             ])];
         }
         if (is_dir(PUBLIC_DIR.'/'.getThemeFilePath('sound'))) {

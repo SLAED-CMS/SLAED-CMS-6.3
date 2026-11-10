@@ -79,7 +79,7 @@ return [
         ],
         'types' => [
             'content' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'orders' => [
                         0 => 'published',
@@ -115,7 +115,7 @@ return [
                 ],
             ],
             'docs' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'orders' => [
                         0 => 'title',
@@ -161,7 +161,7 @@ return [
                 ],
             ],
             'faq' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'orders' => [
                         0 => 'published',
@@ -217,7 +217,7 @@ return [
                 ],
             ],
             'files' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'orders' => [
                         0 => 'published',
@@ -281,7 +281,7 @@ return [
                 ],
             ],
             'help' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'limit' => 20,
                     'show' => [
@@ -317,7 +317,7 @@ return [
                 ],
             ],
             'links' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'orders' => [
                         0 => 'published',
@@ -374,7 +374,7 @@ return [
                 ],
             ],
             'news' => [
-                'version' => 4,
+                'version' => 6,
                 'list' => [
                     'orders' => [
                         0 => 'published',

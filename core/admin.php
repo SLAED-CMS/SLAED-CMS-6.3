@@ -86,11 +86,11 @@ function getAdminSettingsRow(string $axis): string {
         $pick = Editor::getSelect($field, $row['now'], 'content', 'admin', 'id="'.$pid.'"');
     } else {
         if (!$list) return '';
-        $opts = '';
+        $opts = [];
         foreach ($list as $val => $label) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $val, 'label_text' => $label, 'is_selected' => (string)$val === $row['now'], 'is_hidden' => $val === '']);
+            $opts[] = ['value_attr' => $val, 'label_text' => $label, 'is_selected' => (string)$val === $row['now'], 'is_hidden' => $val === ''];
         }
-        $pick = $tpl->getHtmlFrag('select', ['name_attr' => $field, 'select_class' => '', 'selectid' => $pid, 'options_html' => $opts]);
+        $pick = $tpl->getHtmlFrag('select', ['name_attr' => $field, 'select_class' => '', 'selectid' => $pid, 'options' => $opts]);
     }
     $hide = in_array($axis, ['dock-side', 'sound', 'saver'], true) ? [] : ['op' => $op, 'token' => getSiteToken($op)] + ($op === 'option' ? ['key' => $axis] : ['refer' => '1']);
     $html = '';
@@ -744,14 +744,14 @@ function add_voting(string $modul, string $selectName, int $selectedId): string 
     } else {
         $where  = "modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     }
-    $opts   = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => false]);
+    $opts   = [['value_attr' => '0', 'label_text' => _NO, 'is_selected' => false]];
     $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $title] = $db->getSqlRow($result)) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id]);
+            $opts[] = ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id];
         }
     }
-    return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options' => $opts]);
 }
 
 # Split one SQL script into statements, honouring quotes, comments and DELIMITER; a statement stays as written, an escape in a literal is never unwrapped

@@ -52,6 +52,7 @@ Themes should follow this structure:
 
 ```text
 templates/<theme>/
+  theme.json       # the manifest: the contract version the theme meets and its own version
   index.php        # optional theme hook
   assets/
     css/
@@ -67,6 +68,21 @@ templates/<theme>/
   places.json      # optional parts, menus and zones of blocks the site builder edits
   presets.json     # optional ready pages of the site builder
 ```
+
+`theme.json` is the manifest every theme carries, two strings and nothing else:
+
+```json
+{
+    "api": "8.0",
+    "version": "8.0.0"
+}
+```
+
+`api` is the release whose theme contract the package meets, and the core accepts the ones `THEME_API` of
+`core/system.php` lists; a release that leaves the contract alone leaves the list alone. `version` is the theme's
+own, which the core only asks to be there. The name of a theme is the name of its folder and the
+manifest does not repeat it, so a copy of an etalon is a theme at once. A folder without the manifest, with one that
+is not JSON, without one of the two strings or with an `api` outside the list is not a theme: "Theme Contract" below.
 
 The last three are the contract of the site builder, "Layout Sections" below; a site theme without them shows no
 sections and no parts, and the panel theme `admin` has none.
@@ -237,6 +253,7 @@ Recommended logical ladder:
 - `input`
 - `textarea`
 - `select`
+- `select-options`
 - `select-option`
 - `checkbox`
 - `radio`
@@ -275,7 +292,7 @@ Avoid for new base contracts:
 ## Runtime Syntax
 The current `Template` runtime supports:
 - escaped output: `{{ var }}`
-- raw output: `{{{ var }}}`
+- raw output: `{{{ var }}}` — the string is printed as it is; a key that holds markup ends in `_html`, and the count `raw` of "Theme Contract" holds every raw output whose key does not
 - language constants: `{{ _CONST }}` (UPPER_SNAKE_CASE with `_` prefix — resolved at runtime via `defined()`, cache-safe)
 - the root of the site: `{{ root }}`, put into every render by `Template::getView()` (see "Links In Templates")
 - conditions:
@@ -323,6 +340,29 @@ New template work should:
 Do not:
 - add placeholder mapping helpers for new slices
 - copy theme inventories from installations or snapshots that are not present in the current repository
+
+## Screen From Data
+
+PHP passes the rows of a list as an array, and the template walks them and writes the markup of every row. PHP does not
+glue a list out of calls of an atom and hand the string over under a `*_html` key. New and reworked code follows the
+standard; an old screen moves when its module is reworked, whole, never one call at a time.
+
+What is moved:
+
+- **The rows of a partial** — `partials/forum-teaser.html` of `aurora` takes its rows as an array from
+  `setTemplateForum()` of the theme hook and walks them itself.
+- **The options of a select** — `fragments/select.html` of both themes takes the array `options`. An item is
+  `value_attr`, `label_text` and the flags `is_selected` and `is_hidden`; an item with `is_group` is a group, its
+  `label_text` the label and its own `options` the items inside. `fragments/select-options.html` is the one place of
+  that loop: the select includes it, and an answer that is the options alone renders it directly, as `find()` of the
+  site builder does for the search of a record. `fragments/select-option.html` is one option and only a template
+  includes it. A helper that prepares options returns the array: `getTplLanguageOptions()`, `rss_select()`,
+  `getTplCategorySelect()` with `$raw`, whose `$empty` is the list of the options that lead.
+  `testSelectOptionsArriveAsData()` of `TemplateValidationTest` holds it: no code outside the tests calls
+  `select-option` or sends `options_html`.
+
+A theme of its own draws a group as it likes inside its `select-options.html`; the class of a group is the theme's,
+never a key from PHP.
 
 ### Admin Semantic Wrapper Variants
 
@@ -1496,14 +1536,14 @@ A new theme is made by copying an etalon and editing one file: `templates/<theme
 - **Canon is CSS, `fragments/` and `partials/`.** `layouts/` and `pages/` are outside it: the page shells of a panel and a site differ by nature.
 - **Breakpoints are canon, not API.** `@media` cannot read a custom property, so a theme decides how things look at a breakpoint, never where it sits.
 - **`assets/editors/*/skin.css`** consumes tokens, declares no API, and is byte-identical in both themes — `EditorWindowTest` enforces that, so it is edited in both in one commit.
-- **`checkThemeAssets()`** in `core/system.php` defines the assets a theme must ship before the runtime selects it. A frontend theme carries five templates besides, which `TemplateValidationTest` asks for: `fragments/title.html`, `partials/content-list.html`, `partials/node/view.html`, `pages/module.html` and `layouts/app.html`. Both lists are mirrored under `skeleton` in `tools/ui-contract.php`. `pages/home.html` and `layouts/home.html` belong to a frontend theme too: `setFoot()` renders the home page through them by name, though the skeleton does not list them.
+- **`getThemeFaults()`** in `core/system.php` defines what a theme must ship before the runtime selects it, and answers the reasons a folder is refused as rows of `code` and `name`, in the order an author mends them: `manifest` — `theme.json` is missing or is not JSON; `field` — `api` or `version` is not a non-empty string; `api` — the contract version is outside `THEME_API`; `file` — a named file or directory is missing, the skin and the partials an editor manifest declares among them. `checkThemeAssets()` is the same answer as yes or no, remembered for the request: the theme lists of the panel and of the profile leave a refused folder out, a member's refused theme falls back to the theme of the site, a refused theme of the site is still drawn while `getTheme()` writes `Active theme incomplete` with the reasons as `faults` to the site log, and the theme area of the file manager prints the reasons above the files of the chosen theme. A frontend theme carries five templates besides, which `TemplateValidationTest` asks for: `fragments/title.html`, `partials/content-list.html`, `partials/node/view.html`, `pages/module.html` and `layouts/app.html`. Both lists are mirrored under `skeleton` in `tools/ui-contract.php`. `pages/home.html` and `layouts/home.html` belong to a frontend theme too: `setFoot()` renders the home page through them by name, though the skeleton does not list them.
 
 Axes, ladders, the allowlist, categorical sets, declared component names, the ramp and the ratchet list live in `tools/ui-contract.php`. That file is the contract: it is committed, and it is what every tool reads.
 
 - **`error.html`** is the one surface that renders when the CMS cannot, so it carries its own `:root` instead of reading a theme. Its values are the light half of `aurora`, because no server is there to write `data-theme`.
 - **`--sl-size-chip`** is read by `plugins/system/slaed.js` for speed-dial geometry and cannot be renamed without touching the script in the same commit. Names written from outside CSS carry `--sl-d-*` and are registered under `data` in the contract.
 
-Both themes stand at **zero untokenised visual decisions**, and every ratcheted count is at zero except `scoped` and `important`. Neither of those two is a defect list: a scoped custom property on a component root is an internal the rules permit, and an `!important` is permitted where it is need. What the ratchet buys is that neither can grow.
+Both themes stand at **zero untokenised visual decisions**, and every ratcheted count is at zero except `scoped`, `important` and `raw`. None of those three is a defect list: a scoped custom property on a component root is an internal the rules permit, an `!important` is permitted where it is need, and `raw` is every `{{{ key }}}` of the theme's templates whose key does not end in `_html` — an attribute blob, an address or markup under a name that does not say so, counted as `Template::filterRaw()` compiles it, a note left out. What the ratchet buys is that none can grow: a template that adds such an output fails the gates until it prints a `*_html` key or escapes the value.
 
 ### What Belongs In A Skin And What Belongs In The Theme
 
@@ -1546,6 +1586,7 @@ byte-identical between the themes.
 |---|---|
 | `php tools/ui-audit.php` | every count for both themes; exits non-zero when a ratcheted count grew |
 | `php tools/ui-audit.php --markup` | no class attribute, inline style or HTML tag hardcoded in PHP; `limit` is `0` |
+| `php tools/ui-audit.php --theme=<theme> --raw` | the raw outputs whose key does not end in `_html`: every key with its number, then every place as file and line |
 | `php tools/ui-audit.php --file=<css> --migrating` | one file, naming the token that replaces each violation |
 | `php tools/ui-audit.php --store` | rewrites `tools/ui-audit-baseline.json` from the current tree |
 | `vendor/bin/phpunit` | `ThemeContractTest` (ratchet with the global counts + frozen API + contrast registry; the gates run it in place of the full audit), `UiAuditTest` (the tool against fixtures), `ThemeCreationTest` (a scratch copy audits clean and renders) |

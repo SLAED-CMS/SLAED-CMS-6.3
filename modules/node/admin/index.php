@@ -133,12 +133,12 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
                 'is_full' => !empty($one['full'])];
     }
     if ($feat['comments']) {
-        $opts = '';
+        $opts = [];
         foreach ([CommentMode::Disabled->value => _DEACTIVATE, CommentMode::Moderated->value => _APOSTMOD, CommentMode::Open->value => _APOSTNOMOD] as $key => $label) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $vals['comon']->value === $key]);
+            $opts[] = ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $vals['comon']->value === $key];
         }
         $rows[] = ['label_for' => 'f-comon', 'label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'comon', 'selectid' => 'f-comon',
-            'options_html' => $opts])];
+            'options' => $opts])];
     }
     if ($feat['poll']) {
         $rows[] = ['label_for' => 'f-poll', 'label_html' => _VOTING, 'hint_html' => _NODE_POLLHINT, 'hint_id' => 'f-poll-hint',
@@ -169,16 +169,16 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     if ($id) {
         $hidden[] = ['name_attr' => 'id', 'value_attr' => $id];
         $hidden[] = ['name_attr' => 'version', 'value_attr' => $ver];
-        $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES]);
-        $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options_html' => $opts, 'is_inline_gap' => true])
+        $opts = [['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true],
+            ['value_attr' => 'save', 'label_text' => _SAVECHANGES]];
+        $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options' => $opts, 'is_inline_gap' => true])
             : $tpl->getHtmlFrag('hidden', ['name_attr' => 'action', 'value_attr' => 'save', 'input_attr' => '']);
     } else {
-        $opts = '';
+        $opts = [];
         foreach ([NodeStatus::Draft, NodeStatus::Pending, NodeStatus::Published] as $one) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one->value, 'label_text' => getNodeStateLabel($one), 'is_selected' => $one === $state]);
+            $opts[] = ['value_attr' => $one->value, 'label_text' => getNodeStateLabel($one), 'is_selected' => $one === $state];
         }
-        $act = $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'aria_label' => _STATUS, 'options_html' => $opts, 'is_inline_gap' => true]);
+        $act = $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'aria_label' => _STATUS, 'options' => $opts, 'is_inline_gap' => true]);
     }
     return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -829,9 +829,9 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         'value' => $on ? '1' : '0', 'labelledby' => $id, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $pick = fn(string $name, array $list, array $cur): array => array_map(fn(string $k, string $v): array => $item($name, in_array($k, $cur, true), $v, $k),
         array_keys($list), $list);
-    $opts = fn(array $list, string|array $cur): string => implode('', array_map(fn(int|string $k, string $v): string => $tpl->getHtmlFrag('select-option', [
-        'value_attr' => $k, 'label_text' => $v, 'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur]),
-        array_keys($list), $list));
+    $opts = fn(array $list, string|array $cur): array => array_map(fn(int|string $k, string $v): array => [
+        'value_attr' => $k, 'label_text' => $v, 'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur],
+        array_keys($list), $list);
     $tabs = [];
     $rows = [];
     $rows[] = ['label_for' => 'f-tname', 'label_html' => _NODE_NAME, 'hint_html' => $esc(_NODE_NAMEHINT), 'hint_id' => 'f-tname-hint',
@@ -854,9 +854,9 @@ function getNodeTypeTabs(array $vals, bool $new): string {
     $orders = ['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST];
     $rows[] = ['label_html' => _NODE_ORDERS, 'label_id' => 'f-orders-label', 'field_html' => $checks('f-orders-label', $pick('orders[]', $orders, $set['list']['orders']))];
     $rows[] = ['label_for' => 'f-order', 'label_html' => _NODE_ORDER,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'selectid' => 'f-order', 'options_html' => $opts($orders, $set['list']['order'])])];
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'selectid' => 'f-order', 'options' => $opts($orders, $set['list']['order'])])];
     $rows[] = ['label_for' => 'f-dir', 'label_html' => _NODE_ORDDIR,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'options_html' => $opts(['desc' => _DESC, 'asc' => _ASC], $set['list']['dir'])])];
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'options' => $opts(['desc' => _DESC, 'asc' => _ASC], $set['list']['dir'])])];
     $rows[] = ['label_for' => 'f-limit', 'label_html' => _NODE_LIMIT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit',
         'input_id' => 'f-limit',
         'value_attr' => $set['list']['limit']])];
@@ -867,14 +867,14 @@ function getNodeTypeTabs(array $vals, bool $new): string {
     $have = $set['list']['views'] ?: [NodeQuery::MODEVIEW[$set['view']['mode']] ?? 'cards'];
     $rows[] = ['label_html' => _NODE_VIEWS, 'label_id' => 'f-views-label', 'field_html' => $checks('f-views-label', $pick('views[]', $looks, $have))];
     $rows[] = ['label_for' => 'f-view', 'label_html' => _NODE_VIEWDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'view', 'selectid' => 'f-view',
-        'options_html' => $opts($looks, $have[0])])];
+        'options' => $opts($looks, $have[0])])];
     $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'hint_id' => 'f-mode-hint',
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode',
-        'selectid' => 'f-mode', 'describedby' => 'f-mode-hint', 'options_html' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];
+        'selectid' => 'f-mode', 'describedby' => 'f-mode-hint', 'options' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];
     $rows[] = ['label_for' => 'f-side', 'label_html' => _BLOCKS_SIDE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'side', 'selectid' => 'f-side',
-        'options_html' => $opts([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3], $set['view']['side'])])];
+        'options' => $opts([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3], $set['view']['side'])])];
     $rows[] = ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'top', 'selectid' => 'f-top',
-        'options_html' => $opts([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3], $set['view']['top'])])];
+        'options' => $opts([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3], $set['view']['top'])])];
     $tabs[] = [_LIST, $rows];
     $rows = [];
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
@@ -899,7 +899,6 @@ function getNodeTypeTabs(array $vals, bool $new): string {
     $list = $set['assets'];
     for ($i = 0; $i < 3; $i++) $list['#'.$i] = null;
     $idx = 0;
-    $last = count($list) - 1;
     foreach ($list as $key => $def) {
         $def = $def ?? NodeQuery::ROLEDEF;
         $name = str_starts_with((string)$key, '#') ? '' : (string)$key;
@@ -917,7 +916,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
             ['label_for' => $rid.'intro', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'input_id' => $rid.'intro',
                 'name_attr' => $pre.'[intro]', 'value_attr' => $def['intro'], 'maxlength_num' => 1000])],
             ['label_for' => $rid.'mode', 'label_html' => _NODE_RMODE, 'is_role_mode' => true, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => $pre.'[mode]',
-                'selectid' => $rid.'mode', 'options_html' => $opts($modes, (string)($def['mode'] ?? 'download'))])],
+                'selectid' => $rid.'mode', 'options' => $opts($modes, (string)($def['mode'] ?? 'download'))])],
             $flag($pre.'[report]', (bool)$def['report'], _NODE_CANREP, $rid.'report-label') + ['is_role_report' => true],
             ['label_html' => _NODE_KINDS, 'label_id' => $rid.'kinds-label', 'field_html' => $kinds],
             ['label_for' => $rid.'exts', 'label_html' => _NODE_EXTS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'input_id' => $rid.'exts',
@@ -933,13 +932,20 @@ function getNodeTypeTabs(array $vals, bool $new): string {
             $flag($pre.'[canlink]', (bool)$def['canlink'], _NODE_CANLINK, $rid.'canlink-label'),
             $flag($pre.'[active]', (bool)$def['active'], _NODE_ACTIVE, $rid.'active-label'),
         ]]);
+        $head = ($name !== '') ? (getConst((string)($def['title'] ?? '')) ?: $name) : _NODE_ROLE.' '.($idx + 1);
+        $facts = ($name !== '') ? [['text' => $name], ['text' => (string)($def['mode'] ?? '')]] : [];
+        if ($name !== '' && (int)$def['maxbytes'] > 0) $facts[] = ['text' => filterSize((int)$def['maxbytes'])];
+        $chips = ($name !== '') ? [] : [['tone' => 'neutral', 'label' => _ADD]];
+        foreach ([_NODE_ACTIVE => $def['active'], _NODE_CANLINK => $def['canlink'], _NODE_CANREP => $def['report']] as $text => $on) {
+            if ($name !== '' && $on) $chips[] = ['tone' => 'success', 'label' => $text];
+        }
         $blocks .= $tpl->getHtmlPart('toggle-form-block', [
             'block_id' => 'node-role-'.$idx,
-            'is_toggle_block' => true,
-            'is_hidden' => $name === '' && $idx > 0,
-            'toggle_target_id' => ($idx < $last) ? 'node-role-'.($idx + 1) : '',
-            'title' => _ADD,
-            'label_html' => $esc(($name !== '') ? $name : _NODE_ROLE.' '.($idx + 1)),
+            'is_fold' => true,
+            'title' => _DETAILS.': '.$head,
+            'label_html' => $esc($head),
+            'facts' => $facts,
+            'chips' => $chips,
             'content_html' => $cell,
         ]);
         $idx++;
@@ -949,7 +955,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
     $integ = ['search' => _SEARCH, 'rss' => _RSS, 'sitemap' => _SITEMAP, 'blocks' => _BLOCKS];
     foreach ($integ as $key => $label) $rows[] = $flag('integ_'.$key, $set['integrations'][$key], $label, 'f-integ-'.$key.'-label');
     $rows[] = ['label_for' => 'f-seo', 'label_html' => _NODE_SEO,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'seo', 'selectid' => 'f-seo', 'options_html' => $opts(['website' => 'website',
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'seo', 'selectid' => 'f-seo', 'options' => $opts(['website' => 'website',
         'article' => 'article',
         'news' => 'news'], $set['integrations']['seo'])])];
     $tabs[] = [_NODE_INTEG, $rows];
@@ -1021,9 +1027,9 @@ function type(): void {
         $hidden[] = ['name_attr' => 'version', 'value_attr' => $ver];
     }
     if ($prof !== null) $hidden[] = ['name_attr' => 'profile', 'value_attr' => $pname];
-    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true])
-        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES]);
-    $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options_html' => $opts, 'is_inline_gap' => true]) : '';
+    $opts = [['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true],
+        ['value_attr' => 'save', 'label_text' => _SAVECHANGES]];
+    $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options' => $opts, 'is_inline_gap' => true]) : '';
     $head = '';
     if ($old === null) {
         $popts = [['value_attr' => '', 'label_text' => _NONE, 'is_selected' => $pname === '']];

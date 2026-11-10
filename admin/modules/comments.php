@@ -264,30 +264,30 @@ function config(): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'sort',
                 'selectid' => 'f-sort',
-                'options_html' => $tpl->getHtmlFrag('select-option', [
+                'options' => [[
                     'value_attr' => '1',
                     'label_text' => _ASC,
                     'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1',
-                ]).$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0']),
+                ], ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0']],
             ]),
         ],
         ['label_for' => 'f-anonpost', 'label_html' => _ALLOWANONPOST, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'anonpost',
             'selectid' => 'f-anonpost',
             'is_config' => true,
-            'options_html' => $tpl->getHtmlFrag('select-option', [
+            'options' => [[
                 'value_attr' => '0',
                 'label_text' => _DEACTIVATE,
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '0',
-            ]).$tpl->getHtmlFrag('select-option', [
+            ], [
                 'value_attr' => '1',
                 'label_text' => _APOSTMOD,
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '1',
-            ]).$tpl->getHtmlFrag('select-option', [
+            ], [
                 'value_attr' => '2',
                 'label_text' => _APOSTNOMOD,
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '2',
-            ]),
+            ]],
         ])],
         [
             'label_for' => 'f-link',
@@ -298,15 +298,15 @@ function config(): void {
                 'describedby' => $hntid,
                 'name_attr' => 'link',
                 'selectid' => 'f-link',
-                'options_html' => $tpl->getHtmlFrag('select-option', [
+                'options' => [[
                     'value_attr' => '0',
                     'label_text' => _NO,
                     'is_selected' => (string)($conf['comments']['link'] ?? '0') === '0',
-                ]).$tpl->getHtmlFrag('select-option', [
+                ], [
                     'value_attr' => '1',
                     'label_text' => _ANONIMP,
                     'is_selected' => (string)($conf['comments']['link'] ?? '0') === '1',
-                ]).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2']),
+                ], ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2']],
             ]),
         ],
         [

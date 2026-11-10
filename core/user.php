@@ -972,10 +972,10 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
         if ($typ == 1) $mass['save'] = (string)_SAVE;
         if ($typ == 3) $mass['unsave'] = (string)_PRIVAT_UNSAVE;
         $mass['delete'] = (string)_DELETE;
-        $opts = '';
-        foreach ($mass as $key => $lab) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab]);
+        $opts = [];
+        foreach ($mass as $key => $lab) $opts[] = ['value_attr' => $key, 'label_text' => $lab];
         $bulk = $tpl->getHtmlFrag('select', [
-                'name_attr' => 'act', 'title' => _CHECKOP, 'aria_label' => _CHECKOP, 'options_html' => $opts, 'select_attr' => 'form="prbulk"',
+                'name_attr' => 'act', 'title' => _CHECKOP, 'aria_label' => _CHECKOP, 'options' => $opts, 'select_attr' => 'form="prbulk"',
             ])
             .$tpl->getHtmlFrag('button', [
                 'button_type' => 'submit', 'submit_label' => _OK, 'title' => _CHECKOP, 'input_attr' => 'form="prbulk"',

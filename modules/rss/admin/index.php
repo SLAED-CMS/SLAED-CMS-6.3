@@ -24,8 +24,8 @@ function rss(): void {
         $uses = (int)($out[3] ?? 0);
         $indx = $c + 1;
         $opts =
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
+            [['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0],
+            ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]];
         $block = $tpl->getHtmlPart('div', ['rows' => [
             [
                 'label_for' => 'f-field1-'.$c,
@@ -42,7 +42,7 @@ function rss(): void {
             [
                 'label_for' => 'f-field3-'.$c,
                 'label_html' => _USES,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'selectid' => 'f-field3-'.$c, 'options_html' => $opts]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'selectid' => 'f-field3-'.$c, 'options' => $opts]),
             ],
         ]]);
         $rows[] = $tpl->getHtmlPart('toggle-form-block', [

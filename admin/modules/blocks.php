@@ -86,11 +86,7 @@ function add(array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
                 'name_attr' => 'headline',
                 'selectid' => 'f-headline',
-                'options_html' => $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => '',
-                    'label_text' => _CUSTOM,
-                    'is_selected' => true,
-                ]).rss_select(),
+                'options' => [['value_attr' => '', 'label_text' => _CUSTOM, 'is_selected' => true], ...rss_select()],
             ]),
         ],
         [
@@ -99,18 +95,18 @@ function add(array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
                 'name_attr' => 'refresh',
                 'selectid' => 'f-refresh',
-                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$sent['refresh'] === '1800'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$sent['refresh'] === '3600'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '18000'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '36000'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '86400']),
+                'options' => [['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$sent['refresh'] === '1800'],
+                    ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$sent['refresh'] === '3600'],
+                    ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '18000'],
+                    ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '36000'],
+                    ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$sent['refresh'] === '86400']],
             ]),
         ],
     ];
-    $bfopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
+    $bfopts = [['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]];
     foreach ($spec['files'] as $file) {
         if ($file !== 'node.php' && $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) > 0) continue;
-        $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => $file]);
+        $bfopts[] = ['value_attr' => $file, 'label_text' => $file];
     }
     $rows[] = [
         'label_for' => 'f-bfile',
@@ -118,7 +114,7 @@ function add(array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
             'name_attr' => 'bfile',
             'selectid' => 'f-bfile',
-            'options_html' => $bfopts,
+            'options' => $bfopts,
         ]),
     ];
     $rows[] = [
@@ -143,10 +139,10 @@ function add(array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bpos',
             'selectid' => 'f-bpos',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => $sent['bpos'] === 'l'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => $sent['bpos'] === 'c'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => $sent['bpos'] === 'd'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => $sent['bpos'] === 'r']),
+            'options' => [['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => $sent['bpos'] === 'l'],
+                ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => $sent['bpos'] === 'c'],
+                ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => $sent['bpos'] === 'd'],
+                ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => $sent['bpos'] === 'r']],
         ]),
     ];
     $rows[] = [
@@ -162,7 +158,7 @@ function add(array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
                 'selectid' => 'f-lang',
-                'options_html' => getTplLanguageOptions((string)$sent['lang']),
+                'options' => getTplLanguageOptions((string)$sent['lang']),
             ]),
         ];
     }
@@ -195,8 +191,8 @@ function add(array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'action',
             'selectid' => 'f-action',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => $sent['action'] === 'd'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => $sent['action'] === 'r']),
+            'options' => [['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => $sent['action'] === 'd'],
+                ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => $sent['action'] === 'r']],
         ]),
     ];
     $rows[] = [
@@ -205,10 +201,10 @@ function add(array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
             'selectid' => 'f-view',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (string)$sent['view'] === '0'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (string)$sent['view'] === '1'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (string)$sent['view'] === '2'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (string)$sent['view'] === '3']),
+            'options' => [['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (string)$sent['view'] === '0'],
+                ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (string)$sent['view'] === '1'],
+                ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (string)$sent['view'] === '2'],
+                ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (string)$sent['view'] === '3']],
         ]),
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -273,15 +269,15 @@ function fileedit(): void {
     global $db, $afile, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL], 'tab' => 3]);
-    $opts = '';
+    $opts = [];
     $files = scandir(BASE_DIR.'/blocks');
     foreach ($files as $file) {
         if (preg_match('/^(.+)\.php$/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
-                $opts .= $tpl->getHtmlFrag('select-option', [
+                $opts[] = [
                     'value_attr' => $file,
                     'label_text' => $matches[0],
-                ]);
+                ];
             }
         }
     }
@@ -291,7 +287,7 @@ function fileedit(): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bf',
             'selectid' => 'f-bf',
-            'options_html' => $opts,
+            'options' => $opts,
         ]),
     ]];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -475,20 +471,20 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         ]),
     ]];
     if ($bfile != '') {
-        $bfopts = '';
+        $bfopts = [];
         $files = $spec['files'];
         if (!in_array($bfile, $files, true)) {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _BLOCK_NOFILE.': blocks/'.htmlspecialchars($bfile, ENT_QUOTES)]);
-            $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $bfile, 'label_text' => $bfile.' — '._BLOCK_NOFILE, 'is_selected' => true]);
+            $bfopts[] = ['value_attr' => $bfile, 'label_text' => $bfile.' — '._BLOCK_NOFILE, 'is_selected' => true];
         }
-        foreach ($files as $file) $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => $file, 'is_selected' => $bfile === $file]);
+        foreach ($files as $file) $bfopts[] = ['value_attr' => $file, 'label_text' => $file, 'is_selected' => $bfile === $file];
         $rows[] = [
             'label_for' => 'f-bfile',
             'label_html' => _FILENAME,
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'bfile',
                 'selectid' => 'f-bfile',
-                'options_html' => $bfopts,
+                'options' => $bfopts,
             ]),
         ];
         if ($bfile === 'node.php') {
@@ -504,8 +500,8 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
             $rows[] = ['label_html' => _TYPE, 'label_id' => $tids['label'], 'hint_html' => _BLOCK_ALLTYPES, 'hint_id' => $tids['hint'],
                 'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $tids['label'], 'describedby' => $tids['hint'], 'items' => $tbox])];
             $rows[] = ['label_for' => 'f-nmode', 'label_html' => _SHOW, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'nmode', 'selectid' => 'f-nmode',
-                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'last', 'label_text' => _NEW, 'is_selected' => $set['mode'] === 'last'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => 'home', 'label_text' => _HOME, 'is_selected' => $set['mode'] === 'home'])])];
+                'options' => [['value_attr' => 'last', 'label_text' => _NEW, 'is_selected' => $set['mode'] === 'last'],
+                    ['value_attr' => 'home', 'label_text' => _HOME, 'is_selected' => $set['mode'] === 'home']]])];
             $rows[] = ['label_for' => 'f-nlimit', 'label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nlimit',
                 'input_id' => 'f-nlimit', 'value_attr' => (string)$set['limit'], 'is_required' => true])];
         }
@@ -528,11 +524,11 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
                 'name_attr' => 'refresh',
                 'selectid' => 'f-refresh',
-                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$refresh === '1800'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$refresh === '3600'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$refresh === '18000'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$refresh === '36000'])
-                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$refresh === '86400']),
+                'options' => [['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$refresh === '1800'],
+                    ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$refresh === '3600'],
+                    ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$refresh === '18000'],
+                    ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$refresh === '36000'],
+                    ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$refresh === '86400']],
             ]),
         ];
     } else {
@@ -559,10 +555,10 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bpos',
             'selectid' => 'f-bpos',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => (string)$bpos === 'l'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => (string)$bpos === 'c'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => (string)$bpos === 'd'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r']),
+            'options' => [['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => (string)$bpos === 'l'],
+                ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => (string)$bpos === 'c'],
+                ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => (string)$bpos === 'd'],
+                ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r']],
         ]),
     ];
     $where = explode(',', (string)$which);
@@ -581,7 +577,7 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
                 'selectid' => 'f-lang',
-                'options_html' => getTplLanguageOptions((string)$lang),
+                'options' => getTplLanguageOptions((string)$lang),
             ]),
         ];
     }
@@ -624,8 +620,8 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'action',
             'selectid' => 'f-action',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => (string)$action === 'd'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => (string)$action === 'r']),
+            'options' => [['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => (string)$action === 'd'],
+                ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => (string)$action === 'r']],
         ]),
     ];
     $rows[] = [
@@ -634,10 +630,10 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
             'selectid' => 'f-view',
-            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (int)$view === 3]),
+            'options' => [['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0],
+                ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1],
+                ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2],
+                ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (int)$view === 3]],
         ]),
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [

@@ -92,19 +92,19 @@ function config(): void {
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sortopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '1']).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '0']);
+        [['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '1'],
+        ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '0']];
     $anonopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _APOSTMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '0']).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTNOMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '1']);
-    $recycleopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !($conf['forum']['recycle'] ?? 0)]);
+        [['value_attr' => '0', 'label_text' => _APOSTMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '0'],
+        ['value_attr' => '1', 'label_text' => _APOSTNOMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '1']];
+    $recycleopts = [['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !($conf['forum']['recycle'] ?? 0)]];
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern ASC');
     while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
-        $recycleopts .= $tpl->getHtmlFrag('select-option', [
+        $recycleopts[] = [
             'value_attr' => (string)$catid,
             'label_text' => $cattitle,
             'is_selected' => (int)($conf['forum']['recycle'] ?? 0) === (int)$catid,
-        ]);
+        ];
     }
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -159,17 +159,17 @@ function config(): void {
         [
             'label_for' => 'f-recycle',
             'label_html' => _FO_5,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'recycle', 'selectid' => 'f-recycle', 'is_config' => true, 'options_html' => $recycleopts]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'recycle', 'selectid' => 'f-recycle', 'is_config' => true, 'options' => $recycleopts]),
         ],
         [
             'label_for' => 'f-sort',
             'label_html' => _SORT,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'selectid' => 'f-sort', 'is_config' => true, 'options_html' => $sortopts]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'selectid' => 'f-sort', 'is_config' => true, 'options' => $sortopts]),
         ],
         [
             'label_for' => 'f-anonpost',
             'label_html' => _FO_6,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'anonpost', 'selectid' => 'f-anonpost', 'is_config' => true, 'options_html' => $anonopts]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'anonpost', 'selectid' => 'f-anonpost', 'is_config' => true, 'options' => $anonopts]),
         ],
         [
             'label_html' => _FO_7,

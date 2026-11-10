@@ -1,0 +1,12 @@
+{# The options of a select from data; an item with is_group is a group and carries its own options #}
+{% for item in options %}
+{% if item.is_group %}
+<optgroup label="{{ item.label_text }}">
+  {% for sub in item.options %}
+  {% include 'fragments/select-option.html' with sub %}
+  {% endfor %}
+</optgroup>
+{% else %}
+{% include 'fragments/select-option.html' with item %}
+{% endif %}
+{% endfor %}

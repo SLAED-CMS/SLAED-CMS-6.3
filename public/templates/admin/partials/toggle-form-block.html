@@ -1,11 +1,27 @@
 <div id="{{ block_id }}" class="sl-toggle-form-block{% if is_hidden %} sl-hidden{% endif %}"{% if is_toggle_block %} data-sl-toggle="{{ block_id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}"{% endif %}>
-  {% if toggle_target_id %}
+  {% if is_fold or toggle_target_id %}
   <div class="sl-toggle-form-block-title">
-    <span class="sl-plus sl-toggle-form-block-toggle" title="{{ title }}" aria-label="{{ title }}" data-sl-toggle-control="{{ toggle_target_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"></span>
+    <span class="sl-plus sl-toggle-form-block-toggle" title="{{ title }}" aria-label="{{ title }}" data-sl-toggle-control="{% if is_fold %}{{ block_id }}-rows{% else %}{{ toggle_target_id }}{% endif %}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"></span>
     <span class="sl-toggle-form-block-label">{{{ label_html }}}</span>
+    {% for fact in facts %}
+    <span class="sl-muted">{{ fact.text }}</span>
+    {% endfor %}
+    {% if chips %}
+    <span class="sl-toggle-form-block-chips">
+      {% for chip in chips %}
+      <span class="sl-chip sl-chip-{{ chip.tone }}">{{ chip.label }}</span>
+      {% endfor %}
+    </span>
+    {% endif %}
   </div>
   {% else %}
   <div class="sl-toggle-form-block-title">{{{ label_html }}}</div>
   {% endif %}
+  {% if is_fold %}
+  <div id="{{ block_id }}-rows" class="sl-collapsible" data-sl-toggle="{{ block_id }}-rows" data-sl-toggle-default="closed" hidden>
+    {{{ content_html }}}
+  </div>
+  {% else %}
   {{{ content_html }}}
+  {% endif %}
 </div>
