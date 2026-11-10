@@ -124,6 +124,176 @@ final class UploadContractTest extends TestCase
         $this->assertSame([$run['file']], $run['left'], 'The destination holds something other than the published file');
     }
 
+    # Answer whether the probe built the fixture of one case; a missing one is accepted only for a format this GD build cannot encode
+    private function checkFitMade(array $run, string $ext): bool
+    {
+        if (!empty($run['made'])) return true;
+        $this->assertFalse($this->getProbe('fit')['caps'][$ext] ?? true, 'This build can encode '.$ext.' but the probe produced no fixture of it');
+        return false;
+    }
+
+    # Assert one scaled publication: the result and the stored file agree on the fitted size, the container is the one that was sent, and nothing but the file is left
+    private function checkFitShape(array $run, array $size, string $type, string $note): void
+    {
+        $this->assertTrue($run['ok'], $note.' was refused with '.var_export($run['error'], true));
+        $this->assertSame($size, [$run['width'], $run['height']], $note.' reports a size other than the fitted one');
+        $this->assertSame($size, $run['real'], $note.' is stored at a size other than the one its result reports');
+        $this->assertSame($type, $run['type'], $note.' changed its container on the way');
+        $this->assertSame($type, $run['mime'], $note.' reports a type other than the one it was sent as');
+        $this->assertSame($run['bytes'], $run['size'], $note.' reports the weight of the transferred file instead of the stored one');
+        $this->assertFalse($run['same'], $note.' was stored as it was sent');
+        $this->assertCount(1, $run['left'], $note.' left something other than its one file');
+        $this->assertSame([], $run['parts'], $note.' left a partial behind');
+    }
+
+    # An image over the bounds of its rule is scaled into them in proportion and stays in its own container, locally and by link; one bound alone fits as well
+    #[Test]
+    public function anImageOverTheBoundsIsScaledInItsOwnFormat(): void
+    {
+        $data = $this->getProbe('fit');
+        $type = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp', 'avif' => 'image/avif'];
+        foreach ($type as $ext => $mime) {
+            $run = $data['scale'][$ext];
+            if (!$this->checkFitMade($run, $ext)) continue;
+            $this->checkFitShape($run, [100, 50], $mime, 'A '.$ext.' of 200x100 under bounds of 100x100');
+            $this->assertSame('RGBW', $run['word'], 'A scaled '.$ext.' without an orientation was turned or mirrored');
+        }
+        $this->checkFitShape($data['link'], [100, 50], 'image/png', 'A png of 200x100 fetched by link under bounds of 100x100');
+        $this->checkFitShape($data['wide'], [50, 25], 'image/png', 'A png of 200x100 under a width bound of 50 alone');
+        $this->checkFitShape($data['high'], [40, 20], 'image/png', 'A png of 200x100 under a height bound of 20 alone');
+    }
+
+    # The words are the corners Chromium and Firefox drew for the same fixtures: they turn a JPEG, an early eXIf of a PNG and irot with imir of an AVIF, never a WebP
+    #[Test]
+    public function aScaledImageIsTurnedTheWayABrowserShowsIt(): void
+    {
+        $data = $this->getProbe('fit')['turn'];
+        $want = ['jpg1' => 'RGBW', 'jpg2' => 'GRWB', 'jpg3' => 'WBGR', 'jpg4' => 'BWRG', 'jpg5' => 'RBGW', 'jpg6' => 'BRWG', 'jpg7' => 'WGBR', 'jpg8' => 'GWRB',
+            'jpgbig' => 'BRWG', 'pngbig' => 'GWRB', 'png6' => 'BRWG', 'pnglate' => 'RGBW', 'webp6' => 'RGBW', 'avifrot' => 'GWRB', 'avifboth' => 'RBGW', 'avifswap' => 'WGBR'];
+        $side = ['jpg5', 'jpg6', 'jpg7', 'jpg8', 'jpgbig', 'pngbig', 'png6', 'avifrot', 'avifboth', 'avifswap'];
+        $type = ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'avif' => 'image/avif'];
+        foreach ($want as $key => $word) {
+            $run = $data[$key];
+            $ext = (string)preg_replace('#^(jpg|png|webp|avif).*$#', '$1', $key);
+            if (!$this->checkFitMade($run, $ext)) continue;
+            $size = in_array($key, $side, true) ? [20, 40] : [40, 20];
+            $this->checkFitShape($run, $size, $type[$ext], 'The turned fixture '.$key.' of 64x32 under bounds of 40x40');
+            $this->assertSame($word, $run['word'], 'The fixture '.$key.' is not stored the way a browser shows it');
+            $this->assertFalse($run['exif'], 'The scaled fixture '.$key.' still carries the orientation its pixels already follow');
+        }
+    }
+
+    # The bounds are compared with the size an image is shown at: a turned one inside them is stored byte for byte under the size of its header, one over them is scaled upright
+    #[Test]
+    public function theBoundsAreComparedWithTheShownSize(): void
+    {
+        $data = $this->getProbe('fit');
+        $run = $data['inside'];
+        $this->assertTrue($run['ok'], 'A turned jpg shown at 32x64 was refused under bounds of 40x100 with '.var_export($run['error'], true));
+        $this->assertTrue($run['same'], 'An image inside the bounds was rewritten instead of stored byte for byte');
+        $this->assertTrue($run['exif'], 'An image inside the bounds lost its metadata');
+        $this->assertSame([64, 32], [$run['width'], $run['height']], 'An image inside the bounds no longer reports the size of its header');
+        $this->checkFitShape($data['shown'], [20, 40], 'image/jpeg', 'A turned jpg whose header fits 64x40 while its shown size of 32x64 does not');
+        $this->assertSame('BRWG', $data['shown']['word'], 'The image scaled for its shown size is not stored upright');
+    }
+
+    # A scaled JPEG keeps the ICC segments of its source and no other metadata; a profile of another colour model, an incomplete one and one past 64 KB stay behind
+    #[Test]
+    public function aScaledJpegKeepsTheProfileOfItsSource(): void
+    {
+        $data = $this->getProbe('fit')['icc'];
+        foreach (['whole' => 'in one segment', 'split' => 'in two segments', 'link' => 'fetched by link'] as $key => $note) {
+            $run = $data[$key];
+            if (!$this->checkFitMade($run, 'jpg')) continue;
+            $this->checkFitShape($run, [20, 40], 'image/jpeg', 'A turned jpg with an RGB profile '.$note);
+            $this->assertTrue($run['kept'], 'The scaled jpg with an RGB profile '.$note.' does not carry the segments of its source, whole and in order');
+            $this->assertSame('BRWG', $run['word'], 'The scaled jpg with a profile '.$note.' is not stored upright, or the profile broke its decode');
+            $this->assertFalse($run['exif'], 'The scaled jpg with a profile '.$note.' carries its Exif segment as well');
+        }
+        foreach (['cmyk' => 'of a colour model the written pixels are not in', 'part' => 'that declares a segment it does not hold', 'heavy' => 'past 64 KB'] as $key => $note) {
+            $run = $data[$key];
+            if (!$this->checkFitMade($run, 'jpg')) continue;
+            $this->checkFitShape($run, [20, 40], 'image/jpeg', 'A turned jpg with a profile '.$note);
+            $this->assertSame(0, $run['icc'], 'A profile '.$note.' was carried into the scaled jpg');
+        }
+        if (!$this->checkFitMade($data['inside'], 'jpg')) return;
+        $this->assertTrue($data['inside']['same'], 'A jpg with a profile inside the bounds was rewritten instead of stored byte for byte');
+    }
+
+    # An animation over the bounds is refused, because GD would keep one frame of it; inside the bounds it is stored as it was sent
+    #[Test]
+    public function aMovingImageOverTheBoundsIsRefused(): void
+    {
+        $data = $this->getProbe('fit');
+        foreach (['gif', 'png', 'webp', 'avif'] as $ext) {
+            $run = $data['moving'][$ext];
+            if (!$this->checkFitMade($run, $ext)) continue;
+            $this->checkFailShape($run, 'dimensions', 'A moving '.$ext.' over the bounds');
+            $this->assertSame([], $run['left'], 'A moving '.$ext.' over the bounds published a file');
+        }
+        $this->assertTrue($data['still']['ok'], 'A moving gif inside the bounds was refused with '.var_export($data['still']['error'], true));
+        $this->assertTrue($data['still']['same'], 'A moving gif inside the bounds was rewritten, which costs it every frame but the first');
+        $this->assertGreaterThan(65536, $data['span'], 'The noise fixture fits one read of the class, so it no longer proves the walk across a chunk');
+        $this->checkFitShape($data['noise'], [100, 100], 'image/gif', 'A still gif whose one frame is longer than one read');
+        $this->checkFailShape($data['noisy'], 'dimensions', 'A gif whose second frame begins past the first read');
+    }
+
+    # A clear pixel stays clear through the scale: the alpha of a PNG, and the one transparent index of a GIF beside a black the scale must not open
+    #[Test]
+    public function transparencySurvivesTheScale(): void
+    {
+        $data = $this->getProbe('fit');
+        $this->checkFitShape($data['clearpng'], [100, 50], 'image/png', 'A png with a clear corner');
+        $this->assertSame('TGBW', $data['clearpng']['word'], 'The clear corner of a scaled png was filled, or an opaque one was cleared');
+        $this->checkFitShape($data['cleargif'], [100, 50], 'image/gif', 'A gif with a transparent index');
+        $this->assertSame('TKRT', $data['cleargif']['word'], 'The transparent corners of a scaled gif were filled, or its black was cleared with them');
+    }
+
+    # A decode is budgeted from the header to the byte, the rows GD allocates plus four megabytes; the weight limit is answered before the scale, a broken body once it decodes
+    #[Test]
+    public function aDecodeStaysInsideTheMemoryBudget(): void
+    {
+        $data = $this->getProbe('fit');
+        $this->checkFitShape($data['room'], [100, 50], 'image/png', 'A fit of 200x100 into 100x50 with room for exactly its canvas, its rows and the spare');
+        $this->checkFailShape($data['tight'], 'dimensions', 'The same fit with one byte less of room');
+        $this->assertTrue($data['plain']['ok'], 'An image of 40x30 inside the bounds was refused with room for exactly its decode: '.var_export($data['plain']['error'], true));
+        $this->checkFailShape($data['short'], 'dimensions', 'The same image with one byte less of room');
+        $this->checkFailShape($data['weight'], 'size', 'An image over the bounds and one byte over the limit of weight');
+        $this->checkFailShape($data['broken'], 'image', 'A header of 200x100 without pixel data, over the bounds');
+        $this->checkFailShape($data['brokenlink'], 'image', 'The same header fetched by link');
+        foreach (['tight', 'short', 'weight', 'broken', 'brokenlink'] as $key) {
+            $this->assertSame([], $data[$key]['left'], 'The refused case '.$key.' published a file');
+        }
+    }
+
+    # The budget is held against the allocator of this PHP: a width of 1025 and a PNG with alpha take eight bytes a pixel, which a count of four or five would let through
+    #[Test]
+    public function theBudgetCoversWhatTheAllocatorReallyTakes(): void
+    {
+        $data = $this->getProbe('fit')['real'];
+        foreach (['jpg' => 'A jpg 1025 pixels wide', 'png' => 'A png of 1000x1000 with alpha'] as $key => $note) {
+            $run = $data[$key];
+            if (!$this->checkFitMade($run, $key)) continue;
+            $this->assertGreaterThan(0, $run['peak'], $note.' reported no peak, so the comparison proves nothing');
+            $need = $run['budget'] - 4194304;
+            $this->assertGreaterThanOrEqual($run['peak'] - 2097152, $need, $note.' is budgeted below what its decode takes, less the chunk the peak is rounded to');
+            $this->assertLessThanOrEqual($run['peak'] + 4194304, $need, $note.' is budgeted far above what its decode takes, so images that fit are refused');
+        }
+    }
+
+    # Source level: a build that decodes a format and cannot write it refuses the fit and records the capability, and a decoder is never opened before the budget is answered
+    #[Test]
+    public function theFitIsPlannedBeforeAnythingIsDecoded(): void
+    {
+        $code = $this->getFile('core/classes/upload.php');
+        $from = (int)strpos($code, 'private function getImageBounds(');
+        $body = substr($code, $from, (int)strpos($code, 'private function getFitSize(') - $from);
+        $this->assertStringContainsString("'encoder_missing'", $body, 'A format this build cannot write is no longer recorded as the server capability it is');
+        $this->assertStringContainsString('$this->addCapsNote($gone);', $body, 'A missing reader or writer of the scale is refused without a note for the operator');
+        $this->assertLessThan(strpos($body, 'getDecodeError('), strpos($body, 'getMemoryRoom()'), 'The decode is reached before the memory budget is answered');
+        $this->assertStringNotContainsString('getImageCanvas(', $body, 'The bounds check decodes an image it is about to scale, so the pixels are held twice');
+    }
+
     # The stored name grammar: the owner suffix, the sanitized base and a base that sanitizes to nothing
     # The owner is a token and not a number: a guest owns their uploads by a session token, and a digit string stays valid so a file stored before the widening keeps resolving
     #[Test]
@@ -286,7 +456,8 @@ final class UploadContractTest extends TestCase
     public function thePublicationNeitherReservesTheFinalNameNorLinks(): void
     {
         $code = $this->getFile('core/classes/upload.php');
-        $this->assertSame(2, substr_count($code, 'fopen('), 'The class opens a file somewhere other than the remote partial and the read of the content validator');
+        $this->assertSame(3, substr_count($code, 'fopen('), 'The class opens a file somewhere other than the remote partial and the two reads of the content validators');
+        $this->assertSame(2, substr_count($code, "fopen(\$path, 'rb')"), 'The format validator or the reader of the image marks opens its file for more than reading');
         $this->assertStringContainsString("fopen(\$part, 'ab')", $code, 'The writing fopen() of the class must be the remote partial, never a final name');
         $this->assertStringContainsString("fopen(\$path, 'rb')", $code, 'The reading fopen() of the class must be the read-only handle of the content validator');
         $this->assertStringContainsString('FileManager::getPathLock($canon)', $code, 'The publication no longer runs under the shared destination lock');

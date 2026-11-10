@@ -10667,6 +10667,15 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-surface);
 }
 
+/* The file door under the face stands on its axis, as the face does; the gap of the door spaces its button, so the margin of a button would push it off that axis */
+.sl-opt-tile > .sl-file-door {
+  justify-content: center;
+}
+
+.sl-opt-tile > .sl-file-door > .sl-but {
+  margin-right: 0;
+}
+
 .sl-opt-face img {
   width: var(--sl-profile-ava-width);
   height: var(--sl-profile-ava-height);

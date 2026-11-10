@@ -2,6 +2,42 @@
 
 ## 2026-11-10
 
+### The avatar ships the limits of today, and its settings stand in a block of their own
+
+- **The shipped avatar rule** — 256 by 256 pixels, 5 MB a file and a quota of 512 MB for the folder, where it was
+  100 by 100 pixels and 51200 bytes. A photo of a phone passes the weight and is scaled into the bounds. The formats
+  are as they were.
+- **`aquota` of `config/users.php` is the quota of the avatar folder** — `getUploadPlaceRule('users.avatar')` answers
+  it as `maxquota`, the class refuses an upload past it with `quota`, and the file window of the avatar prints the
+  bytes in use against it.
+- **The settings of the users section stand in two blocks** — "Avatar" holds the upload switch, the folder, the
+  formats, the weight and the quota in megabytes and the two bounds with their hint; the rest is "Registration,
+  sign-in and profile". The weight is still stored in bytes.
+- **The file window names its module by its title** — "Module: Profile" where it printed the key `account`; the limit
+  sentence of the window names the formats and the weight.
+- **Breaking:** the key `user_t` of `config/users.php` and its row "Rating interval" are gone: nothing read the value.
+  The constant `_ASIZE` is gone with the byte field it labelled.
+
+### An image over the bounds of its upload rule is scaled down, not refused
+
+- **`Upload` fits an image into `maxwidth` and `maxheight` when it is uploaded** — in proportion, in its own format,
+  turned the way a browser shows it, through the editor window, the catalogue, a remote link and the avatar alike.
+  JPEG and WebP are written at quality 85, AVIF at 60, PNG without loss. An image inside the bounds is stored byte for
+  byte, as before. `docs/ARCHITECTURE.md`, "Image Fit Boundary", holds the contract and what was measured.
+- **The orientation is read by the class itself** — the Exif segment of a JPEG, the `eXIf` chunk of a PNG, `irot` and
+  `imir` of an AVIF; the extension `exif` is not needed. The bounds are compared with the size the image is shown at.
+- **A scaled file carries no metadata but the colour profile of a JPEG** — EXIF with its GPS position leaves it; the
+  ICC segments of a JPEG are carried over, so a photo with Display P3 keeps its colours. `maxbytes` stays the limit of
+  the transfer and is compared before the scale; a scaled file heavier than it is stored.
+- **`dimensions` is still answered** for an animation over the bounds, for an image whose decode does not fit into
+  `memory_limit`, and for a type the build reads but cannot write (`encoder_missing` in `error_file.log`). The decode
+  of every image, inside the bounds too, is budgeted from the header, so a picture too large for the memory is refused
+  instead of ending the request.
+- **The pick of a form row checks no bounds** — `checkFieldFile()` refuses on extension and weight; the options of
+  the window carry no `maxwidth` and `maxheight`, and its limit sentence names the formats and the weight alone. The
+  settings of the file manager say under the two bounds what happens to a larger image, and so do the avatar text of
+  the profile and the help of the panel.
+
 ### The settings blocks fold into one series, and the upload rules ship the limits of today
 
 - **`partials/toggle-form-block.html` of `admin` folds under the flag `is_fold`** — the cap carries the name, the

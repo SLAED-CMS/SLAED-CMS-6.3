@@ -58,7 +58,7 @@ define('_ACTIVATIONERROR','Błąd podczas aktywacji nowego użytkownika');
 define('_ACTIVATIONSUB','Aktywacja konta');
 define('_ACTIVATIONYES','Nowy użytkownik został uaktywniony');
 define('_ACTMSG','Twoje konto zostało pomyślnie aktywowany, proszę do wejścia na stronę pod swoją nazwą, naciśnij <a href="%s">tutaj</a> i wpisz swój login i hasło.');
-define('_AVATARINFO','Wyświetla mały obrazek pod informacjami o tobie w wiadomościach. Może być wyświetlana tylko jeden obraz, o szerokości nie więcej niż %1$s pikseli, wysokość nie więcej niż %2$s pikseli i pojemności nie więcej niż %3$s.');
+define('_AVATARINFO','Awatar to mały obrazek wyświetlany obok twojej nazwy w wiadomościach i w profilu. Możesz przesłać jeden obraz o rozmiarze pliku nie większym niż %3$s. Obraz większy niż %1$s × %2$s pikseli zostanie zmniejszony do tych wymiarów z zachowaniem proporcji.');
 define('_AVATARSAVE','Wybierz awatar');
 define('_AVATARSELECT','Wybierz swój ulubiony awatara z galerii, wystarczy nacisnąć lewy przycisk myszy na wybranym zdjęciu.');
 define('_AVATARSETUP','Ustawienia awatar');

@@ -7,11 +7,12 @@
 return [
     'users' => [
         'adirectory' => 'avatars',
-        'aheight' => '100',
-        'amaxsize' => '51200',
+        'aheight' => '256',
+        'amaxsize' => '5242880',
+        'aquota' => '536870912',
         'atypefile' => 'jpg,jpeg,gif,png',
         'aupload' => '1',
-        'awidth' => '100',
+        'awidth' => '256',
         'check' => '0',
         'enter' => '1',
         'mail_b' => '',
@@ -23,6 +24,5 @@ return [
         'rule' => '0',
         'rules' => 'Правила проекта',
         'theme' => '1',
-        'user_t' => '2592000',
     ],
 ];

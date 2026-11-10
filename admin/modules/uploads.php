@@ -509,7 +509,7 @@ function config(): void {
             $boxes($i.'ext', $rul['extensions'], _FTYPE),
             $limit('size[]', _FSIZE._FIN, $mega($rul['maxbytes']), '', 'min="0.01" step="0.01"'),
             $limit('width[]', _AWIDTH._AIN, $rul['maxwidth'], '', 'min="1"'),
-            $limit('height[]', _AHEIGHT._AIN, $rul['maxheight'], '', 'min="1"'),
+            $limit('height[]', _AHEIGHT._AIN, $rul['maxheight'], _UPLOADS_FIT, 'min="1"'),
             $limit('up[]', _FILEUP, $rul['maxfiles'], '', 'min="1"'),
             $limit('allsize[]', _FSIZEALL._FIN, $mega($rul['maxquota']), '', 'min="0.01" step="0.01"'),
             $limit('gdwidth[]', _GDWIDTH._AIN, $rul['thumbwidth'], '', 'min="1"'),

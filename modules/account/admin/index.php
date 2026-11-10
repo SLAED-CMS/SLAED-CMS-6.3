@@ -816,7 +816,18 @@ function config(): void {
             'is_selected' => $n == $conf['users']['minpass'],
         ];
     }
-    $rows = [
+    $mega = static fn(int $size): string => rtrim(rtrim(number_format($size / 1048576, 2, '.', ''), '0'), '.');
+    $face = [
+        [
+            'label_html' => _AUPLOAD,
+            'label_id' => $labid = getFieldIds('', 'aupload')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'aupload',
+                'value' => (string)$conf['users']['aupload'],
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
         [
             'label_for' => 'f-adirectory',
             'label_html' => _ACCOUNT_ADIR,
@@ -841,12 +852,13 @@ function config(): void {
         ],
         [
             'label_for' => 'f-amaxsize',
-            'label_html' => _ASIZE,
+            'label_html' => _FSIZE._FIN,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
                 'name_attr' => 'amaxsize',
                 'input_id' => 'f-amaxsize',
-                'value_attr' => (string)$conf['users']['amaxsize'],
+                'value_attr' => $mega((int)$conf['users']['amaxsize']),
+                'input_attr' => 'min="0.01" step="0.01"',
                 'is_config' => true,
             ]),
         ],
@@ -864,7 +876,10 @@ function config(): void {
         [
             'label_for' => 'f-aheight',
             'label_html' => _AHEIGHT._AIN,
+            'hint_html' => _UPLOADS_FIT,
+            'hint_id' => 'f-aheight-hint',
             'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => 'f-aheight-hint',
                 'itype' => 'number',
                 'name_attr' => 'aheight',
                 'input_id' => 'f-aheight',
@@ -873,16 +888,19 @@ function config(): void {
             ]),
         ],
         [
-            'label_for' => 'f-user',
-            'label_html' => _VOTING_TIME,
+            'label_for' => 'f-aquota',
+            'label_html' => _FSIZEALL._FIN,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
-                'name_attr' => 'user',
-                'input_id' => 'f-user',
-                'value_attr' => (string)intval($conf['users']['user_t'] / 86400),
+                'name_attr' => 'aquota',
+                'input_id' => 'f-aquota',
+                'value_attr' => $mega((int)($conf['users']['aquota'] ?? 536870912)),
+                'input_attr' => 'min="0.01" step="0.01"',
                 'is_config' => true,
             ]),
         ],
+    ];
+    $rows = [
         [
             'label_for' => 'f-minpass',
             'label_html' => _PASSWDLEN,
@@ -898,16 +916,6 @@ function config(): void {
                     [['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0'],
                     ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']],
                 'is_config' => true,
-            ]),
-        ],
-        [
-            'label_html' => _AUPLOAD,
-            'label_id' => $labid = getFieldIds('', 'aupload')['label'],
-            'field_html' => getTplRadioGroup([
-                'labelledby' => $labid,
-                'name' => 'aupload',
-                'value' => (string)$conf['users']['aupload'],
-                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
             ]),
         ],
         [
@@ -1000,6 +1008,8 @@ function config(): void {
             ]),
         ],
     ];
+    $boxes = $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'acb-avatar', 'label_html' => _ACCOUNT_AVATAR, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $face])]);
+    $boxes .= $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'acb-entry', 'label_html' => _ACCOUNT_ENTRY, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -1007,7 +1017,7 @@ function config(): void {
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('account')],
         ],
-        'rows' => $rows,
+        'content_html' => $boxes,
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;
@@ -1020,13 +1030,17 @@ function save(): void {
     $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
+        $bytes = static function (mixed $val, int $back): int {
+            $num = (int)round(min((float)str_replace(',', '.', is_string($val) ? $val : '0'), 1e9) * 1048576);
+            return ($num > 0) ? $num : $back;
+        };
         $cont = [
             'adirectory' => getVar('post', 'adirectory', 'title'),
             'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title', 'gif,jpg,jpeg,png'), $protect)),
-            'amaxsize' => getVar('post', 'amaxsize', 'num', 51200),
-            'awidth' => getVar('post', 'awidth', 'num', 100),
-            'aheight' => getVar('post', 'aheight', 'num', 100),
-            'user_t' => getVar('post', 'user', 'num', 30) * 86400,
+            'amaxsize' => $bytes(getVar('post', 'amaxsize', 'raw', ''), 5242880),
+            'aquota' => $bytes(getVar('post', 'aquota', 'raw', ''), 536870912),
+            'awidth' => getVar('post', 'awidth', 'num', 256),
+            'aheight' => getVar('post', 'aheight', 'num', 256),
             'minpass' => getVar('post', 'minpass', 'num'),
             'enter' => getVar('post', 'enter', 'num'),
             'aupload' => getVar('post', 'aupload', 'num'),

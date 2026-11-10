@@ -3049,7 +3049,7 @@ function getRouteSecrets(string $work): array {
     $log = getRouteReply('boss', 'GET', 'admin.php?name=changelog&op=config');
     $sec = getRouteReply('boss', 'GET', 'admin.php?name=security&op=oauthkeys');
     $out = ['boss' => ['account' => [$acc['code'], $seen($acc)], 'changelog' => [$log['code'], $seen($log)], 'security' => $seen($sec)]];
-    $pairs = getRoutePairs(getRouteInputs($acc['body'], 'save'), ['user' => '31']);
+    $pairs = getRoutePairs(getRouteInputs($acc['body'], 'save'), ['awidth' => '321']);
     $save = getRouteReply('boss', 'POST', 'admin.php', $pairs + ['rules' => '', 'name' => 'account', 'op' => 'save', 'gsecret' => 'probe-stolen', 'oactive' => '1']);
     $deny = getRouteReply('boss', 'POST', 'admin.php', ['name' => 'security', 'op' => 'oauthsave', 'token' => (string)($pairs['token'] ?? ''), 'gsecret' => 'probe-stolen']);
     $mark = 'name=changelog&amp;op=configsave';
@@ -3061,7 +3061,7 @@ function getRouteSecrets(string $work): array {
         ['rows' => '12'] + array_diff_key($form, array_flip(['source', 'ghowner', 'ghrepo', 'ghtoken'])));
     $kept = $file('changelog');
     $out['write'] = ['codes' => [$save['code'], $chlog['code'], $own['code']], 'denied' => str_contains($deny['body'], 'probe-gkey-old'),
-        'users' => str_contains($file('users'), "'user_t' => '2678400'"),
+        'users' => str_contains($file('users'), "'awidth' => '321'"),
         'oauth' => [str_contains($file('oauth'), 'probe-gkey-old'), str_contains($file('oauth'), 'probe-stolen')],
         'token' => [str_contains($text, 'probe-ghtoken-old'), str_contains($text, 'probe-stolen'), str_contains($text, "'rows' => '11'")],
         'place' => [str_contains($text, "'source' => 'local'"), str_contains($text, 'probe-foreign')],

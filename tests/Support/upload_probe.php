@@ -32,6 +32,12 @@ class ProbeUpload extends Upload {
     public array $reply = [];
     public array $hits = [];
     public string $peer = '';
+    public int $room = 0;
+
+    # Shrink the room a decode may take to a number of bytes, which is the only way a fixture of a few kilobytes meets the budget
+    protected function getMemoryRoom(): int {
+        return $this->room > 0 ? $this->room : parent::getMemoryRoom();
+    }
 
     # Drive the one-hour partial sweep from a controlled clock
     protected function getTime(): int {
@@ -603,7 +609,7 @@ function getProbeCodes(): array {
     $out['mime'] = addProbeRun($upl, addProbeRaw('claim.png', (string)file_get_contents(addProbeFile('gz')['tmp_name'])), getProbeRule());
     $out['image'] = addProbeRun($upl, addProbeBroken(), getProbeRule());
     $out['brokenhdr'] = getProbeBrokenHeader();
-    $out['dimensions'] = addProbeRun($upl, addProbeFile('png', '', 200, 100), getProbeRule(['maxwidth' => 100, 'maxheight' => 100]));
+    $out['dimensions'] = addProbeRun($upl, addProbeRaw('moving.gif', getProbeMoving('gif', 200, 100)), getProbeRule(['maxwidth' => 100, 'maxheight' => 100]));
     $out['quota'] = getProbeQuotaRun();
     $out['destination'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(), 'blocked');
     $out['exists'] = getProbeExistsRun();
@@ -1128,7 +1134,7 @@ function getProbeRemoteType(): array {
     $site = 'https://files.example.net/photo.png';
     $good = [['code' => 200, 'body' => $png]];
     $arch = [['code' => 200, 'body' => getProbeSource('gz')]];
-    $wide = [['code' => 200, 'body' => getProbeSource('png', 200, 100)]];
+    $wide = [['code' => 200, 'body' => getProbeMoving('gif', 200, 100)]];
     $list = [
         'query' => [['reply' => $good], $site.'?v=2', getProbeRule()],
         'owner' => [['reply' => $good, 'uid' => 9], $site, getProbeRule()],
@@ -1138,7 +1144,7 @@ function getProbeRemoteType(): array {
         'notlisted' => [['reply' => $good], $site, getProbeRule(['extensions' => 'gif'])],
         'mime' => [['reply' => $arch], $site, getProbeRule()],
         'broken' => [['reply' => [['code' => 200, 'body' => substr($png, 0, 33)]]], $site, getProbeRule()],
-        'dimensions' => [['reply' => $wide], $site, getProbeRule(['maxwidth' => 100, 'maxheight' => 100])],
+        'dimensions' => [['reply' => $wide], 'https://files.example.net/moving.gif', getProbeRule(['maxwidth' => 100, 'maxheight' => 100])],
         'archive' => [['reply' => $arch], 'https://files.example.net/backup.gz', getProbeRule()],
         'destination' => [['reply' => $good, 'dir' => 'blocked'], $site, getProbeRule()],
     ];
@@ -1213,7 +1219,7 @@ function getProbePlace(): array {
             'maxwidth' => (int)$conf['users']['awidth'],
             'maxheight' => (int)$conf['users']['aheight'],
             'maxfiles' => 1,
-            'maxquota' => 0,
+            'maxquota' => (int)$conf['users']['aquota'],
         ],
     ];
     $out = ['rules' => [], 'hand' => [], 'bad' => []];
@@ -1283,6 +1289,291 @@ function getProbeService(): array {
     ];
 }
 
+# The bytes of one image whose corners differ - red or clear, green, blue, white by rows - so every turn of it spells its own word; empty for a format this GD cannot encode
+function getProbeQuad(string $ext, int $wid = 64, int $hei = 32, bool $clear = false): string {
+    $img = imagecreatetruecolor($wid, $hei);
+    $midx = intdiv($wid, 2);
+    $midy = intdiv($hei, 2);
+    imagealphablending($img, false);
+    imagesavealpha($img, true);
+    imagefilledrectangle($img, 0, 0, $midx - 1, $midy - 1, $clear ? imagecolorallocatealpha($img, 0, 0, 0, 127) : imagecolorallocate($img, 230, 0, 0));
+    imagefilledrectangle($img, $midx, 0, $wid - 1, $midy - 1, imagecolorallocate($img, 0, 200, 0));
+    imagefilledrectangle($img, 0, $midy, $midx - 1, $hei - 1, imagecolorallocate($img, 0, 0, 230));
+    imagefilledrectangle($img, $midx, $midy, $wid - 1, $hei - 1, imagecolorallocate($img, 255, 255, 255));
+    $path = $GLOBALS['ptmp'].'/quad-'.bin2hex(random_bytes(4)).'.'.$ext;
+    $done = match ($ext) {
+        'gif' => function_exists('imagegif') && imagegif($img, $path),
+        'jpg' => function_exists('imagejpeg') && imagejpeg($img, $path, 95),
+        'png' => function_exists('imagepng') && imagepng($img, $path),
+        'webp' => function_exists('imagewebp') && imagewebp($img, $path, 95),
+        'avif' => function_exists('imageavif') && imageavif($img, $path, 90),
+        default => false,
+    };
+    $body = $done ? (string)file_get_contents($path) : '';
+    if (is_file($path)) unlink($path);
+    return $body;
+}
+
+# A GIF with a transparent index beside an opaque black, the colour a clear pixel of a truecolor canvas carries below its alpha: a scale keyed on colour alone would open it
+function getProbeClearGif(int $wid, int $hei): string {
+    $img = imagecreate($wid, $hei);
+    $back = imagecolorallocate($img, 255, 255, 255);
+    imagecolortransparent($img, $back);
+    imagefilledrectangle($img, intdiv($wid, 2), 0, $wid - 1, intdiv($hei, 2) - 1, imagecolorallocate($img, 0, 0, 0));
+    imagefilledrectangle($img, 0, intdiv($hei, 2), intdiv($wid, 2) - 1, $hei - 1, imagecolorallocate($img, 230, 0, 0));
+    $path = $GLOBALS['ptmp'].'/clear-'.bin2hex(random_bytes(4)).'.gif';
+    imagegif($img, $path);
+    $body = (string)file_get_contents($path);
+    unlink($path);
+    return $body;
+}
+
+# The word the four corners of one stored image spell by rows from the top left: R, G, B, W, K for black and T for a clear one
+function getProbeWord(string $path): string {
+    $info = getimagesize($path);
+    $call = [IMAGETYPE_GIF => 'imagecreatefromgif', IMAGETYPE_JPEG => 'imagecreatefromjpeg', IMAGETYPE_PNG => 'imagecreatefrompng',
+        IMAGETYPE_WEBP => 'imagecreatefromwebp', IMAGETYPE_AVIF => 'imagecreatefromavif'][(int)($info[2] ?? 0)] ?? '';
+    $img = ($call !== '' && function_exists($call)) ? $call($path) : false;
+    if ($img === false) return '';
+    $out = '';
+    foreach ([[3, 3], [$info[0] - 4, 3], [3, $info[1] - 4], [$info[0] - 4, $info[1] - 4]] as $spot) {
+        $col = imagecolorsforindex($img, imagecolorat($img, $spot[0], $spot[1]));
+        $out .= match (true) {
+            $col['alpha'] > 100 => 'T',
+            $col['red'] > 200 && $col['green'] > 200 => 'W',
+            $col['red'] > 150 => 'R',
+            $col['green'] > 150 => 'G',
+            $col['blue'] > 150 => 'B',
+            default => 'K',
+        };
+    }
+    return $out;
+}
+
+# The quad carrying one EXIF orientation where its format keeps it: the Exif segment of a JPEG, the eXIf chunk of a PNG before or behind the pixel data, the EXIF chunk of a WebP
+function getProbeTurned(string $ext, int $turn, bool $late = false, bool $big = false): string {
+    $body = getProbeQuad($ext);
+    $tiff = "II*\x00".pack('V', 8).pack('v', 1).pack('vvVvv', 0x0112, 3, 1, $turn, 0).pack('V', 0);
+    if ($big) $tiff = "MM\x00*".pack('N', 8).pack('n', 1).pack('nnNnn', 0x0112, 3, 1, $turn, 0).pack('N', 0);
+    if ($body === '') return '';
+    if ($ext === 'jpg') return substr($body, 0, 2)."\xff\xe1".pack('n', strlen($tiff) + 8)."Exif\x00\x00".$tiff.substr($body, 2);
+    $spot = $late ? strlen($body) - 12 : 33;
+    if ($ext === 'png') return substr($body, 0, $spot).pack('N', strlen($tiff)).'eXIf'.$tiff.pack('N', crc32('eXIf'.$tiff)).substr($body, $spot);
+    $all = 'WEBP'.'VP8X'.pack('V', 10)."\x08\x00\x00\x00".substr(pack('V', 63), 0, 3).substr(pack('V', 31), 0, 3).substr($body, 12).'EXIF'.pack('V', strlen($tiff)).$tiff;
+    return 'RIFF'.pack('V', strlen($all)).$all;
+}
+
+# The turned JPEG quad with an ICC profile of one colour model ahead of its Exif segment, cut into segments of the lengths given; a count of its own declares more than it holds
+function getProbeTagged(string $model, array $cuts, int $count = 0): string {
+    $body = getProbeTurned('jpg', 6);
+    $prof = str_pad(pack('N', array_sum($cuts)).str_repeat("\x00", 12).$model, array_sum($cuts), 'Z');
+    $segs = '';
+    $from = 0;
+    foreach (array_values($cuts) as $key => $len) {
+        $segs .= "\xff\xe2".pack('n', 16 + $len)."ICC_PROFILE\x00".chr($key + 1).chr($count ?: count($cuts)).substr($prof, $from, $len);
+        $from += $len;
+    }
+    return ($body === '') ? '' : substr($body, 0, 2).$segs.substr($body, 2);
+}
+
+# The ICC segments one JPEG body holds before its scan, whole and in the order of the file; empty for any other body
+function getProbeProfile(string $data): string {
+    $out = '';
+    $from = 2;
+    while (str_starts_with($data, "\xff\xd8") && $from + 4 <= strlen($data) && $data[$from] === "\xff" && $data[$from + 1] !== "\xda") {
+        $len = (int)unpack('n', substr($data, $from + 2, 2))[1];
+        if ($data[$from + 1] === "\xe2" && substr($data, $from + 4, 12) === "ICC_PROFILE\x00") $out .= substr($data, $from, 2 + $len);
+        $from += 2 + $len;
+    }
+    return $out;
+}
+
+# The boxes of one range of an ISO base media file by their type, each with its offset and its size; the fixture below is cut along them
+function getProbeBoxes(string $data, int $from, int $stop): array {
+    $out = [];
+    while ($from + 8 <= $stop) {
+        $len = (int)unpack('N', substr($data, $from, 4))[1];
+        if ($len < 8) break;
+        $out[substr($data, $from + 4, 4)] = ['from' => $from, 'size' => $len];
+        $from += $len;
+    }
+    return $out;
+}
+
+# The AVIF quad with turn and mirror boxes tied to its primary item; the boxes around them grow and the pixel data moves back, so sizes and item offsets are rewritten
+function getProbeAvifTurn(array $props): string {
+    $data = getProbeQuad('avif');
+    if ($data === '') return '';
+    $meta = getProbeBoxes($data, 0, strlen($data))['meta'];
+    $part = getProbeBoxes($data, $meta['from'] + 12, $meta['from'] + $meta['size']);
+    $iprp = $part['iprp'];
+    $iloc = $part['iloc'];
+    $prop = getProbeBoxes($data, $iprp['from'] + 8, $iprp['from'] + $iprp['size']);
+    $ipco = $prop['ipco'];
+    $ipma = $prop['ipma'];
+    $have = 0;
+    for ($pos = $ipco['from'] + 8; $pos < $ipco['from'] + $ipco['size']; $pos += (int)unpack('N', substr($data, $pos, 4))[1]) $have++;
+    $add = '';
+    $ref = '';
+    foreach (array_values($props) as $key => $one) {
+        $add .= pack('N', 9).$one[0].chr($one[1]);
+        $ref .= chr(0x80 | ($have + $key + 1));
+    }
+    $grow = strlen($add) + strlen($ref);
+    $wide = ord($data[$iloc['from'] + 12]) >> 4;
+    $num = (int)unpack('n', substr($data, $iloc['from'] + 14, 2))[1];
+    if (ord($data[$iloc['from'] + 8]) !== 0 || $wide !== 4 || ord($data[$iloc['from'] + 13]) !== 0 || ord($data[$ipma['from'] + 8]) !== 0) return '';
+    $pos = $iloc['from'] + 16;
+    for ($i = 0; $i < $num; $i++) {
+        $ext = (int)unpack('n', substr($data, $pos + 4, 2))[1];
+        $pos += 6;
+        for ($j = 0; $j < $ext; $j++) {
+            $data = substr_replace($data, pack('N', (int)unpack('N', substr($data, $pos, 4))[1] + $grow), $pos, 4);
+            $pos += 4 + (ord($data[$iloc['from'] + 12]) & 0x0f);
+        }
+    }
+    $prim = (int)unpack('n', substr($data, $part['pitm']['from'] + 12, 2))[1];
+    $pos = $ipma['from'] + 16;
+    while ((int)unpack('n', substr($data, $pos, 2))[1] !== $prim) $pos += 3 + ord($data[$pos + 2]);
+    $old = ord($data[$pos + 2]);
+    $data[$pos + 2] = chr($old + count($props));
+    $data = substr_replace($data, $ref, $pos + 3 + $old, 0);
+    $data = substr_replace($data, $add, $ipco['from'] + $ipco['size'], 0);
+    foreach ([[$ipma, strlen($ref)], [$ipco, strlen($add)], [$iprp, $grow], [$meta, $grow]] as $one) {
+        $at = $one[0]['from'] + (($one[0]['from'] > $ipco['from']) ? strlen($add) : 0);
+        $data = substr_replace($data, pack('N', $one[0]['size'] + $one[1]), $at, 4);
+    }
+    return $data;
+}
+
+# One image marked as moving: a real second frame in a GIF, and the mark alone elsewhere - acTL of a PNG, the flag of a WebP, the brand avis - which is all the class reads
+function getProbeMoving(string $ext, int $wid = 40, int $hei = 30): string {
+    $body = getProbeSource($ext, $wid, $hei);
+    if ($body === '') return '';
+    if ($ext === 'gif') {
+        $from = 13 + ((ord($body[10]) & 0x80) ? 3 << ((ord($body[10]) & 0x07) + 1) : 0);
+        return substr($body, 0, $from).str_repeat(substr($body, $from, -1), 2).';';
+    }
+    if ($ext === 'png') return substr($body, 0, 33).pack('N', 8).'acTL'.pack('NN', 2, 0).pack('N', crc32('acTL'.pack('NN', 2, 0))).substr($body, 33);
+    if ($ext === 'avif') return substr_replace($body, 'avis', (int)strpos($body, 'MA1'), 4);
+    $all = 'WEBP'.'VP8X'.pack('V', 10)."\x02\x00\x00\x00".substr(pack('V', $wid - 1), 0, 3).substr(pack('V', $hei - 1), 0, 3).substr($body, 12);
+    return 'RIFF'.pack('V', strlen($all)).$all;
+}
+
+# A GIF of noise whose one frame is longer than one read of the class, still or with that frame twice; the walk of its blocks has to cross a chunk and end where the file does
+function getProbeNoiseGif(bool $moves): string {
+    $img = imagecreate(400, 400);
+    $ink = [];
+    for ($i = 0; $i < 16; $i++) $ink[] = imagecolorallocate($img, $i * 16, 255 - $i * 16, ($i * 53) % 256);
+    mt_srand(8);
+    for ($i = 0; $i < 160000; $i++) imagesetpixel($img, $i % 400, intdiv($i, 400), $ink[mt_rand(0, 15)]);
+    $path = $GLOBALS['ptmp'].'/noise-'.bin2hex(random_bytes(4)).'.gif';
+    imagegif($img, $path);
+    $body = (string)file_get_contents($path);
+    unlink($path);
+    $from = 13 + ((ord($body[10]) & 0x80) ? 3 << ((ord($body[10]) & 0x07) + 1) : 0);
+    return $moves ? substr($body, 0, $from).str_repeat(substr($body, $from, -1), 2).';' : $body;
+}
+
+# Publish one body under bounds and report the result beside what was really stored: its size, its type, the word of its corners and whether a byte of it changed
+function getProbeFitRun(string $name, string $body, array $rule, int $room = 0, bool $link = false): array {
+    addProbeRoot();
+    if ($body === '') return ['made' => false];
+    $upl = getProbeUpload();
+    $upl->room = $room;
+    if ($link) {
+        $upl->dns = getProbeZone();
+        $upl->reply = [['code' => 200, 'body' => $body]];
+    }
+    $res = $link ? $upl->addRemoteFile('https://files.example.net/'.$name, $rule, 'files', 'files') : $upl->addUploadedFile(addProbeRaw($name, $body), $rule, 'files', 'files');
+    $path = $GLOBALS['proot'].'/'.(string)$res['path'];
+    $info = !empty($res['ok']) ? getimagesize($path) : false;
+    $prof = is_array($info) ? getProbeProfile((string)file_get_contents($path)) : '';
+    return $res + [
+        'icc' => strlen($prof),
+        'kept' => $prof !== '' && $prof === getProbeProfile($body),
+        'made' => true,
+        'left' => getProbeList('files'),
+        'parts' => getProbeParts('files'),
+        'real' => is_array($info) ? [$info[0], $info[1]] : [],
+        'type' => is_array($info) ? (string)$info['mime'] : '',
+        'word' => is_array($info) ? getProbeWord($path) : '',
+        'bytes' => is_array($info) ? (int)filesize($path) : 0,
+        'same' => is_array($info) && (string)file_get_contents($path) === $body,
+        'exif' => is_array($info) && preg_match('#Exif|eXIf#', (string)file_get_contents($path)) === 1,
+    ];
+}
+
+# What the class budgets for one decode, found by halving the room it accepts, beside the peak the allocator of this PHP reports for that decode in a process of its own
+function getProbeBudget(string $name, string $body): array {
+    if ($body === '') return ['made' => false];
+    $path = $GLOBALS['pwork'].'/peak-'.$name;
+    file_put_contents($path, $body);
+    $call = str_ends_with($name, '.png') ? 'imagecreatefrompng' : 'imagecreatefromjpeg';
+    $code = '$base = memory_get_usage(true); $img = '.$call.'($argv[1]); echo memory_get_peak_usage(true) - $base;';
+    $peak = (int)shell_exec(escapeshellarg(PHP_BINARY).' -d memory_limit=512M -r '.escapeshellarg($code).' '.escapeshellarg($path));
+    unlink($path);
+    $low = 0;
+    $high = 1 << 30;
+    while ($high - $low > 1) {
+        $room = intdiv($low + $high, 2);
+        if (!empty(getProbeFitRun($name, $body, getProbeRule(), $room)['ok'])) $high = $room;
+        else $low = $room;
+    }
+    return ['made' => true, 'peak' => $peak, 'budget' => $high];
+}
+
+# The fit of an image over the bounds of its rule: every format scaled in its own container, every orientation a browser applies turned into the pixels, and what is refused
+function getProbeFit(): array {
+    addProbeRoot();
+    $rule = getProbeRule(['maxwidth' => 100, 'maxheight' => 100]);
+    $tall = getProbeRule(['maxwidth' => 40, 'maxheight' => 40]);
+    $out = ['scale' => [], 'turn' => [], 'moving' => [], 'caps' => getProbeCaps()];
+    foreach (['png', 'jpg', 'gif', 'webp', 'avif'] as $ext) {
+        $out['scale'][$ext] = getProbeFitRun('quad.'.$ext, getProbeQuad($ext, 200, 100), $rule);
+        $out['moving'][$ext] = ($ext === 'jpg') ? ['made' => false] : getProbeFitRun('moving.'.$ext, getProbeMoving($ext, 200, 100), $rule);
+    }
+    for ($i = 1; $i < 9; $i++) $out['turn']['jpg'.$i] = getProbeFitRun('turn.jpg', getProbeTurned('jpg', $i), $tall);
+    $out['turn']['jpgbig'] = getProbeFitRun('turn.jpg', getProbeTurned('jpg', 6, false, true), $tall);
+    $out['turn']['pngbig'] = getProbeFitRun('turn.png', getProbeTurned('png', 8, false, true), $tall);
+    $out['turn']['png6'] = getProbeFitRun('turn.png', getProbeTurned('png', 6), $tall);
+    $out['turn']['pnglate'] = getProbeFitRun('turn.png', getProbeTurned('png', 6, true), $tall);
+    $out['turn']['webp6'] = getProbeFitRun('turn.webp', getProbeTurned('webp', 6), $tall);
+    $out['turn']['avifrot'] = getProbeFitRun('turn.avif', getProbeAvifTurn([['irot', 1]]), $tall);
+    $out['turn']['avifboth'] = getProbeFitRun('turn.avif', getProbeAvifTurn([['irot', 1], ['imir', 0]]), $tall);
+    $out['turn']['avifswap'] = getProbeFitRun('turn.avif', getProbeAvifTurn([['imir', 1], ['irot', 1]]), $tall);
+    $out['icc'] = [
+        'whole' => getProbeFitRun('turn.jpg', getProbeTagged('RGB ', [200]), $tall),
+        'split' => getProbeFitRun('turn.jpg', getProbeTagged('RGB ', [150, 50]), $tall),
+        'link' => getProbeFitRun('turn.jpg', getProbeTagged('RGB ', [200]), $tall, 0, true),
+        'cmyk' => getProbeFitRun('turn.jpg', getProbeTagged('CMYK', [200]), $tall),
+        'part' => getProbeFitRun('turn.jpg', getProbeTagged('RGB ', [200], 2), $tall),
+        'heavy' => getProbeFitRun('turn.jpg', getProbeTagged('RGB ', [40000, 40000]), $tall),
+        'inside' => getProbeFitRun('turn.jpg', getProbeTagged('RGB ', [200]), getProbeRule(['maxwidth' => 40, 'maxheight' => 100])),
+    ];
+    $out['link'] = getProbeFitRun('quad.png', getProbeQuad('png', 200, 100), $rule, 0, true);
+    $out['wide'] = getProbeFitRun('quad.png', getProbeQuad('png', 200, 100), getProbeRule(['maxwidth' => 50]));
+    $out['high'] = getProbeFitRun('quad.png', getProbeQuad('png', 200, 100), getProbeRule(['maxheight' => 20]));
+    $out['inside'] = getProbeFitRun('turn.jpg', getProbeTurned('jpg', 6), getProbeRule(['maxwidth' => 40, 'maxheight' => 100]));
+    $out['shown'] = getProbeFitRun('turn.jpg', getProbeTurned('jpg', 6), getProbeRule(['maxwidth' => 64, 'maxheight' => 40]));
+    $out['still'] = getProbeFitRun('moving.gif', getProbeMoving('gif'), $rule);
+    $out['span'] = strlen(getProbeNoiseGif(false));
+    $out['noise'] = getProbeFitRun('noise.gif', getProbeNoiseGif(false), $rule);
+    $out['noisy'] = getProbeFitRun('noise.gif', getProbeNoiseGif(true), $rule);
+    $out['cleargif'] = getProbeFitRun('clear.gif', getProbeClearGif(200, 100), $rule);
+    $out['clearpng'] = getProbeFitRun('clear.png', getProbeQuad('png', 200, 100, true), $rule);
+    $out['room'] = getProbeFitRun('quad.png', getProbeQuad('png', 200, 100), $rule, 4375904);
+    $out['tight'] = getProbeFitRun('quad.png', getProbeQuad('png', 200, 100), $rule, 4375903);
+    $out['plain'] = getProbeFitRun('quad.png', getProbeQuad('png', 40, 30), $rule, 4205584);
+    $out['short'] = getProbeFitRun('quad.png', getProbeQuad('png', 40, 30), $rule, 4205583);
+    $out['real'] = ['jpg' => getProbeBudget('wide.jpg', getProbeQuad('jpg', 1025, 1500)), 'png' => getProbeBudget('wide.png', getProbeQuad('png', 1000, 1000))];
+    $body = getProbeQuad('png', 200, 100);
+    $out['weight'] = getProbeFitRun('quad.png', $body, getProbeRule(['maxwidth' => 100, 'maxheight' => 100, 'maxbytes' => strlen($body) - 1]));
+    $out['broken'] = getProbeFitRun('quad.png', substr($body, 0, 33), $rule);
+    $out['brokenlink'] = getProbeFitRun('quad.png', substr($body, 0, 33), $rule, 0, true);
+    return $out;
+}
+
 $mode = (string)($argv[1] ?? '');
 $out = [];
 try {
@@ -1305,6 +1596,7 @@ try {
         'first' => getProbeFirst(),
         'blindnet' => getProbeBlindnet(),
         'codes' => getProbeCodes(),
+        'fit' => getProbeFit(),
         'naming' => getProbeNaming(),
         'publish' => getProbePublish(),
         'sweep' => getProbeSweep(),

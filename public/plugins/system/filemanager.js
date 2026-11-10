@@ -1281,16 +1281,13 @@
         if (setFieldPick(id, take.mode, take.data)) setPanel(id, false);
     }
 
-    // The rule is checked at the pick, in the words the server would answer, because nothing is read before the form is submitted
+    // The rule is checked at the pick in the words the server would answer, as nothing is read before the submit; the bounds are not, the server scales a picture over them
     function checkFieldFile(id, file, done) {
         var opt = getOpt(id);
         var list = opt.exts || [];
         var max = parseInt(opt.maxbytes || 0, 10);
-        var wid = parseInt(opt.maxwidth || 0, 10);
-        var hei = parseInt(opt.maxheight || 0, 10);
         var name = String(file.name || '');
         var ext = name.indexOf('.') > 0 ? name.split('.').pop().toLowerCase() : '';
-        var img;
         if (list.length && list.indexOf(ext) < 0) {
             setMsg(id, getLab(id, 'badtype', 'Unsupported file type'), true);
             return;
@@ -1299,22 +1296,7 @@
             setMsg(id, getLab(id, 'big', 'File is too big'), true);
             return;
         }
-        if (wid <= 0 || hei <= 0 || String(file.type || '').indexOf('image/') !== 0) {
-            done();
-            return;
-        }
-        // The bounds belong to the picture and not to the file, so they can only be answered once the browser has decoded it
-        img = new win.Image();
-        img.onload = function() {
-            win.URL.revokeObjectURL(img.src);
-            if (img.naturalWidth > wid || img.naturalHeight > hei) setMsg(id, getLab(id, 'toobig', 'Image is too large'), true);
-            else done();
-        };
-        img.onerror = function() {
-            win.URL.revokeObjectURL(img.src);
-            setMsg(id, getLab(id, 'badtype', 'Unsupported file type'), true);
-        };
-        img.src = win.URL.createObjectURL(file);
+        done();
     }
 
     function addPanel(id) {

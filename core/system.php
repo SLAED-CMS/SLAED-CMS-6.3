@@ -4761,6 +4761,7 @@ function getUploadPlaceRule(string $place): array {
             'mod' => 'account',
             'extensions' => (string)($conf['users']['atypefile'] ?? ''),
             'maxbytes' => (int)($conf['users']['amaxsize'] ?? 0),
+            'maxquota' => (int)($conf['users']['aquota'] ?? 0),
             'maxwidth' => (int)($conf['users']['awidth'] ?? 0),
             'maxheight' => (int)($conf['users']['aheight'] ?? 0),
             'maxfiles' => 1,

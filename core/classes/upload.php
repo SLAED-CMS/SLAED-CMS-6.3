@@ -81,6 +81,12 @@ class Upload {
     ];
     # The MPEG audio sample rates in hertz, by the version bits of the frame header: zero is MPEG 2.5, two is MPEG 2 and three is MPEG 1
     private const MPFREQ = [0 => [11025, 12000, 8000], 2 => [22050, 24000, 16000], 3 => [44100, 48000, 32000]];
+    # The quality a scaled image is written at, by type; the scales of the codecs differ, and AVIF at 85 weighs what JPEG at 85 does
+    private const QUALITY = [IMAGETYPE_JPEG => 85, IMAGETYPE_WEBP => 85, IMAGETYPE_AVIF => 60];
+    # An EXIF orientation as quarter turns anticlockwise in the two low bits and a mirror of left and right before them in the third, the form imageflip() and imagerotate() take
+    private const TURNS = [2 => 4, 3 => 2, 4 => 6, 5 => 5, 6 => 3, 7 => 7, 8 => 1];
+    # The bytes the budget of a decode leaves spare: PHP takes its memory in chunks of two megabytes, and a canvas and a buffer beside it may each open one more
+    private const SPARE = 4194304;
 
     private string $root;
     private ?finfo $reader = null;
@@ -121,6 +127,8 @@ class Upload {
             $this->deleteUploadPart($part, $rel);
             return $this->getFailResult('transfer');
         }
+        $code = $this->addImageFit($part, $info);
+        if ($code !== '') return $this->getAbortResult(false, $part, $rel, $code);
         $info['ext'] = $ext;
         $info['mime'] = $mime;
         return $this->addPublishRun($part, $info, $rule, $rel, $base, $owner);
@@ -157,6 +165,8 @@ class Upload {
         if (!in_array($mime, self::TYPES[$ext], true)) return $this->getAbortResult(false, $part, $rel, 'mime');
         $info = $this->getImageBounds($part, $ext, $rule);
         if ($info['error'] !== '') return $this->getAbortResult(false, $part, $rel, $info['error']);
+        $code = $this->addImageFit($part, $info);
+        if ($code !== '') return $this->getAbortResult(false, $part, $rel, $code);
         $info['ext'] = $ext;
         $info['mime'] = $mime;
         return $this->addPublishRun($part, $info, $rule, $rel, $base, $owner);
@@ -207,6 +217,11 @@ class Upload {
     # Removes one file of this class; seam, so the cleanup-failure branch can be tested without a filesystem that refuses to delete
     protected function deleteFilePath(string $path): bool {
         return is_file($path) && unlink($path);
+    }
+
+    # The bytes a decode may still take under memory_limit; seam, because no test can shrink the limit of its own process far enough to refuse a fixture
+    protected function getMemoryRoom(): int {
+        return getMemoryLimitBytes(true) - memory_get_usage(true);
     }
 
     # Returns the address and alias records of one host; seam, because the address policy has to be tested against records no public resolver would hand out
@@ -840,43 +855,351 @@ class Upload {
         return (preg_match('#^[0-7]+$#', $data) === 1) ? (int)octdec($data) : -1;
     }
 
-    # Check an image against the configured bounds, then decode it; the bounds are read from the header first, so they cap what the decoder may allocate
+    # Check an image against the bounds and the memory budget, then decode it or plan its fit; every refusal is answered from the header, before a decoder allocates
     private function getImageBounds(string $path, string $ext, array $rule): array {
         if (!in_array($ext, self::IMAGES, true)) return ['error' => '', 'width' => null, 'height' => null];
         $info = $this->getImageInfo($path);
         if ($info === []) return ['error' => 'image', 'width' => null, 'height' => null];
         $wid = (int)($rule['maxwidth'] ?? 0);
         $hei = (int)($rule['maxheight'] ?? 0);
-        $over = ($wid > 0 && $info[0] > $wid) || ($hei > 0 && $info[1] > $hei);
-        if ($over) return ['error' => 'dimensions', 'width' => $info[0], 'height' => $info[1]];
-        $code = $this->getDecodeError($path, $info[2]);
-        if ($code !== '') return ['error' => $code, 'width' => $info[0], 'height' => $info[1]];
-        return ['error' => '', 'width' => $info[0], 'height' => $info[1]];
+        $near = $this->getFitSize($info[0], $info[1], $wid, $hei) !== [] || $this->getFitSize($info[1], $info[0], $wid, $hei) !== [];
+        $mark = $this->getImageMarks($path, $info[2], $near);
+        $side = ($mark['turn'] & 1) ? [$info[1], $info[0]] : [$info[0], $info[1]];
+        $fit = $this->getFitSize($side[0], $side[1], $wid, $hei);
+        $out = ['error' => 'dimensions', 'width' => $info[0], 'height' => $info[1]];
+        if ($this->getDecodeBytes($info, $fit, $mark, (int)filesize($path)) + self::SPARE > $this->getMemoryRoom()) return $out;
+        if ($fit === []) return ['error' => $this->getDecodeError($path, $info[2])] + $out;
+        if ($mark['moves']) return $out;
+        $gone = function_exists($this->getImageCall($info[2])) ? '' : 'decoder_missing';
+        if ($gone === '' && !function_exists($this->getImageCall($info[2], true))) $gone = 'encoder_missing';
+        if ($gone === '') return ['error' => '', 'width' => $fit[0], 'height' => $fit[1], 'fit' => ['type' => $info[2], 'turn' => $mark['turn'], 'icc' => $mark['icc']]];
+        $this->addCapsNote($gone);
+        return $out;
     }
 
-    # Prove the pixel data decodes, as getimagesize() reads only the header; no decoder answers unsupported, never a pass, which is why composer requires ext-gd
-    private function getDecodeError(string $path, int $type): string {
-        $call = match ($type) {
-            IMAGETYPE_GIF => 'imagecreatefromgif',
-            IMAGETYPE_JPEG => 'imagecreatefromjpeg',
-            IMAGETYPE_PNG => 'imagecreatefrompng',
-            IMAGETYPE_WEBP => 'imagecreatefromwebp',
-            IMAGETYPE_AVIF => 'imagecreatefromavif',
+    # The size an image is shown at fitted into the bounds in proportion, or an empty array when it lies inside them; a bound of zero is no bound
+    private function getFitSize(int $swid, int $shei, int $wid, int $hei): array {
+        if (($wid < 1 || $swid <= $wid) && ($hei < 1 || $shei <= $hei)) return [];
+        if ($hei < 1 || ($wid > 0 && $swid * $hei > $shei * $wid)) return [$wid, max(1, (int)round($shei * $wid / $swid))];
+        return [max(1, (int)round($swid * $hei / $shei)), $hei];
+    }
+
+    # The bytes one GD canvas takes under memory_limit: each row is an allocation of its own, rounded to whole pages past 3072 bytes and to a size class a quarter apart below
+    private function getCanvasBytes(int $wid, int $hei, int $unit): int {
+        $row = $wid * $unit;
+        return $hei * (8 + (($row > 3072) ? intdiv($row + 4095, 4096) * 4096 : intdiv($row * 5, 4) + 8));
+    }
+
+    # The most a decode and its fit hold at once, phase by phase: the reader with its buffers, the canvas beside the fit, the fit beside its turn, the fit beside its writer
+    private function getDecodeBytes(array $info, array $fit, array $mark, int $size): int {
+        $base = $this->getCanvasBytes($info[0], $info[1], $mark['flat'] ? 1 : 4);
+        $read = in_array($info[2], [IMAGETYPE_WEBP, IMAGETYPE_AVIF], true) ? 2 * $size : $info[0] * $info[1] * $mark['rows'];
+        if ($fit === []) return $base + $read;
+        $side = ($mark['turn'] & 1) ? [$fit[1], $fit[0]] : $fit;
+        $made = $this->getCanvasBytes($side[0], $side[1], 4);
+        $last = $this->getCanvasBytes($fit[0], $fit[1], 4);
+        $save = match ($info[2]) {
+            IMAGETYPE_PNG => $last,
+            IMAGETYPE_WEBP => $fit[0] * $fit[1] * 4,
+            IMAGETYPE_JPEG => ($mark['icc'] === '') ? 0 : $fit[0] * $fit[1] * 4,
+            IMAGETYPE_GIF => $this->getCanvasBytes($fit[0], $fit[1], 1),
+            default => 0,
+        };
+        return max($base + $read, $base + $made, ($mark['turn'] & 3) ? $made + $last : 0, $last + $save);
+    }
+
+    # The GD reader or writer of one image type by its name, an empty string for a type this class does not handle
+    private function getImageCall(int $type, bool $save = false): string {
+        $name = match ($type) {
+            IMAGETYPE_GIF => 'gif',
+            IMAGETYPE_JPEG => 'jpeg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            IMAGETYPE_AVIF => 'avif',
             default => '',
         };
-        if ($call === '' || !function_exists($call)) {
-            $this->addCapsNote('decoder_missing');
-            return 'unsupported';
-        }
+        if ($name === '') return '';
+        return ($save ? 'image' : 'imagecreatefrom').$name;
+    }
+
+    # Decode one image through the GD reader named; a failed decode is a routine refusal, so the warning is swallowed instead of suppressed with @
+    private function getImageCanvas(string $path, string $call): GdImage|false {
         set_error_handler(static fn(): bool => true);
         try {
             $img = $call($path);
         } finally {
             restore_error_handler();
         }
+        return $img;
+    }
+
+    # Prove the pixel data decodes, as getimagesize() reads only the header; no decoder answers unsupported, never a pass, which is why composer requires ext-gd
+    private function getDecodeError(string $path, int $type): string {
+        $call = $this->getImageCall($type);
+        if ($call === '' || !function_exists($call)) {
+            $this->addCapsNote('decoder_missing');
+            return 'unsupported';
+        }
+        return ($this->getImageCanvas($path, $call) === false) ? 'image' : '';
+    }
+
+    # Scale the partial to the fit planned from its header, in its format and turned as a browser shows it; only pixels are written, and of the metadata a JPEG keeps its profile
+    private function addImageFit(string $part, array $info): string {
+        if (!isset($info['fit'])) return '';
+        $type = $info['fit']['type'];
+        $turn = $info['fit']['turn'];
+        $icc = $info['fit']['icc'];
+        $img = $this->getImageCanvas($part, $this->getImageCall($type));
         if ($img === false) return 'image';
+        $side = ($turn & 1) ? [$info['height'], $info['width']] : [$info['width'], $info['height']];
+        $dest = imagecreatetruecolor($side[0], $side[1]);
+        if ($dest === false) return 'write';
+        imagealphablending($dest, false);
+        imagesavealpha($dest, true);
+        $back = imagecolorallocatealpha($dest, 0, 0, 0, 127);
+        imagefilledrectangle($dest, 0, 0, $side[0] - 1, $side[1] - 1, $back);
+        if ($type === IMAGETYPE_GIF && imagecolortransparent($img) >= 0) imagecolortransparent($dest, $back);
+        imagecopyresampled($dest, $img, 0, 0, 0, 0, $side[0], $side[1], imagesx($img), imagesy($img));
         unset($img);
+        if ($turn & 4) imageflip($dest, IMG_FLIP_HORIZONTAL);
+        if ($turn & 3) $dest = imagerotate($dest, ($turn & 3) * 90, 0);
+        if ($dest === false) return 'write';
+        imagesavealpha($dest, true);
+        $call = $this->getImageCall($type, true);
+        $args = isset(self::QUALITY[$type]) ? [$dest, ($icc === '') ? $part : null, self::QUALITY[$type]] : [$dest, $part];
+        set_error_handler(static fn(): bool => true);
+        ob_start();
+        try {
+            $done = $call(...$args);
+            unset($dest, $args);
+            $data = (string)ob_get_contents();
+            $from = (substr($data, 2, 2) === "\xff\xe0") ? 4 + unpack('n', substr($data, 4, 2))[1] : 2;
+            if ($done && $icc !== '') $done = file_put_contents($part, substr($data, 0, $from).$icc.substr($data, $from)) !== false;
+        } finally {
+            ob_end_clean();
+            restore_error_handler();
+        }
+        clearstatcache(true, $part);
+        return $done ? '' : 'write';
+    }
+
+    # The ICC segments of one JPEG before its scan, whole and in order, up to 64 KB; only an RGB profile of a picture of three components describes the pixels GD writes back
+    private function getJpegProfile(mixed $hand): string {
+        $from = 2;
+        $out = '';
+        $seen = 0;
+        $comp = 0;
+        for ($i = 0; $i < self::BLOCKS; $i++) {
+            $head = $this->getFilePart($hand, $from, 18);
+            if ($head === '' || $head[0] !== "\xff" || $head[1] === "\xd9") return '';
+            if ($head[1] === "\xda") return ($comp === 3 && strlen($out) > 37 && $seen === ord($out[17]) && substr($out, 34, 4) === 'RGB ') ? $out : '';
+            $kind = ord($head[1]);
+            $len = (int)unpack('n', substr($head, 2, 2))[1];
+            if ($len < 2) return '';
+            if ($kind >= 0xc0 && $kind <= 0xcf && !in_array($kind, [0xc4, 0xc8, 0xcc], true)) $comp = ord($head[9]);
+            $mine = $kind === 0xe2 && substr($head, 4, 12) === "ICC_PROFILE\x00";
+            if ($mine && (ord($head[16]) !== ++$seen || strlen($out) + $len > self::CHUNK)) return '';
+            if ($mine) $out .= $this->getFilePart($hand, $from, 2 + $len);
+            $from += 2 + $len;
+        }
         return '';
+    }
+
+    # Read what the header size does not say: how a browser turns the image, whether it moves, and what its decode holds; only a PNG is opened while no bound is near
+    private function getImageMarks(string $path, int $type, bool $near): array {
+        $out = ['moves' => false, 'turn' => 0, 'flat' => $type === IMAGETYPE_GIF, 'rows' => 0, 'icc' => ''];
+        if (!$near && $type !== IMAGETYPE_PNG) return $out;
+        $hand = fopen($path, 'rb');
+        if ($hand === false) return $out;
+        $size = (int)(fstat($hand)['size'] ?? 0);
+        try {
+            if ($type === IMAGETYPE_GIF) $out['moves'] = $this->checkGifMotion($hand, $size);
+            if ($type === IMAGETYPE_JPEG) $out = ['turn' => $this->getJpegTurn($hand), 'icc' => $this->getJpegProfile($hand)] + $out;
+            if ($type === IMAGETYPE_PNG) $out = $this->getPngMarks($hand, $size) + $out;
+            $head = ($type === IMAGETYPE_WEBP) ? $this->getFilePart($hand, 12, 9) : '';
+            if (str_starts_with($head, 'VP8X')) $out['moves'] = (ord($head[8]) & 0x02) !== 0;
+            if ($type === IMAGETYPE_AVIF) $out = $this->getAvifMarks($hand, $size) + $out;
+        } finally {
+            fclose($hand);
+        }
+        return $out;
+    }
+
+    # Whether one GIF holds a second frame, read off its block chain and never off its pixels; a looping extension is no proof, a file may move without one
+    private function checkGifMotion(mixed $hand, int $size): bool {
+        $head = $this->getFilePart($hand, 0, 13);
+        if ($head === '') return false;
+        $from = 13 + ((ord($head[10]) & 0x80) ? 3 << ((ord($head[10]) & 0x07) + 1) : 0);
+        $seen = 0;
+        while ($from > 0 && $from < $size) {
+            $kind = $this->getFilePart($hand, $from, 1);
+            $desc = ($kind === "\x2c") ? $this->getFilePart($hand, $from, 10) : '';
+            if ($kind !== "\x21" && $desc === '') return false;
+            if ($desc !== '' && ++$seen > 1) return true;
+            $skip = ($desc === '') ? 2 : 11 + ((ord($desc[9]) & 0x80) ? 3 << ((ord($desc[9]) & 0x07) + 1) : 0);
+            $from = $this->getGifSkip($hand, $from + $skip);
+        }
+        return false;
+    }
+
+    # The offset behind the chain of data sub-blocks at one offset of a GIF, or zero when the file ends first; read by the chunk, as a chain may be cut into a block a byte
+    private function getGifSkip(mixed $hand, int $from): int {
+        while (fseek($hand, $from) === 0) {
+            $data = fread($hand, self::CHUNK);
+            $stop = is_string($data) ? strlen($data) : 0;
+            if ($stop < 1) return 0;
+            $pos = 0;
+            while ($pos < $stop) {
+                $len = ord($data[$pos]);
+                $pos += 1 + $len;
+                if ($len === 0) return $from + $pos;
+            }
+            $from += $pos;
+        }
+        return 0;
+    }
+
+    # The turn of one JPEG, read off the first Exif segment before the scan; a turn stored behind the scan is one no browser reads either
+    private function getJpegTurn(mixed $hand): int {
+        $from = 2;
+        for ($i = 0; $i < self::BLOCKS; $i++) {
+            $head = $this->getFilePart($hand, $from, 4);
+            if ($head === '' || $head[0] !== "\xff" || $head[1] === "\xda" || $head[1] === "\xd9") return 0;
+            $len = (int)unpack('n', substr($head, 2, 2))[1];
+            if ($len < 2) return 0;
+            if ($head[1] === "\xe1" && $this->getFilePart($hand, $from + 4, 6) === "Exif\x00\x00") return $this->getExifTurn($this->getFilePart($hand, $from + 10, $len - 8));
+            $from += 2 + $len;
+        }
+        return 0;
+    }
+
+    # The marks of one PNG before its pixel data: the colour type and tRNS say what GD and libpng hold for a pixel, acTL moves it, eXIf turns it, and behind IDAT neither counts
+    private function getPngMarks(mixed $hand, int $size): array {
+        $kind = $this->getFilePart($hand, 25, 1);
+        $flat = $kind === "\x00" || $kind === "\x03";
+        $out = ['moves' => false, 'turn' => 0, 'flat' => $flat, 'rows' => $flat ? 1 : 4];
+        $from = 8;
+        $seen = false;
+        for ($i = 0; $i < self::BLOCKS && $from + 12 <= $size; $i++) {
+            $head = $this->getFilePart($hand, $from, 8);
+            $type = substr($head, 4, 4);
+            if ($type === 'IDAT' && $kind === "\x02" && !$seen) $out['rows'] = 3;
+            if ($head === '' || $type === 'IDAT' || $type === 'IEND') return $out;
+            $len = (int)unpack('N', substr($head, 0, 4))[1];
+            if ($type === 'tRNS') $seen = true;
+            if ($type === 'acTL') $out['moves'] = true;
+            if ($type === 'eXIf') $out['turn'] = $this->getExifTurn($this->getFilePart($hand, $from + 8, min($len, self::CHUNK)));
+            $from += 12 + $len;
+        }
+        return $out;
+    }
+
+    # The turn tag 0x0112 of the first directory of one TIFF structure gives; an unreadable structure is no turn, as a browser shows such a picture the way it is stored
+    private function getExifTurn(string $data): int {
+        $long = match (substr($data, 0, 4)) {
+            "II\x2a\x00" => 'V',
+            "MM\x00\x2a" => 'N',
+            default => '',
+        };
+        if ($long === '' || strlen($data) < 14) return 0;
+        $word = ($long === 'V') ? 'v' : 'n';
+        $from = (int)unpack($long, substr($data, 4, 4))[1];
+        if ($from < 8 || $from + 2 > strlen($data)) return 0;
+        $num = (int)unpack($word, substr($data, $from, 2))[1];
+        for ($i = 0; $i < $num; $i++) {
+            $row = substr($data, $from + 2 + $i * 12, 12);
+            if (strlen($row) < 12) return 0;
+            if (unpack($word, substr($row, 0, 2))[1] !== 0x0112) continue;
+            if (unpack($word, substr($row, 2, 2))[1] !== 3 || unpack($long, substr($row, 4, 4))[1] !== 1) return 0;
+            return self::TURNS[unpack($word, substr($row, 8, 2))[1]] ?? 0;
+        }
+        return 0;
+    }
+
+    # The marks of one AVIF: the brand avis in its file type box makes it a sequence, and the meta box holds the turn of its primary item
+    private function getAvifMarks(mixed $hand, int $size): array {
+        $out = ['moves' => false, 'turn' => 0];
+        $from = 0;
+        for ($i = 0; $i < self::BLOCKS && $from + 8 <= $size; $i++) {
+            $box = $this->getBoxHead($hand, $from, $size);
+            if ($box === []) return $out;
+            $len = $box['size'] - $box['head'];
+            if ($box['type'] === 'ftyp') $out['moves'] = in_array('avis', str_split($this->getFilePart($hand, $from + $box['head'], min($len, self::ZONE)), 4), true);
+            if ($box['type'] === 'meta') $out['turn'] = $this->getAvifTurn($hand, $from + $box['head'] + 4, $from + $box['size']);
+            if ($box['type'] === 'meta') return $out;
+            $from += $box['size'];
+        }
+        return $out;
+    }
+
+    # The turn of the primary item of one AVIF, found through the item named in pitm and the property boxes of iprp, whichever of the two the file stores first
+    private function getAvifTurn(mixed $hand, int $from, int $stop): int {
+        $prim = -1;
+        $prop = [];
+        for ($i = 0; $i < self::BLOCKS && $from + 8 <= $stop; $i++) {
+            $box = $this->getBoxHead($hand, $from, $stop);
+            if ($box === []) return 0;
+            if ($box['type'] === 'iprp') $prop = [$from + $box['head'], $from + $box['size']];
+            $data = ($box['type'] === 'pitm') ? $this->getFilePart($hand, $from + $box['head'], $box['size'] - $box['head']) : '';
+            if (strlen($data) > 7) $prim = (int)unpack('N', substr($data, 4, 4))[1];
+            if (strlen($data) > 5 && $data[0] === "\x00") $prim = (int)unpack('n', substr($data, 4, 2))[1];
+            $from += $box['size'];
+        }
+        if ($prim < 0 || $prop === []) return 0;
+        return $this->getPropTurn($hand, $prop[0], $prop[1], $prim);
+    }
+
+    # Fold the irot and imir of one item into a turn; the turn goes first whatever order the file lists them in, which is how the browsers apply the two
+    private function getPropTurn(mixed $hand, int $from, int $stop, int $prim): int {
+        $list = [];
+        $refs = [];
+        for ($i = 0; $i < self::BLOCKS && $from + 8 <= $stop; $i++) {
+            $box = $this->getBoxHead($hand, $from, $stop);
+            if ($box === []) return 0;
+            $len = $box['size'] - $box['head'];
+            if ($box['type'] === 'ipco') $list = $this->getPropList($hand, $from + $box['head'], $from + $box['size']);
+            if ($box['type'] === 'ipma') $refs = array_merge($refs, $this->getPropRefs($this->getFilePart($hand, $from + $box['head'], min($len, self::CHUNK)), $prim));
+            $from += $box['size'];
+        }
+        $rot = 0;
+        $mir = -1;
+        foreach ($refs as $key) {
+            if (($list[$key][0] ?? '') === 'irot') $rot = $list[$key][1] & 0x03;
+            if (($list[$key][0] ?? '') === 'imir') $mir = $list[$key][1] & 0x01;
+        }
+        if ($mir < 0) return $rot;
+        return 4 | ((($mir === 1 ? 4 : 6) - $rot) & 0x03);
+    }
+
+    # The turn and mirror boxes of one property container by their index, which counts every box of the container from one and is what an item refers to
+    private function getPropList(mixed $hand, int $from, int $stop): array {
+        $out = [];
+        for ($i = 1; $i <= self::BLOCKS && $from + 8 <= $stop; $i++) {
+            $box = $this->getBoxHead($hand, $from, $stop);
+            if ($box === []) return $out;
+            $byte = ($box['type'] === 'irot' || $box['type'] === 'imir') ? $this->getFilePart($hand, $from + $box['head'], 1) : '';
+            if ($byte !== '') $out[$i] = [$box['type'], ord($byte)];
+            $from += $box['size'];
+        }
+        return $out;
+    }
+
+    # The property indexes one item refers to in the body of one association box, in the order the box lists them; the widths follow its version and its flags
+    private function getPropRefs(string $data, int $prim): array {
+        if (strlen($data) < 8) return [];
+        $wide = ($data[0] === "\x00") ? 2 : 4;
+        $step = (ord($data[3]) & 0x01) ? 2 : 1;
+        $num = (int)unpack('N', substr($data, 4, 4))[1];
+        $pos = 8;
+        $out = [];
+        for ($i = 0; $i < $num && $pos + $wide < strlen($data); $i++) {
+            $item = (int)unpack(($wide === 2) ? 'n' : 'N', substr($data, $pos, $wide))[1];
+            $refs = substr($data, $pos + $wide + 1, ord($data[$pos + $wide]) * $step);
+            $pos += $wide + 1 + strlen($refs);
+            if ($item !== $prim) continue;
+            foreach (str_split($refs, $step) as $one) $out[] = (strlen($one) === 2) ? unpack('n', $one)[1] & 0x7fff : ord($one) & 0x7f;
+        }
+        return $out;
     }
 
     # Reads the pixel size and the type marker of one file; a decode failure is a routine rejection, so the warning is swallowed instead of suppressed with @

@@ -833,11 +833,8 @@ function getTplPostAction(array $hide, string $icon, string $title, string $conf
 function getFileManagerText(array $rule = []): array {
     $exts = array_values(array_filter(array_map('trim', explode(',', (string)($rule['extensions'] ?? '')))));
     $mbyt = (int)($rule['maxbytes'] ?? 0);
-    $mwid = (int)($rule['maxwidth'] ?? 0);
-    $mhei = (int)($rule['maxheight'] ?? 0);
     $lims = [implode(', ', $exts)];
     if ($mbyt > 0) $lims[] = filterSize($mbyt);
-    if ($mwid > 0 && $mhei > 0) $lims[] = $mwid.' × '.$mhei.' px';
     return [
         'labels' => [
             'upload' => _ERROR_UP,
@@ -973,7 +970,7 @@ function getFileManagerWindow(array $opt): string {
         'files_note' => '',
         'files_why' => _EDITOR_NOMY,
         'quota_text' => $upl ? sprintf(_NUMOF, '—', filterSize((int)$rul['maxquota'])) : _EDITOR_NOUP,
-        'module_text' => sprintf(_EDITOR_MODULE, $mod),
+        'module_text' => sprintf(_EDITOR_MODULE, ['profile' => _ACCOUNT, 'layout' => _LAYOUT_BUILDER][$mod] ?? getModuleTitle($mod)),
         'address_label' => _EIMGURL,
         'alt_label' => _DESCRIPTION,
         'insas_label' => _EDITOR_INSAS,
@@ -1047,8 +1044,6 @@ function getEditorFileKit(string $id, array $data): array {
         'maxfiles' => (int)($rul['maxfiles'] ?? 0),
         'exts' => array_values(array_filter(array_map('trim', explode(',', strtolower((string)($rul['extensions'] ?? '')))))),
         'maxbytes' => (int)($rul['maxbytes'] ?? 0),
-        'maxwidth' => (int)($rul['maxwidth'] ?? 0),
-        'maxheight' => (int)($rul['maxheight'] ?? 0),
         'token' => $upl ? getSiteToken('upload') : '',
         'upload' => $upl ? HOME_PATH.'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
         'files' => $upl ? HOME_PATH.'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
@@ -1165,8 +1160,6 @@ function getFileManagerField(array $opt): string {
         'maxfiles' => (int)$rul['maxfiles'],
         'exts' => $exts,
         'maxbytes' => (int)$rul['maxbytes'],
-        'maxwidth' => (int)$rul['maxwidth'],
-        'maxheight' => (int)$rul['maxheight'],
         'token' => $upl ? getSiteToken('upload') : '',
         'upload' => ($upl && in_array('editorUpload', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
         'files' => ($upl && in_array('editorFiles', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',

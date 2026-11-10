@@ -58,7 +58,7 @@ define('_ACTIVATIONERROR','Fehler bei der Benutzeraktivierung');
 define('_ACTIVATIONSUB','Account aktivieren');
 define('_ACTIVATIONYES','Ihr Benutzerkonto ist aktiviert worden!');
 define('_ACTMSG','Ihr Benutzerkonto ist aktiviert worden. Bitten melden Sie sich mit <a href="%s">diesem Link</a> an und benutzen Sie Ihren Benutzernamen und Ihr Passwort.');
-define('_AVATARINFO','Zeigt eine kleine Grafik neben deinen Details zu jedem deiner Beiträge an. Es kann immer nur ein Avatar angezeigt werden, seine Breite darf nicht grцsser als %1$s Pixel sein, die Höhe nicht grösser als %2$s Pixel, und die Dateigrцsse darf maximal %3$s betragen.');
+define('_AVATARINFO','Der Avatar ist ein kleines Bild, das neben deinem Namen in Beiträgen und im Profil angezeigt wird. Du kannst ein Bild mit höchstens %3$s hochladen. Ein Bild, das größer als %1$s × %2$s Pixel ist, wird proportional auf diese Größe verkleinert.');
 define('_AVATARSAVE','Avatar auswählen');
 define('_AVATARSELECT','Wählen Sie Ihr Lieblingsbild aus der Galerie, mit der linke Maustaste auf das gewünschte Bild klicken.');
 define('_AVATARSETUP','Avatar Einstellungen');

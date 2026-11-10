@@ -884,7 +884,7 @@ so no route reassembles a right from config:
 | `maxbytes` | config | `amaxsize` |
 | `maxwidth` / `maxheight` | config | `awidth` / `aheight` |
 | `maxfiles` | config | 1 |
-| `maxquota` | config | 0 |
+| `maxquota` | config | `aquota` |
 | `thumbwidth` | config | 0 |
 | `userupload` | config | `aupload` |
 | `guestupload` | config | 0 — always |
@@ -921,6 +921,166 @@ reads `place`, and every endpoint URL is built server side —
 
 The window built on this boundary is documented in `docs/WINDOW.md`; the runtime
 that drives it in `docs/EDITORS.md`.
+
+## Image Fit Boundary
+
+An image over the bounds of its upload rule (`maxwidth`, `maxheight`) is scaled
+down to them when it is uploaded, not refused. `Upload`
+(`core/classes/upload.php`) owns that and nothing outside it scales an upload.
+There is one behaviour for every rule and for the avatar, whose bounds are
+`awidth` and `aheight` of `$conf['users']`: an avatar over them is fitted in
+proportion, without a crop. The rule keeps its twelve keys.
+
+**The plan is made from the header, and the pixels are decoded once.**
+`getImageBounds()` reads the size (`getImageInfo()`), the marks
+(`getImageMarks()`), the fit (`getFitSize()`) and the memory the decode needs
+(`getDecodeBytes()`), and answers every refusal before a decoder allocates. An
+image inside the bounds is decoded by `getDecodeError()` as the proof of its
+pixels and stored byte for byte, with its metadata. An image over them leaves
+as a plan under the key `fit`, and `addImageFit()` scales the partial after the
+transfer in `addUploadedFile()` and after the fetch in `addRemoteFile()`: one
+decode, `imagecopyresampled()`, the turn, the writer of the same type.
+
+**What a stored file is.**
+
+- The bounds are compared with the size the image is shown at, the header size
+  with its orientation applied. A 4000×3000 photo turned by EXIF into a rule of
+  4096×3200 is scaled to 2400×3200 and stored upright. The fit keeps the
+  proportion; a bound of zero is no bound.
+- The type is kept: the extension and the MIME type of a stored file never
+  differ from the transferred one. `QUALITY` writes JPEG and WebP at 85 and
+  AVIF at 60, because the scales of the codecs differ; PNG is written without
+  loss, GIF through the 256-colour palette GD builds.
+- Only pixels are written, so EXIF with its GPS position leaves a scaled file.
+  A scaled JPEG keeps one thing of its metadata, the colour profile: without it
+  the pixels of a wide-gamut photo are read as sRGB. `getJpegProfile()` takes
+  the ICC segments before the scan, whole and in their order, and
+  `addImageFit()` writes them behind the JFIF segment of the scaled file. A
+  profile is carried only when it is an RGB one of a picture of three
+  components, complete, and no more than 64 KB; any other stays behind. PNG,
+  WebP and AVIF carry none.
+- The result of a scaled file carries the stored width and height; a file
+  inside the bounds keeps the width and height of its header.
+- `maxbytes` is the limit of the transfer. `checkUploadInput()` and
+  `addRemoteFetch()` compare it with the transferred file before any of this,
+  so a 5 MB photo into a rule of 1 MB is refused with `size`. A scaled file
+  heavier than `maxbytes` is stored, and `maxquota` counts the scaled file.
+
+**What is still refused with `dimensions`.**
+
+- An animation over the bounds — GIF, WebP, APNG, an AVIF sequence — because GD
+  would keep one frame. `checkGifMotion()` walks the block chain of a GIF,
+  `getPngMarks()` meets `acTL`, the `VP8X` flag marks a WebP and the brand
+  `avis` an AVIF.
+- An image past the memory budget, inside the bounds as well as over them.
+- A type this build cannot decode or cannot write, over the bounds:
+  `decoder_missing` and `encoder_missing` of `addCapsNote()`. AVIF without
+  `imageavif()` is the case.
+
+**The orientation is read by a parser of the class**, and the extension `exif`
+is not required: the product is distributed. `getJpegTurn()` reads the Exif
+segment before the scan, `getPngMarks()` the `eXIf` chunk before `IDAT`,
+`getAvifMarks()` the `irot` and `imir` of the primary item; `TURNS` maps the
+eight EXIF values onto `imageflip()` and `imagerotate()`. A WebP is never
+turned. The marks are read only when the header size or its quarter turn
+exceeds a bound; a PNG is opened always, for its colour type.
+
+**The decode runs inside a budget derived from `memory_limit`.**
+`getMemoryRoom()` is the seam: `getMemoryLimitBytes(true)` less the memory in
+use. `getDecodeBytes()` budgets phase by phase — the canvas of
+`getCanvasBytes()` with what its reader holds, the canvas beside the fit, the
+fit beside its turn, the fit beside the buffer of its writer — and `SPARE`
+adds 4 MB. A JPEG that carries a profile is written through the output buffer,
+so that the segments are placed without the file being read back, and is
+budgeted 4 bytes a pixel of the fit for it.
+
+**What stays outside.** `checkFieldFile()` of
+`public/plugins/system/filemanager.js` checks extension and weight at the pick
+and no bounds (`docs/WINDOW.md`), and the limit sentence of the window
+(`getFileManagerText()`) names the formats and the weight alone. `getImageThumb()` (`core/system.php`) builds
+a thumbnail by width, in the format of the source, with no orientation. An
+image already stored is not scaled, and nothing is scaled in the browser before
+the transfer. The demo (`DEMO_FAIL.dimensions` of `public/demo/assets/demo.js`)
+keeps its refusal on the bounds at the pick; the difference from the product is
+known and stays.
+
+### Measured
+
+Home stand, 2026-11-10. Weight, time and memory: console PHP 8.4 and 8.5 with
+bundled GD.
+
+Weight and time:
+
+- A 4032×3024 JPEG decoded and resampled to 1920×1440: 564 ms, peak 58.6 MB
+  over the base, which is the two truecolor canvases.
+- The 1920×1440 result written: JPEG 85 — 336 KB in 42 ms, WebP 85 — 197 KB in
+  209 ms, AVIF 85 — 310 KB in 307 ms, AVIF 60 — 165 KB in 281 ms. A 640×439
+  result: JPEG 85 — 58 KB, WebP 85 — 41 KB, AVIF 85 — 57 KB, AVIF 60 — 32 KB.
+- A scaled file can weigh more than the one sent: a 5000×5000 palette PNG of
+  hairlines, 8874 bytes, is stored as 4096×4096 at 78268 bytes; a 6000×3000
+  JPEG of quality 20, 407 KB, as 4096×2048 at 459 KB.
+- Through the route of the editor window on the stand (PHP 8.5): a 5000×60 PNG
+  is stored as 4096×49, a 6000×3000 JPEG as 4096×2048, a 4500×4500 WebP as
+  4096×4096, a 1025×3000 and a 300×200 PNG byte for byte.
+
+Orientation, Chromium and Firefox of the repository Playwright; GD applies none
+of it on decode:
+
+- JPEG: the Exif segment before the scan turns the picture in both browsers,
+  all eight values.
+- PNG: an `eXIf` chunk before `IDAT` turns it in both, all eight values; behind
+  `IDAT` neither browser reads it.
+- WebP: an `EXIF` chunk turns it in neither browser, so the class reads none.
+- AVIF: `irot` and `imir` of the primary item turn it in both; `imir` axis 0
+  exchanges top and bottom, axis 1 left and right; the turn is applied before
+  the mirror whatever order the file lists them in (Chromium; Firefox refuses a
+  file that lists the mirror first).
+- Every one of the 34 fixtures stored by the class spells the corners the
+  browsers drew.
+
+The colour profile, two photos of an iPhone with Display P3 (5712×4284 of
+flowers, 4032×3024 of a street) scaled to 1920×1440, painted by Chromium of the
+repository Playwright:
+
+- Without the profile the scaled file is drawn duller: 29 % of the pixels of
+  the flowers and 1.3 % of the street differ by more than 10 levels of 255 from
+  the same file with the profile, 8.9 and 2.3 levels on average.
+- With the profile, 554 bytes, the scaled file is drawn as its source.
+- The headless Firefox of the rig paints all three alike; a Firefox with a
+  window was not measured.
+- Through the catalogue of the panel on the stand (PHP 8.5): the 5712×4284
+  photo, 2.8 MB, is stored as 4096×3072 at 934 KB with the segment of its
+  profile and without its Exif.
+
+Memory, each case in a process of its own:
+
+- A truecolor canvas is not 4 bytes a pixel: GD allocates a row at a time and
+  PHP rounds a row past 3072 bytes to whole pages of 4096, so 1024×8000 takes
+  30 MB and 1025×8000 takes 62 MB (7.9 bytes a pixel).
+- A PNG decode holds the rows of libpng beside the canvas: 7.3 bytes a pixel
+  for RGB, 8.4 for RGBA and for grey with alpha, 2.1 for a palette or grey, 16
+  bits as 8.
+- A WebP or AVIF reader holds the file itself, 1.1 to 1.2 times its weight; a
+  JPEG reader holds nothing.
+- A writer holds beside the canvas: PNG as much again, WebP 4 bytes a pixel,
+  GIF one byte a pixel, JPEG and AVIF nothing. A JPEG written through the
+  output buffer holds its file there: noise at quality 85 weighs 0.76 bytes a
+  pixel and its write peaks at 2.1 bytes a pixel beside the canvas.
+- Under a real `memory_limit`, 108 cases on 8.4 and 27 on 8.5 (ten kinds of
+  file, four sizes, inside the bounds and two fits): at the limit the class
+  starts to accept a file the request survives, below it the class answers
+  `dimensions`, and with the budget lifted the request survives 2 to 8 MB
+  lower. A limit of 5 to 9 MB kills PHP while it loads `fileinfo`, before the
+  class is reached.
+- What `getDecodeBytes()` asks with `SPARE`: a 4032×3024 JPEG inside the bounds
+  51 MB and fitted to 1920×1440 63 MB; a 4032×3024 RGBA PNG 98 MB; a 5712×4284
+  JPEG fitted to 4096×3072 153 MB; an 8064×6048 JPEG fitted to 4096×3072
+  241 MB.
+- The readers of the marks answered 44000 mutated and truncated files without a
+  warning.
+- A GIF cut into sub-blocks of one byte, 25 MB of them, over the bounds: the
+  walk of `checkGifMotion()` takes 0.56 s; inside the bounds no walk runs and
+  the call takes 0.03 s.
 
 ## File Delivery Boundary
 

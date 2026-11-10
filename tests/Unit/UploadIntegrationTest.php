@@ -156,7 +156,7 @@ final class UploadIntegrationTest extends TestCase
         $this->assertSame(250, $avat['moderfiles'], 'The moderator cap of users.avatar is not the shipped one of config/uploads.php');
         $this->assertSame(100, $avat['userfiles'], 'The member cap of users.avatar is not the shipped one of config/uploads.php');
         $this->assertSame(1, $avat['maxfiles'], 'A field place takes more than one file, and nothing outside the editor offers a batch');
-        $this->assertSame(0, $avat['maxquota'], 'A field place carries a quota, so its window would draw a bar over a number nobody set');
+        $this->assertSame(536870912, $avat['maxquota'], 'The quota of users.avatar is not the shipped aquota, so its window draws a bar over a number nobody set');
     }
 
     # The upload right of users.avatar is its own switch, and the rule reads it on every call instead of remembering the shipped value

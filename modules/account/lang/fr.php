@@ -58,7 +58,7 @@ define('_ACTIVATIONERROR','Erreur lors de la revitalisation nouvel utilisateur')
 define('_ACTIVATIONSUB','Activation de compte');
 define('_ACTIVATIONYES','Le nouvel utilisateur est activé');
 define('_ACTMSG','Votre compte est activé avec succès, s\'il vous plaît entrer sur le site sous votre nom, puis appuyez sur <a href="%s">ici</a> et entrez votre login et mot de passe.');
-define('_AVATARINFO','Affiche une petite image sous informations sur vous dans les messages. Peut être montré seulement une image, d\'une largeur de pas plus de %1$s de pixels, la hauteur n\'est pas plus de %2$s pixel et le volume pas plus de %3$s.');
+define('_AVATARINFO','L\'avatar est une petite image affichée à côté de votre nom dans les messages et dans le profil. Vous pouvez téléverser une seule image de %3$s au maximum. Une image de plus de %1$s × %2$s pixels sera réduite à ces dimensions en gardant ses proportions.');
 define('_AVATARSAVE','Choisir un avatar');
 define('_AVATARSELECT','Choisissez votre avatar favori de la galerie, il suffit d\'appuyer sur le bouton gauche de la souris sur l\'image souhaitée.');
 define('_AVATARSETUP','Paramètres avatar');

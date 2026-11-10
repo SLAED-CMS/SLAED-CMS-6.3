@@ -58,7 +58,7 @@ define('_ACTIVATIONERROR','New User Activation Error');
 define('_ACTIVATIONSUB','New User Account Activation');
 define('_ACTIVATIONYES','New User Activation');
 define('_ACTMSG','Your account has been activated. Please login from <a href="%s">this link</a> using your assigned Nickname and Password.');
-define('_AVATARINFO','Displays a small graphic image below your details in posts. Only one image can be displayed at a time, its width can be no greater than %1$s pixels, the height no greater than %2$s pixels, and the file size no more than %3$s.');
+define('_AVATARINFO','An avatar is a small image shown next to your name in posts and in your profile. You can upload one image of no more than %3$s. An image larger than %1$s × %2$s pixels will be scaled down to that size, keeping its proportions.');
 define('_AVATARSAVE','Select Avatar from gallery');
 define('_AVATARSELECT','Choose your favorite avatar from the gallery, it is enough to press the left mouse button on the desired image.');
 define('_AVATARSETUP','Select avatar');

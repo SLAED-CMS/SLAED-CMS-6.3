@@ -257,10 +257,10 @@ is printed by no form, and the drop zones of the file windows keep their own.
 
 **The rule is checked at the pick, not only at the submit.** `addFileList()` refuses on count
 first — a drop carries as many files as the pointer held, whatever the picker was told to allow —
-and then hands the one file to `checkFieldFile()`, which refuses on extension, weight and finally
-image dimensions, the last only once the browser has decoded the picture. The words are the ones
-`getUploadFailText()` would have answered with and arrive in `opt.labels`; no refusal phrase is
-invented for the client.
+and then hands the one file to `checkFieldFile()`, which refuses on extension and weight. The bounds
+of a picture are not checked at the pick: the server scales an image over them instead of refusing
+it. The words are the ones `getUploadFailText()` would have answered with and arrive in
+`opt.labels`; no refusal phrase is invented for the client.
 `setFieldPick()` answers whether the write landed and the window closes on that answer alone: a
 chip drawn over a field that stayed empty states a file the form is not carrying.
 
