@@ -60,7 +60,7 @@ final class EditorBreakTest extends TestCase
         }
     }
 
-    # The stored text is escaped at render: a tag a member typed stays text, both hard breaks break, an entity reads as CommonMark reads it
+    # The stored text is escaped at render: a tag a member typed stays text, both hard breaks and the line end of a signature break, an entity reads as CommonMark
     #[Test]
     public function renderEscapesTheTypedText(): void
     {
@@ -68,6 +68,7 @@ final class EditorBreakTest extends TestCase
         $this->assertStringContainsString('&lt;h4&gt;Head&lt;/h4&gt;', $trips['tags']['sign']);
         $this->assertStringNotContainsString('<h4', $trips['tags']['sign']);
         $this->assertSame(2, substr_count($trips['breaks']['sign'], '<br>'));
+        $this->assertSame(1, substr_count($trips['soft']['sign'], '<br>'));
         $this->assertStringContainsString('a &amp; b &amp; c &lt;x&gt;', $trips['entity']['sign']);
         $this->assertSame(2, substr_count($trips['blank']['sign'], '<p>'));
     }
@@ -90,10 +91,10 @@ final class EditorBreakTest extends TestCase
         $base = dirname(__DIR__, 2);
         $need = [
             'modules/forum/index.php' => ["filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true))" => 3,
-                "filterContent(\$rows[0][7], true, \$conf['name'], 0, '', [], true)" => 1],
+                "filterContent(\$rows[0][7], true, \$conf['name'], 0, 'breaks', [], true)" => 1, "'fmt' => getStoreFormat('forum.body')" => 1],
             'modules/search/index.php' => ["'content' => \$cont, 'safe' => true, 'trust' => true," => 1],
-            'core/user.php' => ['$body = filterSourceText($text, isAdmin(true));' => 1, "filterContent(\$body, true, 'forum', 2, '', ['forum', \$id], true)" => 1,
-                "filterContent(\$userblock, true, 'profile', 2, '', ['profile', \$uid], true)" => 1, "filterContent(\$sig, true, 'profile'" => 1],
+            'core/user.php' => ['$body = filterSourceText($text, isAdmin(true));' => 1, "filterContent(\$body, true, 'forum', 2, 'breaks', ['forum', \$id], true)" => 1,
+                "filterContent(\$userblock, true, 'profile', 2, '', ['profile', \$uid], true)" => 1, "filterContent(\$sig, true, 'profile', \$hoff, 'breaks'" => 1],
             'modules/account/index.php' => ["filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true))" => 1,
                 "filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true))" => 1],
             'modules/account/admin/index.php' => ["filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true))" => 2,
@@ -104,7 +105,8 @@ final class EditorBreakTest extends TestCase
             'core/classes/mail.php' => ["filterContent(\$body, true, 'all', 0, '', [], true)" => 1],
             'modules/contact/admin/index.php' => ["filterSourceText(getVar('post', 'info', 'raw', ''), isAdmin(true))" => 1],
             'modules/contact/index.php' => ["filterContent(\$conf['contact']['info'], true, \$conf['name'], 0, 'breaks', [], true)" => 1],
-            'core/helpers.php' => ["filterContent(\$texta, true, \$mod, 0, '', \$own, true)" => 1, "filterContent(\$textb, true, \$mod, 0, '', \$own, true)" => 1,
+            'core/helpers.php' => ['filterContent($texta, true, $mod, 0, $fmt, $own, true)' => 1, 'filterContent($textb, true, $mod, 0, $fmt, $own, true)' => 1,
+                "'fmt' => getStoreFormat(\$store)" => 1,
                 "\$desc = \$value ?: filterSourceText(getVar('post', \$name, 'raw', ''), isAdmin(true));" => 1],
             'core/classes/comment.php' => ['filterSourceText($body)' => 2, 'filterSourceText($body, false, false)' => 1],
             'core/classes/privat.php' => ['filterSourceText($body)' => 1],

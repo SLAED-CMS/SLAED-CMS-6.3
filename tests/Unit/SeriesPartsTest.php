@@ -53,14 +53,14 @@ final class SeriesPartsTest extends TestCase
     public function aTileCarriesItsChangeBesideItsNote(): void
     {
         $tile = self::getPart('metric-list', ['items' => [[
-            'label' => 'A', 'value' => '1 200', 'num' => 1200, 'note' => 'N<', 'delta' => '+12%', 'dir' => 'up', 'arrow' => 'arrow-up-right', 'delta_tip' => 'T<',
+            'label' => 'A', 'value' => '1 200', 'num' => 1200, 'note' => 'N<', 'delta' => '+12%', 'dir' => 'up', 'delta_tip' => 'T<',
         ]]]);
         $this->assertSame('1200', $tile->querySelector('.sl-metric-value > [data-sl-figure]')->getAttribute('data-sl-figure'));
         $this->assertSame('N<', $tile->querySelector('[data-sl-metric-note]')->textContent);
+        $this->assertNotNull($tile->querySelector('.sl-metric.sl-metric-trend-up'), 'The tile does not wear the direction of its change');
         $delta = $tile->querySelector('small > .sl-metric-delta-up[data-sl-metric-delta]');
         $this->assertSame('T<', $delta->getAttribute('title'));
-        $this->assertNotNull($delta->querySelector('i.bi-arrow-up-right'));
-        $this->assertSame('+12%', $delta->lastElementChild->textContent);
+        $this->assertSame('+12%', $delta->textContent);
         $this->assertNull(self::getPart('metric-list', ['items' => [['label' => 'B', 'value' => '2', 'note' => 'N']]])->querySelector('[data-sl-metric-delta]'));
     }
 

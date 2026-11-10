@@ -373,13 +373,13 @@ function config(): void {
     $vals = [
         _DEACTIVATE,
         _SYSTEM_INFO,
-        _AVARIABLES.': POST',
-        _AVARIABLES.': GET',
-        _AVARIABLES.': COOKIE',
-        _AVARIABLES.': FILES',
-        _AVARIABLES.': SESSION',
-        _AVARIABLES.': SERVER',
-        _AQUERY_DB.': MySQL',
+        'POST',
+        'GET',
+        'COOKIE',
+        'FILES',
+        'SESSION',
+        'SERVER',
+        'MySQL',
     ];
     $boxes = [];
     foreach ($vals as $key => $val) $boxes[] = ['name_attr' => 'variables[]', 'value_attr' => (string)$key, 'label_text' => $val, 'is_checked' => !empty($vars[$key])];
@@ -961,7 +961,7 @@ function replace(): void {
             'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
             'toggle_target_id' => 'fi'.$next,
             'title' => _ADD,
-            'label_html' => _REPLACE_FIELD.': '.$next,
+            'label_html' => _REPLACE_FIELD.' '.$next,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
         ]);
     }

@@ -3,7 +3,7 @@
     <ul class="sl-admin-login-list">
       {% for row in rows %}
       <li>
-        <span>{{ row.label }}{% if row.has_colon %}:{% endif %}</span>
+        <span>{{ row.label }}</span>
         <div class="sl-admin-login-field">
           {{{ row.field_html }}}
         </div>

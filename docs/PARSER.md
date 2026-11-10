@@ -49,9 +49,10 @@ The file context `$own` names the owner and the stored target of the text, `['no
 
 The format names the syntax the stored source was written in. It is an input to rendering, not a security switch:
 * **`'plain'`:** no Markdown construct is recognised — no headings, lists, tables, quotes, emphasis, code fences, inline code or `[t](u)` links. A blank line separates paragraphs and every other line ending becomes a `<br>`. The bracket layer (the SLAED tags) still runs.
-* **anything else, including `''`:** Markdown, which is what a caller that says nothing gets.
+* **`'breaks'`:** Markdown in which a single line ending is a line break as well, the rule of a conversation channel, as in the comments of GitHub and Discourse: its author typed every line end they meant. A typed `<br>` or hard break before the line end stays one break.
+* **anything else, including `''`:** Markdown by CommonMark, where a lone line ending joins the lines around it; what a document gets and what a caller that says nothing gets.
 
-No stored content passes this argument, and no table carries a format column: `plain` and the editors are input interfaces rather than storage formats, and rendering must not branch on the editor an author happened to type in. The argument belongs to a caller that knows the syntax of a string it built itself.
+The format belongs to the store, not to the author or the editor: no table carries a format column, and rendering never branches on the editor an author happened to type in. `getStoreFormat()` in `core/helpers.php` names it for a declared store: comments, forum posts, private messages and signatures render as `breaks`, and every reader of those stores, the preview of the editor included, passes it; the contact text of the settings does too. Node materials, blocks, newsletters, the own block of a profile and the help render as plain Markdown. `plain` belongs to a caller that knows the syntax of a string it built itself.
 
 ## Security Context (`$safe`)
 

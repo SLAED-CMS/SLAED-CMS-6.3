@@ -125,7 +125,7 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
         'is_hidden' => $hide,
         'toggle_target_id' => $kept ? 'fi-'.$slug.'-'.($pos + 1) : '',
         'title' => _ADD,
-        'label_html' => $kept ? _FIELD.': '.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _FIELD.': '._ADD,
+        'label_html' => $kept ? _FIELD.' '.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _FIELD,
         'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
     ]);
 }

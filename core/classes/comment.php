@@ -295,17 +295,19 @@ class Comment {
         return $out + ['user' => $this->getAuthors([$out['uid']])[$out['uid']] ?? []];
     }
 
-    # Return the published comments of one account, newest first; a Node comment shows only when the viewer may read its material, so slices follow until the limit fills
+    # Return the published comments of one account, newest by time, as migrated ids do not follow it; a Node comment shows only when the viewer may read its material
     public function getUserList(int $uid, int $limit): array {
         if ($uid < 1 || $limit < 1) return [];
-        $size = min($limit, 500);
+        $size = 500;
         $out = [];
         $last = 0;
+        $when = '';
         for ($i = 0; $i < 10 && count($out) < $limit; $i++) {
-            $pars = ['uid' => $uid, 'stat' => CommentStatus::Published->value] + ($last ? ['last' => $last] : []);
+            $pars = ['uid' => $uid, 'stat' => CommentStatus::Published->value] + ($last ? ['wa' => $when, 'wb' => $when, 'last' => $last] : []);
             $sql = 'SELECT '.self::FIELDS.', (SELECT r.path FROM '.PREFIX_DB.'_routes AS r WHERE r.oid = c.cid AND r.cur = 1'
                 .' AND r.kind = CASE c.modul WHEN \'account\' THEN \'user\' WHEN \'voting\' THEN \'poll\' ELSE \'node\' END) AS path FROM '.PREFIX_DB.'_comment AS c'
-                .' WHERE uid = :uid AND status = :stat AND deleted IS NULL'.($last ? ' AND id < :last' : '').' ORDER BY id DESC LIMIT 0, '.$size;
+                .' WHERE uid = :uid AND status = :stat AND deleted IS NULL'.($last ? ' AND (time < :wa OR (time = :wb AND id < :last))' : '')
+                .' ORDER BY time DESC, id DESC LIMIT 0, '.$size;
             $rows = array_map(fn(array $v): array => $this->getRowData($v) + ['path' => $v['path']], $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: []);
             $refs = [];
             foreach ($rows as $row) if ($this->checkNodeKind($row['modul']) && $row['cid'] > 0) $refs[$row['cid']] = $row['modul'];
@@ -318,6 +320,7 @@ class Comment {
             }
             foreach ($rows as $row) {
                 $last = $row['id'];
+                $when = $row['time'];
                 if ($this->checkNodeKind($row['modul']) && !isset($open[$row['cid']])) continue;
                 if (count($out) < $limit) $out[] = $row;
             }

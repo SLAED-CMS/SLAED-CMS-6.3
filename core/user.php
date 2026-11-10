@@ -560,7 +560,7 @@ function getForumBody(int $id, string $body, string $etime, bool $see, string $w
     global $tpl, $prs;
     $badge = ($see && $etime !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($etime, _TIMESTRING)]) : '';
     return [
-        'text' => filterTextHighlight($prs->filterContent($body, true, 'forum', 2, '', ['forum', $id], true), $word),
+        'text' => filterTextHighlight($prs->filterContent($body, true, 'forum', 2, 'breaks', ['forum', $id], true), $word),
         'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-forum-'.$id, 'mark_html' => $badge]),
     ];
 }
@@ -697,7 +697,7 @@ function checkProfileNames(string $text, string $old): string {
 # Render one signature in the file context of its account, so every page that shows it resolves its attachments against the one folder and owner of the account texts
 function getUserSign(string $sig, int $uid, int $hoff = 0): string {
     global $prs;
-    return ($sig === '') ? '' : $prs->filterContent($sig, true, 'profile', $hoff, '', ($uid > 0) ? ['profile', $uid] : [], true);
+    return ($sig === '') ? '' : $prs->filterContent($sig, true, 'profile', $hoff, 'breaks', ($uid > 0) ? ['profile', $uid] : [], true);
 }
 
 # Render the mailbox shelves of the private message page with their quota rings; a shelf badge keeps its element at zero, because an out-of-band swap needs one to replace

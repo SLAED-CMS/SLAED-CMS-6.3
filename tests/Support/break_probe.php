@@ -12,10 +12,11 @@ require_once __DIR__.'/probe_boot.php';
 require_once BASE_DIR.'/core/system.php';
 if (!class_exists('Parser')) require_once BASE_DIR.'/core/classes/parser.php';
 
-# Stored Markdown as the columns hold it: both hard breaks, an empty line, entities and a bare ampersand, tags a member typed, quotes and a fence with markup inside
+# Stored Markdown as the columns hold it: both hard breaks, a bare line end, an empty line, entities, tags a member typed, quotes and a fence with markup inside
 function getProbeValues(): array {
     return [
         'breaks' => "alpha  \nbeta\\\ngamma",
+        'soft' => "verse\nline",
         'blank' => "para\n\n\nnext",
         'entity' => 'a &amp; b & c &lt;x&gt;',
         'tags' => '<h4>Head</h4> and <b>x</b><br>y',

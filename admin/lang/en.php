@@ -209,7 +209,7 @@ define('_NODE','Content');
 define('_NODE_STALE','The Node type %s was changed by another save meanwhile, nothing was written. Reload the page and repeat the change.');
 define('_NODE_BAD','The Node type %s refused the change, nothing was written.');
 define('_NODE_PROOF','The database decides which snapshot applies, by the version of the Node type %s.');
-define('_NODE_MANAGE','Node: types and their settings');
+define('_NODE_MANAGE','Node types and their settings');
 define('_NODE_SETUP','The installation did not finish these Node sections: %s - a section was not created, not switched on or left without its starter material. The reason is written to the site log.');
 define('_NODE_START_TITLE','Welcome to SLAED CMS');
 define('_NODE_START_INTRO','The site is installed and ready to work. The sections for news, pages, questions and answers, files, links, media, documentation and others have been created from the standard Node profiles and are already switched on.');

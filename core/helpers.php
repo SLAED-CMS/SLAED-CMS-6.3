@@ -122,7 +122,7 @@ function getTplViewFieldRows(array $data = []): string {
     return $rows;
 }
 
-# Render one full preview block from prepared source texts and dynamic fields; own is the file context of the parser, such as [forum, 0] of an unsaved post
+# Render one full preview block from prepared source texts and dynamic fields; own is the parser file context, such as [forum, 0] of an unsaved post, fmt the format of its store
 function getTplPreviewContent(array $data = []): string {
     global $tpl, $prs;
     $title = $data['title'] ?? '';
@@ -131,9 +131,10 @@ function getTplPreviewContent(array $data = []): string {
     $field = $data['field'] ?? '';
     $mod = $data['mod'] ?? '';
     $own = $data['own'] ?? [];
+    $fmt = $data['fmt'] ?? '';
     if ($title === '' && $texta === '' && $textb === '' && $field === '') return '';
-    $bodya = $texta ? $prs->filterContent($texta, true, $mod, 0, '', $own, true) : '';
-    $bodyb = $textb ? $prs->filterContent($textb, true, $mod, 0, '', $own, true) : '';
+    $bodya = $texta ? $prs->filterContent($texta, true, $mod, 0, $fmt, $own, true) : '';
+    $bodyb = $textb ? $prs->filterContent($textb, true, $mod, 0, $fmt, $own, true) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
     return $tpl->getHtmlPart('preview', [
         'title' => _PREVIEW,
@@ -154,11 +155,12 @@ function getEditorPreview(): void {
     }
     $text = filterSourceText(getVar('post', 'text', 'raw', ''), isAdmin(true));
     $store = getVar('post', 'store', 'raw', '');
+    $store = is_string($store) ? $store : '';
     $mod = getVar('post', 'mod', 'var');
     $own = getUploadOwner($mod);
-    $room = checkEditorTextRoom($text, is_string($store) ? $store : '');
+    $room = checkEditorTextRoom($text, $store);
     if ($room !== '') echo $tpl->getHtmlFrag('alert', ['text' => $room, 'is_warn' => true]);
-    else echo getTplPreviewContent(['texta' => $text, 'mod' => $mod, 'own' => ($own !== '') ? [$own, 0] : []]);
+    else echo getTplPreviewContent(['texta' => $text, 'mod' => $mod, 'own' => ($own !== '') ? [$own, 0] : [], 'fmt' => getStoreFormat($store)]);
     exit;
 }
 
@@ -732,6 +734,11 @@ function getEditorRoomData(string $store): array {
     $kind = $room[$store] ?? 'text';
     $size = $byte[$kind];
     return ['kind' => $kind, 'bytes' => $size, 'embed' => $size >= intdiv(Parser::EMBEDMAX + 2, 3) * 4 + 32];
+}
+
+# Name the render format of a declared store, the one its readers pass to the parser: a conversation channel breaks on every line end its author typed
+function getStoreFormat(string $store): string {
+    return in_array($store, ['comment.body', 'forum.body', 'privat.body', 'users.sig'], true) ? 'breaks' : '';
 }
 
 # Refuse a text its column cannot hold before the query runs; length is strlen(), never mb_strlen(), because a column bounds bytes and not characters

@@ -83,12 +83,10 @@ namespace Tests\Unit {
                 'route' => 'admin',
                 'rows' => [
                     [
-                        'has_colon' => true,
                         'label' => 'Nickname',
                         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'placeholder_text' => 'Nickname', 'is_required' => true]),
                     ],
                     [
-                        'has_colon' => true,
                         'label' => 'Password',
                         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pwd', 'placeholder_text' => 'Password', 'is_required' => true]),
                     ],
@@ -115,12 +113,11 @@ namespace Tests\Unit {
                 'route' => 'admin',
                 'rows' => [
                     [
-                        'has_colon' => true,
                         'label' => 'Nickname',
                         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser']),
                     ],
-                    ['has_colon' => true, 'label' => 'Homepage', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aurl', 'value_attr' => 'http://admin.example.test'])],
-                    ['has_colon' => true, 'label' => 'Email', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aemail', 'value_attr' => 'admin@example.test'])],
+                    ['label' => 'Homepage', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aurl', 'value_attr' => 'http://admin.example.test'])],
+                    ['label' => 'Email', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aemail', 'value_attr' => 'admin@example.test'])],
                     [
                         'label' => 'Create user data',
                         'field_html' => $tpl->getHtmlFrag('radio', ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => 'Yes', 'is_checked' => true]),
@@ -144,8 +141,8 @@ namespace Tests\Unit {
             $html = (new \Template('missing-theme'))->getHtmlPart('auth-form', [
                 'route' => 'admin',
                 'rows' => [
-                    ['has_colon' => true, 'label' => 'Nickname', 'field_html' => '<input name="name">'],
-                    ['has_colon' => true, 'label' => 'Password', 'field_html' => '<input name="pwd">'],
+                    ['label' => 'Nickname', 'field_html' => '<input name="name">'],
+                    ['label' => 'Password', 'field_html' => '<input name="pwd">'],
                 ],
                 'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
                 'submit' => ['button_type' => 'submit', 'submit_label' => 'Login'],

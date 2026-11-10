@@ -3205,6 +3205,7 @@ function getProbeMatModel(): array {
     $sql = 'INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:open, \'news\', NOW(), 2, \'anna\', \'x\', 1),'
         .' (:shut, \'news\', NOW(), 2, \'anna\', \'x\', 1), (1, \'voting\', NOW(), 2, \'anna\', \'x\', 1)';
     $pdb->getSqlQuery($sql, ['open' => $open->id, 'shut' => $one->id]);
+    $shut = $one->id;
     $out['profile'] = [$was[0] === $was[1], $com->getUserCount(2) - $was[0], count($com->getUserList(2, 500)) - $was[1]];
     $sync = $GLOBALS['conf']['node']['limits']['syncbatch'];
     $GLOBALS['conf']['node']['limits']['syncbatch'] = 1;
@@ -3216,6 +3217,17 @@ function getProbeMatModel(): array {
         $out['batch'][] = getProbeQuery('guest')->getTargetSize();
     }
     $GLOBALS['conf']['node']['limits']['syncbatch'] = $sync;
+    $rows = implode(', ', array_fill(0, 300, '('.intval($shut).', \'news\', NOW(), 2, \'anna\', \'x\', 1)'));
+    $sql = 'INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES '.$rows;
+    $pdb->getSqlQuery($sql);
+    $deep = $pdb->getSqlQuery('SELECT COUNT(*) FROM '.$pre.'comment WHERE cid = :shut AND uid = 2', ['shut' => $shut])->fetchColumn();
+    $out['deep'] = [intval($deep) > 300, in_array($open->id, array_column(getProbeCom()->getUserList(2, 5), 'cid'), true)];
+    $sql = 'INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:open, \'news\', \'2001-01-01 00:00:00\', 2, \'anna\', \'x\', 1)';
+    $pdb->getSqlQuery($sql, ['open' => $open->id]);
+    $times = array_column(getProbeCom()->getUserList(2, 500), 'time');
+    $order = $times;
+    rsort($order);
+    $out['order'] = [$times === $order, end($times)];
     $out['free'] = $off('files', 'related');
     return $out;
 }

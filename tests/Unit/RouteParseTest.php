@@ -32,12 +32,12 @@ final class RouteParseTest extends TestCase
         return self::$probe;
     }
 
-    # Every row of the address table opens its page as a path; the canonical address, built since batch 5 on the stored path, shows the entity the route keys named
+    # Every row of the address table opens its page as a path; the canonical address is the stored path of the entity the keys named, the root for news, the start type
     #[Test]
     public function everyPageOfTheTableOpensAsAPath(): void
     {
         $want = [
-            'news' => [200, 'News', 'news'],
+            'news' => [200, 'News', ''],
             'news/alpha' => [200, 'Alpha - Open - News', 'news/alpha'],
             'news/open' => [200, 'Open - News', 'news/open'],
             'news?let=B' => [200, 'News - B', ''],
@@ -88,7 +88,7 @@ final class RouteParseTest extends TestCase
     public function theKeysOfThePathWinOverTheQuery(): void
     {
         $alpha = [200, 'Alpha - Open - News', 'news/alpha'];
-        $want = [$alpha, $alpha, [200, 'News', 'news'], [200, 'Beta - News', 'news/beta']];
+        $want = [$alpha, $alpha, [200, 'News', ''], [200, 'Beta - News', 'news/beta']];
         $this->assertSame($want, $this->getRun()['wins']);
     }
 }

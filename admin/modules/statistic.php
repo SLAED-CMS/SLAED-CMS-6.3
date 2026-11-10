@@ -545,7 +545,7 @@ function config(): void {
     foreach (getStatBotTypes() as $type => $word) {
         $map = $conf['statistic']['bots'][$type] ?? [];
         $lines = array_map(static fn(int|string $mask, string $name): string => $mask.(($name !== '') ? '='.$name : ''), array_keys($map), $map);
-        $bots[] = $list('bot_'.$type, _STATISTIC_BOTS.': '.$word, _STATISTIC_BOTLINE, $lines);
+        $bots[] = $list('bot_'.$type, _STATISTIC_BOTS.' '.$word, _STATISTIC_BOTLINE, $lines);
     }
     $rows = [
         [

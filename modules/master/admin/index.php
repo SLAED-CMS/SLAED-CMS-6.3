@@ -225,7 +225,8 @@ function getMasterStats(): string {
         .' ORDER BY failver DESC, num DESC');
     $rows = [];
     foreach (($res ? ($db->getSqlRows($res) ?: []) : []) as $row) {
-        $rows[] = [['content_text' => $row['failver']], ['content_text' => mb_ucfirst(sprintf(_MASTER_STEP, $row['failstep']))], ['is_col_count' => true, 'content_text' => $row['num']]];
+        $rows[] = [['content_text' => $row['failver']], ['content_text' => mb_ucfirst(sprintf(_MASTER_STEP, $row['failstep']))],
+            ['is_col_count' => true, 'content_text' => $row['num']]];
     }
     if ($rows) $cont .= getMasterTable([['content' => _MASTER_FAILS], ['content' => _MASTER_STEPS], ['content' => _MASTER_COUNT, 'is_col_count' => true]], $rows);
     return $cont;

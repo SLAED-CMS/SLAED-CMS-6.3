@@ -324,7 +324,6 @@ function getAdminLoginForm(): void {
             'route' => $afile,
             'rows' => [
                 [
-                    'has_colon' => true,
                     'label' => _NICKNAME,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
@@ -336,7 +335,6 @@ function getAdminLoginForm(): void {
                     ]),
                 ],
                 [
-                    'has_colon' => true,
                     'label' => _HOMEPAGE,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'name_attr' => 'aurl',
@@ -347,7 +345,6 @@ function getAdminLoginForm(): void {
                     ]),
                 ],
                 [
-                    'has_colon' => true,
                     'label' => _EMAIL,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'email',
@@ -359,13 +356,11 @@ function getAdminLoginForm(): void {
                     ]),
                 ],
                 [
-                    'has_colon' => true,
                     'label' => _PASSWORD,
                     'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'apwd', 'placeholder_text' => _PASSWORD, 'is_required' => true,
                         'autocomplete_attr' => 'new-password']),
                 ],
                 [
-                    'has_colon' => true,
                     'label' => _RETYPEPASSWORD,
                     'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'apwd2', 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true,
                         'autocomplete_attr' => 'new-password']),
@@ -389,7 +384,6 @@ function getAdminLoginForm(): void {
         $capt = getCaptcha('adminlogin');
         $rows = [
             [
-                'has_colon' => true,
                 'label' => _NICKNAME,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',
@@ -401,7 +395,6 @@ function getAdminLoginForm(): void {
                 ]),
             ],
             [
-                'has_colon' => true,
                 'label' => _PASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'name_attr' => 'pwd',

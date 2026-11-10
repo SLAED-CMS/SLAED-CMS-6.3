@@ -209,7 +209,7 @@ define('_NODE','Treści');
 define('_NODE_STALE','Typ Node %s został w międzyczasie zmieniony przez inny zapis, nic nie zapisano. Odśwież stronę i powtórz zmianę.');
 define('_NODE_BAD','Typ Node %s odrzucił zmianę, nic nie zapisano.');
 define('_NODE_PROOF','O migawce do zastosowania decyduje baza danych na podstawie wersji typu Node %s.');
-define('_NODE_MANAGE','Node: typy i ich ustawienia');
+define('_NODE_MANAGE','Typy Node i ich ustawienia');
 define('_NODE_SETUP','Instalacja nie ukończyła tych sekcji Node: %s - sekcja nie została utworzona, nie została włączona lub pozostała bez materiału startowego. Przyczyna jest zapisana w dzienniku witryny.');
 define('_NODE_START_TITLE','Witamy w SLAED CMS');
 define('_NODE_START_INTRO','Strona jest zainstalowana i gotowa do pracy. Sekcje wiadomości, stron, pytań i odpowiedzi, plików, linków, multimediów, dokumentacji i inne zostały utworzone ze standardowych profili Node i są już włączone.');

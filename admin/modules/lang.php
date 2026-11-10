@@ -129,7 +129,7 @@ function fileedit(): void {
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
         $rows = [[
             'label_for' => 'f-cnst-'.$i,
-            'label_html' => _CONST.': #'.$n,
+            'label_html' => _CONST.' '.$n,
             'is_lang_edit' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',

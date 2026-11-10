@@ -1989,7 +1989,7 @@ function getRouteModeOrder(string $html, array $marks): array {
     return array_keys($pos);
 }
 
-# The display modes over real requests: every list and one view of each type, read back by the classes of its mode; article keeps the base set beside the head and the part
+# The display modes over real requests: every list and one view of each type, read back by the classes of its mode; article keeps the base set beside the head, part and foot
 # The related cards of a media material come in the grid of its mode as well
 function getRouteModes(PDO $pdo): array {
     $pdo->exec('INSERT INTO '.RPREF.'_node_relations (nid, rid, type, sort) VALUES (701, 702, \'related\', 0)');
@@ -1997,10 +1997,11 @@ function getRouteModes(PDO $pdo): array {
     $out = [];
     foreach (['news', 'docs', 'faq', 'files', 'media'] as $name) {
         $one = $get('index.php?name='.$name);
-        $out['list'][$name] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list")/', $one['body']) === 1, substr_count($one['body'], 'class="sl-post sl-card"')];
+        $out['list'][$name] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list"|foot"|more")/', $one['body']) === 1,
+            substr_count($one['body'], 'class="sl-post sl-card"')];
     }
     $one = $get('index.php?name=news&op=view&id=101');
-    $out['news'] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list")/', $one['body']) === 1];
+    $out['news'] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list"|foot"|more")/', $one['body']) === 1];
     $out['docs'] = getRouteModeBits($get('index.php?name=docs')['body'], 'sl-node-toc');
     $one = $get('index.php?name=docs&op=view&id=201')['body'];
     $out['docsview'] = [str_contains($one, 'sl-views'), str_contains($one, 'sl-author'), str_contains($one, 'sl-date')];

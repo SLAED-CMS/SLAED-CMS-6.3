@@ -772,6 +772,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([true, 2, 2], $run['profile'], 'The profile count differs from its feed or counts a hidden material');
         $this->assertSame([2, 2], $run['lowbatch'], 'A sync batch below the targets of one feed slice drops Node comments from the profile');
         $this->assertSame([1, 500, 500], $run['batch'], 'The target batch does not follow limits.syncbatch within 500');
+        $this->assertSame([true, '2001-01-01 00:00:00'], $run['order'], 'The profile feed follows the id of a comment instead of its time');
+        $this->assertSame([true, true], $run['deep'], 'A run of hidden comments newer than the limit of the feed empties the profile feed');
         $root = dirname(__DIR__, 2);
         $own = '/min\(500, [^)]*syncbatch|array_(chunk|slice)\([^;]*\b500\b[^;]*getNodeTargetList/';
         foreach (['core/classes/comment.php', 'core/classes/node/service.php', 'modules/node/index.php', 'core/system.php'] as $file) {

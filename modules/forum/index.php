@@ -586,7 +586,7 @@ function view(): void {
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor, $upath);
             }
         }
-        $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], true, $conf['name'], 0, '', [], true))), 160);
+        $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], true, $conf['name'], 0, 'breaks', [], true))), 160);
         $seoimg = getImgText($rows[0][7], '', false, '', ['forum', intval($rows[0][0])]);
         $seoimg = $seoimg ? getPublicUrl($seoimg) : '';
         $share = getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $topic, 'route' => $rows[0][25], 'page' => $num]);
@@ -945,7 +945,8 @@ function add(): void {
         setHead(['title' => $info, 'ctitle' => ($fid || $ftext) ? $ctitle : '', 'kind' => 'utility', 'robots' => 'noindex, follow']);
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $psubject = (!$subh) ? $subject : '';
-        if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)]]);
+        $view = ['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)], 'fmt' => getStoreFormat('forum.body')];
+        if ($hometext) $cont .= getTplPreviewContent($view);
         $userinfo = getUserInfo();
         if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);

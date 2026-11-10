@@ -1128,8 +1128,7 @@ function getStatLoadHours(array $pts): array {
     return $out;
 }
 
-# One line of the counter by its field names: a day of an old archive stops at the eighth field, so its hours, load and session maps are empty,
-# and its browsers carry a major version, joined here into the family; null for a line that is no day
+# One counter line by field names: an old archive day stops at field eight with empty hour, load and session maps, its browser versions join their family; null for no day
 function getStatRow(string $line): ?array {
     $pts = explode('|', trim($line));
     if (count($pts) < 8 || !preg_match('#^(\d{2})\.(\d{2})\.(\d{4})$#', $pts[0], $hit)) return null;
