@@ -82,7 +82,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame([3, 35], $run['before']);
         $this->assertSame([200, true, [], true], $run['page'], 'The page of the first stage does not offer the run, shows a report or writes a file');
         $this->assertSame([true, true], $run['refuse']);
-        $this->assertSame([200, true, '0'], $run['guest']);
+        $this->assertSame([503, true, '0'], $run['guest'], 'A 6.2 site before its update did not answer a guest with the static 503 or closed itself');
         $this->assertStringContainsString('module registry: old_modules could not be read', $run['nomods'][0]);
         $this->assertSame([[], true, 0], array_slice($run['nomods'], 1), 'A registry that could not be read left the mark modules or wrote the file');
         $this->checkBrokenRun($run);

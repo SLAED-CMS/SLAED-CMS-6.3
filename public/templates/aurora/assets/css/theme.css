@@ -2295,7 +2295,8 @@ button.sl-but-mini:hover,
   list-style: none;
 }
 
-.sl-node-faq summary::-webkit-details-marker {
+.sl-node-faq summary::-webkit-details-marker,
+.sl-block-fold summary::-webkit-details-marker {
   display: none;
 }
 
@@ -2308,7 +2309,12 @@ button.sl-but-mini:hover,
   transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
-.sl-node-faq[open] summary .bi {
+.sl-block-fold summary .bi {
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-node-faq[open] summary .bi,
+.sl-block-fold[open] summary .bi {
   transform: rotate(90deg);
 }
 
@@ -5290,6 +5296,16 @@ dialog.sl-editor-emoji-panel {
   padding: var(--sl-space-2) var(--sl-space-1);
 }
 
+/* Navigation: the folded tail of the list, its rows spaced as the open ones */
+.sl-block-fold summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.sl-block-fold > a {
+  margin-top: var(--sl-space-2);
+}
+
 .sl-block-mod-section {
   margin-top: var(--sl-space-4);
   padding-top: var(--sl-space-3);
@@ -5304,6 +5320,7 @@ dialog.sl-editor-emoji-panel {
   flex-wrap: wrap;
   gap: var(--sl-space-3);
   align-items: center;
+  justify-content: space-between;
 }
 
 /* The flags are submit buttons of one form: the switch answers only a POST with a token in its body, which a link cannot carry */
@@ -5320,7 +5337,7 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-block-flags img {
-  width: var(--sl-size-icon-md);
+  width: var(--sl-size-icon-lg);
   height: auto;
   border: 1px solid var(--sl-border-strong);
   border-radius: var(--sl-radius-1);
@@ -7088,7 +7105,7 @@ button.sl-seg-cell:hover {
   min-width: var(--sl-menu-width);
   background-color: var(--sl-bg-inverse);
   color: var(--sl-band-text);
-  z-index: var(--sl-z-dropdown);
+  z-index: var(--sl-z-popover);
   box-shadow: var(--sl-panel-shadow);
   opacity: 0;
   visibility: hidden;

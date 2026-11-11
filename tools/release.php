@@ -131,9 +131,20 @@ function setArchiveModules(string $tag, string $file): array {
     return $cut;
 }
 
-# The archive of a tag: git archive honours export-ignore, every entry passes the path rules of a package, and files.json with SHA-256 and the site marks goes in
+# The archive of a tag with files.json inside: git archive honours export-ignore but runs the smudge filters of the clone, so a rewritten file gets the bytes of the tag back
 function addArchive(string $tag, string $file, string $ver): array {
     getGitText(['archive', '--format=zip', '-o', $file, $tag]);
+    $zip = new ZipArchive();
+    if ($zip->open($file) !== true) setFailExit('git archive wrote no zip for '.$tag);
+    $back = [];
+    foreach (explode("\0", rtrim(getGitText(['ls-tree', '-r', '-z', $tag]), "\0")) as $row) {
+        if (preg_match('#^100\d{3} blob ([0-9a-f]{40})\t(.+)$#Ds', $row, $hit) !== 1) continue;
+        $body = $zip->getFromName($hit[2]);
+        if ($body !== false && sha1('blob '.strlen($body)."\0".$body) !== $hit[1]) $back[$hit[2]] = $hit[1];
+    }
+    foreach ($back as $name => $blob) $zip->addFromString($name, getGitText(['cat-file', 'blob', $blob]));
+    if (!$zip->close()) setFailExit('cannot write '.$file);
+    if ($back) fwrite(STDOUT, 'Taken from '.$tag.' as committed, a filter of this clone rewrote: '.implode(', ', array_keys($back))."\n");
     setArchiveModules($tag, $file);
     $zip = new ZipArchive();
     if ($zip->open($file) !== true) setFailExit('git archive wrote no zip for '.$tag);

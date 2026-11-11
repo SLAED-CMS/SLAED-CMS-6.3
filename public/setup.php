@@ -360,7 +360,7 @@ function setSetupRun(array $state): array {
     return setSetupNext($state, $out);
 }
 
-# Write the configuration part after one more probe; the password then leaves the session, as the later parts read it from config/db.php
+# Write the configuration part after one more probe, the contacts of the shipped layout giving way to the site's own; the password then leaves the session, config/db.php holds it
 function setSetupConfig(array &$state): array {
     global $conf;
     $base = $state['base'];
@@ -368,7 +368,11 @@ function setSetupConfig(array &$state): array {
     $fail = getSetupProbe($base)['fail'];
     if ($fail !== '') return ['task' => '', 'fail' => $fail];
     $glob = getSetupSource('global.php');
-    if (!setSetupFile('global.php', $glob, ['language' => $state['lang'], 'homeurl' => $site['url'], 'sitename' => $site['name'], 'webroot' => getSetupRoot()])) {
+    $mail = (string)$state['admin']['mail'];
+    $sign = str_replace(['SLAED CMS - Support', 'https://slaed.net', 'support@slaed.net'], [$site['name'], $site['url'], $mail], (string)($glob['mtemp'] ?? ''));
+    $mine = ['language' => $state['lang'], 'homeurl' => $site['url'], 'sitename' => $site['name'], 'webroot' => getSetupRoot(), 'adminmail' => $mail, 'mtemp' => $sign,
+        'slogan' => '', 'schema' => (string)preg_replace('#,\s*"sameAs":\s*\[[^\]]*\]#', '', (string)($glob['schema'] ?? ''))];
+    if (!setSetupFile('global.php', $glob, $mine)) {
         return ['task' => '', 'fail' => _FILE.' config/global.php — '._SETUP_NOWRITE];
     }
     $now = (string)($conf['security']['afile'] ?? 'admin');
@@ -384,6 +388,12 @@ function setSetupConfig(array &$state): array {
         'collate' => $base['collate'], 'prefix' => $base['prefix']];
     if (!setSetupFile('db.php', getSetupBase(), $cont)) return ['task' => '', 'fail' => _FILE.' config/db.php — '._SETUP_NOWRITE];
     if (deleteSetupTypes() === false) return ['task' => '', 'fail' => _FILE.' config/node.php — '._SETUP_NOWRITE];
+    $lay = getSetupSource('layout.php')['layout'] ?? [];
+    $ours = ['address' => '', 'phone' => '', 'email' => $state['admin']['mail'], 'web' => $site['url'], 'paneon' => false, 'linetitle' => $site['name']];
+    $ours['marks'] = array_map(static fn(mixed $v): array => ['url' => ''] + (array)$v, (array)($lay['theme']['marks'] ?? []));
+    if (is_array($lay['theme'] ?? null) && !setSetupFile('layout.php', ['theme' => $ours + $lay['theme']] + $lay, [], true)) {
+        return ['task' => '', 'fail' => _FILE.' config/layout.php — '._SETUP_NOWRITE];
+    }
     $state['base']['pass'] = '';
     $task = ($panel !== $from) ? $from.'.php → '.$panel.'.php — '._SETUP_RENAMED : 'config/db.php — '._SETUP_WRITTEN;
     return ['task' => $task, 'fail' => ''];

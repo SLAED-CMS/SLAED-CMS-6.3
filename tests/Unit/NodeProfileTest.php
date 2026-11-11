@@ -192,7 +192,7 @@ final class NodeProfileTest extends TestCase
     # The first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
     # The administrator part creates the administrator with a site account of the same password and turns every profile into an active type through the one import path
     # The sixteen types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
-    # Every type, the starter news, the site account and the forum seed of insert.sql carry their first path, the seed in the order of the registry
+    # Every type, the starter news, the site account and the seed of node.sql and insert.sql carry their first path, the seed in the order of the registry
     #[Test]
     #[Group('release')]
     public function aCleanInstallationCreatesTheShippedTypes(): void
@@ -230,14 +230,25 @@ final class NodeProfileTest extends TestCase
         $this->assertMatchesRegularExpression('#^[0-9a-f]{32}$#D', $run['updater']['sid'], 'The installer left no id of the installation');
         $this->assertTrue($run['updater']['home'], 'The id does not belong to the address of the installation');
         $this->assertSame(\Update::getCheckTime($run['updater']['sid']), $run['updater']['line'], 'The daily minute of updatecheck does not follow the id');
-        $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
-            'comon' => 2]], $run['starter']);
+        $news = [1 => 'Безопасность и обновления: что проверить в первый день', 3 => 'Разделы сайта: новости, статьи, файлы и другие',
+            2 => 'Первые шаги в панели администратора'];
+        $want = [];
+        foreach ($news + [0 => 'Добро пожаловать в SLAED CMS'] as $cid => $title) {
+            $want[] = ['name' => 'news', 'cid' => $cid ?: 2, 'uid' => 0, 'aname' => 'SLAED', 'title' => $title, 'status' => 2, 'home' => 1, 'comon' => 2];
+        }
+        $this->assertSame($want, $run['starter'], 'The four starter news are not in the rubrics node.sql seeds');
         $want = [['user', 'users/probe']];
         foreach (self::NAMES as $name) $want[] = ['type', $name];
-        array_splice($want, array_search(['type', 'news'], $want, true) + 1, 0, [['node', 'news/dobro-pozhalovat-v-slaed-cms']]);
-        $seed = ['cat' => ['kategoriya-foruma', 'demonstratsiya-foruma', 'ustarevshie-soobshcheniya'],
-            'topic' => ['zashchita-i-bezopasnost', 'yazykovye-versii-statei', 'dobavlenie-pod-kategorii']];
-        foreach ($seed as $kind => $list) foreach ($list as $name) $want[] = [$kind, 'forum/'.$name];
+        $seed = ['node' => ['news' => ['bezopasnost-i-obnovleniya-chto-proverit-v-pervyi-den', 'razdely-saita-novosti-stati-faily-i-drugie',
+                'pervye-shagi-v-paneli-administratora', 'dobro-pozhalovat-v-slaed-cms']],
+            'cat' => ['docs' => ['ustroistvo', 'informatsiya', 'panel-administratora', 'temy', 'bloki', 'moduli'],
+                'faq' => ['nash-proekt', 'obshchie-svedeniya', 'chastye-oshibki', 'vnedreniya-i-izmeneniya'],
+                'files' => ['moduli', 'bloki', 'temy-i-grafika', 'programmy', 'skripty', 'yazyki', 'slaed-cms'], 'news' => ['internet', 'nashi-novosti', 'programmy'],
+                'forum' => ['sistema-postroeniya-saitov', 'vebmaster-i-vebdizain', 'koordinatsiya-proekta', 'ustanovka-nastroika-i-ispolzovanie', 'moduli', 'temy-oformleniya',
+                    'soobshcheniya-o-naidennykh-oshibkakh', 'seo-indeksatsiya-i-prodvizhenie', 'idei-i-predlozheniya-dlya-razrabotki', 'svobodnyi-otdel',
+                    'ustarevshie-soobshcheniya']],
+            'topic' => ['forum' => ['s-chego-nachat-posle-ustanovki', 'kak-smenit-logotip-menyu-i-podval', 'predlagaite-idei-dlya-razvitiya-saita']]];
+        foreach ($seed as $kind => $areas) foreach ($areas as $area => $list) foreach ($list as $name) $want[] = [$kind, $area.'/'.$name];
         $this->assertSame($want, array_map(fn(array $v): array => [$v[0], $v[1]], $run['routes']), 'The installation did not give its seed, types and accounts their paths');
         $this->assertSame(array_fill(0, count($want), 1), array_map('intval', array_column($run['routes'], 2)));
         $this->assertSame([303, 1, 16], $run['again']);
@@ -285,7 +296,7 @@ final class NodeProfileTest extends TestCase
     }
 
     # A profile the installation cannot finish - here a user file in uploads/node/jokes it refuses to take over - is named on the closing stop and in the site log with its step
-    # The other fifteen types and the starter news are created all the same, and the mark is gone
+    # The other fifteen types and the four starter news are created all the same, and the mark is gone
     #[Test]
     #[Group('release')]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void
@@ -296,7 +307,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_values(array_diff(self::SORTED, ['jokes'])), array_column($run['types'], 0));
         $this->assertSame([3, true], $run['notice']);
         $this->assertFalse($run['mark']);
-        $this->assertCount(1, $run['starter']);
+        $this->assertCount(4, $run['starter']);
         $logs = self::$fail['logs'];
         $this->assertSame([[], []], [$logs['error_php'], $logs['error_sql']]);
         $site = array_map(fn($v) => json_decode($v, true), $logs['error_site']);

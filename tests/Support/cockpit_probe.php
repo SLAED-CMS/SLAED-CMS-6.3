@@ -38,6 +38,9 @@ $sgtime = microtime(true);
 $conf['security']['log_b'] = '1';
 $conf['security']['dump_age'] = '7';
 $pout = ['calm' => getProbeSignals(), 'order' => array_column(getSystemSignals(0), 'key'), 'levels' => array_column(getSystemSignals(0), 'level')];
+setSchedulerState('selfcheck', ['last_run' => time() - 2 * 86400]);
+setSchedulerState('dbbackup', ['last_run' => time() - 86400]);
+$pout['ran'] = getProbeSignals();
 setProbeJournal('error_php.log', 3);
 setProbeJournal('error_site.log', 2);
 setProbeJournal('error_file.log', 4);
@@ -75,7 +78,8 @@ $pout['https'] = [getProbeSignals()['https']];
 $conf['homeurl'] = 'http://probe.test/';
 $pout['https'][] = getProbeSignals()['https'];
 $conf['homeurl'] = $phome;
-$pout['text'] = ['day' => sprintf(_ADM_SIG_DAY, '%s'), 'open' => _ADM_SIG_OPEN, 'none' => _ADM_SIG_NONE, 'off' => _OFF, 'late' => _ADM_SIG_LATE, 'wait' => _ADM_SIG_WAIT,
+$pout['text'] = ['day' => sprintf(_ADM_SIG_DAY, '%s'), 'open' => _ADM_SIG_OPEN, 'none' => _ADM_SIG_NONE,
+    'first' => _ADM_SIG_FIRST, 'off' => _OFF, 'late' => _ADM_SIG_LATE, 'wait' => _ADM_SIG_WAIT,
     'root' => _ADM_SIG_ROOT];
 $pout['setup'] = is_file(PUBLIC_DIR.'/setup.php');
 $pcalls = 0;

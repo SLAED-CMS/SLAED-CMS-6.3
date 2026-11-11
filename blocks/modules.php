@@ -35,13 +35,16 @@ foreach ($mod_list as $m_title => $info) {
         $mods_4 .= $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $m_title]), 'title' => $m_title2, 'label' => $m_title2, 'is_module' => true]);
     }
 }
-# The registered Node types stand beside the modules under their public names: an active type for everyone, a disabled one for those the registry hands it to
+# The registered Node types follow the modules under their public names, folded to keep the list short: an active type for everyone, a disabled one for whom the registry names
+$fold = '';
+$num = 0;
 foreach (getNodeTypeMap() as $tname => $ntype) {
     $label = getModuleName($tname);
     $link = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $tname]), 'title' => $label, 'label' => $label, 'is_module' => true]);
-    if ($ntype->active) $mods_1 .= $link;
-    else $mods_3 .= $link;
+    if (!$ntype->active) $mods_3 .= $link;
+    else [$fold, $num] = [$fold.$link, $num + 1];
 }
+if ($num) $mods_1 .= $tpl->getHtmlFrag('block-fold', ['title' => _MORE, 'num' => $num, 'content_html' => $fold]);
 $mods_2 = ($mods_2) ? $tpl->getHtmlFrag('block-content', [
     'is_block_module_section' => true,
     'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _INVISIBLEMODULES])._ACTIVEBUTNOTSEE,

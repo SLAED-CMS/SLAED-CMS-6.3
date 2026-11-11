@@ -53,7 +53,7 @@ final class CockpitTest extends TestCase
         $keys = $data['order'];
         sort($keys);
         $this->assertSame(self::KEYS, $keys);
-        $rank = array_map(fn(string $v): int => ['danger' => 0, 'warn' => 1, 'ok' => 2][$v], $data['levels']);
+        $rank = array_map(fn(string $v): int => ['danger' => 0, 'warn' => 1, 'info' => 2, 'ok' => 3][$v], $data['levels']);
         $sort = $rank;
         sort($sort);
         $this->assertSame($sort, $rank, 'A signal in order stands before a failure');
@@ -77,23 +77,25 @@ final class CockpitTest extends TestCase
         $this->assertSame(['danger', $day(10)], $data['many']['sql']);
     }
 
-    # An open root fails, no verdict within a day warns, every root closed is in order; the setup file warns while it lies in the root
+    # An open root fails, no verdict within a day warns, a check that never ran only waits, every root closed is in order; the setup file warns while it lies in the root
     #[Test]
     public function selfCheckAndSetupFile(): void
     {
         $data = $this->getProbe();
-        $this->assertSame(['warn', $data['text']['none']], $data['calm']['dirs']);
+        $this->assertSame(['info', $data['text']['first']], $data['calm']['dirs'], 'A self-check that never ran counts as a failure');
+        $this->assertSame(['warn', $data['text']['none']], $data['ran']['dirs']);
         $this->assertSame(['danger', $data['text']['open']], $data['open']['dirs']);
         $this->assertSame('ok', $data['closed']['dirs'][0]);
         $this->assertSame($data['setup'] ? ['warn', $data['text']['root']] : ['ok', ''], $data['calm']['setup']);
     }
 
-    # No backup at all fails, one older than dump_age warns with its short date, a fresh one is in order, backups switched off warn
+    # No backup after the job ran fails, before its first run it only waits, one older than dump_age warns with its short date, a fresh one is in order, backups off warn
     #[Test]
     public function backupAgeAndSwitch(): void
     {
         $data = $this->getProbe();
-        $this->assertSame('danger', $data['calm']['backup'][0]);
+        $this->assertSame(['info', $data['text']['first']], $data['calm']['backup'], 'A backup job that never ran counts as a failure');
+        $this->assertSame('danger', $data['ran']['backup'][0]);
         $this->assertSame(['warn', $data['backday']], $data['open']['backup']);
         $this->assertSame(['ok', ''], $data['closed']['backup']);
         $this->assertSame(['warn', $data['text']['off']], $data['nobackup']['backup']);

@@ -175,7 +175,9 @@ The admin dashboard and sidebar are assembled in `admin/index.php` and
 Files:
 - `setup.php`: the installer, one file in the root
 - `storage/update/sql/table.sql`, `storage/update/sql/insert.sql`: the schema and
-  the seed it runs
+  the seed it runs; `storage/update/sql/node.sql`: the rubrics of the Node types,
+  run by `addNodeProfiles()` once the types exist, as a type is not created over
+  rubrics of its name
 - `templates/admin/pages/setup.html`: the page of every stop
 
 Role:
@@ -252,16 +254,19 @@ Stops, each its own request, seven on the road of the card:
 
 Run, in parts (`getSetupParts()`), each its own POST:
 - configuration: the probe again, `global.php` (`language`, `homeurl`,
-  `sitename`), the rename of `admin.php` to the panel name, `security.php`
+  `sitename`, and `adminmail`, an empty `slogan`, the signature of `mtemp` and `schema`
+  without the accounts of slaed.net, so no new site mails or names the vendor as itself), the rename of `admin.php` to the panel name, `security.php`
   (`afile`), `db.php`, and `deleteSetupTypes()` removing the Node types of the
-  shipped `config/node.php` with their package; the database password leaves the
-  session afterwards
+  shipped `config/node.php` with their package, and the contacts of the shipped
+  `config/layout.php` give way to the address of the site and the mail of the
+  administrator, its version plate switched off, the season line titled with the name of the
+  site and the links of the technology tiles removed; the database password leaves the session afterwards
 - `table.sql` in groups of seven statements, then every statement of
   `insert.sql` alone; the last one writes the marks `points`, `ratings`, `fields`
   and `node` of `config/update.php`, so a failed statement leaves no mark
 - administrator: the core boots, the `_admins` row and the optional `_users` row
-  take the hash, then `addNodeProfiles()` creates the shipped types and the
-  starter news and removes the mark `node`
+  take the hash, then `addNodeProfiles()` creates the shipped types, seeds
+  `node.sql`, adds four starter news and removes the mark `node`
 - a part is marked busy in the session before it runs, and a request that meets a
   busy part fails the run instead of running it twice. A failed part sends the
   browser back to the administrator stop with the reason; once a table part has

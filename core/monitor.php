@@ -1095,7 +1095,7 @@ function getServerSignalList(array $in): array {
         ['uptime', 'clock-history', _MONITOR_UPTIME, ($mins !== null && $mins < 60) ? 'warn' : 'ok',
             ($mins === null) ? _NO_INFO : (($mins < 60) ? sprintf(_MONITOR_REBOOT, $mins) : sprintf(_MONITOR_NOREBOOT, getUptimeWords($mins)))],
     ];
-    $rank = ['danger' => 0, 'warn' => 1, 'ok' => 2];
+    $rank = ['danger' => 0, 'warn' => 1, 'info' => 2, 'ok' => 3];
     usort($rows, static fn(array $one, array $two): int => $rank[$one[3]] <=> $rank[$two[3]]);
     return array_map(static fn(array $one): array => array_combine(['key', 'icon', 'label', 'level', 'fact'], $one), $rows);
 }
@@ -1306,7 +1306,7 @@ function getStatData(string $month = '', int $pick = -1, bool $now = true, int $
     ];
 }
 
-# The sixteen signals of the lamp, failures first, each with check, level, fact of a failure and page; journals and queues kept $ttl seconds, 0 fresh
+# The sixteen signals of the lamp, failures first, each with check, level, fact and page; info is a job that waits for its first run, no failure; journals kept $ttl seconds
 function getSystemSignals(int $ttl = 60): array {
     global $conf, $afile;
     require_once BASE_DIR.'/core/classes/update.php';
@@ -1330,14 +1330,17 @@ function getSystemSignals(int $ttl = 60): array {
     $found = Update::getState()['found'];
     $ver = Update::isVersion((string)($found['version'] ?? '')) ? (string)$found['version'] : '';
     $age = time() - $runs['backup'];
-    $bak = empty($conf['security']['log_b']) ? ['warn', _OFF] : (($runs['backup'] <= 0) ? ['danger', _ADM_SIG_NOBAK]
+    $wait = static fn(string $job): bool => !empty(getSchedulerJobs()[$job]['active']) && intval(getSchedulerState($job)['last_run']) === 0;
+    $none = $wait('dbbackup') ? ['info', _ADM_SIG_FIRST] : ['danger', _ADM_SIG_NOBAK];
+    $bak = empty($conf['security']['log_b']) ? ['warn', _OFF] : (($runs['backup'] <= 0) ? $none
         : [($age > 86400 * max(1, intval($conf['security']['dump_age']))) ? 'warn' : 'ok', getShortDate($runs['backup'])]);
+    $first = $self['none'] && $wait('selfcheck');
     $day = static fn(int|string $num): string => sprintf(_ADM_SIG_DAY, $num);
     $count = static fn(int|string $num, int $warn, int $fail = 0): string => !is_int($num) ? 'ok'
         : (($fail > 0 && $num >= $fail) ? 'danger' : (($num >= $warn) ? 'warn' : 'ok'));
     $rows = [
-        ['dirs', _ADM_SIG_DIRS, 'security', $self['open'] ? 'danger' : (($self['none'] || $self['unknown']) ? 'warn' : 'ok'),
-            $self['open'] ? _ADM_SIG_OPEN : ($self['none'] ? _ADM_SIG_NONE : _ADM_SIG_UNK)],
+        ['dirs', _ADM_SIG_DIRS, 'security', $self['open'] ? 'danger' : ($first ? 'info' : (($self['none'] || $self['unknown']) ? 'warn' : 'ok')),
+            $self['open'] ? _ADM_SIG_OPEN : ($first ? _ADM_SIG_FIRST : ($self['none'] ? _ADM_SIG_NONE : _ADM_SIG_UNK))],
         ['setup', _ADM_SIG_SETUP, '', is_file(PUBLIC_DIR.'/setup.php') ? 'warn' : 'ok', _ADM_SIG_ROOT],
         ['php', _ADM_SIG_PHP, 'logs&op=logview&file=error_php', $count($runs['php'], 1, 100), $day($runs['php'])],
         ['site', _ADM_SIG_SITE, 'logs&op=logview&file=error_site', $count($runs['site'], 1, 100), $day($runs['site'])],
@@ -1354,7 +1357,7 @@ function getSystemSignals(int $ttl = 60): array {
         ['mail', _NEWSLETTER, 'newsletter&op=queue', ($runs['mail'] > 0) ? 'warn' : 'ok', sprintf(_ADM_SIG_WAIT, $runs['mail'])],
         ['update', _UPDATE_TITLE, 'update', ($ver === '') ? 'ok' : (empty($found['security']) ? 'warn' : 'danger'), $ver],
     ];
-    $rank = ['danger' => 0, 'warn' => 1, 'ok' => 2];
+    $rank = ['danger' => 0, 'warn' => 1, 'info' => 2, 'ok' => 3];
     $out = array_map(static fn(array $one): array => ['key' => $one[0], 'label' => $one[1], 'href' => ($one[2] !== '') ? $base.$one[2] : '', 'level' => $one[3],
         'fact' => ($one[3] === 'ok') ? '' : $one[4]], $rows);
     usort($out, static fn(array $one, array $two): int => $rank[$one['level']] <=> $rank[$two['level']]);

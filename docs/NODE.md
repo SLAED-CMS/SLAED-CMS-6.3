@@ -2114,7 +2114,8 @@ and calls `updateNodeType()` with the version the form carries.
 `addNodeTypeImport()`; nothing reads it at runtime. Every profile carries full `settings` and `fields` and empty
 `uploads` and `rating`, so a type made from it takes the site's `uploads.all` and the default rating rule. A clean
 installation (`addNodeProfiles()` in `core/admin.php`, opened by the mark `node => new` of `config/update.php`)
-imports and activates all sixteen and adds a starter material to `news`; the 8.0 update creates no type.
+imports and activates all sixteen, seeds the rubrics of `node.sql` and adds four starter
+materials to `news`; the 8.0 update creates no type.
 
 All sixteen profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off)
 and `reviews` (`access all`: a guest may post). `workflow.lifetime` is 30 days in `board` and `jobs` and 0 in the

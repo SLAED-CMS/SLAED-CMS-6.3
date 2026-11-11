@@ -65,6 +65,15 @@ date_default_timezone_set($conf['gtime']);
 # Language on — init locale, load main language file, set cookie
 setLang();
 
+# A site with no config/db.php is not installed: its visitor goes to the installer, at an address without the public/ a project-level .htaccess rewrote in; a 6.2 db.php gets 503
+if (($conf['db']['name'] ?? '') === '') {
+    if (defined('API_FILE') || is_file(CONFIG_DIR.'/db.php') || !is_file(PUBLIC_DIR.'/setup.php')) setGateClose(defined('API_FILE'));
+    $sdir = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
+    $sown = realpath((string)($_SERVER['DOCUMENT_ROOT'] ?? '')) === realpath(PUBLIC_DIR);
+    header('Location: '.((!$sown && str_ends_with($sdir, '/public')) ? substr($sdir, 0, -7) : $sdir).'/setup.php', true, 302);
+    exit;
+}
+
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
 $db = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);

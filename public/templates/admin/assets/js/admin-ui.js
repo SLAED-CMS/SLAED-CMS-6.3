@@ -2219,7 +2219,7 @@
     }
     // Г9-Г14 One answer of the cockpit poll: the tone of the panel, its line of state and the rows of the lamp, the signals in the order of the server, rings, strip
     function setCockpitView(box, data) {
-        var loud = data.signals.filter(function (sig) { return sig.level !== 'ok'; }).length;
+        var loud = data.signals.filter(function (sig) { return sig.level !== 'ok' && sig.level !== 'info'; }).length;
         var list = box.querySelector('[data-sl-signals]');
         var cap = box.querySelector('[data-sl-signals-cap]');
         var pass = box.querySelector('[data-sl-cockpit-pass]');

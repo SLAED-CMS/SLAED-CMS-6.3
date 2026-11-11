@@ -1536,12 +1536,13 @@ function getAdminFileDownload(): void {
     getFileStream($one['realpath'], $one['name']);
 }
 
-# Turn every shipped Node profile into an active type, news with starter material; only the mark node => new the installer writes to config/update.php opens it
+# Turn every shipped Node profile into an active type, then seed node.sql, as a type is not created over rubrics of its name, and four starter news; a body spells its line end \n
 function addNodeProfiles(int $aid): string {
     global $db, $conf, $fld, $pnt;
     if (($conf['update']['node'] ?? '') !== 'new') return '';
     $srv = new NodeService($db, new NodeContext(0, [], $aid, [], true, true, getIp(), ''), $fld, $pnt);
     $fail = [];
+    $news = null;
     foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
         $name = basename($file, '.json');
         $step = 'import';
@@ -1549,15 +1550,31 @@ function addNodeProfiles(int $aid): string {
             $type = $srv->addNodeTypeImport((string)file_get_contents($file));
             $step = 'status';
             $type = $srv->updateNodeTypeStatus($type->name, true, $type->version);
-            if ($type->name !== 'news') continue;
-            $step = 'starter';
-            $input = new NodeInput(0, [], 'SLAED', _NODE_START_TITLE, _NODE_START_INTRO, _NODE_START_BODY, [], 0, true, CommentMode::Open, false, null, null, [], [], []);
-            $srv->addNode($type, $input, NodeStatus::Published);
+            if ($type->name === 'news') $news = $type;
         } catch (NodeException $err) {
             $fail[] = $name;
             $info = ['name' => $name, 'step' => $step, 'code' => $err->getCode(), 'path' => $err->getMessage()];
             Logger::addSite('error', 'Node: the installation could not finish a profile', $info);
         }
+    }
+    $file = BASE_DIR.'/storage/update/sql/node.sql';
+    foreach (is_file($file) ? getSqlbatch((string)file_get_contents($file))['statements'] : [] as $sql) {
+        if ($db->getSqlQuery(str_replace('{prefix}', PREFIX_DB, $sql)) !== false) continue;
+        $fail[] = 'node.sql';
+        Logger::addSite('error', 'Node: the installation could not seed the rubrics', ['path' => $db->getSqlError()['message']]);
+    }
+    $list = [[1, _NODE_GUARD_TITLE, _NODE_GUARD_INTRO, _NODE_GUARD_BODY], [3, _NODE_PARTS_TITLE, _NODE_PARTS_INTRO, _NODE_PARTS_BODY],
+        [2, _NODE_PANEL_TITLE, _NODE_PANEL_INTRO, _NODE_PANEL_BODY], [2, _NODE_START_TITLE, _NODE_START_INTRO, _NODE_START_BODY]];
+    try {
+        foreach ($news ? $list : [] as $i => [$cid, $title, $intro, $body]) {
+            $date = date('Y-m-d H:i:s', time() - (count($list) - 1 - $i) * 86400);
+            $input = new NodeInput($cid, [], 'SLAED', $title, $intro, str_replace('\n', "\n", $body), [], 0, true, CommentMode::Open, false, $date, null, [], [], []);
+            $srv->addNode($news, $input, NodeStatus::Published);
+        }
+    } catch (NodeException $err) {
+        $fail[] = 'news';
+        $info = ['name' => 'news', 'step' => 'starter', 'code' => $err->getCode(), 'path' => $err->getMessage()];
+        Logger::addSite('error', 'Node: the installation could not finish a profile', $info);
     }
     if (!setConfigFile('update.php', array_diff_key($conf['update'], ['node' => '']))) Logger::addSite('error', 'Node: the installation mark could not be removed');
     return $fail ? sprintf(_NODE_SETUP, implode(', ', $fail)) : '';

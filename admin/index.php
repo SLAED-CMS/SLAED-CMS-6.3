@@ -134,7 +134,7 @@ function getAdminPanel(): void {
         $tone = getCockpitTone($sigs);
         $every = getLiveEvery('panel');
         $flag = static fn(string $level): array => ['is_ok' => $level === 'ok', 'is_info' => $level === 'info', 'is_warn' => $level === 'warn', 'is_danger' => $level === 'danger'];
-        $loud = count(array_filter($sigs, static fn(array $v): bool => $v['level'] !== 'ok'));
+        $loud = count(array_filter($sigs, static fn(array $v): bool => !in_array($v['level'], ['ok', 'info'], true)));
         $content .= $tpl->getHtmlPart('cockpit', [
             'url' => 'index.php?go=5&op=getCockpitData',
             'monitor_url' => HOME_PATH.$afile.'.php?name=monitor',
