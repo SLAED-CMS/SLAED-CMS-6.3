@@ -1,0 +1,354 @@
+/* Window series (win-NN): the window of the right side of the panel, and nothing else. Every face shows the same four
+   rooms with the same content - gauges as on the monitor, settings in groups, folding groups, and a bare form with a
+   table beside them - and differs only in the set of values on .wn-root: the frame, the radius, the ground, the head,
+   the line under it, the inset, the shade and the side of the fold. An axis is an attribute, a face is a set of
+   values, so the desk can mix any of them in place */
+.wn-desk {
+  display: grid;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-4) var(--sl-space-5);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+}
+
+.wn-desk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-6);
+}
+
+.wn-desk-cap,
+.wn-axis-cap,
+.wn-room-cap > b {
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.wn-axis {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.wn-desk .sl-seg-cell {
+  width: auto;
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.wn-desk-set {
+  margin: 0;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.wn-desk-reset {
+  margin-left: auto;
+}
+
+/* The rooms: one caption over each, a row of three and a stack */
+.wn-root {
+  --wn-edge: var(--sl-border);
+  --wn-round: var(--sl-radius-2);
+  --wn-fill: var(--sl-bg);
+  --wn-pad-x: var(--sl-space-5);
+  --wn-pad-y: var(--sl-space-5);
+  --wn-cap-y: var(--sl-space-4);
+  --wn-shade: none;
+  display: grid;
+  gap: var(--sl-space-8);
+  min-width: 0;
+}
+
+.wn-room {
+  display: grid;
+  gap: var(--sl-space-4);
+  min-width: 0;
+}
+
+.wn-room-cap {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sl-space-4);
+  margin: 0;
+  padding-bottom: var(--sl-space-2);
+  border-bottom: 1px dashed var(--sl-border-strong);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.wn-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-4);
+}
+
+.wn-stack {
+  display: grid;
+  gap: var(--sl-space-4);
+  min-width: 0;
+}
+
+.wn-room .sl-box {
+  margin: 0;
+}
+
+/* Axis: frame */
+.wn-root[data-wn-frame="strong"] {
+  --wn-edge: var(--sl-border-strong);
+}
+
+/* Axis: radius */
+.wn-root[data-wn-radius="1"] {
+  --wn-round: var(--sl-radius-1);
+}
+
+.wn-root[data-wn-radius="3"] {
+  --wn-round: var(--sl-radius-3);
+}
+
+/* Axis: ground */
+.wn-root[data-wn-ground="grad"] {
+  --wn-fill: linear-gradient(var(--sl-surface), var(--sl-bg));
+}
+
+.wn-root[data-wn-ground="sunken"] {
+  --wn-fill: var(--sl-surface);
+}
+
+/* Axis: inset */
+.wn-root[data-wn-inset="tight"] {
+  --wn-pad-x: var(--sl-space-4);
+  --wn-pad-y: var(--sl-space-3);
+  --wn-cap-y: var(--sl-space-3);
+}
+
+.wn-root[data-wn-inset="wide"] {
+  --wn-pad-x: var(--sl-space-6);
+  --wn-pad-y: var(--sl-space-6);
+}
+
+/* Axis: shade */
+.wn-root[data-wn-shade="xs"] {
+  --wn-shade: var(--sl-shadow-xs);
+}
+
+/* The window */
+.wn-win {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--wn-edge);
+  border-radius: var(--wn-round);
+  background: var(--wn-fill);
+  box-shadow: var(--wn-shade);
+}
+
+.wn-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  box-sizing: border-box;
+  min-height: calc(var(--sl-size-chip) + var(--wn-cap-y) * 2 + 1px);
+  padding: var(--wn-cap-y) var(--wn-pad-x);
+}
+
+.wn-title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wn-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  color: var(--sl-primary);
+}
+
+.wn-lamps {
+  display: none;
+  gap: var(--sl-space-2);
+}
+
+.wn-lamps > i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-danger);
+}
+
+.wn-lamps > i:nth-child(2) {
+  background: var(--sl-warning);
+}
+
+.wn-lamps > i:nth-child(3) {
+  background: var(--sl-success);
+}
+
+.wn-tail {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin-left: auto;
+}
+
+.wn-meta {
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.wn-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--wn-pad-y) var(--wn-pad-x);
+}
+
+/* Axis: the line under the head; without it the head sits on the body, and a folded window keeps its lower inset */
+.wn-root[data-wn-rule="on"] .wn-cap {
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.wn-root[data-wn-rule="off"] .wn-cap {
+  min-height: calc(var(--sl-size-chip) + var(--wn-pad-y));
+  padding-top: var(--wn-pad-y);
+  padding-bottom: 0;
+}
+
+.wn-root[data-wn-rule="off"] .wn-body {
+  padding-top: var(--wn-cap-y);
+}
+
+.wn-root[data-wn-rule="on"] .wn-win:has(> .sl-collapsible.sl-is-closed) > .wn-cap {
+  border-bottom-color: transparent;
+}
+
+.wn-root[data-wn-rule="off"] .wn-win:has(> .sl-collapsible.sl-is-closed) > .wn-cap {
+  min-height: calc(var(--sl-size-chip) + var(--wn-pad-y) * 2);
+  padding-bottom: var(--wn-pad-y);
+}
+
+/* Axis: head. Mono capitals with the icon or with the three lamps are the window of the monitor */
+.wn-root:is([data-wn-head="caps"], [data-wn-head="lamps"]) :is(.wn-title, .wn-meta) {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  line-height: var(--sl-line-normal);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.wn-root:is([data-wn-head="caps"], [data-wn-head="lamps"]) .wn-meta {
+  color: var(--sl-primary);
+}
+
+.wn-root[data-wn-head="lamps"] .wn-mark > .bi {
+  display: none;
+}
+
+.wn-root[data-wn-head="lamps"] .wn-lamps {
+  display: inline-flex;
+}
+
+/* Head: plain text in the strong brand tone and no mark is the settings block of today */
+.wn-root[data-wn-head="link"] .wn-title {
+  font-size: var(--sl-font-body);
+  font-weight: var(--sl-weight-normal);
+  line-height: var(--sl-size-icon-sm);
+  color: var(--sl-primary-strong);
+}
+
+.wn-root[data-wn-head="link"] .wn-mark {
+  display: none;
+}
+
+/* Head: the icon on a solid plate and a semibold name is the window of the cabinet of the site */
+.wn-root[data-wn-head="badge"] .wn-title {
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-semibold);
+  line-height: var(--sl-line-tight);
+  color: var(--sl-text-strong);
+}
+
+.wn-root[data-wn-head="badge"] .wn-mark {
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-size-icon-sm);
+}
+
+/* Axis: the side of the fold */
+.wn-fold {
+  flex: none;
+}
+
+.wn-root[data-wn-fold="end"] .wn-fold {
+  order: 9;
+}
+
+.wn-root[data-wn-fold="end"] .wn-tail {
+  margin-right: 0;
+}
+
+/* Content inside a window: the list of facts is the narrow one the theme gives a window of a board - the value at the
+   right, a dashed rule, none under the last fact */
+.wn-win .sl-kv {
+  grid-template-columns: var(--sl-monitor-table-width) minmax(0, 1fr);
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-3) 0;
+  border-bottom-style: dashed;
+  font-size: var(--sl-font-small);
+}
+
+.wn-win .sl-kv:last-child {
+  border-bottom: 0;
+}
+
+.wn-win .sl-kv > dd {
+  display: block;
+  text-align: right;
+}
+
+.wn-win .sl-kv > dt {
+  color: var(--sl-text-muted);
+}
+
+/* The rows of a form lose their own ground on every ground but the sunken one, where they
+   stay the white tiles of the block of today, and reach the inset so their text starts under the name of the window */
+.wn-win .sl-div-grid {
+  margin-bottom: 0;
+}
+
+.wn-win .sl-div-item:last-child {
+  border-bottom: 0;
+}
+
+.wn-root:not([data-wn-ground="sunken"]) .wn-win .sl-div-item {
+  background: none;
+}
+
+.wn-root:not([data-wn-ground="sunken"]) .wn-win .sl-div-item:hover {
+  background: var(--sl-tint);
+}
+
+.wn-root:not([data-wn-ground="sunken"]) .wn-body > .sl-div-grid {
+  margin-inline: calc(var(--sl-space-4) * -1);
+}
+
+@media (max-width: 900px) {
+  .wn-trio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

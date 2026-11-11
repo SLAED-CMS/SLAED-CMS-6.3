@@ -1797,6 +1797,39 @@ const DEMO_MON = [
   },
 ];
 
+/* The window series: which window the right side of the panel takes as its one standard. The four faces carry the same
+   four rooms (assets/win.js) and differ only in the set of values on the root; the desk mixes the axes in place */
+const DEMO_WIN = [
+  {
+    file: 'win-01-monitor.html',
+    title: 'Окно мониторинга',
+    note: 'Окно «Мониторинга» и «Статистики» как есть: сильная рамка, радиус 12, градиент поверхности, название моноширинным ' +
+      'капсом с тремя лампами, черта под шапкой, поля 16. Группы настроек и сворачиваемые группы надевают ту же рамку.',
+    tags: ['рамка сильная', 'радиус 12', 'градиент', 'капс и лампы', 'черта', 'поля 16'],
+  },
+  {
+    file: 'win-02-block.html',
+    title: 'Блок настроек',
+    note: 'Блок настроек «Пользователи → Конфигурации» как есть: тонкая рамка, радиус 4, утопленная поверхность с белыми ' +
+      'строками, название обычным текстом в тоне бренда, без значка и черты, поля 8. Приборы надевают ту же рамку.',
+    tags: ['рамка тонкая', 'радиус 4', 'утопленная', 'название текстом', 'без черты', 'поля 8'],
+  },
+  {
+    file: 'win-03-cabinet.html',
+    title: 'Окно кабинета',
+    note: 'Окно кабинета сайта, перенесённое в панель: тонкая рамка, радиус 8, плоская поверхность, значок на плашке и ' +
+      'полужирное название, без черты, поля 12. Один вид окна на панель и на сайт.',
+    tags: ['рамка тонкая', 'радиус 8', 'плоская', 'значок-плашка', 'без черты', 'поля 12'],
+  },
+  {
+    file: 'win-04-mixed.html',
+    title: 'Смешанный',
+    note: 'Рамка таблицы списка — тонкая, радиус 8, её же тень — и шапка мониторинга: моноширинный капс с иконкой и черта под ' +
+      'ней, поверхность плоская, поля 12. Окно, таблица и алерт получают один радиус на экране.',
+    tags: ['рамка тонкая', 'радиус 8', 'плоская', 'капс и иконка', 'черта', 'тень таблицы'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -1819,6 +1852,7 @@ const DEMO_SERIES = [
   { key: 'sitebuild', title: 'Конструктор сайта', addr: 'index.php (главная), partials/menu.html, site-header.html, site-footer.html', items: DEMO_SITEBUILD },
   { key: 'statistic', title: 'Статистика', addr: 'admin.php?name=statistic', items: DEMO_STAT },
   { key: 'monitor', title: 'Мониторинг', addr: 'admin.php?name=monitor', items: DEMO_MON },
+  { key: 'windows', title: 'Окна панели', addr: 'admin.php?name=monitor, account&op=config, rss', items: DEMO_WIN },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
