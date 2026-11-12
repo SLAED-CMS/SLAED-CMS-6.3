@@ -8,6 +8,9 @@
     {% endfor %}
   </span>
   {% endif %}
+  {% if meta or meta_icon %}
+  <span class="sl-pane-meta"{% if meta_tone %} data-sl-tone="{{ meta_tone }}"{% endif %}>{% if meta_icon %}<i class="bi bi-{{ meta_icon }}" aria-hidden="true"></i>{% endif %}{{ meta }}</span>
+  {% endif %}
   {% if live_title %}
   <span class="sl-profile-feed-live" title="{{ live_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
   {% endif %}

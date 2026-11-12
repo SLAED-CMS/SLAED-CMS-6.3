@@ -25,14 +25,16 @@
       </div>
       <div class="sl-pres-detail">
         {% for item in groups %}
-        <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.title }}</span><b data-sl-tone="success">● {{ item.state }}</b></div>
-          <div class="sl-pres-tags">{% for tag in item.tags %}<span>{{ tag }}</span>{% endfor %}</div>
+        <div class="sl-pane">
+          {% include 'fragments/pane-cap.html' with item %}
+          <div class="sl-pane-body">
+            <div class="sl-pres-tags">{% for tag in item.tags %}<span>{{ tag }}</span>{% endfor %}</div>
+          </div>
         </div>
         {% endfor %}
       </div>
       <div class="sl-pres-blocks">
-        <div class="sl-pres-panel-head"><span><i class="bi bi-grid-1x2" aria-hidden="true"></i>{{ blocks.over }}</span><b><i class="sl-pres-dot" data-sl-tone="success"></i>{{ blocks.active }}</b></div>
+        {% include 'fragments/pane-cap.html' with blocks_cap %}
         <div class="sl-pres-blocks-layout">
           <div class="sl-pres-blocks-stage sl-pres-scene">
             <svg class="sl-pres-wires" viewBox="0 0 760 340" preserveAspectRatio="none" aria-hidden="true">
@@ -59,15 +61,17 @@
             <div class="sl-pres-node{% if item.is_on %} sl-is-on{% else %} sl-is-off{% endif %}" title="{{ item.title }}" data-sl-pres-slot="{{ item.slot }}" data-sl-pres-at="{{ item.at }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.pos }}</span><b>{{ item.title }}</b><small><span>{% if item.is_file %}FILE{% else %}HTML{% endif %}</span><span>{% if item.is_on %}ON{% else %}OFF{% endif %}</span></small></div>
             {% endfor %}
           </div>
-          <aside class="sl-pres-blocks-panel">
-            <div class="sl-pres-panel-head"><span><i class="bi bi-layout-three-columns" aria-hidden="true"></i>{{ blocks.layout }}</span><b>{{ blocks.current }}</b></div>
-            <div class="sl-pres-blocks-list">
-              {% for item in blocks.nodes %}
-              <div class="sl-pres-bcard" title="{{ item.title }}" data-sl-pres-slot="{{ item.slot }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>
-              {% endfor %}
-            </div>
-            <div class="sl-pres-rules">
-              {% for item in blocks.rules %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.title }}</b><em>{{ item.note }}</em></span>{% endfor %}
+          <aside class="sl-pane sl-pres-blocks-panel">
+            {% include 'fragments/pane-cap.html' with layout_cap %}
+            <div class="sl-pane-body">
+              <div class="sl-pres-blocks-list">
+                {% for item in blocks.nodes %}
+                <div class="sl-pres-bcard" title="{{ item.title }}" data-sl-pres-slot="{{ item.slot }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>
+                {% endfor %}
+              </div>
+              <div class="sl-pres-rules">
+                {% for item in blocks.rules %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.title }}</b><em>{{ item.note }}</em></span>{% endfor %}
+              </div>
             </div>
           </aside>
         </div>

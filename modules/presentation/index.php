@@ -156,6 +156,9 @@ function getPresentationData(): array {
         'num' => sprintf('%02d', $num), 'icon' => $icon, 'title' => $title, 'lead' => $lead, 'state' => $state, 'tone' => $tone,
     ];
     $toggle = static fn(string $name, string $label, bool $on): array => ['toggle' => ['name' => $name, 'label' => $label, 'is_on' => $on, 'yes' => _YES, 'no' => _NO]];
+    $cap = static fn(string $icon, string $title, string $meta = '', string $tone = '', string $mark = ''): array => [
+        'icon' => $icon, 'title' => $title, 'meta' => $meta, 'meta_tone' => $tone, 'meta_icon' => $mark,
+    ];
     $gen = getLoadMark('gen_ms');
     $qnum = getLoadMark('qnum');
     $sql = getLoadMark('sql');
@@ -294,8 +297,9 @@ function getPresentationData(): array {
         ],
         'plate' => ['pass' => 14, 'total' => 14, 'bars' => array_map(static fn(int $i): array => ['num' => $i], range(0, 13))],
         'eyebrow' => _PRES_EYEBROW, 'head_a' => $motto[0], 'head_b' => $motto[1], 'head_c' => $motto[2], 'lead' => _PRES_LEAD,
+        'core_cap' => $cap('window-sidebar', _PRES_CONTROL, $menu[0]['path']),
         'core' => [
-            'title' => _PRES_CONTROL, 'route' => $menu[0]['path'], 'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,
+            'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,
             'metrics' => [
                 ['value' => $gen.' ms', 'label' => _PRES_GEN], ['value' => $qnum.' sql', 'label' => _PRES_QUERY],
                 ['value' => (string)$live, 'label' => _ONLINE],
@@ -345,8 +349,9 @@ function getPresentationData(): array {
         ],
         'legend' => [_PRES_RH_HITS, _PRES_CACHE, _PRES_DB],
         'vring' => ['is_round' => true, 'inner' => $gpart, 'deep' => $qpart] + $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'info'),
+        'vitals_cap' => $cap('activity', _PRES_RH_VITALS, '', '', 'heart-pulse'),
         'vitals' => [
-            'over' => _PRES_RH_VITALS, 'title' => _PRES_RH_FAST, 'text' => _PRES_RH_FAST_T,
+            'title' => _PRES_RH_FAST, 'text' => _PRES_RH_FAST_T,
             'rows' => [
                 ['label' => _PRES_RH_RESP, 'value' => $gen.' ms', 'icon' => '', 'tone' => ''],
                 ['label' => _PRES_QUERIES, 'value' => $qnum, 'icon' => '', 'tone' => ''],
@@ -360,22 +365,23 @@ function getPresentationData(): array {
         'theme' => $theme, 'logo' => $logo, 'mods' => $mods, 'lit' => $lit,
         'presets' => ['label' => _PRES_MD_BUILD, 'note' => _PRES_MD_DEMO, 'items' => $presets],
         'groups' => [
-            ['icon' => 'cpu', 'title' => _PRES_MD_CORE, 'state' => _PRES_MD_READY, 'tags' => [
+            $cap('cpu', _PRES_MD_CORE, '● '._PRES_MD_READY, 'success') + ['tags' => [
                 _PRES_NAV_MODULES.' '.$mon.' / '.$mtot, _LANGUAGE.' '.$langs, _PRES_CACHE.' '.$state, _VERSION.' '.$ver[0],
             ]],
-            ['icon' => 'file-earmark-text', 'title' => _PRES_MD_CONTENT, 'state' => _PRES_MD_LIVE, 'tags' => [
+            $cap('file-earmark-text', _PRES_MD_CONTENT, '● '._PRES_MD_LIVE, 'success') + ['tags' => [
                 ...($news['type'] ? [_NEWS.' '.$num($news['num'])] : []), ...($docs['type'] ? [_PAGES.' '.$num($docs['num'])] : []),
                 ...($files['type'] ? [_FILES.' '.$num($files['num'])] : []), _CATEGORIES.' '.$num($cats),
             ]],
-            ['icon' => 'shield-lock', 'title' => _PRES_MD_CONTROL, 'state' => _PRES_MD_SECURED, 'tags' => [
+            $cap('shield-lock', _PRES_MD_CONTROL, '● '._PRES_MD_SECURED, 'success') + ['tags' => [
                 _USERS.' '.$num($users), _ONLINE.' '.$cnt['all'], _BOTS.' '.$bots, _PRES_GD_EVENTS.' '.$events,
             ]],
-            ['icon' => 'easel', 'title' => _PRESENTATION, 'state' => _PRES_MD_SEPARATE, 'tags' => [
+            $cap('easel', _PRESENTATION, '● '._PRES_MD_SEPARATE, 'success') + ['tags' => [
                 _THEME.' '.$theme, sprintf(_PRES_BL_ACTIVE, $bcount), _LANGUAGE.' '.$conf['language'],
             ]],
         ],
+        'blocks_cap' => $cap('grid-1x2', _PRES_BL_OVER, '● '.sprintf(_PRES_BL_ACTIVE, $bcount), 'success'),
+        'layout_cap' => $cap('layout-three-columns', _PRES_BL_LAYOUT, $cur),
         'blocks' => [
-            'over' => _PRES_BL_OVER, 'active' => sprintf(_PRES_BL_ACTIVE, $bcount),
             'fill' => [
                 'banner' => isset($filled['b']), 'left' => isset($filled['l']), 'top' => isset($filled['c']), 'bottom' => isset($filled['d']),
                 'right' => isset($filled['r']), 'footer' => isset($filled['f']),
@@ -384,7 +390,7 @@ function getPresentationData(): array {
                 'banner' => _PRES_BL_BANNER, 'left' => _PRES_BL_LEFT, 'top' => _PRES_BL_TOP, 'content' => _PRES_BL_CONTENT, 'output' => _PRES_BL_OUTPUT,
                 'bottom' => _PRES_BL_BOTTOM, 'right' => _PRES_BL_RIGHT, 'footer' => _PRES_BL_FOOTER,
             ],
-            'nodes' => $nodes, 'router' => _PRES_BL_POS, 'router_note' => _PRES_BL_ROUTER, 'layout' => _PRES_BL_LAYOUT, 'current' => $cur,
+            'nodes' => $nodes, 'router' => _PRES_BL_POS, 'router_note' => _PRES_BL_ROUTER,
             'rules' => [
                 ['icon' => 'eye', 'title' => _PRES_BL_VIS, 'note' => _PRES_BL_VIS_T], ['icon' => 'sort-down', 'title' => _PRES_BL_ORDER, 'note' => _PRES_BL_ORDER_T],
                 ['icon' => 'toggle-on', 'title' => _STATUS, 'note' => _PRES_BL_STATUS_T], ['icon' => 'file-earmark-code', 'title' => _PRES_BL_SOURCE, 'note' => _PRES_BL_SOURCE_T],
@@ -424,15 +430,17 @@ function getPresentationData(): array {
             ['icon' => 'file-earmark-text', 'title' => _PRES_MD_CONTENT], ['icon' => 'search', 'title' => _SEARCH],
             ['icon' => 'cpu', 'title' => _PRES_GD_PUBLIC], ['icon' => 'gear', 'title' => _PRES_GD_SYSTEM],
         ],
+        'class_cap' => $cap('funnel', _PRES_GD_CLASS, _PRES_GD_STATE, 'success'),
+        'types_cap' => $cap('diagram-3', _PRES_GD_TYPES),
+        'log_cap' => $cap('list-check', _PRES_GD_LAST),
         'classifier' => [
-            'title' => _PRES_GD_CLASS, 'text' => _PRES_GD_CLASS_T, 'state' => _PRES_GD_STATE,
+            'text' => _PRES_GD_CLASS_T,
             'stats' => [
                 $stat(_PRES_GD_EVENTS, (string)$events, '', '', -1, $events > 0 ? 'danger' : 'success'),
                 $stat(_PRES_GD_FAILED, (string)$failed, '', '', -1, $failed > 0 ? 'warning' : 'success'),
                 $stat(_PRES_GD_VISITS, $num($today['visits'])),
             ],
         ],
-        'types_title' => _PRES_GD_TYPES,
         'types' => [
             ['icon' => 'person-fill', 'label' => _PRES_GD_T_HUMAN, 'verdict' => _PRES_GD_ALLOW, 'tone' => 'primary'],
             ['icon' => 'search', 'label' => _PRES_GD_T_SEARCH, 'verdict' => _PRES_GD_INDEX, 'tone' => 'info'],
@@ -440,7 +448,6 @@ function getPresentationData(): array {
             ['icon' => 'robot', 'label' => _PRES_GD_T_BOT, 'verdict' => _PRES_GD_ALLOW, 'tone' => 'muted'],
             ['icon' => 'bug-fill', 'label' => _PRES_GD_T_EVIL, 'verdict' => _PRES_GD_BLOCK, 'tone' => 'danger'],
         ],
-        'log_title' => _PRES_GD_LAST,
         'log' => [
             ['label' => _PRES_GD_LOG_A, 'result' => _PRES_GD_ALLOW, 'tone' => 'success'], ['label' => _PRES_GD_LOG_B, 'result' => _PRES_GD_INDEX, 'tone' => 'success'],
             ['label' => _PRES_GD_LOG_C, 'result' => _PRES_GD_CLASSIFY, 'tone' => 'info'], ['label' => _PRES_GD_LOG_D, 'result' => _PRES_GD_ALLOW, 'tone' => 'success'],
@@ -462,12 +469,14 @@ function getPresentationData(): array {
     ];
     $runtime = [
         'head' => $head(4, getIconName('focus'), _PRES_H_SPEED, _PRES_L_SPEED),
+        'resp_cap' => $cap('stopwatch', _PRES_SP_RESP),
+        'db_cap' => $cap('database', _PRES_DB),
+        'online_cap' => $cap('people', _ONLINE),
         'resp' => [
-            'title' => _PRES_SP_RESP, 'value' => $gen, 'unit' => 'ms', 'chart' => _PRES_RH_CHART,
+            'value' => $gen, 'unit' => 'ms', 'chart' => _PRES_RH_CHART,
             'series' => json_encode(['day' => ['labels' => $span, 'visits' => $spark]]),
         ],
         'db' => [
-            'title' => _PRES_DB,
             'rows' => [
                 ['label' => _PRES_QUERIES, 'value' => $qnum, 'part' => $qpart, 'has_part' => true],
                 ['label' => _PRES_SQL_TIME, 'value' => $sql.' s', 'part' => $spart, 'has_part' => true],
@@ -475,7 +484,7 @@ function getPresentationData(): array {
             ],
         ],
         'online' => [
-            'title' => _ONLINE, 'dials' => [$onring],
+            'dials' => [$onring],
             'rows' => [
                 ['label' => _BMEM, 'value' => (string)$cnt['users']], ['label' => _BOTS, 'value' => (string)$bots],
                 ['label' => _BVIS, 'value' => (string)$guests], ['label' => _OVERALL, 'value' => (string)$cnt['all']],
@@ -519,10 +528,10 @@ function getPresentationData(): array {
     ];
     $dev = [
         'head' => $head(5, getIconName('commits'), _PRES_H_DEV, _PRES_L_DEV),
-        'version' => 'SLAED '.$conf['version'].($branch !== '' ? ' · '.$branch : ''), 'live' => _PRES_DV_ACTIVE,
+        'board_cap' => $cap('clock-history', _PRES_DV_ACTIVE, 'SLAED '.$conf['version'].($branch !== '' ? ' · '.$branch : '')),
+        'focus_cap' => $cap('git', _PRES_DV_FOCUS, 'HEAD'), 'pipe_cap' => $cap('box-seam', _PRES_DV_PIPE, _PRES_DV_PIPE_T),
         'commits' => $commits, 'has_commits' => $commits !== [], 'none' => _PRES_DV_NONE,
-        'focus' => _PRES_DV_FOCUS, 'focus_state' => 'HEAD', 'focus_recent' => _PRES_DV_RECENT, 'first' => $commits[0] ?? [],
-        'pipe' => _PRES_DV_PIPE, 'pipe_note' => _PRES_DV_PIPE_T,
+        'focus_recent' => _PRES_DV_RECENT, 'first' => $commits[0] ?? [],
         'steps' => [
             ['icon' => 'code-slash', 'label' => _PRES_DV_CODE], ['icon' => 'check2-square', 'label' => _PRES_DV_TEST], ['icon' => 'git', 'label' => _PRES_DV_COMMIT],
             ['icon' => 'journal-code', 'label' => _PRES_DV_LOG], ['icon' => 'box-seam', 'label' => _PRES_DV_RELEASE],
@@ -534,15 +543,17 @@ function getPresentationData(): array {
     ];
     $stats = [
         'head' => $head(6, getIconName('statistic'), _PRES_H_STATS, _PRES_L_STATS),
-        'over' => _PRES_ST_OVER, 'today' => sprintf(_PRES_ST_TODAY, $today['date']), 'has_today' => $today['date'] !== '', 'sync' => _PRES_ST_SYNC,
+        'board_cap' => $cap('graph-up', _PRES_ST_OVER, $today['date'] !== '' ? sprintf(_PRES_ST_TODAY, $today['date']).' · '._PRES_ST_SYNC : ''),
+        'hours_cap' => $cap('bar-chart', _PRES_ST_HOURS, _PRES_ST_MODULE), 'claim_cap' => $cap('broadcast', _PRES_ST_CLAIM),
+        'has_today' => $today['date'] !== '',
         'board' => [
             $stat(_PRES_ST_VISITS, $num($today['visits']), '', $today['hosts'].' '._PRES_ST_HOSTS), $stat(_PRES_ST_HOME, $num($today['home']), '', _PRES_ST_ENTRIES),
             $stat(_PRES_ST_RETURN, (string)$rpart, '%', _PRES_ST_RETURN_T, -1, 'success'), $stat(_PRES_ST_HUMAN, (string)$human, '%', _ONLINE_NOW, -1, 'success'),
             $stat(_PRES_ST_TOTAL, $num($today['total']), '', _PRES_ST_TOTAL_T),
         ],
-        'hours_title' => _PRES_ST_HOURS, 'hours_note' => _PRES_ST_MODULE, 'hours' => $hours,
+        'hours' => $hours,
         'note' => _PRES_ST_NOTE,
-        'claim' => _PRES_ST_CLAIM, 'claim_title' => _PRES_ST_CLAIM_T, 'claim_text' => _PRES_ST_CLAIM_P, 'claim_tags' => [_PRES_NAV_STATS, _PRES_STK_RUNTIME, _BOTS, 'HTMX'],
+        'claim_title' => _PRES_ST_CLAIM_T, 'claim_text' => _PRES_ST_CLAIM_P, 'claim_tags' => [_PRES_NAV_STATS, _PRES_STK_RUNTIME, _BOTS, 'HTMX'],
         'rings' => [
             $ring((string)$rpart, '%', _PRES_ST_RETURN, $rpart, '', false, '', 'ok'), $ring((string)$npart, '%', _PRES_ST_NEW, $npart, '', false, '', 'info'),
             $ring((string)$human, '%', _PRES_ST_HUMAN, $human, '', false, '', 'ok'), $ring((string)$hpart, '%', _PRES_ST_HOME, $hpart, '', false, '', 'info'),
@@ -597,7 +608,7 @@ function getPresentationData(): array {
             ['icon' => 'layout-text-window-reverse', 'num' => '06', 'title' => _PRES_AR_N_TPL, 'a' => _PRES_AR_COMPILED, 'b' => 'HTML'],
             ['icon' => 'box-arrow-up-right', 'num' => '07', 'title' => _PRES_AR_N_RESP, 'a' => _PRES_AR_S_DYNAMIC, 'b' => _PRES_AR_S_SERVE],
         ],
-        'tree' => _PRES_AR_TREE, 'tree_mode' => 'cache = '.$cache,
+        'tree_cap' => $cap('diagram-2', _PRES_AR_TREE, 'cache = '.$cache),
         'cases' => [
             ['name' => 'HIT', 'text' => _PRES_AR_HIT_T, 'is_on' => $cache > 0, 'tone' => 'success'],
             ['name' => 'MISS', 'text' => _PRES_AR_MISS_T, 'is_on' => false, 'tone' => 'warning'],
@@ -660,7 +671,7 @@ function getPresentationData(): array {
         ],
         'voices' => [
             'head' => $head(11, getIconName('comm'), _PRES_H_VOICES, _PRES_L_VOICES),
-            'over' => _PRES_VO_OVER, 'pill' => _PRES_NAV_VOICES.' · '.count($voices), 'items' => $voices,
+            'cap' => $cap('chat-quote', _PRES_VO_OVER, _PRES_NAV_VOICES.' · '.count($voices), 'success'), 'items' => $voices,
         ],
         'pulse' => $pulse,
         'script' => ['src' => Template::getAssetUrl('plugins/presentation/presentation.js'), 'attr' => 'defer'],

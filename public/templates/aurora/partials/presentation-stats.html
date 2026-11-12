@@ -2,25 +2,29 @@
   {% include 'fragments/presentation-head.html' with head %}
   <div class="sl-pres-body">
     <div class="sl-pres-stats">
-      <div class="sl-pres-stats-board sl-pres-scene">
-        <div class="sl-pres-panel-head"><span><i class="bi bi-graph-up" aria-hidden="true"></i>{{ over }}</span>{% if has_today %}<b>{{ today }} · <em data-sl-pres="sync" data-sl-tone="success">{{ sync }}</em></b>{% endif %}</div>
+      <div class="sl-pres-stats-board sl-pres-scene"{% if has_today %} data-sl-pres="sync"{% endif %}>
+        {% include 'fragments/pane-cap.html' with board_cap %}
         <div class="sl-pres-stats-grid">
           {% for item in board %}
           {% include 'fragments/presentation-stat.html' with item %}
           {% endfor %}
         </div>
-        <div class="sl-pres-hours">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-bar-chart" aria-hidden="true"></i>{{ hours_title }}</span><b>{{ hours_note }}</b></div>
-          <div class="sl-pres-hours-bars" aria-hidden="true">{% for item in hours %}<i style="--sl-d-part:{{ item.part }}%"></i>{% endfor %}</div>
-          <div class="sl-pres-hours-axis" aria-hidden="true"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div>
+        <div class="sl-pane sl-pres-hours">
+          {% include 'fragments/pane-cap.html' with hours_cap %}
+          <div class="sl-pane-body">
+            <div class="sl-pres-hours-bars" aria-hidden="true">{% for item in hours %}<i style="--sl-d-part:{{ item.part }}%"></i>{% endfor %}</div>
+            <div class="sl-pres-hours-axis" aria-hidden="true"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div>
+          </div>
         </div>
       </div>
       <div class="sl-pres-stats-side">
-        <div class="sl-pres-claim">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-broadcast" aria-hidden="true"></i>{{ claim }}</span></div>
-          <h3>{{ claim_title }}</h3>
-          <p>{{ claim_text }}</p>
-          <div class="sl-pres-tags">{% for tag in claim_tags %}<span>{{ tag }}</span>{% endfor %}</div>
+        <div class="sl-pane">
+          {% include 'fragments/pane-cap.html' with claim_cap %}
+          <div class="sl-pane-body">
+            <h3>{{ claim_title }}</h3>
+            <p>{{ claim_text }}</p>
+            <div class="sl-pres-tags">{% for tag in claim_tags %}<span>{{ tag }}</span>{% endfor %}</div>
+          </div>
         </div>
         <div class="sl-pres-rings sl-pres-dials">
           {% for item in rings %}

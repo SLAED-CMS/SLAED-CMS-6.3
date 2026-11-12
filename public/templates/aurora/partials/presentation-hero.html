@@ -23,7 +23,7 @@
       <p class="sl-pres-lead">{{ lead }}</p>
     </div>
     <div class="sl-pres-core" data-sl-pres="core">
-      <div class="sl-pres-panel-head"><span><i class="bi bi-window-sidebar" aria-hidden="true"></i>{{ core.title }}</span><b>{{ core.route }}</b></div>
+      {% include 'fragments/pane-cap.html' with core_cap %}
       <div class="sl-pres-core-body">
         <div class="sl-pres-core-menu">
           {% for item in core.menu %}<button type="button" data-sl-pres-trace="{{ item.trace }}" data-sl-pres-path="{{ item.path }}"{% if item.is_on %} aria-pressed="true"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</button>{% endfor %}

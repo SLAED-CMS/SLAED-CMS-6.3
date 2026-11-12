@@ -1,6 +1,6 @@
 <div class="sl-pres-voices">
   {% if over %}
-  <div class="sl-pres-panel-head"><span{% if is_build %} data-sl-text="over"{% endif %}>{{ over }}</span></div>
+  <div class="sl-pane-cap"><h3 class="sl-pane-title"{% if is_build %} data-sl-text="over"{% endif %}>{{ over }}</h3></div>
   {% endif %}
   <div class="sl-pres-voices-track">
     {% for item in items %}

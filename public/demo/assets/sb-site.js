@@ -146,7 +146,10 @@
     // The voices of the presentation: the words, the hairline of the tone, the person and the year
     voices: (s, p) => `
       <div class="sl-pres-voices">
-        <div class="sl-pres-panel-head">${s.over ? text(p + 'over', 'span', '', s.over) : '<span></span>'}<b class="sl-pres-pill" data-sl-tone="success">Отзывы · ${s.items.length}</b></div>
+        <div class="sl-pane-cap">
+          ${s.over ? text(p + 'over', 'h3', 'sl-pane-title', s.over) : '<h3 class="sl-pane-title"></h3>'}
+          <span class="sl-pane-meta" data-sl-tone="success">Отзывы · ${s.items.length}</span>
+        </div>
         <div class="sl-pres-voices-track">${s.items.map((it, i) => `
           <article class="sl-pres-voice" data-sl-tone="${['primary', 'success', 'accent'][i % 3]}">
             ${text(p + 'items.' + i + '.text', 'p', '', it.text, true)}

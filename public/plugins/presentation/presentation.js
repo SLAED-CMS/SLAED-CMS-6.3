@@ -433,7 +433,7 @@
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var keys = root.querySelectorAll('.sl-pres-core-menu > button');
         var log = root.querySelector('.sl-pres-log');
-        var path = root.querySelector('.sl-pres-core > .sl-pres-panel-head > b');
+        var path = root.querySelector('.sl-pres-core > .sl-pane-cap > .sl-pane-meta');
         if (!keys.length || !log) return;
         root.setAttribute('data-sl-pres-ready', '1');
         var at = 0;
@@ -823,9 +823,9 @@
         var focus = root.querySelector('.sl-pres-focus');
         if (rows.length < 2 || !focus) return;
         root.setAttribute('data-sl-pres-ready', '1');
-        var state = focus.querySelector('.sl-pres-panel-head > b');
+        var state = focus.querySelector('.sl-pane-meta');
         var mono = focus.querySelector('.sl-pres-mono');
-        var title = focus.querySelector('h3');
+        var title = focus.querySelector('.sl-pane-body > h3');
         var text = focus.querySelector('p');
         var tags = focus.querySelector('.sl-pres-tags');
         var head = state ? state.textContent : '';
@@ -858,10 +858,11 @@
         setAutoplay(root, function () { show((at + 1) % rows.length); });
     }
 
-    // The poll heartbeat of the statistics board: the word the template wrote, then one to three dots, round and round
-    function setSync(el) {
-        if (el.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
-        el.setAttribute('data-sl-pres-ready', '1');
+    // The poll heartbeat of the statistics board: the value its head carries, then one to three dots, round and round
+    function setSync(root) {
+        var el = root.querySelector('.sl-pane-cap > .sl-pane-meta');
+        if (!el || root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
+        root.setAttribute('data-sl-pres-ready', '1');
         var base = el.textContent;
         var n = 0;
         window.setInterval(function () {
@@ -879,7 +880,7 @@
         var nodes = root.querySelectorAll('.sl-pres-flow > .sl-pres-node');
         if (!scene || pool.length < 2 || nodes.length < 7) return;
         root.setAttribute('data-sl-pres-ready', '1');
-        var mode = root.querySelector('.sl-pres-tree .sl-pres-panel-head > b');
+        var mode = root.querySelector('.sl-pres-tree .sl-pane-meta');
         var level = mode ? mode.textContent : '';
         // The packet and the lit station keep one clock: each request restarts the round, a station lights as the packet reaches it
         var motion = root.querySelector('.sl-pres-path-packet > animateMotion');

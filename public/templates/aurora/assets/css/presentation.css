@@ -46,7 +46,6 @@
 
 /* The glyph standing before a caption, in the brand tone, and the two sizes it comes in */
 .sl-pres-cockpit-top .bi,
-.sl-pres-panel-head > span > .bi,
 .sl-pres-presets > span > .bi,
 .sl-pres-note > .bi,
 .sl-pres-vars header > .bi {
@@ -102,27 +101,52 @@
   color: var(--sl-pres-muted-text);
 }
 
-/* A framed card inside a section body: the illustrated scenes, the runtime cards, the guard console */
-.sl-pres-card {
+/* The window on this page, fragments/pane-cap.html in a .sl-pane: the frame and the ground of the page palette, no lift under the hand, a plain body inset on all four sides */
+.sl-pres .sl-pane,
+.sl-pres .sl-pane:hover {
   position: relative;
-  min-width: 0;
-  border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-2);
+  border-color: var(--sl-pres-border);
   background: var(--sl-pres-panel-bg);
-  padding: var(--sl-space-5);
+  box-shadow: none;
 }
 
-.sl-pres-card > h3 {
-  margin: 0 0 var(--sl-space-4);
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-pres-text);
+.sl-pres .sl-pane-body {
+  display: block;
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
 }
 
-.sl-pres-card > h3 > .bi {
-  margin-right: var(--sl-space-3);
-  color: var(--sl-pres-link-text);
+.sl-pres .sl-pane > .sl-pane-body > :first-child {
+  margin-top: 0;
+}
+
+/* Its head is the head of the panel, over a group that draws no frame too: mono capitals, a bare icon, a rule, the value at the right in the tone of a link or in its own */
+.sl-pres .sl-pane-cap {
+  min-height: calc(var(--sl-size-chip) + var(--sl-space-3) * 2 + 1px);
+  border-bottom: 1px solid var(--sl-pres-border);
+  background: none;
+  padding: var(--sl-space-3) var(--sl-pane-pad-x);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-pres-muted-text);
+}
+
+.sl-pres .sl-pane-cap > .bi {
+  display: inline-block;
+  flex: none;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
   font-size: var(--sl-size-icon-xs);
+  color: var(--sl-pres-link-text);
+}
+
+.sl-pres .sl-pane-title {
+  font-size: inherit;
+  font-weight: var(--sl-weight-normal);
+  line-height: var(--sl-line-normal);
+  color: inherit;
 }
 
 /* An illustrated scene: a framed ground with the faint grid every drawing of the page stands on */
@@ -267,7 +291,8 @@
 }
 
 /* A small monospace pill: a version, a status, a count */
-.sl-pres-pill {
+.sl-pres-pill,
+.sl-pres-voices > .sl-pane-cap > .sl-pane-meta {
   display: inline-flex;
   align-items: center;
   gap: var(--sl-space-2);
@@ -285,7 +310,7 @@
 .sl-pres-allow > span,
 .sl-pres-badge,
 .sl-pres-bcard > span,
-.sl-pres-blocks-panel .sl-pres-panel-head > b,
+.sl-pres-blocks-panel .sl-pane-meta,
 .sl-pres-console-head > span,
 .sl-pres-core-flow > span,
 .sl-pres-deny > span,
@@ -297,7 +322,7 @@
 .sl-pres-net > span,
 .sl-pres-node > span,
 .sl-pres-note-row > b,
-.sl-pres-panel-head > span,
+.sl-pres .sl-pane-title,
 .sl-pres-pdo-head > b,
 .sl-pres-pdo-head > em,
 .sl-pres-pipe > div > span,
@@ -737,15 +762,11 @@
 /* A block that stands still gets the box the light round its frame is drawn in */
 .sl-pres-metric,
 .sl-pres-chart,
-.sl-pres-vitals,
 .sl-pres-core,
 .sl-pres-bcard,
-.sl-pres-blocks-panel,
 .sl-pres-pane,
 .sl-pres-console,
-.sl-pres-tree,
-.sl-pres-rings,
-.sl-pres-focus {
+.sl-pres-rings {
   position: relative;
 }
 
@@ -1550,10 +1571,6 @@
 
 .sl-pres-chart {
   grid-column: span 3;
-}
-
-.sl-pres-chart,
-.sl-pres-vitals {
   min-width: 0;
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-2);
@@ -1658,19 +1675,22 @@
   background: var(--sl-pres-good-text);
 }
 
-/* The vitals card: its ring carries two thinner inner arcs in the tones of the chart's bands */
-.sl-pres-vitals {
+/* The vitals window: its ring carries two thinner inner arcs in the tones of the chart's bands */
+.sl-pres .sl-pres-vitals {
   background: linear-gradient(145deg, var(--sl-tint), var(--sl-pres-panel-bg));
+}
+
+.sl-pres-vitals > .sl-pane-body {
   text-align: center;
 }
 
-.sl-pres-vitals > .sl-pres-ring {
+.sl-pres-vitals > .sl-pane-body > .sl-pres-ring {
   width: calc(var(--sl-gauge-width) + var(--sl-space-11));
   height: calc(var(--sl-gauge-height) + var(--sl-space-11));
   margin: var(--sl-space-5) auto;
 }
 
-.sl-pres-vitals > .sl-pres-ring > div > b {
+.sl-pres-vitals > .sl-pane-body > .sl-pres-ring > div > b {
   font-size: var(--sl-font-display);
 }
 
@@ -1690,13 +1710,13 @@
   color: var(--sl-pres-good-text);
 }
 
-.sl-pres-vitals > h3 {
+.sl-pres-vitals > .sl-pane-body > h3 {
   margin: var(--sl-space-3) 0;
   font-size: var(--sl-font-h4);
   color: var(--sl-pres-text);
 }
 
-.sl-pres-vitals > p {
+.sl-pres-vitals > .sl-pane-body > p {
   margin: var(--sl-space-5) 0;
   font-size: var(--sl-font-small);
   line-height: var(--sl-line-loose);
@@ -2062,52 +2082,14 @@
   color: var(--sl-pres-text);
 }
 
-/* Router panel: the active layout, its block list and the four rules */
-.sl-pres-blocks-panel {
-  overflow: hidden;
-  border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-pres-panel-bg);
+/* Router panel: the active layout, its block list and the four rules; they run from frame to frame, as the cases of the cache tree do, so the body of such a window has no inset */
+.sl-pres-blocks-panel > .sl-pane-body,
+.sl-pres-tree > .sl-pane-body {
+  padding: 0;
 }
 
-.sl-pres-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-3);
-  border-bottom: 1px solid var(--sl-pres-border);
-  padding: var(--sl-space-3) var(--sl-space-4);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  color: var(--sl-pres-muted-text);
-}
-
-.sl-pres-panel-head em {
-  font-style: normal;
-}
-
-.sl-pres-panel-head > b > .sl-pres-dot,
-.sl-pres-panel-head > span > .sl-pres-dot {
-  margin-right: var(--sl-space-2);
-}
-
-/* The one head of every inner block: as the first child of a padded box it reaches the box edges, so its line runs from frame to frame */
-.sl-pres-card > .sl-pres-panel-head:first-child,
-.sl-pres-claim > .sl-pres-panel-head:first-child {
-  margin: calc(var(--sl-space-5) * -1) calc(var(--sl-space-5) * -1) var(--sl-space-4);
-}
-
-.sl-pres-vitals > .sl-pres-panel-head:first-child {
-  align-self: stretch;
-  margin: calc(var(--sl-space-6) * -1) calc(var(--sl-space-6) * -1) var(--sl-space-4);
-}
-
-.sl-pres-hours > .sl-pres-panel-head:first-child {
-  margin: calc(var(--sl-space-4) * -1) calc(var(--sl-space-4) * -1) 0;
-}
-
-.sl-pres-panel-head > b,
+/* The value of a head yields to the tone its attribute names, so it is written without the weight of the root */
+:where(.sl-pres) .sl-pane-meta,
 .sl-pres-ambient b,
 .sl-pres-sql b,
 .sl-pres-gallery-head > b {
@@ -2120,7 +2102,7 @@
   gap: var(--sl-space-2);
   align-content: start;
   min-height: calc(var(--sl-pres-height) / 2);
-  padding: var(--sl-space-3);
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
 }
 
 .sl-pres-bcard {
@@ -2167,7 +2149,7 @@
 /* A rule is one row like every row list: icon and caption left, its values right on the same line */
 .sl-pres-rules {
   display: grid;
-  border-top: 1px solid var(--sl-pres-border);
+  border-top: 1px dashed var(--sl-pres-border);
 }
 
 .sl-pres-rules > span {
@@ -2175,8 +2157,8 @@
   grid-template-columns: var(--sl-size-icon-xs) auto minmax(0, 1fr);
   gap: var(--sl-space-2);
   align-items: center;
-  border-bottom: 1px solid var(--sl-pres-border);
-  padding: var(--sl-space-2) var(--sl-space-3);
+  border-bottom: 1px dashed var(--sl-pres-border);
+  padding: var(--sl-space-2) var(--sl-pane-pad-x);
 }
 
 .sl-pres-rules > span:last-child {
@@ -3292,6 +3274,7 @@
 }
 
 .sl-pres-guard-console .sl-pres-log > div {
+  border-bottom-style: dashed;
   padding: var(--sl-space-1) 0;
 }
 
@@ -3308,7 +3291,7 @@
   grid-template-columns: var(--sl-size-icon-sm) 1fr auto;
   gap: var(--sl-space-3);
   align-items: center;
-  border-bottom: 1px solid var(--sl-pres-border);
+  border-bottom: 1px dashed var(--sl-pres-border);
   padding: var(--sl-space-2) 0;
 }
 
@@ -3368,13 +3351,13 @@
   gap: var(--sl-space-3);
 }
 
-/* The three cards of the top row share one height: the line of the response grows into what its figure leaves, the dial stands in the middle */
-.sl-pres-speed > .sl-pres-card {
+/* The three windows of the top row share one height: the line of the response grows into what its figure leaves, the dial stands in the middle */
+.sl-pres-speed > .sl-pane > .sl-pane-body {
   display: flex;
   flex-direction: column;
 }
 
-.sl-pres-speed > .sl-pres-card > .sl-pres-spark {
+.sl-pres-speed .sl-pane-body > .sl-pres-spark {
   position: relative;
   flex: 1 1 auto;
   height: auto;
@@ -3382,16 +3365,16 @@
 }
 
 /* The canvas is sized from its box, so it stands out of the flow, or its own height would grow the box it is measured from */
-.sl-pres-speed > .sl-pres-card > .sl-pres-spark > canvas {
+.sl-pres-speed .sl-pane-body > .sl-pres-spark > canvas {
   position: absolute;
   inset: 0;
 }
 
-.sl-pres-speed > .sl-pres-card > .sl-pres-rows {
+.sl-pres-speed .sl-pane-body > .sl-pres-rows {
   gap: var(--sl-space-3);
 }
 
-.sl-pres-speed > .sl-pres-card > .sl-pres-online {
+.sl-pres-speed .sl-pane-body > .sl-pres-online {
   flex: 1 1 auto;
 }
 
@@ -4118,30 +4101,18 @@
   margin-top: var(--sl-space-1);
 }
 
-.sl-pres-focus,
-.sl-pres-tree {
-  overflow: hidden;
-  border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-pres-panel-bg);
-}
-
-.sl-pres-focus-body {
-  padding: var(--sl-space-4);
-}
-
-.sl-pres-focus-body > .sl-pres-mono {
+.sl-pres-focus > .sl-pane-body > .sl-pres-mono {
   color: var(--sl-pres-link-text);
 }
 
-.sl-pres-focus-body > h3 {
+.sl-pres-focus > .sl-pane-body > h3 {
   margin: var(--sl-space-2) 0 var(--sl-space-3);
   font-size: var(--sl-font-body);
   line-height: var(--sl-line-normal);
   color: var(--sl-pres-text);
 }
 
-.sl-pres-focus-body > p {
+.sl-pres-focus > .sl-pane-body > p {
   margin: 0 0 var(--sl-space-3);
   font-size: var(--sl-font-small);
   line-height: var(--sl-line-loose);
@@ -4246,15 +4217,13 @@
 }
 
 .sl-pres-hours {
-  position: relative;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: var(--sl-space-3);
   min-height: calc(var(--sl-plot-height) + var(--sl-space-10));
-  border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-2);
-  background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-fav-mix), transparent);
-  padding: var(--sl-space-4);
+}
+
+.sl-pres-hours > .sl-pane-body {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--sl-space-3);
 }
 
 .sl-pres-hours-axis {
@@ -4306,14 +4275,16 @@
   color: var(--sl-pres-link-text);
 }
 
-.sl-pres-claim > h3 {
+.sl-pres-claim > h3,
+.sl-pres-stats-side > .sl-pane > .sl-pane-body > h3 {
   margin: var(--sl-space-2) 0 var(--sl-space-3);
   font-size: var(--sl-font-h3);
   line-height: var(--sl-line-tight);
   color: var(--sl-pres-text);
 }
 
-.sl-pres-claim > p {
+.sl-pres-claim > p,
+.sl-pres-stats-side > .sl-pane > .sl-pane-body > p {
   margin: 0;
   font-size: var(--sl-font-micro);
   line-height: var(--sl-line-loose);
@@ -4344,7 +4315,7 @@
   align-items: center;
 }
 
-.sl-pres-vitals > .sl-pres-note,
+.sl-pres-vitals > .sl-pane-body > .sl-pres-note,
 .sl-pres-stats-side > .sl-pres-note,
 .sl-pres-arch-side > .sl-pres-note {
   align-self: stretch;
@@ -4575,13 +4546,15 @@
   display: grid;
   grid-template-columns: var(--sl-size-icon-xl) 1fr;
   gap: var(--sl-space-3);
-  border-bottom: 1px solid var(--sl-pres-border);
-  padding: var(--sl-space-4);
+  border-bottom: 1px dashed var(--sl-pres-border);
+  padding: var(--sl-space-4) var(--sl-pane-pad-x);
   transition: background-color var(--sl-time-slow) var(--sl-ease-out);
 }
 
+/* The ground of a lit case ends in the lower corners of its window */
 .sl-pres-case:last-child {
   border-bottom: 0;
+  border-radius: 0 0 calc(var(--sl-pane-radius) - 1px) calc(var(--sl-pane-radius) - 1px);
 }
 
 .sl-pres-case > span {
@@ -5338,7 +5311,7 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .sl-pres-speed > .sl-pres-card:first-child {
+  .sl-pres-speed > .sl-pane:first-child {
     grid-column: 1 / -1;
   }
 
@@ -5661,7 +5634,6 @@
   }
 
   .sl-pres-chart,
-  .sl-pres-vitals,
   .sl-pres-body {
     padding: var(--sl-space-5);
   }

@@ -65,31 +65,37 @@
         </div>
       </div>
       <div class="sl-pres-guard-console">
-        <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-funnel" aria-hidden="true"></i>{{ classifier.title }}</span><b data-sl-tone="success">{{ classifier.state }}</b></div>
-          <p class="sl-pres-guard-text">{{ classifier.text }}</p>
-          <div class="sl-pres-guard-stats">
-            {% for item in classifier.stats %}
-            {% include 'fragments/presentation-stat.html' with item %}
-            {% endfor %}
+        <div class="sl-pane">
+          {% include 'fragments/pane-cap.html' with class_cap %}
+          <div class="sl-pane-body">
+            <p class="sl-pres-guard-text">{{ classifier.text }}</p>
+            <div class="sl-pres-guard-stats">
+              {% for item in classifier.stats %}
+              {% include 'fragments/presentation-stat.html' with item %}
+              {% endfor %}
+            </div>
           </div>
         </div>
-        <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-diagram-3" aria-hidden="true"></i>{{ types_title }}</span></div>
-          <div class="sl-pres-rows">
-            {% for item in types %}
-            <div class="sl-pres-row" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span><b>{{ item.verdict }}</b></div>
-            {% endfor %}
+        <div class="sl-pane">
+          {% include 'fragments/pane-cap.html' with types_cap %}
+          <div class="sl-pane-body">
+            <div class="sl-pres-rows">
+              {% for item in types %}
+              <div class="sl-pres-row" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span><b>{{ item.verdict }}</b></div>
+              {% endfor %}
+            </div>
           </div>
         </div>
-        <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-list-check" aria-hidden="true"></i>{{ log_title }}</span></div>
-          <div class="sl-pres-log">
-            {% for item in log %}
-            <div><span>{{ item.label }}</span><em data-sl-tone="{{ item.tone }}">{{ item.result }}</em></div>
-            {% endfor %}
+        <div class="sl-pane">
+          {% include 'fragments/pane-cap.html' with log_cap %}
+          <div class="sl-pane-body">
+            <div class="sl-pres-log">
+              {% for item in log %}
+              <div><span>{{ item.label }}</span><em data-sl-tone="{{ item.tone }}">{{ item.result }}</em></div>
+              {% endfor %}
+            </div>
+            <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
           </div>
-          <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
         </div>
       </div>
     </div>

@@ -261,7 +261,15 @@ final class SeriesPartsTest extends TestCase
         $this->assertNotNull($bare->querySelector('section.sl-pane > .sl-pane-cap > i.bi-hdd[aria-hidden="true"]:first-child'));
         $this->assertSame('A<b>', $bare->querySelector('h3.sl-pane-title')->textContent);
         $this->assertNotNull($bare->querySelector('.sl-pane > .sl-pane-body > #in'));
-        $this->assertNull($bare->querySelector('.sl-pane-fold, .sl-pane-chips, .sl-collapsible, .sl-is-warn, [data-sl-toggle-head], [data-sl-toggle], [title]'));
+        $this->assertNull($bare->querySelector('.sl-pane-fold, .sl-pane-chips, .sl-pane-meta, .sl-collapsible, .sl-is-warn, [data-sl-toggle-head], [data-sl-toggle], [title]'));
+        $meta = $part(['title' => 'A', 'icon' => 'hdd', 'meta' => 'M<', 'meta_tone' => 'success', 'meta_icon' => 'heart-pulse', 'content_html' => '']);
+        $mark = $meta->querySelector('.sl-pane-cap > h3.sl-pane-title + .sl-pane-meta[data-sl-tone="success"]:last-child');
+        $this->assertNotNull($mark, 'The value of a head stands after its name');
+        $this->assertSame('M<', $mark->textContent);
+        $this->assertNotNull($mark->querySelector('i.bi-heart-pulse[aria-hidden="true"]:first-child'));
+        $lone = $part(['title' => 'A', 'meta' => 'cache = 1', 'content_html' => '']);
+        $this->assertNull($lone->querySelector('.sl-pane-meta[data-sl-tone], .sl-pane-meta > i'), 'A value without a tone and an icon prints neither');
+        $this->assertSame('cache = 1', $lone->querySelector('.sl-pane-meta')->textContent);
         $full = $part([
             'title' => 'plain', 'title_html' => '<mark>T</mark>', 'title_id' => 'ttl', 'hint' => 'H<', 'icon' => 'star', 'is_warn' => true,
             'chips' => [['tone' => 'info', 'label' => 'L<', 'icon' => 'grid', 'title' => 'C<', 'id' => 'chp', 'is_live' => true], ['tone' => 'neutral', 'label' => '7']],
@@ -284,5 +292,24 @@ final class SeriesPartsTest extends TestCase
         $shut = $part(['id' => 'w2', 'title' => 'A', 'icon' => 'hdd', 'is_fold' => true, 'plus_text' => 'P', 'content_html' => '<p id="in"></p>']);
         $this->assertNotNull($shut->querySelector('#w2-rows.sl-collapsible[data-sl-toggle-default="closed"][hidden] > .sl-pane-body > #in'));
         $this->assertNotNull($shut->querySelector('.sl-pane-fold:not(.sl-is-open)'));
+    }
+
+    #[Test]
+    public function voicesSectionWritesTheHeadOfTheWindow(): void
+    {
+        if (!defined('_LAYOUT_FROM')) define('_LAYOUT_FROM', 'Since');
+        $site = new Template('aurora');
+        $part = static fn(array $data): \Dom\HTMLDocument => \Dom\HTMLDocument::createFromString(
+            '<!doctype html><html><body>'.$site->getHtmlSection('voices', $data).'</body></html>',
+            LIBXML_NOERROR
+        );
+        $item = ['order_num' => 0, 'text' => 'T', 'name' => 'N', 'site' => '', 'role' => '', 'since' => ''];
+        $edit = $part(['over' => 'O<', 'is_build' => true, 'items' => [$item]]);
+        $this->assertSame('O<', $edit->querySelector('.sl-pres-voices > .sl-pane-cap:first-child > h3.sl-pane-title[data-sl-text="over"]')->textContent);
+        $view = $part(['over' => 'O', 'items' => [$item]]);
+        $this->assertNotNull($view->querySelector('.sl-pres-voices > .sl-pane-cap > h3.sl-pane-title:not([data-sl-text])'));
+        $none = $part(['over' => '', 'items' => [$item]]);
+        $this->assertNull($none->querySelector('.sl-pane-cap'), 'A section without an overline carries no head');
+        $this->assertNotNull($none->querySelector('.sl-pres-voices > .sl-pres-voices-track > .sl-pres-voice'));
     }
 }

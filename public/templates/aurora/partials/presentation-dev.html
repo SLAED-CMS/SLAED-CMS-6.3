@@ -3,7 +3,7 @@
   <div class="sl-pres-body">
     <div class="sl-pres-dev" data-sl-pres="dev" data-sl-pres-recent="{{ focus_recent }}">
       <div class="sl-pres-dev-board sl-pres-scene">
-        <div class="sl-pres-panel-head"><span><i class="sl-pres-dot sl-is-live"></i>{{ live }}</span><b>{{ version }}</b></div>
+        {% include 'fragments/pane-cap.html' with board_cap %}
         {% if has_commits %}
         <div class="sl-pres-commits">
           {% for item in commits %}
@@ -19,9 +19,9 @@
         {% endif %}
       </div>
       <div class="sl-pres-dev-side">
-        <div class="sl-pres-focus">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-git" aria-hidden="true"></i>{{ focus }}</span><b>{{ focus_state }}</b></div>
-          <div class="sl-pres-focus-body">
+        <div class="sl-pane sl-pres-focus">
+          {% include 'fragments/pane-cap.html' with focus_cap %}
+          <div class="sl-pane-body">
             {% if has_commits %}
             <span class="sl-pres-mono">{{ first.short }} · {{ first.date }}</span>
             <h3>{{ first.title }}</h3>
@@ -32,13 +32,15 @@
             {% endif %}
           </div>
         </div>
-        <div class="sl-pres-card">
-          <div class="sl-pres-panel-head"><span><i class="bi bi-box-seam" aria-hidden="true"></i>{{ pipe }}</span><b>{{ pipe_note }}</b></div>
-          <div class="sl-pres-pipe">
-            <i class="sl-pres-pipe-packet" aria-hidden="true"></i>
-            {% for item in steps %}
-            <div><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span></div>
-            {% endfor %}
+        <div class="sl-pane">
+          {% include 'fragments/pane-cap.html' with pipe_cap %}
+          <div class="sl-pane-body">
+            <div class="sl-pres-pipe">
+              <i class="sl-pres-pipe-packet" aria-hidden="true"></i>
+              {% for item in steps %}
+              <div><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span></div>
+              {% endfor %}
+            </div>
           </div>
         </div>
         <div class="sl-pres-dev-foot">

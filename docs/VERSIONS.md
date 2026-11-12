@@ -2,6 +2,23 @@
 
 ## 2026-11-12
 
+### The presentation stands in the window
+
+- **A frame with a head is `.sl-pane` on the presentation too** — the cards of the guard, of the runtime, of the
+  module groups and of the delivery, the vitals, the panel of the block layout, the hours of the statistics, the focus
+  of the commits, the cache tree and the claim; the focus, the tree and the claim come down from radius 12 to 8.
+  `.sl-pres-card` and `.sl-pres-panel-head` are gone. A theme that copied them takes `fragments/pane-cap.html`.
+- **One head draws every head of the page** — of a window, of the model of the hero, which stays a drawing, and of
+  the four groups that draw no frame. On the presentation it is the head of the panel: mono capitals, a bare icon of
+  16 px, a rule, 43 px high where the strip was 34.
+- **A head of `aurora` carries a value** — `meta` with `meta_tone` and `meta_icon`, printed as `.sl-pane-meta` at the
+  right end, the name the panel uses; the route of the hero, the focus of the commits, the mode of the cache and the
+  poll of the statistics are written into it by the plugin.
+- **A rule between rows inside a window is dashed** — the rows of the traffic types, of the last decisions, of the
+  cache tree and of the block rules; the frame and the rule under the head stay solid.
+- **Three heads changed their mark** — the commits carry an icon where the live lamp stood, the count of the active
+  blocks takes the tone of a state as the groups above it, and "Опрос" runs its dots in the tone of the value.
+
 ### The upload of an archive follows a found release, and the channels speak to a site owner
 
 - **The window "Загрузить архив" of "Обновления" stands only while the master offers a release** — the page goes
