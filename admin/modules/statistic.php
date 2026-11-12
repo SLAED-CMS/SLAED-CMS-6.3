@@ -99,6 +99,7 @@ function getStatRhythmSpan(string $key, string $name, array $list, array $delta)
         'key' => $key,
         'name' => $name,
         'figure' => filterDecimal(array_sum(array_column($list, 'h')), 0),
+        'num' => array_sum(array_column($list, 'h')),
         'note' => _STATISTIC_INSPAN,
         'delta' => $delta['delta'],
         'dir' => $delta['dir'],
@@ -136,6 +137,7 @@ function getStatRhythm(array $data): array {
                 'key' => 'day',
                 'name' => _STATISTIC_H24,
                 'figure' => filterDecimal($day['h'] ?? 0, 0),
+                'num' => $day['h'] ?? 0,
                 'note' => _STATISTIC_INSPAN,
                 'delta' => $then['delta'],
                 'dir' => $then['dir'],
@@ -450,15 +452,24 @@ function getStatGround(array $data): string {
     $pane = static fn(array $keys): string => $tpl->getHtmlFrag('pane', $keys);
     $bars = static fn(string $title, string $icon, string $id): string => $pane(['title' => $title, 'icon' => $icon, 'content_html' => $part($id, 'rows')]);
     $month = getStatMonthName($data['key']);
+    $chip = $data['is_run'] ? $tpl->getHtmlFrag('live-chip', ['live_every' => $every]) : '';
     $traffic = $pane([
         'title' => _STATISTIC_TRAFFIC,
         'icon' => 'bar-chart-line',
         'meta' => $month,
+        'live_html' => $chip,
         'is_fill' => true,
         'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => $view['tiles']]).$part('sl-stat-days', 'days'),
     ]);
     $sources = $pane(['title' => _STATISTIC_SOURCE, 'icon' => 'box-arrow-in-right', 'meta' => $view['meta']['sl-stat-refcat'], 'content_html' => $part('sl-stat-refcat', 'rows')]);
-    $rhythm = $pane(['title' => _STATISTIC_HOURS, 'icon' => 'activity', 'meta' => _STATISTIC_RHYTHM, 'is_fill' => true, 'content_html' => $part('sl-stat-rhythm', 'rhythm')]);
+    $rhythm = $pane([
+        'title' => _STATISTIC_HOURS,
+        'icon' => 'activity',
+        'meta' => _STATISTIC_RHYTHM,
+        'live_html' => $chip,
+        'is_fill' => true,
+        'content_html' => $part('sl-stat-rhythm', 'rhythm'),
+    ]);
     $week = $pane(['title' => _STATISTIC_WEEK, 'icon' => 'calendar-week', 'meta' => _STATISTIC_MEAN, 'is_fill' => true, 'content_html' => $part('sl-stat-week', 'week')]);
     $stacks = $pane([
         'title' => _STATISTIC_SESSION,

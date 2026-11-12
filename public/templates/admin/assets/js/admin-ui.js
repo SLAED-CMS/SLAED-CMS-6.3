@@ -1782,7 +1782,7 @@
         host.slLive = { at: list, series: data.series };
         if (made) setSeriesSwap(host);
     }
-    // The chart of the rhythm: its period and its view are the reader's; a tick of the same period moves the lines and the bars in place, and a new choice builds it again
+    // The chart of the rhythm: its period and its view are the reader's; a tick of the same period moves it in place, a new choice builds it again, and its figure runs once drawn
     function setRhythmChart(host, data, tick) {
         var box = host.querySelector(':scope > .sl-rhythm');
         var per = data.periods.filter(function (one) { return one.key === host.slPeriod; })[0] || data.periods[0];
@@ -1812,7 +1812,13 @@
                 rows: per.series.map(function (row, j) { return [row.name, getSeriesText(row, row.values[i]), tones[j]]; }),
                 dots: (view === 'bar') ? [] : per.series.map(function (row, j) { return { tone: tones[j], y: row.values[i] / top }; }) };
         }));
-        box.querySelector('.sl-rhythm-figure > b').textContent = per.figure;
+        var sum = box.querySelector('.sl-rhythm-figure > b');
+        if (sum.slFigure === undefined) {
+            sum.slFigure = per.num;
+            sum.textContent = per.figure;
+        } else {
+            window.setFigureRun(sum, per.num, per.figure);
+        }
         box.querySelector('.sl-rhythm-figure > span').textContent = per.note;
         var delta = box.querySelector('.sl-rhythm-figure > em');
         delta.textContent = per.delta || '';
@@ -1894,7 +1900,7 @@
         host.replaceChildren(box, getSeriesKeys([{ text: data.low }].concat(keys, [{ text: data.high }]), 'sl-series-steps'));
         setSeriesSwap(host);
     }
-    // One bar split into its parts and its keys; a part is a float, so its colour is a layer of its own that the motion moves
+    // One bar split into its parts and its keys; a part is a float, so its colour is a layer the motion moves; a share of zero keeps its key and draws no part
     function setSeriesStack(host, data) {
         if (!data.parts.length && data.empty) return host.replaceChildren(getSeriesNode('p', 'sl-series-none', data.label + ': ' + data.empty));
         var bar = getSeriesNode('span', 'sl-stack-bar');
@@ -1903,11 +1909,12 @@
         bar.setAttribute('aria-label', data.label);
         data.parts.forEach(function (one, i) {
             var tone = 'part' + (i % 5 + 1);
-            var part = bar.appendChild(getSeriesNode('span', 'sl-stack-part sl-float' + getSeriesTone(tone)));
             var key = keys.appendChild(getSeriesNode('span', 'sl-stack-key' + getSeriesTone(tone)));
+            key.append(getSeriesNode('i'), getSeriesNode('span', '', one.name), getSeriesNode('b', '', one.pct + '%'));
+            if (!Number(one.pct)) return;
+            var part = bar.appendChild(getSeriesNode('span', 'sl-stack-part sl-float' + getSeriesTone(tone)));
             part.style.setProperty('--sl-d-part', one.pct + '%');
             part.appendChild(getSeriesTip(data.label, [[one.name, one.pct + '%', tone], [data.count, one.text]]));
-            key.append(getSeriesNode('i'), getSeriesNode('span', '', one.name), getSeriesNode('b', '', one.pct + '%'));
         });
         host.replaceChildren(bar, keys);
         setSeriesSwap(host);
@@ -2352,25 +2359,29 @@
         ['up', 'down', 'flat', 'none'].forEach(function (dir) { tile.classList.toggle('sl-metric-trend-' + dir, dir === one.dir); });
         tile.querySelector('.sl-metric-icon').className = 'bi bi-' + one.icon + ' sl-metric-icon';
     }
-    // One reading of the counter over the page: the first draw brings no parts, as each host carries its own, and a part whose data did not move is left alone
-    function setStatView(page, data) {
+    // One reading over the page: a part whose data did not move is left alone, and a tick passes by a paused box; a window with no chip of its own stands in the box of the cockpit
+    function setStatView(page, data, tick) {
         var top = page.querySelector('.sl-cockpit');
-        setCockpitGauges(top, data);
-        setStatState(top, data.state);
-        page.querySelectorAll('.sl-metric').forEach(function (tile, i) { if (data.tiles[i]) setMetricTile(tile, data.tiles[i]); });
+        var held = function (node) { return !!tick && (node.closest('[data-sl-live-box]') || top).hasAttribute('data-sl-live-paused'); };
+        if (!held(top)) {
+            setCockpitGauges(top, data);
+            setStatState(top, data.state);
+        }
+        page.querySelectorAll('.sl-metric').forEach(function (tile, i) { if (data.tiles[i] && !held(tile)) setMetricTile(tile, data.tiles[i]); });
         Object.keys(data.meta).forEach(function (id) {
             var host = document.getElementById(id);
             var pane = host ? host.closest('.sl-pane') : null;
             var meta = pane ? pane.querySelector('.sl-pane-meta') : null;
-            if (meta) meta.textContent = data.meta[id];
+            if (meta && !held(host)) meta.textContent = data.meta[id];
         });
         Object.keys(data.parts || {}).forEach(function (id) {
             var host = document.getElementById(id);
-            if (host && JSON.stringify(host.slSeries) !== JSON.stringify(data.parts[id])) setSeriesData(host, data.parts[id], true);
+            if (host && !held(host) && JSON.stringify(host.slSeries) !== JSON.stringify(data.parts[id])) setSeriesData(host, data.parts[id], true);
         });
+        page.querySelectorAll('[data-sl-live-box]').forEach(function (box) { if (!held(box)) box.setAttribute('data-sl-live-stamp', Date.now()); });
     }
-    // Ask for the reading of the day in scope; a later question makes an earlier answer stale, and a poll renews no session
-    function setStatFetch() {
+    // Ask for the reading of the day in scope, as a tick of the poll or for a choice of the reader; a later question makes an earlier answer stale, and a poll renews no session
+    function setStatFetch(tick) {
         var page = document.querySelector('[data-sl-stat]');
         var seq = ++stat.seq;
         if (!page) return;
@@ -2378,9 +2389,7 @@
         fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
             .then(function (res) { return res.ok ? res.json() : null; })
             .then(function (data) {
-                if (!data || !data.parts || seq !== stat.seq || !page.isConnected) return;
-                setStatView(page, data);
-                page.querySelector('.sl-cockpit').setAttribute('data-sl-live-stamp', Date.now());
+                if (data && data.parts && seq === stat.seq && page.isConnected) setStatView(page, data, tick);
             })
             .catch(function () {});
     }
@@ -2418,14 +2427,14 @@
         setBeamTurns();
         if (stat.back !== null) setStatFocus(page);
     }
-    // The running month asks for its reading while the tab is in sight and the live chip runs; a day picked or switched asks at once in any month
+    // The running month asks for its reading while the tab is in sight and a live chip of the page runs; a day picked or switched asks at once in any month
     function setStatPoll() {
         var page = document.querySelector('[data-sl-stat]');
         if (!page) return;
         setStatStart(page);
         var ask = function () {
             var box = document.querySelector('[data-sl-stat][data-sl-stat-live]');
-            if (box && !document.hidden && !box.querySelector('[data-sl-live-paused]')) setStatFetch();
+            if (box && !document.hidden && box.querySelector('[data-sl-live-box]:not([data-sl-live-paused])')) setStatFetch(true);
         };
         if (Number(page.getAttribute('data-sl-stat-every'))) window.setInterval(ask, Number(page.getAttribute('data-sl-stat-every')) * 1000);
         document.addEventListener('visibilitychange', ask);

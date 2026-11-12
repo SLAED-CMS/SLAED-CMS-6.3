@@ -13759,6 +13759,13 @@ a.sl-archive-month:is(:hover, :focus-visible) > i {
   font-size: var(--sl-font-small);
 }
 
+/* A window that takes the whole row has the room: the keys of its bar stand in one line, from one end of the bar to the other */
+.sl-ground > .sl-pane .sl-stack-keys {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .sl-stack-key > i {
   width: var(--sl-space-4);
   height: var(--sl-space-4);

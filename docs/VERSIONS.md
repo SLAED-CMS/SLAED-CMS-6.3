@@ -13,6 +13,18 @@
   the field stands as far from the rule over it as from the one under. A row with one field is 45 pixels high where it
   was 55.
 
+### The two windows of the statistic that move with the day carry the live chip, and the figure of the rhythm runs
+
+- **"Статистика / трафик сайта" and "Хиты по часам" carry the live chip** of the running month, as the window of
+  the traffic does in "Мониторинг": a chip pauses its own window and names its own last reading, the chip of the
+  cockpit holds the cockpit and every window without a chip, and the poll runs while one of the three does. A day picked
+  or a switch of "Сейчас / Вчера" redraws the whole page under a pause too.
+- **The figure over the chart of "Хиты по часам" runs to its new value** by `setFigureRun()`, as the figure of a tile
+  does; a period of the rhythm carries `num` beside `figure`.
+- **A split bar ends round whatever its shares** — a share of zero keeps its key and draws no part, where its empty
+  part took the rounding of the end and left the next one square. In a window that takes the whole row ("Боты") the
+  keys of the bar stand in one line from one end of the bar to the other; a side window keeps its two columns.
+
 ## 2026-11-10
 
 ### The avatar ships the limits of today, and its settings stand in a block of their own
