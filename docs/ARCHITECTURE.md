@@ -1301,7 +1301,7 @@ through `addCompress()` into an archive `<name>_<date>.log.<zip|gz|bz2>`, or
 `.log.bak` without a compressor; `filescan_tree.log` is rewritten whole by each
 scan. Beside the
 journals `storage/logs/` holds only state as `.json` (`scheduler/<job>.json`,
-`scheduler/heartbeat.json`, `scheduler/trigger.json`, `monitor.json`,
+`scheduler/heartbeat.json`, `scheduler/trigger.json`, `scheduler/mailrate.json`, `monitor.json`,
 `filescan.json`); the locks
 live in `storage/cache/locks/`, which the cache sweeps never empty. The labels
 of the logs section come from one map in `admin/modules/logs.php`, and

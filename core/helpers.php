@@ -384,7 +384,7 @@ function getTplAdminList(array $data): string {
     foreach ($list as $at => $row) {
         $drop = (array)($row['drop'] ?? []);
         $tip = (array)($row['details'] ?? []);
-        $turn = array_values(array_filter(array_column((array)($row['cells'] ?? []), 'stat')));
+        $turn = array_values(array_filter(array_column((array)($row['cells'] ?? []), 'stat'), static fn(array $one): bool => !empty($one['hidden'])));
         $cells = [];
         foreach ((array)($row['cells'] ?? []) as $i => $cell) {
             if (array_key_exists('moment', $cell)) {

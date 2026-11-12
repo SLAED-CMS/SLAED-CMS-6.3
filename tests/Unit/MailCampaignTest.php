@@ -174,6 +174,18 @@ final class MailCampaignTest extends TestCase
         $this->assertTrue($mailer->checkAddress('user@slaed.net'));
     }
 
+    # A code that names the mailbox itself stops the address below the configured count, and a refusal by policy still waits for that count
+    #[Test]
+    public function aCodeThatNamesTheMailboxStopsTheAddressAtOnce(): void
+    {
+        $db = new MailCampDatabase();
+        $mailer = $this->getMail($db, ['verify' => '0'], ['bouncemax' => '2']);
+        $db->rows = [['fails' => 1, 'code' => '5.2.1']];
+        $this->assertFalse($mailer->checkAddress('user@slaed.net'), 'A disabled mailbox waited for a second refusal');
+        $db->rows = [['fails' => 1, 'code' => '5.7.1']];
+        $this->assertTrue($mailer->checkAddress('user@slaed.net'), 'One refusal by policy already excluded the address');
+    }
+
     # Every step of the ladder degrades to sending: a check that cannot run states nothing, and a check that states nothing must never stop a mailing
     #[Test]
     public function everyCheckThatCannotAnswerSendsAnyway(): void
@@ -320,6 +332,7 @@ final class MailCampaignTest extends TestCase
         $db->rows = [$rows];
         $this->getCall($this->getMail($db, [], ['breakwin' => '10', 'abort' => '40']), 'checkCampBreak', [4]);
         $this->assertCount(1, $db->getMatch('_newsletter SET status = 7'), 'A mailing over its limit was not aborted');
+        $this->assertCount(1, $db->getMatch('AND time >= (SELECT time FROM'), 'The window reads the results of an earlier launch of the same mailing');
         $db = new MailCampDatabase();
         $db->rows = [array_slice($rows, 0, 9)];
         $this->getCall($this->getMail($db, [], ['breakwin' => '10', 'abort' => '40']), 'checkCampBreak', [4]);

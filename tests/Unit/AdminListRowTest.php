@@ -252,6 +252,17 @@ namespace Tests\Unit {
             $this->assertSame('lamp typ', $dial->getElementById($items[1]->getAttribute('form'))->getAttribute('data-sl-later'), 'The dial switch lost its deferred kind');
         }
 
+        # A status that only marks a state carries no action, so it stays in its cell and the dial gets no item from it
+        #[Test]
+        public function aStatusWithoutActionStaysOutOfTheDial(): void
+        {
+            $head = [['content' => 'Status', 'is_col_status' => true], ['content' => 'Functions', 'is_col_actions' => true]];
+            $doc = self::getList($head, [['name' => 'Done', 'cells' => [['is_col_status' => true, 'stat' => ['text' => 'Done', 'is_on' => true]],
+                ['is_col_actions' => true, 'dial' => [['href' => 'admin.php?op=edit', 'icon_name' => 'pencil', 'title' => 'Edit']]]]]]);
+            $items = iterator_to_array($doc->querySelectorAll('tbody .sl-dial-item'));
+            $this->assertSame(['Edit'], array_map(static fn($one): string => $one->getAttribute('title'), $items), 'A status that is only a mark became a dial item');
+        }
+
         # A drop that moves its row elsewhere stays deferred as a move, and the foot names its action by the title of the drop
         #[Test]
         public function aDropThatMovesNamesItsFootAction(): void

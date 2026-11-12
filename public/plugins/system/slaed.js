@@ -2643,7 +2643,9 @@
                     // A submit button may own its form through the form attribute, which puts the form outside its ancestors
                     var askform = ask.form || ask.closest('form');
                     // requestSubmit and not submit: the latter skips every submit listener, and a field a listener fills in would travel empty or stale
-                    if (askform) askform.requestSubmit ? askform.requestSubmit() : askform.submit();
+                    // The button that asked travels as the submitter, so its own name and value reach the handler as they would without the question
+                    var asksub = (ask.type === 'submit' && ask.form === askform) ? ask : undefined;
+                    if (askform) askform.requestSubmit ? askform.requestSubmit(asksub) : askform.submit();
                 }
                 return;
             }

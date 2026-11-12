@@ -1679,10 +1679,13 @@ CREATE TABLE IF NOT EXISTS `{prefix}_maildead` (
   `fails` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `phase` VARCHAR(10) NOT NULL DEFAULT '',
   `code` VARCHAR(20) NOT NULL DEFAULT '',
+  `note` VARCHAR(255) NOT NULL DEFAULT '',
   `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CALL addcol('{prefix}_maildead', 'note', 'VARCHAR(255) NOT NULL DEFAULT \'\' AFTER `code`');
 
 CALL addcol('{prefix}_newsletter', 'fails',  'INT UNSIGNED NOT NULL DEFAULT 0');
 CALL addcol('{prefix}_newsletter', 'status', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');

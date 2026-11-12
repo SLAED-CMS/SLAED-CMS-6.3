@@ -172,7 +172,7 @@ function getProbeDrain(): array {
         if (str_contains($mesg['body'], 'shared probe body')) $out['refbody'] = true;
     }
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_mail WHERE email LIKE :mail', ['mail' => '%@slaed.net']);
-    if (is_file(LOGS_DIR.'/scheduler/maildrain.json')) unlink(LOGS_DIR.'/scheduler/maildrain.json');
+    if (is_file(LOGS_DIR.'/scheduler/mailrate.json')) unlink(LOGS_DIR.'/scheduler/mailrate.json');
     $mailer = getProbeMail(array_replace($sect, ['rate' => '1']));
     foreach (['four@slaed.net', 'five@slaed.net', 'six@slaed.net'] as $mail) {
         $mailer->addQueue(['kind' => PROBEKIND, 'email' => $mail, 'sender' => 'info@slaed.net', 'title' => 'rate', 'body' => 'rate']);
@@ -180,7 +180,17 @@ function getProbeDrain(): array {
     $out['rate'] = $mailer->updateQueue();
     $left = $db->getSqlRows($db->getSqlQuery('SELECT status, lockid FROM '.PREFIX_DB.'_mail WHERE status = 0 AND email LIKE :mail', ['mail' => '%@slaed.net'])) ?: [];
     $out['rate']['free'] = count(array_filter($left, static fn(array $one): bool => $one['lockid'] === ''));
+    setSchedulerDone('maildrain', 'success', 'probe run');
     $out['again'] = getProbeMail(array_replace($sect, ['rate' => '1']))->updateQueue();
+    $quiet = getProbeMail(array_replace($sect, ['rate' => '0']), ['unsub' => '0']);
+    $quiet->addQueue(['kind' => 'newsletter', 'email' => 'seven@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'quiet', 'ref' => $nid]);
+    $quiet->updateQueue();
+    $out['quiet'] = ['sent' => false, 'list' => false, 'link' => false];
+    foreach (json_decode((string)file_get_contents($file), true)['mails'] ?? [] as $mesg) {
+        $part = getProbeMessage((string)$mesg);
+        if (!str_contains($part['head'], 'To: <seven@slaed.net>')) continue;
+        $out['quiet'] = ['sent' => true, 'list' => str_contains($part['head'], 'List-'), 'link' => str_contains($part['body'].$part['text'], 'unsub')];
+    }
     proc_terminate($proc);
     proc_close($proc);
     $out['clean'] = deleteProbeRows($ntime);
@@ -246,15 +256,25 @@ function getProbeBounce(): array {
         'plain' => $mailer->addBounce("From: someone@mail.example\nSubject: Out of office\n\nI am away until Monday.\n"),
     ];
     $out['afterforged'] = $mailer->getDeadList(['page' => 1])['total'];
-    $out['first'] = $mailer->addBounce(str_replace("\n", "\r\n", $dsn('gone@slaed.net', '5.1.1', $mid)));
+    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_newsletter (title, body, send, time) VALUES (\'probe mailing\', \'bounced\', 5, NOW())');
+    $bid = intval($db->getSqlLastId());
+    $mailer->addQueue(['kind' => 'newsletter', 'email' => 'gone@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'sent', 'ref' => $bid]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_mail SET status = 1 WHERE kind = \'newsletter\' AND ref = :ref', ['ref' => $bid]);
+    $out['first'] = $mailer->addBounce(str_replace("\n", "\r\n", $dsn('gone@slaed.net', '5.7.1', $mid)));
     $out['stillsends'] = $mailer->checkAddress('gone@slaed.net');
-    $out['second'] = $mailer->addBounce($dsn('gone@slaed.net', '5.1.1', $mid));
+    $out['second'] = $mailer->addBounce($dsn('gone@slaed.net', '5.7.1', $mid));
+    $camp = $db->getSqlRow($db->getSqlQuery('SELECT send, fails FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $bid]));
+    $sent = $db->getSqlRow($db->getSqlQuery('SELECT status, phase, code FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :ref', ['ref' => $bid]));
+    $out['camp'] = [intval($camp['send'] ?? -1), intval($camp['fails'] ?? -1), intval($sent['status'] ?? -1), (string)($sent['phase'] ?? ''), (string)($sent['code'] ?? '')];
     $out['excluded'] = !$mailer->checkAddress('gone@slaed.net');
     $list = $mailer->getDeadList(['page' => 1]);
     $one = $list['rows'][0] ?? [];
     $out['row'] = [$list['total'], (string)($one['email'] ?? ''), intval($one['fails'] ?? 0), (string)($one['phase'] ?? ''), (string)($one['code'] ?? '')];
+    $out['note'] = (string)($one['note'] ?? '');
     $out['revived'] = $mailer->deleteDeadMail([intval($one['id'] ?? 0)]);
     $out['sendsagain'] = $mailer->checkAddress('gone@slaed.net');
+    $out['final'] = [$mailer->addBounce($dsn('gone@slaed.net', '5.2.1', $mid))['dead'], $mailer->checkAddress('gone@slaed.net')];
+    $mailer->deleteDeadMail([intval($mailer->getDeadList(['page' => 1])['rows'][0]['id'] ?? 0)]);
     $real = str_replace("\n", "\r\n", $dsn('gone@slaed.net', '5.1.1', $mid));
     $away = "From: someone@mail.example\nSubject: Out of office\n\n.I am away until Monday.\n";
     $out['pop'] = [
@@ -302,7 +322,7 @@ function getProbeCamp(): array {
     usleep(400000);
     $sect = ['transport' => 'smtp', 'host' => '127.0.0.1', 'port' => (string)$port, 'secure' => 'none', 'auth' => '0', 'timeout' => '5'];
     $sect += ['verify' => '0', 'batch' => '10', 'rate' => '0'];
-    $rule = ['canary' => '2', 'canarymin' => '1', 'breakwin' => '100', 'abort' => '10', 'bouncemax' => '2'];
+    $rule = ['canary' => '2', 'canarymin' => '1', 'breakwin' => '100', 'abort' => '10', 'bouncemax' => '2', 'unsub' => '1'];
     $GLOBALS['mailer'] = getProbeMail($sect, $rule);
     $out['expand'] = updateNewsletter();
     $out['state'] = getProbeCampRow($nid);

@@ -112,9 +112,25 @@ final class MailDrainTest extends TestCase
         $this->assertSame(['gone@slaed.net'], $data['first']['dead'], 'A report with CRLF line endings was not read');
         $this->assertTrue($data['stillsends'], 'One report already excluded the address');
         $this->assertTrue($data['excluded'], 'The second report did not exclude the address');
-        $this->assertSame([1, 'gone@slaed.net', 2, 'dsn', '5.1.1'], $data['row']);
+        $this->assertSame([1, 'gone@slaed.net', 2, 'dsn', '5.7.1'], $data['row']);
         $this->assertSame(1, $data['revived']);
         $this->assertTrue($data['sendsagain'], 'A revived address still did not receive mailings');
+    }
+
+    # A report whose code names the mailbox itself excludes the address at once, whatever the configured count, and the registry keeps the text of the server
+    #[Test]
+    public function aReportThatNamesTheMailboxExcludesAtOnce(): void
+    {
+        $data = $this->getProbe('mailbounce');
+        $this->assertSame([['gone@slaed.net'], false], $data['final']);
+        $this->assertSame('550 5.1.1 user unknown', $data['note']);
+    }
+
+    # A believed report turns the accepted letter of a mailing into a refusal and moves it from the sent to the failed of its campaign, once, however many reports follow
+    #[Test]
+    public function aRealReportMovesTheLetterToTheFailedOfItsCampaign(): void
+    {
+        $this->assertSame([4, 1, 2, 'dsn', '5.7.1'], $this->getProbe('mailbounce')['camp']);
     }
 
     # The bounce mailbox is read over POP3: a wrong password and a session broken mid-message count nothing and delete nothing, so the next run reads the same reports once
@@ -329,7 +345,17 @@ final class MailDrainTest extends TestCase
         $this->assertSame(2, $data['free'], 'A row the run did not send was left claimed');
     }
 
-    # The window outlives the run: a second run inside the same minute stays under the cap instead of opening a window of its own
+    # A mailing sent with the unsubscribe switched off carries neither the list headers nor the link in either body part
+    #[Test]
+    public function aMailingWithoutUnsubscribeCarriesNoLink(): void
+    {
+        $data = $this->getProbe('maildrain')['quiet'];
+        $this->assertTrue($data['sent'], 'The mailing with the unsubscribe switched off never reached the relay');
+        $this->assertFalse($data['list'], 'A list header was written although the unsubscribe is switched off');
+        $this->assertFalse($data['link'], 'An unsubscribe link was written although the unsubscribe is switched off');
+    }
+
+    # The window outlives the run and the end of a scheduler run: a second run inside the same minute stays under the cap instead of opening a window of its own
     #[Test]
     public function theRateWindowHoldsAcrossTwoRuns(): void
     {

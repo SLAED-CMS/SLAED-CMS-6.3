@@ -13107,7 +13107,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-meter-bar {
   display: block;
   height: var(--sl-space-3);
-  margin: var(--sl-space-3) 0 var(--sl-space-2);
+  margin: var(--sl-space-2) 0;
   border-radius: var(--sl-radius-pill);
   background: var(--sl-bg-subtle);
 }

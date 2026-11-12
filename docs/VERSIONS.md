@@ -702,6 +702,24 @@ them to 17–33 frames a second. The laws are `docs/TEMPLATES.md`, "The Cost Of 
   find, `op=mailsave` stores it, `op=mailtest` queues the test letter under the token of the section. `tab=5` of `name=config` is no more.
 - **Two files.** `mtemp` stays in `config/global.php`, where its readers take it. The form of "Конфигурации" writes the whole file, so it
   keeps the key it no longer shows; `op=mailsave` writes that key alone. `MailConfigTest` holds both.
+- **A draft and a launch.** "Сохранить" of `op=add` stores a draft and queues nothing. `op=launch` hands it to the producer with the audience
+  counted anew: from "Запустить" of the form, which saves first, and from the fan of the row, both under a question. A finished or stopped
+  campaign with an empty queue is edited in place, which returns it to a draft with its counters at zero, and is launched again from its fan
+  ("Перезапустить"); one in work is only copied (`&copy=1`). `_NLUSER` is gone: the column of the sent shows the number alone.
+- **The unsubscribe is a switch.** `unsub` of `config/newsletter.php`, "Добавлять ссылку отписки" of the tab "Конфигурации", shipped on. Off, a
+  mailing leaves without the link and without the list headers.
+- **The rate window.** The cap of messages per minute lives in `storage/logs/scheduler/mailrate.json`. It stood in the state of `maildrain`,
+  where the end of every scheduler run dropped it, so each run opened a window of its own.
+- **A late refusal counts.** A delivery report believed for an address turns its last accepted mailing letter into a refused row (`dsn` and the
+  status code) and moves it from the sent to the failed of its campaign, once. The registry of "Отказы" names the reason in words by the code
+  (`getDeadReason()`), and the mark before the address opens the reason, the code, the date, the count and the text of the server, kept in
+  the new column `note` of `_maildead` (`table.sql`, and `addcol` in the tool for 6.2 data).
+- **Who leaves a mailing.** A code that names the mailbox itself - `5.1.1`, `5.1.2`, `5.1.10`, `5.2.1` - excludes the address at once; every
+  other refusal still counts up to `bouncemax`. The breaker of a campaign reads the results since its launch only, so a campaign launched
+  again is not judged by its earlier run. `MailingPanelTest` holds the form and the launch over real requests.
+- **Around it.** A status that is only a mark is no item of the dial of its row, in every list of `getTplAdminList()`. A submit button that
+  asks first travels as the submitter of its form, so its name and value reach the handler. The bar of a meter stands `--sl-space-2` under its
+  figure.
 
 ### The detector leaves a word inside a file name, a zero limit stays zero, and the presentation counts who is online
 

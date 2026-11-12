@@ -30,6 +30,7 @@
 # The argument router runs the core of the connector over three modules it writes for the run: the route, the guards in their order, the input, the envelope and the file
 # The argument master runs the module master: its panel, master/check and master/file over its inbox/; its child masterext runs the two jobs of the master
 # The argument blocks runs the zones of a type and of a page, the expired, lost, gone and free blocks, the free tag of a writer and the order the panel writes
+# The argument mailing runs the form of a mailing and its launch in the panel: the draft, the edit, the launch and the campaigns that take neither
 # The argument gate runs the closed site of a code newer than its step mark: every entry at 503, the light mode of the panel, its login and steps, then the notices and settings
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -2824,6 +2825,50 @@ function getRouteNull(PDO $pdo): array {
     return $out;
 }
 
+# The mailing form and its launch over real requests: a save is a draft, a launch hands it over once, a campaign in work or with mail in its queue is neither rewritten nor launched
+function getRouteMailing(PDO $pdo): array {
+    $pre = RPREF.'_';
+    $row = static function (int $id) use ($pdo, $pre): array {
+        $one = $pdo->query('SELECT title, status, send, total FROM '.$pre.'newsletter WHERE id = '.$id)->fetch(PDO::FETCH_NUM) ?: ['', -1, -1, -1];
+        return [(string)$one[0], (int)$one[1], (int)$one[2], (int)$one[3]];
+    };
+    $tok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=newsletter&op=add')['body'], 'save');
+    $base = ['name' => 'newsletter', 'op' => 'save', 'posttype' => 'save', 'nid' => '0', 'title' => 'Draft one', 'body' => 'Probe text', 'audit' => 'subs-', 'days' => '365',
+        'token' => $tok];
+    $out = ['save' => getRouteReply('root', 'POST', 'admin.php', $base)['code']];
+    $id = (int)$pdo->query('SELECT MAX(id) FROM '.$pre.'newsletter')->fetchColumn();
+    $edit = static fn(array $more): array => getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['nid' => (string)$id], $more));
+    $start = static fn(string $with): array => getRouteReply('root', 'POST', 'admin.php', ['name' => 'newsletter', 'op' => 'launch', 'id' => (string)$id, 'token' => $with]);
+    $out['draft'] = [$row($id), (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'mail')->fetchColumn()];
+    $edit(['title' => 'Draft two']);
+    $out['edited'] = [$row($id), (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'newsletter')->fetchColumn()];
+    $out['fan'] = str_contains(getRouteReply('root', 'GET', 'admin.php?name=newsletter')['body'], 'name="op" value="launch"');
+    $start(str_repeat('0', 64));
+    $out['badtoken'] = $row($id)[1];
+    $start($tok);
+    $out['launched'] = $row($id)[1];
+    $edit(['title' => 'Late edit']);
+    $start($tok);
+    $out['inwork'] = $row($id);
+    $pdo->exec('UPDATE '.$pre.'newsletter SET status = 6, send = 5, total = 5 WHERE id = '.$id);
+    $pdo->exec('INSERT INTO '.$pre.'mail (kind, sender, email, title, body, ref) VALUES (\'newsletter\', \'site@probe.test\', \'late@probe.test\', \'x\', \'\', '.$id.')');
+    $edit(['title' => 'Busy edit']);
+    $start($tok);
+    $out['busy'] = $row($id);
+    $pdo->exec('DELETE FROM '.$pre.'mail');
+    $out['again'] = str_contains(getRouteReply('root', 'GET', 'admin.php?name=newsletter')['body'], 'name="op" value="launch"');
+    $edit(['title' => 'Third']);
+    $out['reopened'] = $row($id);
+    $edit(['title' => 'Fourth', 'launch' => '1']);
+    $out['savelaunch'] = $row($id);
+    $pdo->exec('UPDATE '.$pre.'newsletter SET status = 6 WHERE id = '.$id);
+    $out['forms'] = [getRouteField(getRouteReply('root', 'GET', 'admin.php?name=newsletter&op=add&id='.$id)['body'], 'nid'),
+        getRouteField(getRouteReply('root', 'GET', 'admin.php?name=newsletter&op=add&id='.$id.'&copy=1')['body'], 'nid')];
+    $start($tok);
+    $out['relaunch'] = $row($id);
+    return $out;
+}
+
 # The unique address over real requests: a taken one in the settings, a registration racing a held one, a late activation, two OAuth accounts without one
 function getRouteEmail(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
@@ -4668,6 +4713,8 @@ try {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {
         $report['runs']['null'] = getRouteNull($rpdo);
+    } elseif (($argv[2] ?? '') === 'mailing') {
+        $report['runs']['mailing'] = getRouteMailing($rpdo);
     } elseif (($argv[2] ?? '') === 'email') {
         $report['runs']['email'] = getRouteEmail($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {

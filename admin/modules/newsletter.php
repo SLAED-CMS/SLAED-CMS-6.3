@@ -68,17 +68,26 @@ function getCampOptions(string $pick, int $days): array {
     return $opts;
 }
 
-# The fan of one campaign in the state it is in: release and stop ask first, the edit or clone is a link; the removal of a drained one is the drop of its row
-function getCampActions(array $camp): array {
+# The fan of one campaign in the state it is in: a draft and a finished one with an empty queue are edited and launched, and launch, release and stop ask first
+function getCampActions(array $camp, int $left): array {
     global $afile;
+    static $nums = [];
     $id = intval($camp['id']);
     $stat = intval($camp['status']);
     $keys = ['name' => 'newsletter', 'id' => $id];
+    $link = $afile.'.php?name=newsletter&op=add&id='.$id;
+    $open = $stat === 0 || (in_array($stat, [6, 7], true) && $left < 1);
     $acts = [];
+    if ($open) $acts[] = ['href' => $link, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true];
+    if ($open && (string)$camp['audit'] !== '') {
+        $nums[$camp['audit'].'-'.$camp['apar']] ??= getMailAudienceNum((string)$camp['audit'], (string)$camp['apar']);
+        $whom = getCampAudit((string)$camp['audit'], (string)$camp['apar']).' - '.$nums[$camp['audit'].'-'.$camp['apar']];
+        $name = ($stat === 0) ? _NLLAUNCH : _NLRERUN;
+        $acts[] = getTplPostAction(['op' => 'launch'] + $keys, ($stat === 0) ? 'send' : 'arrow-repeat', $name, $name.' "'.$camp['title'].'"? '.$whom);
+    }
     if (in_array($stat, [4, 7], true)) $acts[] = getTplPostAction(['op' => 'release'] + $keys, 'play', _NLFREE, _NLFREE.' "'.$camp['title'].'"?');
     if (in_array($stat, [1, 3, 4, 5], true)) $acts[] = getTplPostAction(['op' => 'stop'] + $keys, 'pause', _NLSTOP, _NLSTOP.' "'.$camp['title'].'"?');
-    $acts[] = ['href' => $afile.'.php?name=newsletter&op=add&id='.$id, 'icon_name' => ($stat === 0) ? 'pencil' : 'files', 'title' => ($stat === 0) ? _FULLEDIT : _NLCLONE,
-        'is_edit' => $stat === 0];
+    if ($stat !== 0) $acts[] = ['href' => $link.'&copy=1', 'icon_name' => 'files', 'title' => _NLCLONE];
     return $acts;
 }
 
@@ -147,10 +156,10 @@ function newsletter(): void {
             ['class_name' => 'sl-col-sent', 'is_col_count' => true] + ((intval($camp['expect']) > 0)
                 ? ['content_html' => getTplMeter(_NLPROGRESS, intval($camp['total']), intval($camp['expect']), '', 'ok', $camp['total'].' / '.$camp['expect'], true)]
                 : ['has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']]),
-            ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $camp['send'].' '._NLUSER],
+            ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['send']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['fails'].' ('.$rate.'%)'],
             ['is_col_status' => true, 'stat' => ['text' => getCampState($cst), 'is_on' => $cst === 6, 'is_wait' => in_array($cst, [1, 2, 3, 4, 5], true)]],
-            ['is_col_actions' => true, 'dial' => getCampActions($camp)],
+            ['is_col_actions' => true, 'dial' => getCampActions($camp, $left[$id] ?? 0)],
         ]];
     }
     setHead();
@@ -177,7 +186,7 @@ function newsletter(): void {
 }
 
 function add(): void {
-    global $db, $afile, $stop, $tpl;
+    global $db, $afile, $stop, $tpl, $mailer;
     $id = getVar('req', 'id', 'num');
     $nid = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
@@ -185,21 +194,27 @@ function add(): void {
     $pick = getVar('post', 'audit', 'var', 'subs-');
     $days = getVar('post', 'days', 'num', 365);
     $lock = false;
+    $again = false;
     if ($id) {
         $sql = 'SELECT title, body, audit, apar, status FROM '.PREFIX_DB.'_newsletter WHERE id = :id';
         $camp = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id])) ?: setRedirect($afile.'.php?name=newsletter', false, 302, _NONE_FOUND, true);
         $title = (string)$camp['title'];
         $body = (string)$camp['body'];
-        $pick = $camp['audit'].'-'.$camp['apar'];
+        $pick = ((string)$camp['audit'] === '') ? 'subs-' : $camp['audit'].'-'.$camp['apar'];
         if ((string)$camp['audit'] === 'active') $days = intval($camp['apar']);
-        $lock = intval($camp['status']) !== 0;
-        $nid = $lock ? 0 : $id;
+        $stat = intval($camp['status']);
+        $copy = getVar('get', 'copy', 'num') > 0;
+        $open = $stat === 0 || (in_array($stat, [6, 7], true) && $mailer->getCampLeft($id) < 1);
+        $lock = !$open && !$copy;
+        $again = $open && !$copy && $stat !== 0;
+        $nid = ($open && !$copy) ? $id : 0;
     }
     if (str_starts_with($pick, 'active-')) $pick = 'active-'.$days;
     setHead();
     $cont = getCampTabs(1);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($lock) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLLOCKED]);
+    if ($again) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLREOPEN]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -259,15 +274,17 @@ function add(): void {
                 'field_unwrapped' => true,
             ],
         ],
+        'actions_html' => $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'launch', 'value_attr' => '1', 'label' => _NLLAUNCH, 'icon_name' => 'send',
+            'is_green' => true, 'button_attr' => 'data-sl-confirm="'.htmlspecialchars(_NLLAUNCH.'?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"']),
         'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
 }
 
-# Store a mailing for the producer, nothing expanded here; a campaign past draft is never rewritten, because the queue still refers to its body
+# Store a mailing as a draft, nothing queued here; a campaign is rewritten only as a draft or once its queue is empty, because pending rows still refer to its body
 function save(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $mailer;
     $stop = [];
     $nid = getVar('post', 'nid', 'num', 0);
     $title = filterCutText(getVar('post', 'title', 'title'), 50);
@@ -289,19 +306,44 @@ function save(): void {
     if (!$warn && !$stop && getVar('post', 'posttype') == 'save') {
         $pars = ['title' => $title, 'body' => $body, 'audit' => $audit, 'apar' => $apar, 'num' => getMailAudienceNum($audit, $apar)];
         if ($nid) {
-            $sql = 'UPDATE '.PREFIX_DB.'_newsletter SET title = :title, body = :body, audit = :audit, apar = :apar, expect = :num, status = 1,'
-                .' `cursor` = 0, total = 0, send = 0, fails = 0, note = \'\', time = NOW(), endtime = NULL WHERE id = :id AND status = 0';
+            $row = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $nid]));
+            $stat = intval($row['status'] ?? -1);
+            $open = $stat === 0 || (in_array($stat, [6, 7], true) && $mailer->getCampLeft($nid) < 1);
+            if (!$open) setRedirect($afile.'.php?name=newsletter', false, 302, _NLLOCKED, true);
+            $sql = 'UPDATE '.PREFIX_DB.'_newsletter SET title = :title, body = :body, audit = :audit, apar = :apar, expect = :num, status = 0,'
+                .' `cursor` = 0, total = 0, send = 0, fails = 0, note = \'\', time = NOW(), endtime = NULL WHERE id = :id AND status IN (0, 6, 7)';
             $db->getSqlQuery($sql, $pars + ['id' => $nid]);
         } else {
-            $sql = 'INSERT INTO '.PREFIX_DB.'_newsletter (title, body, audit, apar, expect, status, time) VALUES (:title, :body, :audit, :apar, :num, 1, NOW())';
+            $sql = 'INSERT INTO '.PREFIX_DB.'_newsletter (title, body, audit, apar, expect, status, time) VALUES (:title, :body, :audit, :apar, :num, 0, NOW())';
             $db->getSqlQuery($sql, $pars);
         }
+        $sid = $nid ?: intval($db->getSqlLastId());
+        if (getVar('post', 'launch', 'num') && !setCampLaunch($sid)) setRedirect($afile.'.php?name=newsletter', false, 302, _ERROR, true);
         setRedirect($afile.'.php?name=newsletter', false, 302, _SUCCSAVE);
     } elseif ($warn) {
         setRedirect($afile.'.php?name=newsletter&op=add'.($nid ? '&id='.$nid : ''), false, 302, _TOKENMISS, true);
     } else {
         add();
     }
+}
+
+# Hand a draft, or a finished campaign whose queue is empty, to the producer with the audience size it has now and counters from zero; one in work is refused
+function setCampLaunch(int $id): bool {
+    global $db, $mailer;
+    $camp = $db->getSqlRow($db->getSqlQuery('SELECT audit, apar FROM '.PREFIX_DB.'_newsletter WHERE id = :id AND status IN (0, 6, 7)', ['id' => $id]));
+    if (!$camp || $mailer->getCampLeft($id) > 0 || !getMailAudience((string)$camp['audit'], (string)$camp['apar'])) return false;
+    $sql = 'UPDATE '.PREFIX_DB.'_newsletter SET expect = :num, status = 1, `cursor` = 0, total = 0, send = 0, fails = 0, note = \'\', time = NOW(), endtime = NULL'
+        .' WHERE id = :id AND status IN (0, 6, 7)';
+    $res = $db->getSqlQuery($sql, ['num' => getMailAudienceNum((string)$camp['audit'], (string)$camp['apar']), 'id' => $id]);
+    return $res && $res->rowCount() > 0;
+}
+
+function launch(): void {
+    global $afile;
+    $id = getVar('post', 'id', 'num');
+    $warn = !checkAdminPost('newsletter');
+    $done = !$warn && $id && setCampLaunch($id);
+    setRedirect($afile.'.php?name=newsletter', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSAVE : _ERROR), !$done);
 }
 
 # Remove a campaign only while nothing in the queue still points at its body, because those rows would then be refused one by one for a reason nobody caused
@@ -514,6 +556,18 @@ function getDeadSearch(array $flt): string {
     ]);
 }
 
+# Name the reason of a refusal by its enhanced status code; a reply code of the SMTP dialogue and every other class stay a permanent failure
+function getDeadReason(string $code): string {
+    return match (true) {
+        $code === '5.1.1' => _MAIL_WHYUSER,
+        in_array($code, ['5.1.2', '5.1.10'], true) => _MAIL_WHYHOST,
+        $code === '5.2.1' => _MAIL_WHYOFF,
+        $code === '5.2.2' => _MAIL_WHYFULL,
+        str_starts_with($code, '5.7.') => _MAIL_WHYDENY,
+        default => _MAIL_WHYELSE,
+    };
+}
+
 function dead(): void {
     global $afile, $mailer;
     $flt = getDeadFilter();
@@ -522,11 +576,16 @@ function dead(): void {
     $rows = [];
     foreach ($data['rows'] as $row) {
         $note = trim((string)$row['phase'].' '.$row['code']);
+        $why = getDeadReason((string)$row['code']);
         $drop = getTplPostAction(['op' => 'revive', 'id[]' => $row['id']] + $keep, 'arrow-counterclockwise', _MAIL_REVIVE);
         $mail = filterTextHighlight(htmlspecialchars((string)$row['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng']);
-        $rows[] = ['name' => (string)$row['email'], 'drop' => $drop + ['later' => 'gone move'], 'cells' => [
+        $tips = [['label' => _MAIL_WHY, 'value' => $why], ['label' => _ERROR, 'value' => $note], ['label' => _DATE, 'value' => format_time((string)$row['time'], _TIMESTRING)],
+            ['label' => _MAIL_FAILS, 'value' => (string)$row['fails']]];
+        if ((string)$row['note'] !== '') $tips[] = ['label' => _MAIL_WHYSAID, 'has_value_text' => true, 'value_text' => (string)$row['note']];
+        $rows[] = ['name' => (string)$row['email'], 'details' => $tips, 'drop' => $drop + ['later' => 'gone move'], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
-            ['is_truncate' => true, 'text_html' => $mail] + getTplLongCell((string)$row['email'], _EMAIL),
+            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'text_html' => $mail],
+            ['is_truncate' => true, 'title_text' => $why, 'has_content_text' => true, 'content_text' => $why],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
             ['is_col_date' => true, 'moment' => $row['time']],
             ['is_col_status' => true, 'stat' => ($note === '') ? ['text' => _NO] : ['text' => $note, 'is_fail' => true]],
@@ -541,6 +600,7 @@ function dead(): void {
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _EMAIL, 'is_truncate' => true],
+            ['content' => _MAIL_WHY, 'is_truncate' => true],
             ['content' => _MAIL_FAILS, 'is_col_count' => true],
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
@@ -938,6 +998,20 @@ function config(): void {
             ]),
         ];
     }
+    $fids = getFieldIds('', 'unsub');
+    $rows[] = [
+        'label_html' => _NLUNSUB,
+        'label_id' => $fids['label'],
+        'hint_html' => _NLUNSUBI,
+        'hint_id' => $fids['hint'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $fids['label'],
+            'describedby' => $fids['hint'],
+            'name' => 'unsub',
+            'value' => (string)intval($rule['unsub'] ?? 1),
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -964,6 +1038,7 @@ function configsave(): void {
             'breakwin' => max(1, getVar('post', 'breakwin', 'num', 100)),
             'canary' => max(0, getVar('post', 'canary', 'num', 100)),
             'canarymin' => max(0, getVar('post', 'canarymin', 'num', 500)),
+            'unsub' => min(1, max(0, getVar('post', 'unsub', 'num', 1))),
         ];
         $warn = !setConfigFile('newsletter.php', $content);
         if ($warn) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
@@ -983,6 +1058,7 @@ switch ($op) {
     default: newsletter(); break;
     case 'add': add(); break;
     case 'save': save(); break;
+    case 'launch': launch(); break;
     case 'delete': delete(); break;
     case 'release': release(); break;
     case 'stop': stop(); break;

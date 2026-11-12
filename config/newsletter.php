@@ -11,5 +11,6 @@ return [
         'breakwin' => '100',
         'canary' => '100',
         'canarymin' => '500',
+        'unsub' => '1',
     ],
 ];

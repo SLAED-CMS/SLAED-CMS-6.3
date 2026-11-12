@@ -22,6 +22,8 @@ class Mail {
     private const DEADCAP = 255;
     private const BOUNCELEN = 1048576;
     private const BOUNCENUM = 50;
+    private const RATEKEY = 'mailrate';
+    private const DEADCODE = ['5.1.1', '5.1.2', '5.1.10', '5.2.1'];
 
     private ?Database $db;
     private array $conf;
@@ -224,7 +226,7 @@ class Mail {
             return 'stop';
         }
         $this->setResult($id, false, $this->error, $scope !== 'temp');
-        if ($scope === 'rcpt') $this->addDeadMail((string)$row['email']);
+        if ($scope === 'rcpt') $this->addDeadMail((string)$row['email'], $this->error);
         if ($scope === 'campaign' && (string)$row['kind'] === 'newsletter') $this->setCampAbort(intval($row['ref']), 'the relay refused the sender of this mailing');
         $this->setCampResult($row, false, $scope);
         return 'fail';
@@ -257,8 +259,9 @@ class Mail {
     private function checkCampBreak(int $ref): void {
         $win = max(1, intval($this->rule['breakwin'] ?? 0) ?: 100);
         $bad = max(1, min(100, intval($this->rule['abort'] ?? 0) ?: 10));
-        $sql = 'SELECT status, phase FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status IN (1, 2) ORDER BY id DESC LIMIT '.$win;
-        $rows = $this->db->getSqlRows($this->db->getSqlQuery($sql, ['id' => $ref])) ?: [];
+        $sql = 'SELECT status, phase FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status IN (1, 2)'
+            .' AND time >= (SELECT time FROM '.PREFIX_DB.'_newsletter WHERE id = :cid) ORDER BY id DESC LIMIT '.$win;
+        $rows = $this->db->getSqlRows($this->db->getSqlQuery($sql, ['id' => $ref, 'cid' => $ref])) ?: [];
         if (count($rows) < $win) return;
         $num = 0;
         foreach ($rows as $one) {
@@ -368,24 +371,25 @@ class Mail {
         return (strlen($mail) > self::MAILLEN) ? '' : $mail;
     }
 
-    # Report whether an address has failed as a recipient often enough to leave bulk audiences; transactional mail never asks, which is what makes a wrong verdict cheap
+    # Report whether an address left bulk audiences: at once on a code that names the mailbox itself, else at the configured count; transactional mail never asks
     private function checkDeadMail(string $mail): bool {
         $mail = $this->filterDeadMail($mail);
         if ($mail === '' || !$this->db instanceof Database) return false;
         $cap = max(1, intval($this->rule['bouncemax'] ?? 0) ?: 2);
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT fails FROM '.PREFIX_DB.'_maildead WHERE email = :mail', ['mail' => $mail]));
-        return $row && intval($row['fails']) >= $cap;
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT fails, code FROM '.PREFIX_DB.'_maildead WHERE email = :mail', ['mail' => $mail]));
+        return $row && (intval($row['fails'] ?? 0) >= $cap || in_array((string)($row['code'] ?? ''), self::DEADCODE, true));
     }
 
     # Count one permanent recipient verdict against its address; every placeholder is named once, because native prepares refuse a repeated name and the write fails
-    private function addDeadMail(string $mail): void {
+    private function addDeadMail(string $mail, string $note = ''): void {
         $mail = $this->filterDeadMail($mail);
         if ($mail === '' || !$this->db instanceof Database) return;
         $phase = mb_substr($this->phase, 0, 10);
         $code = mb_substr($this->code, 0, 20);
-        $sql = 'INSERT INTO '.PREFIX_DB.'_maildead (email, fails, phase, code, time) VALUES (:mail, 1, :phase, :code, NOW())'
-            .' ON DUPLICATE KEY UPDATE fails = LEAST('.self::DEADCAP.', fails + 1), phase = :uphase, code = :ucode, time = NOW()';
-        $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => $phase, 'code' => $code, 'uphase' => $phase, 'ucode' => $code]);
+        $note = mb_substr($this->filterHeader($note), 0, self::ERRLEN);
+        $sql = 'INSERT INTO '.PREFIX_DB.'_maildead (email, fails, phase, code, note, time) VALUES (:mail, 1, :phase, :code, :note, NOW())'
+            .' ON DUPLICATE KEY UPDATE fails = LEAST('.self::DEADCAP.', fails + 1), phase = :uphase, code = :ucode, note = :unote, time = NOW()';
+        $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => $phase, 'code' => $code, 'note' => $note, 'uphase' => $phase, 'ucode' => $code, 'unote' => $note]);
     }
 
     # Ask whether the domain of an address accepts mail, caching the verdict; a failure of the check itself accepts, as a dead resolver says nothing about the domain
@@ -454,17 +458,16 @@ class Mail {
         return ($max > 0) ? max(10, intval($max * 0.6)) : 120;
     }
 
-    # Read the rate window the runs share, so a cap of messages per minute holds across two consecutive runs and across a manual trigger instead of only inside one run
+    # Read the rate window the runs share from a state of its own: the end of a scheduler run keeps only the contract fields in the state of the job maildrain
     private function getRateWindow(): void {
-        $state = function_exists('getSchedulerState') ? getSchedulerState('maildrain') : [];
+        $state = function_exists('getSchedulerState') ? getSchedulerState(self::RATEKEY) : [];
         $this->rsec = intval($state['rate_start'] ?? 0);
         $this->rnum = intval($state['rate_count'] ?? 0);
     }
 
     # Persist the window this run leaves behind, which is what the next run resumes instead of opening a window of its own and doubling the cap
     private function setRateWindow(): void {
-        if (!function_exists('getSchedulerState') || !function_exists('setSchedulerState')) return;
-        setSchedulerState('maildrain', array_replace(getSchedulerState('maildrain'), ['rate_start' => $this->rsec, 'rate_count' => $this->rnum]));
+        if (function_exists('setSchedulerState')) setSchedulerState(self::RATEKEY, ['rate_start' => $this->rsec, 'rate_count' => $this->rnum]);
     }
 
     # Report whether one more message may leave inside the current minute, opening a fresh window when the last one has expired; a spent window stops the run rather than slowing it
@@ -552,7 +555,7 @@ class Mail {
         $out['limit'] = $lim = getListLimit($out['total']);
         $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
         $out['page'] = max(1, min($out['pages'], intval($filt['page'] ?? 1)));
-        $sql = 'SELECT id, email, fails, phase, code, time FROM '.PREFIX_DB.'_maildead'.$where.' ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;
+        $sql = 'SELECT id, email, fails, phase, code, note, time FROM '.PREFIX_DB.'_maildead'.$where.' ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;
         $out['rows'] = $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [];
         return $out;
     }
@@ -585,14 +588,14 @@ class Mail {
     # Count every permanent failure one delivery report names; only a report quoting a Message-ID signed for that recipient counts, so a forged mail removes nobody
     public function addBounce(string $raw): array {
         $out = ['dead' => [], 'skip' => 0];
-        foreach ($this->getBounceDead($raw, $out['skip']) as [$mail, $code]) {
-            $this->setBounceDead($mail, $code);
+        foreach ($this->getBounceDead($raw, $out['skip']) as [$mail, $code, $text]) {
+            $this->setBounceDead($mail, $code, $text);
             $out['dead'][] = $mail;
         }
         return $out;
     }
 
-    # Read the believable permanent failures out of one report as address and status pairs, counting into skip every recipient block that does not qualify
+    # Read the believable permanent failures out of one report as address, status and the text of the server, counting into skip every recipient block that does not qualify
     private function getBounceDead(string $raw, int &$skip = 0): array {
         $out = [];
         $raw = str_replace(["\r\n", "\r"], "\n", substr($raw, 0, self::BOUNCELEN));
@@ -603,18 +606,28 @@ class Mail {
             if (!preg_match('/^Final-Recipient:\s*rfc822\s*;\s*<?([^\s<>;]+@[^\s<>;]+)>?/mi', $part, $rcpt)) continue;
             $act = preg_match('/^Action:\s*(\S+)/mi', $part, $mtch) ? strtolower($mtch[1]) : '';
             $code = preg_match('/^Status:\s*(\d\.\d{1,3}\.\d{1,3})/mi', $part, $mtch) ? $mtch[1] : '';
+            $text = preg_match('/^Diagnostic-Code:\s*(?:[a-z0-9.\-]+\s*;\s*)?(.+(?:\n[ \t]+.+)*)/mi', $part, $mtch) ? $this->filterHeader($mtch[1]) : '';
             $mail = $this->filterDeadMail($rcpt[1]);
-            if ($act === 'failed' && str_starts_with($code, '5.') && $mail !== '' && $this->checkBounceId($ids, $mail)) $out[] = [$mail, $code];
+            if ($act === 'failed' && str_starts_with($code, '5.') && $mail !== '' && $this->checkBounceId($ids, $mail)) $out[] = [$mail, $code, $text];
             else $skip++;
         }
         return $out;
     }
 
-    # Write one believed failure into the registry under the phase of a delivery report and its status code
-    private function setBounceDead(string $mail, string $code): void {
+    # Write one believed failure into the registry, and turn the last accepted mailing letter of that address into a refusal that moves from the sent to the failed of its campaign
+    private function setBounceDead(string $mail, string $code, string $text = ''): void {
         $this->phase = 'dsn';
         $this->code = $code;
-        $this->addDeadMail($mail);
+        $this->addDeadMail($mail, $text);
+        if (!$this->db instanceof Database) return;
+        $sql = 'SELECT id, ref FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND status = 1 AND email = :mail ORDER BY id DESC LIMIT 1';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['mail' => $mail]));
+        if (!$row) return;
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 2, phase = \'dsn\', code = :code, error = :err WHERE id = :id AND status = 1';
+        $text = mb_substr(($text !== '') ? $text : 'returned by a delivery report', 0, self::ERRLEN);
+        $this->db->getSqlQuery($sql, ['code' => mb_substr($code, 0, 20), 'err' => $text, 'id' => intval($row['id'])]);
+        if (intval($this->db->getSqlAffected()) < 1 || intval($row['ref']) < 1) return;
+        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET send = GREATEST(send, 1) - 1, fails = fails + 1 WHERE id = :id', ['id' => intval($row['ref'])]);
     }
 
     # Read the bounce mailbox over POP3 and delete what was read; verdicts are written only after QUIT commits the deletions, so a broken session counts nothing
@@ -641,8 +654,8 @@ class Mail {
             $out['error'] = $this->error;
             return $out;
         }
-        foreach ($list as [$mail, $code]) {
-            $this->setBounceDead($mail, $code);
+        foreach ($list as [$mail, $code, $text]) {
+            $this->setBounceDead($mail, $code, $text);
             $out['dead']++;
         }
         return $out;
@@ -892,9 +905,9 @@ class Mail {
         return "\n"._IP.': '.getIp()."\n"._BROWSER.': '.$agent."\n"._HASH.': '.md5($agent);
     }
 
-    # Build the unsubscribe address of one mailing recipient, signed for that address, or nothing when the site has no address of its own to send the reader to
+    # Build the unsubscribe address of one mailing recipient, signed for that address, or nothing when it is switched off or the site has no address to send the reader to
     private function getUnsubUrl(string $mail): string {
-        if ($this->home === '' || !function_exists('getUnsubKey')) return '';
+        if ($this->home === '' || !intval($this->rule['unsub'] ?? 1) || !function_exists('getUnsubKey')) return '';
         return getPublicUrl(['name' => 'account', 'op' => 'unsub', 'key' => getUnsubKey($mail), 'mail' => rawurlencode($mail)]);
     }
 
