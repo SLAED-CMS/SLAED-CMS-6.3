@@ -1639,13 +1639,12 @@ pre code.hljs {
   margin-bottom: var(--sl-space-5);
 }
 
-/* The caption stands at the top of its field, its line as high as a control, so a text area, a list or a picture keeps it at their top */
+/* The caption stands at the top of its field, its line as high as a control, so a text area, a list or a picture keeps it at their top; the row is as tall as its field and its own inset, so the field stands as far from the rule over it as from the one under */
 .sl-div-item {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sl-space-6);
   align-items: start;
-  min-height: var(--sl-item-height);
   padding: var(--sl-space-3) var(--sl-space-4);
   border-bottom: 1px solid var(--sl-border);
   border-radius: 0;
@@ -5715,19 +5714,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     animation: sl-beam var(--sl-beam-dur) var(--sl-ease-in-out) infinite;
     animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-beam-dur) / 10);
     pointer-events: none;
-  }
-
-  /* The lamps of a window head fade in turn */
-  .sl-pane-lamps > i {
-    animation: sl-pane-lamp var(--sl-pane-dur) var(--sl-ease-in-out) infinite;
-  }
-
-  .sl-pane-lamps > i:nth-child(2) {
-    animation-delay: calc(var(--sl-pane-dur) / 8);
-  }
-
-  .sl-pane-lamps > i:nth-child(3) {
-    animation-delay: calc(var(--sl-pane-dur) / 4);
   }
 
   /* The ripple of a press on a home tile, a row of the menu or of its counters and a control of the cockpit: a layer over the control clips a disc spreading from the pointer */
@@ -12834,30 +12820,35 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   flex: 1 1 0;
 }
 
-/* Series window: not the dialog of fragments/window.html; a head of mono capitals with its lamps or icon, its meta and live chip at the right end, and a body stacking its parts */
+/* Pane: the one window of the panel, not the dialog of fragments/window.html; a thin frame with the shadow of a list, a head of mono capitals with its icon, its meta and live chip at the right end, and a body stacking its parts */
 .sl-pane {
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-3);
-  background: linear-gradient(var(--sl-surface), var(--sl-bg));
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
 }
 
+/* The gradient ends where the head ends, so a window reads the same at any height; the head is as tall as a chip, its inset twice and its rule, and rounds its upper corners inside the frame */
 .sl-pane-cap {
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--sl-space-4);
   box-sizing: border-box;
-  min-height: calc(var(--sl-size-chip) + var(--sl-space-4) * 2 + 1px);
-  padding: var(--sl-space-4) var(--sl-space-6);
+  min-height: calc(var(--sl-size-chip) + var(--sl-space-3) * 2 + 1px);
+  padding: var(--sl-space-3) var(--sl-space-4);
   overflow: hidden;
   border-bottom: 1px solid var(--sl-border);
+  border-radius: calc(var(--sl-radius-2) - 1px) calc(var(--sl-radius-2) - 1px) 0 0;
+  background: linear-gradient(var(--sl-surface), var(--sl-bg));
 }
 
 .sl-pane-cap > .bi {
+  font-size: var(--sl-size-icon-xs);
   color: var(--sl-primary);
 }
 
@@ -12888,33 +12879,13 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-left: 0;
 }
 
-.sl-pane-lamps {
-  display: inline-flex;
-  gap: var(--sl-space-2);
-}
-
-.sl-pane-lamps > i {
-  width: var(--sl-space-3);
-  height: var(--sl-space-3);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-danger);
-}
-
-.sl-pane-lamps > i:nth-child(2) {
-  background: var(--sl-warning);
-}
-
-.sl-pane-lamps > i:nth-child(3) {
-  background: var(--sl-success);
-}
-
 .sl-pane-body {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: var(--sl-space-6);
+  padding: var(--sl-space-3) var(--sl-space-4);
 }
 
 /* A large window gives what its row has left to its picture, the last part of its body */

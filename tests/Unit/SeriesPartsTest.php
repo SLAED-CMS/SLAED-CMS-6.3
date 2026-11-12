@@ -31,18 +31,18 @@ final class SeriesPartsTest extends TestCase
     }
 
     #[Test]
-    public function windowTakesLampsOrIconMetaAndTwoHalves(): void
+    public function windowTakesIconMetaAndTwoHalves(): void
     {
-        $lamps = self::getPart('pane', ['title' => 'A<b>', 'content_html' => '<p id="in"></p>']);
-        $this->assertCount(3, $lamps->querySelectorAll('.sl-pane-lamps > i'));
-        $this->assertSame('A<b>', $lamps->querySelector('h2.sl-pane-title')->textContent);
-        $this->assertNotNull($lamps->querySelector('.sl-pane-body:not(.sl-pane-two) > #in'));
-        $this->assertNull($lamps->querySelector('[data-sl-live-box]'));
+        $bare = self::getPart('pane', ['title' => 'A<b>', 'icon' => 'hdd', 'content_html' => '<p id="in"></p>']);
+        $this->assertNotNull($bare->querySelector('.sl-pane-cap > i.bi-hdd[aria-hidden="true"]:first-child'));
+        $this->assertNull($bare->querySelector('.sl-pane-lamps'));
+        $this->assertSame('A<b>', $bare->querySelector('h2.sl-pane-title')->textContent);
+        $this->assertNotNull($bare->querySelector('.sl-pane-body:not(.sl-pane-two) > #in'));
+        $this->assertNull($bare->querySelector('[data-sl-live-box]'));
         $full = self::getPart('pane', [
             'title' => 'B', 'icon' => 'database', 'meta' => 'M<', 'is_fill' => true, 'live_html' => '<div class="sl-live-chip"></div>',
             'content_html' => '<p id="one"></p>', 'right_html' => '<p id="two"></p>',
         ]);
-        $this->assertNull($full->querySelector('.sl-pane-lamps'));
         $this->assertNotNull($full->querySelector('.sl-pane.sl-pane-fill[data-sl-live-box] .sl-pane-cap > i.bi-database'));
         $this->assertSame('M<', $full->querySelector('.sl-pane-meta')->textContent);
         $this->assertNotNull($full->querySelector('.sl-pane-two > div > #one'));

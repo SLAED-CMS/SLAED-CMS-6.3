@@ -233,13 +233,13 @@ function getMonitorGround(array $snap): string {
             getMonitorFlag('BZip2', extension_loaded('bz2')),
         ]),
     ]);
-    $soft = $pane(['title' => _MONITOR_SOFT, 'content_html' => $list([
+    $soft = $pane(['title' => _MONITOR_SOFT, 'icon' => 'window-stack', 'content_html' => $list([
         ['label' => 'SLAED CMS', 'text' => (string)($conf['version'] ?? ''), 'icon' => 'window-stack'],
         ['label' => 'PHP', 'text' => PHP_VERSION, 'icon' => 'filetype-php'],
         ['label' => $dbase['name'], 'text' => $dbase['version'], 'icon' => 'database'],
         ['label' => $web['name'], 'text' => $webver ?: _NO_INFO, 'icon' => 'hdd-rack'],
     ])]);
-    $opcache = $pane(['title' => 'OPcache', 'content_html' => $list([
+    $opcache = $pane(['title' => 'OPcache', 'icon' => 'lightning-charge', 'content_html' => $list([
         getMonitorFlag('OPcache', $opon),
         getMonitorRow(_ADM_SCRIPTS, $opon ? filterDecimal((int)$opc['opcache_statistics']['num_cached_scripts'], 0) : ''),
         getMonitorRow(_ADM_HITS, $opon ? filterDecimal(round((float)$opc['opcache_statistics']['opcache_hit_rate'], 1)).'%' : ''),
@@ -273,7 +273,7 @@ function getMonitorGround(array $snap): string {
             getMonitorRow(_BROWSER, getServerValue('HTTP_USER_AGENT', ''), true),
         ]),
     ]);
-    $guard = $pane(['title' => _SECURITY, 'meta' => _MONITOR_DAY, 'content_html' => $list([
+    $guard = $pane(['title' => _SECURITY, 'icon' => 'shield-check', 'meta' => _MONITOR_DAY, 'content_html' => $list([
         getMonitorRow(_MONITOR_FAILED, filterDecimal((int)$extra['failed24'], 0)),
         getMonitorEvent($extra['seclast24']),
         is_int($extra['sql24']) && $extra['sql24'] > 0 ? getMonitorRow(_MONITOR_DBERR, filterDecimal($extra['sql24'], 0))
@@ -282,6 +282,7 @@ function getMonitorGround(array $snap): string {
     ])]);
     $folders = $pane([
         'title' => _MONITOR_STORE,
+        'icon' => 'folder2-open',
         'meta' => ($backup > 0) ? sprintf(_MONITOR_BACKUP, getShortDate($backup)) : '',
         'content_html' => $list([
             getMonitorSize(_UPLOADS, $snap['uploads']),
@@ -290,14 +291,14 @@ function getMonitorGround(array $snap): string {
             getMonitorSize(_MONITOR_CACHE, $store['cache']),
         ]),
     ]);
-    $drive = $pane(['title' => _ADM_DISK, 'content_html' => getTplMeter(_ADM_DISKUSED, $snap['disk_used'], $snap['disk_total'],
+    $drive = $pane(['title' => _ADM_DISK, 'icon' => 'hdd', 'content_html' => getTplMeter(_ADM_DISKUSED, $snap['disk_used'], $snap['disk_total'],
         sprintf(_MONITOR_OF, filterSize($snap['disk_used']), filterSize($snap['disk_total']))).$list([
         getMonitorSize(_ADM_FREE, $snap['disk_free']),
         getMonitorRow(_MONITOR_READ, $rate($disk['read_rate'])),
         getMonitorRow(_MONITOR_WRITE, $rate($disk['write_rate'])),
         ($free < 10) ? ['label' => _MONITOR_HEALTH, 'text' => _MONITOR_LOWDISK] : ['label' => _MONITOR_HEALTH, 'text' => _MONITOR_NORM, 'is_good' => true],
     ])]);
-    $limits = $pane(['title' => _MONITOR_LIMITS, 'content_html' => $list([
+    $limits = $pane(['title' => _MONITOR_LIMITS, 'icon' => 'sliders', 'content_html' => $list([
         getMonitorRow(_MONITOR_MEMLIM, (string)ini_get('memory_limit')),
         getMonitorRow(_MONITOR_SCRIPT, filterSize(memory_get_usage(true))),
         getMonitorRow(_MONITOR_MAXTIME, ini_get('max_execution_time').' '._SEC),
@@ -308,7 +309,7 @@ function getMonitorGround(array $snap): string {
         getMonitorRow(_MONITOR_MAXVARS, (string)ini_get('max_input_vars')),
     ])]);
     $upbar = getTplMeter(_MONITOR_UPLOAD, $upmax, $postmax, $upnote, ($upmax > $postmax) ? 'warn' : 'ok');
-    $site = $pane(['title' => _SITE, 'content_html' => $upbar.$list(array_merge([
+    $site = $pane(['title' => _SITE, 'icon' => 'globe', 'content_html' => $upbar.$list(array_merge([
         getMonitorFlag(_SITE, !($conf['close'] ?? 0)),
         getMonitorFlag(_STATISTIC, (bool)($conf['statistic']['stat'] ?? 0)),
         getMonitorFlag(_NEWSLETTER_JOB, intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) === 1),

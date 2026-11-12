@@ -779,8 +779,9 @@ under the text to the right — the width of the alert decides, not that of the 
 
 ## Panel Window
 
-The window `fragments/pane.html` — a frame with the cap of `pane-cap.html`: an icon or the three lamps, the title in
-capitals, a value on the right — is an instrument among several on one screen, a board: "Мониторинг" and
+The window `fragments/pane.html` — a thin frame with the shadow of a list and the cap of `pane-cap.html`: an icon,
+which every window names, the title in capitals, a value on the right, a gradient that ends with the cap and a rule
+under it — is an instrument among several on one screen, a board: "Мониторинг" and
 "Статистика". A page that shows one thing under its tabs draws no window: the head of the page already names it, so
 a cap would repeat the title the reader has just read.
 

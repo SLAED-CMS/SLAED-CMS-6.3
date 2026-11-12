@@ -448,7 +448,7 @@ function getStatGround(array $data): string {
     ]);
     $part = static fn(string $id, string $kind): string => $series($id, $kind, $view['parts'][$id]);
     $pane = static fn(array $keys): string => $tpl->getHtmlFrag('pane', $keys);
-    $bars = static fn(string $title, string $id): string => $pane(['title' => $title, 'content_html' => $part($id, 'rows')]);
+    $bars = static fn(string $title, string $icon, string $id): string => $pane(['title' => $title, 'icon' => $icon, 'content_html' => $part($id, 'rows')]);
     $month = getStatMonthName($data['key']);
     $traffic = $pane([
         'title' => _STATISTIC_TRAFFIC,
@@ -457,20 +457,27 @@ function getStatGround(array $data): string {
         'is_fill' => true,
         'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => $view['tiles']]).$part('sl-stat-days', 'days'),
     ]);
-    $sources = $pane(['title' => _STATISTIC_SOURCE, 'meta' => $view['meta']['sl-stat-refcat'], 'content_html' => $part('sl-stat-refcat', 'rows')]);
+    $sources = $pane(['title' => _STATISTIC_SOURCE, 'icon' => 'box-arrow-in-right', 'meta' => $view['meta']['sl-stat-refcat'], 'content_html' => $part('sl-stat-refcat', 'rows')]);
     $rhythm = $pane(['title' => _STATISTIC_HOURS, 'icon' => 'activity', 'meta' => _STATISTIC_RHYTHM, 'is_fill' => true, 'content_html' => $part('sl-stat-rhythm', 'rhythm')]);
     $week = $pane(['title' => _STATISTIC_WEEK, 'icon' => 'calendar-week', 'meta' => _STATISTIC_MEAN, 'is_fill' => true, 'content_html' => $part('sl-stat-week', 'week')]);
-    $stacks = $pane(['title' => _STATISTIC_SESSION, 'content_html' => $part('sl-stat-newret', 'stack').$part('sl-stat-depth', 'stack').$part('sl-stat-duration', 'stack')]);
+    $stacks = $pane([
+        'title' => _STATISTIC_SESSION,
+        'icon' => 'people',
+        'content_html' => $part('sl-stat-newret', 'stack').$part('sl-stat-depth', 'stack').$part('sl-stat-duration', 'stack'),
+    ]);
     $ground = getStatCockpit($data, $view, $part('sl-stat-clock', 'clock'), $every)
         .$pane(['title' => _STATISTIC_ARCHIVE, 'icon' => 'archive', 'meta' => $strip['meta'], 'content_html' => $series('sl-stat-archive', 'archive', $strip['part'])])
-        .$tpl->getHtmlFrag('pane-row', ['content_html' => $traffic, 'side_html' => $sources.$bars(_STATISTIC_LANDS, 'sl-stat-countries')])
-        .$tpl->getHtmlFrag('pane-row', ['content_html' => $rhythm, 'side_html' => $bars(_STATISTIC_BROWSE, 'sl-stat-browsers').$bars(_STATISTIC_OSES, 'sl-stat-os')])
-        .$tpl->getHtmlFrag('pane-row', ['content_html' => $week, 'side_html' => $stacks.$bars(_STATISTIC_DEVICE, 'sl-stat-devices')])
+        .$tpl->getHtmlFrag('pane-row', ['content_html' => $traffic, 'side_html' => $sources.$bars(_STATISTIC_LANDS, 'geo-alt', 'sl-stat-countries')])
         .$tpl->getHtmlFrag('pane-row', [
-            'content_html' => $pane(['title' => _STATISTIC_PAGES, 'is_fill' => true, 'content_html' => $part('sl-stat-pages', 'rows')]),
-            'side_html' => $bars(_STATISTIC_HOSTS, 'sl-stat-hosts'),
+            'content_html' => $rhythm,
+            'side_html' => $bars(_STATISTIC_BROWSE, 'window', 'sl-stat-browsers').$bars(_STATISTIC_OSES, 'pc-display', 'sl-stat-os'),
         ])
-        .$pane(['title' => _STATISTIC_BOTS, 'content_html' => $part('sl-stat-bottype', 'stack').$part('sl-stat-bots', 'rows')]);
+        .$tpl->getHtmlFrag('pane-row', ['content_html' => $week, 'side_html' => $stacks.$bars(_STATISTIC_DEVICE, 'phone', 'sl-stat-devices')])
+        .$tpl->getHtmlFrag('pane-row', [
+            'content_html' => $pane(['title' => _STATISTIC_PAGES, 'icon' => 'file-earmark-text', 'is_fill' => true, 'content_html' => $part('sl-stat-pages', 'rows')]),
+            'side_html' => $bars(_STATISTIC_HOSTS, 'router', 'sl-stat-hosts'),
+        ])
+        .$pane(['title' => _STATISTIC_BOTS, 'icon' => 'robot', 'content_html' => $part('sl-stat-bottype', 'stack').$part('sl-stat-bots', 'rows')]);
     $days = $view['parts']['sl-stat-table'];
     $cells = static fn(array $nums): array => array_map(static fn(string $val): array => ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $val], $nums);
     $rows = [['is_no_sort' => true, 'cells' => [['has_content_text' => true, 'content_text' => $days['total']['label']], ...$cells($days['total']['cells'])]]];
