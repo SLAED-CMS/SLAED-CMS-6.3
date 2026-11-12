@@ -316,8 +316,12 @@
   place-items: center;
 }
 
+/* One size for the icons of a head: the glyph of the fold is as large as the mark at the other end */
 .wn-fold::before {
+  width: var(--sl-size-icon-xs);
+  height: var(--sl-size-icon-xs);
   margin: 0;
+  font-size: var(--sl-size-icon-xs);
 }
 
 .wn-root[data-wn-fold="end"] .wn-fold {

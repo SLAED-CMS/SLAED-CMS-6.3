@@ -1639,7 +1639,7 @@ pre code.hljs {
   margin-bottom: var(--sl-space-5);
 }
 
-/* The caption stands at the top of its field, its line as high as a control, so a text area, a list or a picture keeps it at their top; the row is as tall as its field and its own inset, so the field stands as far from the rule over it as from the one under */
+/* The caption stands at the top of its field, its line as high as a control; the row is as tall as its field and its inset, so the field sits evenly between its rules */
 .sl-div-item {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -12820,7 +12820,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   flex: 1 1 0;
 }
 
-/* Pane: the one window of the panel, not the dialog of fragments/window.html; a thin frame with the shadow of a list, a head of mono capitals with its icon, its meta and live chip at the right end, and a body stacking its parts */
+/* Pane: the one window of the panel, not the dialog of fragments/window.html; a thin frame with the shadow of a list, a head of mono capitals with its icon, and a body */
 .sl-pane {
   position: relative;
   display: flex;
@@ -12832,7 +12832,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   box-shadow: var(--sl-shadow-xs);
 }
 
-/* The gradient ends where the head ends, so a window reads the same at any height; the head is as tall as a chip, its inset twice and its rule, and rounds its upper corners inside the frame */
+/* The gradient ends with the head, so a window reads the same at any height; the head is a chip, its inset twice and its rule high, and rounds its upper corners */
 .sl-pane-cap {
   position: relative;
   display: flex;

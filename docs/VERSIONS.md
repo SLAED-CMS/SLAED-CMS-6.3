@@ -1,5 +1,18 @@
 # Versions
 
+## 2026-11-12
+
+### The window of the panel takes one standard, and a form row is as tall as its field
+
+- **`fragments/pane.html` of `admin` is the one window of the panel** — a thin frame of radius 8 with the shadow of a
+  list, a gradient that ends with the head, a rule under the head and an inset of 8 by 10. The head is 43 pixels high
+  and its icon 16. "Мониторинг" and "Статистика" wear it.
+- **Every window names its icon** — the three lamps of a head and their animation are gone, and `pane-cap.html` prints
+  the icon alone; the sixteen windows that showed the lamps got an icon of their own.
+- **A form row of the panel carries no minimum height** — `.sl-div-item` is as tall as its field and its own inset, so
+  the field stands as far from the rule over it as from the one under. A row with one field is 45 pixels high where it
+  was 55.
+
 ## 2026-11-10
 
 ### The avatar ships the limits of today, and its settings stand in a block of their own

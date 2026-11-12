@@ -86,7 +86,7 @@ function getWnRooms() {
       getWnSwitch('wn-nomail', 'Регистрация без подтверждения на E-Mail?', false)}${getWnInput('wn-stop', 'Запрещённые имена', 'alter,drop,insert,outfile,select,truncate,union')}</div>` })}</div>`) +
   room('Сворачиваемые группы', 'Как «RSS-каналы» и «Дополнительные поля»: одно раскрыто, два свёрнуты', `<div class="wn-stack">${
     feed(1, false, ['success', 'Включён'])}${feed(2, true, ['neutral', 'Пусто'])}${feed(3, true, ['neutral', 'Пусто'])}</div>`) +
-  room('Рядом без окна', 'Короткая форма без групп и таблица: рамки окна нет, строка формы той же высоты, что в окне', `<div class="sl-box"><div class="sl-div-form"><div class="sl-div-grid">${
+  room('Рядом без окна', 'Короткая форма без групп и таблица: рамки окна нет, строка той же высоты', `<div class="sl-box"><div class="sl-div-form"><div class="sl-div-grid">${
     getWnInput('wn-cnum', 'Записей на странице сайта', '15', 'number', 'Пусто — как в общих настройках: 15.')}${getWnSelect('wn-csort', 'Сортировка', ['В порядке убывания', 'В порядке возрастания'])}${
     getWnSwitch('wn-calert', 'Уведомлять администраторов о новых поступлениях?', true)}</div>` +
     '<div class="sl-div-actions"><button type="button" class="sl-but-blue"><i class="bi bi-check2" aria-hidden="true"></i> Сохранить изменения</button></div></div></div>' +

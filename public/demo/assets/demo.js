@@ -1797,14 +1797,15 @@ const DEMO_MON = [
   },
 ];
 
-/* The window series: one window for the whole system. 01 and 02 are the windows of the panel of today, kept to compare
-   with; 03 is the set of the site and 04 the set of the panel. The four faces carry the same four rooms (assets/win.js)
+/* The window series: one window for the whole system. 01 is the window of the monitor before the standard and 02 the
+   settings block of today, both kept to compare with; 03 is the set of the site and 04 the set of the panel, which the
+   window of the monitor wears now. The four faces carry the same four rooms (assets/win.js)
    and differ only in the set of values on the root; the desk mixes the axes in place */
 const DEMO_WIN = [
   {
     file: 'win-01-monitor.html',
     title: 'Окно мониторинга',
-    note: 'Окно «Мониторинга» и «Статистики» как есть: сильная рамка, радиус 12, градиент поверхности, название моноширинным ' +
+    note: 'Окно «Мониторинга» и «Статистики», каким оно было до стандарта: сильная рамка, радиус 12, градиент, название моноширинным ' +
       'капсом с тремя лампами, черта под шапкой, поля 16. Группы настроек и сворачиваемые группы надевают ту же рамку.',
     tags: ['рамка сильная', 'радиус 12', 'градиент', 'капс и лампы', 'черта', 'поля 16'],
   },
