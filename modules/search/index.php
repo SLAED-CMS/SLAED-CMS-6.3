@@ -42,7 +42,7 @@ function getSearchState(): array {
     ];
 }
 
-function getSearchModList(array $mods, string $curr): array {
+function getSearchModOpts(array $mods, string $curr): array {
     $cont = [];
     foreach ($mods as $mod) {
         $cont[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod), 'is_selected' => $mod === $curr];
@@ -56,7 +56,7 @@ function getSearchForm(array $state): string {
     $mod_html = $tpl->getHtmlFrag('select', [
         'name_attr' => 'mod',
         'aria_label' => _MODUL,
-        'options' => [['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false], ...getSearchModList($state['mods'], (string)$state['mod'])],
+        'options' => [['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false], ...getSearchModOpts($state['mods'],(string)$state['mod'])],
     ]);
     $word_html = $tpl->getHtmlFrag('input', [
         'itype' => 'text',

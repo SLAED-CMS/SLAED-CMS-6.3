@@ -12,6 +12,9 @@ define('_FO_6','Apply in the case of installation of the relevant rights in the 
 define('_FO_7','Allow the publication, editing and deleting of messages and topics on the forum?');
 define('_FO_8','Activate the quick reply form?');
 define('_FO_9','Show the date of the last edit for messages?');
+define('_FORUM_BUTTONS','User buttons');
+define('_FORUM_LISTS','Topics and lists');
+define('_FORUM_POST','Posting');
 define('_SYNCH','Synchronization');
 define('_SYNCHOK','Forum totals agree with its topics and messages.');
 define('_SYNCHFIX','Repaired. Forums: %d, topics: %d.');

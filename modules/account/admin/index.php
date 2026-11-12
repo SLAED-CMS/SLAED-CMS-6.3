@@ -213,59 +213,87 @@ function add(bool $fresh = false): void {
     setHead();
     $cont = getTplAdminTabs(getAccountTabs() + ['subtitle_html' => getAccountSearch(), 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-    $rows = [
-        [
-            'label_for' => 'f-uname',
-            'label_html' => _NICKNAME,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'uname',
-                'input_id' => 'f-uname',
-                'value_attr' => $uname,
-                'maxlength_num' => 25,
-                'placeholder_text' => _NICKNAME,
-                'is_required' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-rank',
-            'label_html' => _URANK,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'rank',
-                'input_id' => 'f-rank',
-                'value_attr' => $rank,
-                'maxlength_num' => 25,
-                'placeholder_text' => _URANK,
-            ]),
-        ],
-        [
-            'label_for' => 'f-email',
-            'label_html' => _EMAIL,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'email',
-                'name_attr' => 'email',
-                'input_id' => 'f-email',
-                'value_attr' => $email,
-                'maxlength_num' => 255,
-                'placeholder_text' => _EMAIL,
-                'is_required' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-site',
-            'label_html' => _SITEURL,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'name_attr' => 'site',
-                'input_id' => 'f-site',
-                'value_attr' => $site,
-                'maxlength_num' => 255,
-                'placeholder_text' => _SITEURL,
-            ]),
-        ],
+    $main[] = [
+        'label_for' => 'f-uname',
+        'label_html' => _NICKNAME,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text',
+            'name_attr' => 'uname',
+            'input_id' => 'f-uname',
+            'value_attr' => $uname,
+            'maxlength_num' => 25,
+            'placeholder_text' => _NICKNAME,
+            'is_required' => true,
+        ]),
+    ];
+    $main[] = [
+        'label_for' => 'f-email',
+        'label_html' => _EMAIL,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'email',
+            'name_attr' => 'email',
+            'input_id' => 'f-email',
+            'value_attr' => $email,
+            'maxlength_num' => 255,
+            'placeholder_text' => _EMAIL,
+            'is_required' => true,
+        ]),
+    ];
+    $main[] = [
+        'label_for' => 'f-pass',
+        'label_html' => _PASSWORD,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass', 'input_id' => 'f-pass', 'value_attr' => '', 'maxlength_num' => 25,
+            'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'new-password']),
+    ];
+    $main[] = [
+        'label_for' => 'f-pass2',
+        'label_html' => _RETYPEPASSWORD,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass2', 'input_id' => 'f-pass2', 'value_attr' => '', 'maxlength_num' => 25,
+            'placeholder_text' => _RETYPEPASSWORD, 'autocomplete_attr' => 'new-password']),
+    ];
+    $main[] = [
+        'label_for' => 'f-rank',
+        'label_html' => _URANK,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text',
+            'name_attr' => 'rank',
+            'input_id' => 'f-rank',
+            'value_attr' => $rank,
+            'maxlength_num' => 25,
+            'placeholder_text' => _URANK,
+        ]),
+    ];
+    $grpopts = [['value_attr' => '0', 'label_text' => _NO]];
+    $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
+    while ([$grid, $grname] = $db->getSqlRow($result)) {
+        $grpopts[] = [
+            'value_attr' => (string)$grid,
+            'label_text' => $grname,
+            'is_selected' => $grid == $group,
+        ];
+    }
+    $main[] = [
+        'label_for' => 'f-group',
+        'label_html' => _SPEC_GROUP,
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options' => $grpopts]),
+    ];
+    $main[] = [
+        'label_html' => _REG,
+        'field_html' => getTplAddDateTime(['name' => 'reg', 'label' => _REG, 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'is_config' => true]),
+    ];
+    $prof[] = [
+        'label_for' => 'f-site',
+        'label_html' => _SITEURL,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'site',
+            'input_id' => 'f-site',
+            'value_attr' => $site,
+            'maxlength_num' => 255,
+            'placeholder_text' => _SITEURL,
+        ]),
     ];
     if ($avatar !== '') {
-        $rows[] = [
+        $prof[] = [
             'label_for' => 'f-avatar',
             'label_html' => _AVATAR,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -278,11 +306,7 @@ function add(bool $fresh = false): void {
             ]),
         ];
     }
-    $rows[] = [
-        'label_html' => _REG,
-        'field_html' => getTplAddDateTime(['name' => 'reg', 'label' => _REG, 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'is_config' => true]),
-    ];
-    $rows[] = [
+    $prof[] = [
         'label_for' => 'f-occ',
         'label_html' => _OCCUPATION,
         'field_html' => $tpl->getHtmlFrag('input', [
@@ -294,7 +318,7 @@ function add(bool $fresh = false): void {
             'placeholder_text' => _OCCUPATION,
         ]),
     ];
-    $rows[] = [
+    $prof[] = [
         'label_for' => 'f-from',
         'label_html' => _LOCATION,
         'field_html' => $tpl->getHtmlFrag('input', [
@@ -306,7 +330,7 @@ function add(bool $fresh = false): void {
             'placeholder_text' => _LOCATION,
         ]),
     ];
-    $rows[] = [
+    $prof[] = [
         'label_for' => 'f-inter',
         'label_html' => _INTERESTS,
         'field_html' => $tpl->getHtmlFrag('input', [
@@ -318,7 +342,26 @@ function add(bool $fresh = false): void {
             'placeholder_text' => _INTERESTS,
         ]),
     ];
-    $rows[] = [
+    $prof[] = [
+        'label_html' => _BIRTHDAY,
+        'field_html' => getTplAddDateTime(['name' => 'birth', 'label' => _BIRTHDAY, 'time' => (string)$birth, 'with' => false, 'max' => 10, 'is_config' => true]),
+    ];
+    $gender = intval($gender ?? 0);
+    $genderopts = [];
+    foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
+        $genderopts[] = [
+            'value_attr' => (string)$key,
+            'label_text' => $val,
+            'is_selected' => $key == $gender,
+        ];
+    }
+    $prof[] = [
+        'label_for' => 'f-gender',
+        'label_html' => _GENDER,
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'selectid' => 'f-gender', 'is_config' => true, 'options' => $genderopts]),
+    ];
+    $prof = array_merge($prof, getTplAddFieldRows(['field' => $field, 'mod' => 'account', 'new' => !$uid]));
+    $prof[] = [
         'label_html' => _SIGNATURE, 'hint_html' => _SIGNATURE_TEXT,
         'label_id' => ($fids = getFieldIds('', 'sig'))['label'], 'hint_id' => $fids['hint'],
         'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _SIGNATURE,
@@ -326,7 +369,7 @@ function add(bool $fresh = false): void {
             'autofocus' => true,
         ]),
     ];
-    $rows[] = [
+    $sets[] = [
         'label_html' => _ALLOWUSERS,
         'label_id' => $labid = getFieldIds('', 'view')['label'],
         'field_html' => getTplRadioGroup([
@@ -336,21 +379,14 @@ function add(bool $fresh = false): void {
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
-    $rows[] = [
-        'label_html' => _ACTIVATEPERSONAL,
-        'label_id' => $labid = getFieldIds('', 'blockon')['label'],
+    $sets[] = [
+        'label_html' => _RNEWSLETTER,
+        'label_id' => $labid = getFieldIds('', 'news')['label'],
         'field_html' => getTplRadioGroup([
             'labelledby' => $labid,
-            'name' => 'blockon',
-            'value' => (string)$blockon,
+            'name' => 'news',
+            'value' => (string)$news,
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-        ]),
-    ];
-    $rows[] = [
-        'label_html' => _MENUCONF, 'hint_html' => _MENUINFO,
-        'label_id' => ($fids = getFieldIds('', 'block'))['label'], 'hint_id' => $fids['hint'],
-        'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MENUCONF,
-            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'profile', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
         ]),
     ];
     if ($conf['users']['theme']) {
@@ -367,38 +403,45 @@ function add(bool $fresh = false): void {
             }
         }
         if ($themecount > 1) {
-            $rows[] = [
+            $sets[] = [
                 'label_for' => 'f-theme',
                 'label_html' => _THEME,
                 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'selectid' => 'f-theme', 'options' => $themeopts]),
             ];
         }
     }
-    $rows[] = [
-        'label_html' => _RNEWSLETTER,
-        'label_id' => $labid = getFieldIds('', 'news')['label'],
-        'field_html' => getTplRadioGroup([
-            'labelledby' => $labid,
-            'name' => 'news',
-            'value' => (string)$news,
-            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-        ]),
-    ];
     if ($conf['multilingual'] == 1) {
-        $rows[] = [
+        $sets[] = [
             'label_for' => 'f-lang',
             'label_html' => _LANGUAGE,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options' => getTplLanguageOptions($lang)]),
         ];
     }
-    $rows[] = [
+    $sets[] = [
+        'label_html' => _ACTIVATEPERSONAL,
+        'label_id' => $labid = getFieldIds('', 'blockon')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'blockon',
+            'value' => (string)$blockon,
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
+    $sets[] = [
+        'label_html' => _MENUCONF, 'hint_html' => _MENUINFO,
+        'label_id' => ($fids = getFieldIds('', 'block'))['label'], 'hint_id' => $fids['hint'],
+        'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MENUCONF,
+            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'profile', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
+        ]),
+    ];
+    $marks[] = [
         'label_for' => 'f-point',
         'label_html' => _POINTS,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number', 'name_attr' => 'point', 'input_id' => 'f-point', 'value_attr' => $point, 'placeholder_text' => _POINTS, 'is_readonly' => true,
         ]),
     ];
-    if ($uid) $rows[] = [
+    if ($uid) $marks[] = [
         'label_for' => 'f-pdiff',
         'label_html' => _POINTS_DIFF,
         'field_html' => $tpl->getHtmlFrag('input', [
@@ -406,7 +449,7 @@ function add(bool $fresh = false): void {
             'maxlength_num' => 8, 'placeholder_text' => _POINTS_DIFF,
         ]),
     ];
-    if ($uid) $rows[] = [
+    if ($uid) $marks[] = [
         'label_for' => 'f-pnote',
         'label_html' => _POINTS_NOTE,
         'field_html' => $tpl->getHtmlFrag('input', [
@@ -416,7 +459,7 @@ function add(bool $fresh = false): void {
     ];
     for ($i = 0; $i < 5; $i++) {
         $a = $i + 1;
-        $rows[] = [
+        $marks[] = [
             'label_for' => 'f-warn-'.$i,
             'label_html' => _UWARN.' - '.$a,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -428,7 +471,7 @@ function add(bool $fresh = false): void {
             ]),
         ];
     }
-    $rows[] = [
+    $marks[] = [
         'label_html' => _UACESS,
         'label_id' => $labid = getFieldIds('', 'access')['label'],
         'field_html' => getTplRadioGroup([
@@ -438,52 +481,7 @@ function add(bool $fresh = false): void {
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
-    $grpopts = [['value_attr' => '0', 'label_text' => _NO]];
-    $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
-    while ([$grid, $grname] = $db->getSqlRow($result)) {
-        $grpopts[] = [
-            'value_attr' => (string)$grid,
-            'label_text' => $grname,
-            'is_selected' => $grid == $group,
-        ];
-    }
-    $gender = intval($gender ?? 0);
-    $genderopts = [];
-    foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
-        $genderopts[] = [
-            'value_attr' => (string)$key,
-            'label_text' => $val,
-            'is_selected' => $key == $gender,
-        ];
-    }
-    $rows[] = [
-        'label_for' => 'f-group',
-        'label_html' => _SPEC_GROUP,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options' => $grpopts]),
-    ];
-    $rows[] = [
-        'label_html' => _BIRTHDAY,
-        'field_html' => getTplAddDateTime(['name' => 'birth', 'label' => _BIRTHDAY, 'time' => (string)$birth, 'with' => false, 'max' => 10, 'is_config' => true]),
-    ];
-    $rows[] = [
-        'label_for' => 'f-gender',
-        'label_html' => _GENDER,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'selectid' => 'f-gender', 'is_config' => true, 'options' => $genderopts]),
-    ];
-    $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'account', 'new' => !$uid]));
-    $rows[] = [
-        'label_for' => 'f-pass',
-        'label_html' => _PASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass', 'input_id' => 'f-pass', 'value_attr' => '', 'maxlength_num' => 25,
-            'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'new-password']),
-    ];
-    $rows[] = [
-        'label_for' => 'f-pass2',
-        'label_html' => _RETYPEPASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass2', 'input_id' => 'f-pass2', 'value_attr' => '', 'maxlength_num' => 25,
-            'placeholder_text' => _RETYPEPASSWORD, 'autocomplete_attr' => 'new-password']),
-    ];
-    $rows[] = [
+    $note[] = [
         'label_for' => 'f-mail',
         'label_html' => _MAIL_SENDE,
         'field_html' => $tpl->getHtmlFrag('checkbox', [
@@ -494,7 +492,7 @@ function add(bool $fresh = false): void {
             'input_attr' => 'data-sl-toggle-control="sl_form_account_mail"',
         ]),
     ];
-    $rows[] = [
+    $note[] = [
         'label_html' => '',
         'field_html' => $tpl->getHtmlPart('div', [
             'id' => 'sl_form_account_mail',
@@ -519,10 +517,15 @@ function add(bool $fresh = false): void {
     ];
     $pkey = $fresh ? '' : getVar('post', 'pkey', 'raw', '');
     if ($uid) $hidden[] = ['nameattr' => 'pkey', 'valueattr' => preg_match('/^[0-9a-f]{32}$/D', $pkey) ? $pkey : bin2hex(random_bytes(16))];
+    $boxes = $tpl->getHtmlFrag('pane', ['icon' => 'person', 'title' => _USER, 'facts' => $uid ? [['text' => $uname]] : [],
+        'content_html' => $tpl->getHtmlPart('div', ['rows' => $main])]);
+    foreach ([['person-vcard', _ACCOUNT, $prof], ['sliders', _CHANGE, $sets], ['coin', _ACCOUNT_POINTS, $marks], ['envelope', _ACCOUNT_NOTICE, $note]] as [$icon, $title, $rows]) {
+        $boxes .= $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
+    }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
-        'rows' => $rows,
+        'content_html' => $boxes,
         'submit_label' => _SAVE,
     ])]);
     echo $cont;

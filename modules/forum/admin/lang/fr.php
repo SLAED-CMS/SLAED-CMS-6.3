@@ -12,6 +12,9 @@ define('_FO_6','Fonctionne dans le cas de l\'installation de droits appropri&#23
 define('_FO_7','Permettre de publier, de modifier et de supprimer des messages et sujets sur le forum?');
 define('_FO_8','Activer la forme d\'une r&#233;ponse rapide?');
 define('_FO_9','Afficher la derni&#232;re date de modification pour les messages?');
+define('_FORUM_BUTTONS','Boutons utilisateur');
+define('_FORUM_LISTS','Sujets et listes');
+define('_FORUM_POST','Publication');
 define('_SYNCH','Synchronisation');
 define('_SYNCHOK','Les totaux du forum correspondent à ses sujets et messages.');
 define('_SYNCHFIX','Réparé. Forums : %d, sujets : %d.');

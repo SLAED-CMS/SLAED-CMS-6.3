@@ -11,6 +11,25 @@
   and in "Состояние", and the row of the switch carries a hint (`_UPDATE_CHANHINT`) that tells the two apart in plain
   words, in the six locales.
 
+### The long forms of the panel are parted into windows
+
+- **A long form stands in windows named by what they set** — "Конфигурации" in fourteen over its five tabs ("Сайт",
+  "Оформление", "Сессии и Cookies", "Списки и живые блоки", "Панель", "Отладка"; "Заголовки и описание",
+  "Перенаправления", "Разметка"; "Язык", "GeoIP"; "Цензура"; "Кеш", "Стили и скрипты"), the transport of "Почта" in
+  five ("Письмо", "Транспорт", "Возвраты", "Очередь", "Проверка адресов"), "Карта сайта" in five, the settings of
+  "Безопасность" and of "Форум" in three each, a user of "Пользователи" in five with the nick as the fact of an edit.
+  The rows are regrouped by meaning; no field name, address or handler changed.
+- **The form of a group is three windows** — "Готовый ранг", "Свой ранг" with the proof at its right and "Группа" with
+  the name of the record as the fact of an edit; an icon stands where the number of a part stood, the buttons under
+  the last window, and the frame of the console is the window.
+- **Every constant of a language file is a window** — "Языковая константа N" with the name of the constant as the fact
+  of its head, the pager under the windows.
+- **The search of settings leads into a window** — it stays a list of hits, opens the tab and puts the cursor in the
+  field, and hides neither a row nor a window.
+- **Twenty-three names of windows in the six locales** — `_CONFIG_*`, `_ACCOUNT_NOTICE`, `_ACCOUNT_POINTS`,
+  `_MAIL_LETTER`, `_MAIL_RETURNS`, `_MAIL_CHECK`, `_MAP_*`, `_SEC_ATTACKS` (`admin/lang/*.php`) and `_FORUM_*`
+  (`modules/forum/admin/lang/*.php`).
+
 ### A form of one record and a form of one action stand in the window
 
 - **The window of a record form is named by the record** — "Администратор", "Блок", "Файловый блок", "Комментарий",

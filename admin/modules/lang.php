@@ -129,7 +129,7 @@ function fileedit(): void {
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
         $rows = [[
             'label_for' => 'f-cnst-'.$i,
-            'label_html' => _CONST.' '.$n,
+            'label_html' => _CONST,
             'is_lang_edit' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
@@ -172,7 +172,8 @@ function fileedit(): void {
                 ]).$btn,
             ];
         }
-        $groups[] = $tpl->getHtmlPart('div', ['rows' => $rows]);
+        $groups[] = $tpl->getHtmlFrag('pane', ['icon' => 'translate', 'title' => _CONST.' '.$n, 'facts' => $valc ? [['text' => $valc]] : [],
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
     }
     $pager = getPageNumbers('', $total, $total_pages, $per_page, 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&', 0, $page, '', 'page');
     $form = $tpl->getHtmlPart('form', [

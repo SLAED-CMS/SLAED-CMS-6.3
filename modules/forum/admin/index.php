@@ -107,7 +107,7 @@ function config(): void {
         ];
     }
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
-    $rows = [
+    $lists = [
         [
             'label_for' => 'f-defis',
             'label_html' => _CDEFIS,
@@ -166,6 +166,8 @@ function config(): void {
             'label_html' => _SORT,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'selectid' => 'f-sort', 'is_config' => true, 'options' => $sortopts]),
         ],
+    ];
+    $post = [
         [
             'label_for' => 'f-anonpost',
             'label_html' => _FO_6,
@@ -191,6 +193,8 @@ function config(): void {
             'label_id' => $labid = getFieldIds('', 'addmail')['label'],
             'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => (string)($conf['forum']['addmail'] ?? 0), 'options' => $yesno]),
         ],
+    ];
+    $btns = [
         [
             'label_html' => _VPRIVAT,
             'label_id' => $labid = getFieldIds('', 'privat')['label'],
@@ -207,10 +211,14 @@ function config(): void {
             'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'web', 'value' => (string)($conf['forum']['web'] ?? 0), 'options' => $yesno]),
         ],
     ];
+    $boxes = '';
+    foreach ([['list-ul', _FORUM_LISTS, $lists], ['pencil-square', _FORUM_POST, $post], ['person-lines-fill', _FORUM_BUTTONS, $btns]] as [$icon, $title, $rows]) {
+        $boxes .= $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
+    }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=forum&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('forum')]],
-        'rows' => $rows,
+        'content_html' => $boxes,
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;

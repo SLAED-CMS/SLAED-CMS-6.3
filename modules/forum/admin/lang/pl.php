@@ -12,6 +12,9 @@ define('_FO_6','Dzia&#322;a w przypadku instalowania odpowiednich praw w kategor
 define('_FO_7','Zezwalaj na publikowanie, edytowanie i usuwanie post&#243;w i temat&#243;w na forum?');
 define('_FO_8','Aktywacja formularza szybkiego reagowania?');
 define('_FO_9','Wy&#347;wietla dat&#281; ostatniej edycji do wiadomo&#347;ci?');
+define('_FORUM_BUTTONS','Przyciski użytkownika');
+define('_FORUM_LISTS','Tematy i listy');
+define('_FORUM_POST','Publikowanie');
 define('_SYNCH','Synchronizacja');
 define('_SYNCHOK','Sumy forum zgadzają się z jego tematami i wiadomościami.');
 define('_SYNCHFIX','Naprawiono. Fora: %d, tematy: %d.');

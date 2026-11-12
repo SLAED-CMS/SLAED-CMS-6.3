@@ -194,39 +194,7 @@
   height: var(--sl-size-chip);
 }
 
-/* The group form: three numbered parts, the ready ranks, the console with its proof, the group */
-.sl-rank-part + .sl-rank-part {
-  margin-top: var(--sl-space-8);
-  padding-top: var(--sl-space-6);
-  border-top: 1px solid var(--sl-border);
-}
-
-.sl-rank-cap {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  margin: 0 0 var(--sl-space-4);
-  color: var(--sl-text-strong);
-  font-weight: var(--sl-weight-semibold);
-}
-
-.sl-rank-cap b {
-  display: inline-grid;
-  place-items: center;
-  width: var(--sl-size-chip);
-  height: var(--sl-size-chip);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-primary);
-  color: var(--sl-on-solid);
-  font-size: var(--sl-font-small);
-}
-
-.sl-rank-cap small {
-  color: var(--sl-text-muted);
-  font-weight: var(--sl-weight-normal);
-}
-
-/* Eighteen ready ranks in rows that are always full: nine, six or three across */
+/* The group form, three windows: the ready ranks, the console with its proof, the group. Eighteen ready ranks in rows that are always full: nine, six or three across */
 .sl-rank-presets {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
@@ -262,10 +230,6 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--sl-space-6);
-  padding: var(--sl-space-6);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-bg-subtle);
 }
 
 /* The controls keep their own height from the top; the proof beside them stands as tall as they are */
@@ -5429,12 +5393,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 
   /* A block that stands still gets the box the light round its frame is drawn in */
-  :is(.sl-block-sidebar, .sl-fm-ops, .sl-empty, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card) {
+  :is(.sl-block-sidebar, .sl-fm-ops, .sl-empty, .sl-rank-preset, .sl-rank-tile, .sl-msg-card) {
     position: relative;
   }
 
   /* Under the hand a light runs round the frame of every block of the panel, a turning cone cut to the line of the frame; the --sl-aurora-* tokens draw it, the layer exists only under the hand */
-  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card)::before,
+  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-empty, .sl-fm-preview, .sl-rank-preset, .sl-rank-tile, .sl-msg-card)::before,
   :root:not([data-sl-rail]) .sl-block-sidebar::before,
   .sl-metric::after {
     position: absolute;
@@ -5449,7 +5413,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     pointer-events: none;
   }
 
-  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-empty, .sl-fm-preview, .sl-rank-deck, .sl-rank-preset, .sl-rank-tile, .sl-msg-card):hover::before,
+  :is(.sl-cockpit, .sl-mcard, .sl-pane, .sl-fm-tile, .sl-fm-ops, .sl-empty, .sl-fm-preview, .sl-rank-preset, .sl-rank-tile, .sl-msg-card):hover::before,
   :root:not([data-sl-rail]) .sl-block-sidebar:hover::before,
   .sl-metric:hover::after {
     content: "";

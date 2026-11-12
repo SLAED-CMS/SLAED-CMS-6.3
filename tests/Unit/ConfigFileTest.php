@@ -339,7 +339,10 @@ class ConfigFileTest extends TestCase
         $this->assertStringContainsString('getConfigJournal()', $body, 'The screen shows no diagnostics of the journal');
         $this->assertStringNotContainsString('$conf', $body, 'The diagnostic screen depends on the configuration it repairs');
         foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
-            $this->assertSame(9, substr_count($this->getFile('admin/lang/'.$loc.'.php'), "define('_CONFIG_"), 'The locale '.$loc.' misses a constant of the restore screen');
+            $lang = $this->getFile('admin/lang/'.$loc.'.php');
+            foreach (['BLOCKED', 'CLEAN', 'OP', 'PENDING', 'PHASE', 'RESTORE', 'RECOVER', 'RESTORED', 'VERDICT'] as $name) {
+                $this->assertStringContainsString("define('_CONFIG_".$name."',", $lang, 'The locale '.$loc.' misses _CONFIG_'.$name.' of the restore screen');
+            }
         }
     }
 

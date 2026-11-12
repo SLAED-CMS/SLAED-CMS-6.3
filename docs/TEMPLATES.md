@@ -782,10 +782,8 @@ under the text to the right — the width of the alert decides, not that of the 
 The window `fragments/pane.html` — a thin frame with the shadow of a list and the cap of `pane-cap.html`: an icon,
 which every window names, the title in capitals, a value on the right, a gradient that ends with the cap and a rule
 under it — frames what a page sets or tells under a name: an instrument of a board ("Мониторинг", "Статистика"), a
-short form of settings or a group of one, a form of one record or of one action, a section of a page. A list table
-never stands in a window. A form that is one editor, the form of a group and a long form without groups
-("Конфигурации", the transport of "Почта", "Карта сайта", the settings of "Безопасность" and of "Форум", a user of
-"Пользователи") stand in their `partials/box.html` without one.
+form of settings or a group of one, a form of one record or of one action, a section of a page. A list table never
+stands in a window, and a form that is one editor stands in its `partials/box.html` without one.
 
 - **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
   ("Очередь" of "Почта", "Поиск", "База данных") and above a form or a file into the page ("Карта сайта") with no
@@ -807,6 +805,21 @@ never stands in a window. A form that is one editor, the form of a group and a l
   The form holds the window, a note of the form stands over it and the submit under it. A form of settings with a
   table ("Пункты" of "Группы") puts its rows in the window and keeps the table under it without a frame, the submit
   under the table.
+- **A long form is parted into windows by meaning.** Each window is named by what its rows set and names an icon:
+  "Сайт", "Оформление", "Сессии и Cookies", "Списки и живые блоки", "Панель" and "Отладка" of the first tab of
+  "Конфигурации", "Письмо", "Транспорт", "Возвраты", "Очередь" and "Проверка адресов" of the transport of "Почта", the
+  windows of "Карта сайта", of the settings of "Безопасность" and of "Форум". The windows stand open, the submit under
+  the last one. A tab of such a form holds its own windows, a lone one named by the tab ("Цензура"); a table of the
+  tab stands under its window (the bases of GeoIP), and figures with a list of facts that belong to a setting stand
+  in its window over the rows ("Кеш"). The find of settings (`find` of "Admin Form Contract") leads into a window and
+  hides nothing.
+- **A long form of one record keeps the fact in its first window.** A user of "Пользователи" stands in "Пользователь",
+  "Профиль", "Настройки", "Пункты и предупреждения" and "Уведомление"; the first is named by the record and carries
+  the nick of an edit. The form of a group (`partials/group-form.html`) writes its three windows itself with
+  `pane-cap.html` — "Готовый ранг", "Свой ранг" with the proof at the right, "Группа" with the fact of an edit — and
+  keeps the buttons under the last one.
+- **A set of records on one page is a stack of windows.** Every constant of a language file is the window "Языковая
+  константа N" with the name of the constant as the fact of its head, open, the pager under the stack.
 - **A form of one record stands in a window named by the record.** The name is the record in the singular — "Блок",
   "Администратор", "Комментарий", "Модуль", "Рассылка", "Задание", "Запрос", "Опрос", "Материал", "Выпуск", "IP-адрес"
   and "Пользователь" of a ban — never the tab and never "Основные"; the submit stands under the window. An edit passes
@@ -1384,7 +1397,7 @@ Every reader passes the raw column and its title, and every template takes the r
 |---|---|
 | `partials/group-ladder.html` | one list: the heading with its icon, subtitle and sort button, and the `ol.sl-ladder` of its steps; `sl-ladder-extra` dashes the rail of the special groups |
 | `fragments/group-step.html` | one step `sl-ladder-step`: the threshold or the mark «Специальная», the node on the rail, the rank before the name, the description, «Участников: N» or «Пусто — участников нет» over the share bar, the dial |
-| `partials/group-form.html` | the form `sl-rank-form` with its three numbered parts `sl-rank-part`: «Готовый ранг», «Свой ранг» (the console and the preview), «Группа» |
+| `partials/group-form.html` | the form `sl-rank-form` with its three windows (`.sl-pane` with `fragments/pane-cap.html`): «Готовый ранг», «Свой ранг» (the console and the preview), «Группа» |
 
 - **The list.** `groups()` counts the members of every group in one query with `GROUP BY` — a special group the users
   whose `grp` it is, a point group every user at or above its threshold — and prints the point groups by threshold and

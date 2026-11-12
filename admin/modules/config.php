@@ -115,7 +115,7 @@ function getGeoipPanel(): string {
         ['content' => _VALUE],
     ];
     $info = $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => getGeoipRows($test)]);
-    return $tpl->getHtmlPart('div', ['rows' => $rows]).$stat.$info;
+    return $tpl->getHtmlFrag('pane', ['icon' => 'geo-alt', 'title' => 'GeoIP', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]).$stat.$info;
 }
 
 # Render the settings tabs in one form; the cache button stands in its action row but posts a form of its own by the attribute form, because the browser drops a nested form
@@ -154,12 +154,13 @@ function config(): void {
         $link = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=config&op=restore', 'title' => _CONFIG_RESTORE, 'label' => _CONFIG_RESTORE]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CONFIG_PENDING.' '.$link]);
     }
-    $rows = [];
+    $pane = static fn(string $icon, string $title, array $rows, string $lead = ''): string => $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title,
+        'content_html' => $lead.$tpl->getHtmlPart('div', ['rows' => $rows])]);
     $yesno = [
         ['value' => '1', 'label' => _YES],
         ['value' => '0', 'label' => _NO],
     ];
-    $rows[] = ['label_for' => 'f-sitename', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', [
+    $site[] =['label_for' => 'f-sitename', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'sitename',
         'input_id' => 'f-sitename',
@@ -169,7 +170,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-homeurl', 'label_html' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $site[] = ['label_for' => 'f-homeurl', 'label_html' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'url',
         'name_attr' => 'homeurl',
         'input_id' => 'f-homeurl',
@@ -177,6 +178,25 @@ function config(): void {
         'maxlength_num' => 255,
         'placeholder_text' => _SITEURL,
         'is_required' => true,
+        'is_config' => true,
+    ])];
+    $list = is_dir(PUBLIC_DIR.'/templates') ? scandir(PUBLIC_DIR.'/templates') : [];
+    $opts = [];
+    if (is_array($list)) {
+        foreach ($list as $file) {
+            if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
+                $opts[] = [
+                    'value_attr' => $file,
+                    'label_text' => $file,
+                    'is_selected' => $file == $conf['theme'],
+                ];
+            }
+        }
+    }
+    $look[] = ['label_for' => 'f-theme', 'label_html' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', [
+        'name_attr' => 'theme',
+        'selectid' => 'f-theme',
+        'options' => $opts,
         'is_config' => true,
     ])];
     $path = 'templates/'.$conf['theme'].'/images/logos/';
@@ -194,14 +214,14 @@ function config(): void {
             }
         }
     }
-    $rows[] = ['label_for' => 'img_replace', 'label_html' => _LOGO, 'field_html' => $tpl->getHtmlFrag('select', [
+    $look[] = ['label_for' => 'img_replace', 'label_html' => _LOGO, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'site_logo',
         'options' => $opts,
         'is_config' => true,
         'selectid' => 'img_replace',
         'imgtar' => 'picture',
     ])];
-    $rows[] = ['label_html' => _SITELOGO, 'field_html' => $tpl->getHtmlFrag('image-preview', [
+    $look[] = ['label_html' => _SITELOGO, 'field_html' => $tpl->getHtmlFrag('image-preview', [
         'src_attr' => $path.$conf['site_logo'],
         'image_id' => 'picture',
         'alt_text' => _SITELOGO,
@@ -225,28 +245,28 @@ function config(): void {
             }
         }
     }
-    $rows[] = ['label_for' => 'admin_img_replace', 'label_html' => _ADMINLOGO, 'field_html' => $tpl->getHtmlFrag('select', [
+    $look[] = ['label_for' => 'admin_img_replace', 'label_html' => _ADMINLOGO, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'admin_logo',
         'options' => $opts,
         'is_config' => true,
         'selectid' => 'admin_img_replace',
         'imgtar' => 'admin_picture',
     ])];
-    $rows[] = ['label_html' => _ADMINLOGOP, 'field_html' => $tpl->getHtmlFrag('image-preview', [
+    $look[] = ['label_html' => _ADMINLOGOP, 'field_html' => $tpl->getHtmlFrag('image-preview', [
         'src_attr' => $path.$adlogo,
         'image_id' => 'admin_picture',
         'alt_text' => _ADMINLOGOP,
         'title_text' => _ADMINLOGOP,
         'is_popup' => true,
     ])];
-    $rows[] = ['label_for' => 'f-slogan', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $site[] = ['label_for' => 'f-slogan', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'slogan',
         'input_id' => 'f-slogan',
         'value_text' => (string)$conf['slogan'],
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = [
+    $panel[] = [
         'label_for' => 'f-admininfo',
         'label_html' => _ADMININFO,
         'hint_html' => _ADMININFODES,
@@ -259,11 +279,11 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
+    $site[] = [
         'label_html' => _STARTDATE,
         'field_html' => getTplAddDateTime(['name' => 'startdate', 'label' => _STARTDATE, 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'is_config' => true]),
     ];
-    $rows[] = ['label_for' => 'f-adminmail', 'label_html' => _ADMINEMAIL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $site[] = ['label_for' => 'f-adminmail', 'label_html' => _ADMINEMAIL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'email',
         'name_attr' => 'adminmail',
         'input_id' => 'f-adminmail',
@@ -273,7 +293,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-user-c', 'label_html' => _USER_COOKIE, 'field_html' => $tpl->getHtmlFrag('input', [
+    $sess[] = ['label_for' => 'f-user-c', 'label_html' => _USER_COOKIE, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'user_c',
         'input_id' => 'f-user-c',
@@ -283,7 +303,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-admin-c', 'label_html' => _ADMIN_SESSION, 'field_html' => $tpl->getHtmlFrag('input', [
+    $sess[] = ['label_for' => 'f-admin-c', 'label_html' => _ADMIN_SESSION, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'admin_c',
         'input_id' => 'f-admin-c',
@@ -293,7 +313,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-user-c-t', 'label_html' => _USER_COOKIE_T, 'field_html' => $tpl->getHtmlFrag('input', [
+    $sess[] = ['label_for' => 'f-user-c-t', 'label_html' => _USER_COOKIE_T, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'user_c_t',
         'input_id' => 'f-user-c-t',
@@ -302,7 +322,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-sess-t', 'label_html' => _SESS_T, 'field_html' => $tpl->getHtmlFrag('input', [
+    $sess[] = ['label_for' => 'f-sess-t', 'label_html' => _SESS_T, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'sess_t',
         'input_id' => 'f-sess-t',
@@ -311,7 +331,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-ip-link', 'label_html' => _IP_LINK, 'field_html' => $tpl->getHtmlFrag('input', [
+    $panel[] = ['label_for' => 'f-ip-link', 'label_html' => _IP_LINK, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'url',
         'name_attr' => 'ip_link',
         'input_id' => 'f-ip-link',
@@ -321,34 +341,15 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $list = is_dir(PUBLIC_DIR.'/templates') ? scandir(PUBLIC_DIR.'/templates') : [];
-    $opts = [];
-    if (is_array($list)) {
-        foreach ($list as $file) {
-            if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
-                $opts[] = [
-                    'value_attr' => $file,
-                    'label_text' => $file,
-                    'is_selected' => $file == $conf['theme'],
-                ];
-            }
-        }
-    }
-    $rows[] = ['label_for' => 'f-theme', 'label_html' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', [
-        'name_attr' => 'theme',
-        'selectid' => 'f-theme',
-        'options' => $opts,
-        'is_config' => true,
-    ])];
     $fids = getFieldIds('f-module');
-    $rows[] = [
+    $site[] = [
         'label_html' => _PUTINHOME,
         'label_id' => $fids['label'],
         'hint_html' => _PUTINHOMEINFO,
         'hint_id' => $fids['hint'],
         'field_html' => getTplModuleChecks('module', $conf['module'], [], $fids['label'], $fids['hint']),
     ];
-    $rows[] = [
+    $look[] = [
         'label_for' => 'f-editor-user',
         'label_html' => _EDITORUSER,
         'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user', 'id="f-editor-user"'),
@@ -363,7 +364,7 @@ function config(): void {
             'is_selected' => $name === $val,
         ];
     }
-    $rows[] = ['label_for' => 'f-gtime', 'label_html' => _GTIME, 'field_html' => $tpl->getHtmlFrag('select', [
+    $site[] = ['label_for' => 'f-gtime', 'label_html' => _GTIME, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'gtime',
         'selectid' => 'f-gtime',
         'options' => $opts,
@@ -383,7 +384,7 @@ function config(): void {
     ];
     $boxes = [];
     foreach ($vals as $key => $val) $boxes[] = ['name_attr' => 'variables[]', 'value_attr' => (string)$key, 'label_text' => $val, 'is_checked' => !empty($vars[$key])];
-    $rows[] = ['label_html' => _VARIABLES, 'label_id' => $labid = getFieldIds('', 'variables')['label'],
+    $debug[] = ['label_html' => _VARIABLES, 'label_id' => $labid = getFieldIds('', 'variables')['label'],
         'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => $boxes])];
     $opts = [[
         'value_attr' => '0',
@@ -394,7 +395,7 @@ function config(): void {
         'label_text' => _MVALL,
         'is_selected' => $conf['var_view'] == '1',
     ]];
-    $rows[] = ['label_for' => 'f-var-view', 'label_html' => _VAR_VIEW, 'field_html' => $tpl->getHtmlFrag('select', [
+    $debug[] = ['label_for' => 'f-var-view', 'label_html' => _VAR_VIEW, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'var_view',
         'selectid' => 'f-var-view',
         'options' => $opts,
@@ -413,13 +414,13 @@ function config(): void {
         'label_text' => _SYNTAXSH,
         'is_selected' => $conf['syntax'] == '2',
     ]];
-    $rows[] = ['label_for' => 'f-syntax', 'label_html' => _SYNTAX, 'field_html' => $tpl->getHtmlFrag('select', [
+    $look[] = ['label_for' => 'f-syntax', 'label_html' => _SYNTAX, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'syntax',
         'selectid' => 'f-syntax',
         'options' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-admcol', 'label_html' => _ADMCOL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $panel[] = ['label_for' => 'f-admcol', 'label_html' => _ADMCOL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'admcol',
         'input_id' => 'f-admcol',
@@ -429,7 +430,7 @@ function config(): void {
         'is_config' => true,
     ])];
     foreach (['rows' => [_C_33, 1, 100], 'span' => [_C_35, 1, 20], 'arows' => [_C_34, 5, LIST_MAX], 'aspan' => [_C_36, 1, 20]] as $key => [$label, $min, $max]) {
-        $rows[] = ['label_for' => 'f-pager-'.$key, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', [
+        $pager[] = ['label_for' => 'f-pager-'.$key, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'pager_'.$key,
             'input_id' => 'f-pager-'.$key,
@@ -439,18 +440,18 @@ function config(): void {
             'is_config' => true,
         ])];
     }
-    $rows[] = [
+    $sess[] = [
         'label_html' => _SESSION,
         'label_id' => $labid = getFieldIds('', 'session')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'session', 'value' => $conf['session'], 'options' => $yesno]),
     ];
-    $rows[] = [
+    $sess[] = [
         'label_html' => _BOTSACT,
         'label_id' => $labid = getFieldIds('', 'botsact')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno]),
     ];
     foreach (['site' => _LIVE_SITE, 'panel' => _LIVE_PANEL, 'note' => _LIVE_NOTE] as $kind => $label) {
-        $rows[] = ['label_for' => 'f-live-'.$kind, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', [
+        $pager[] = ['label_for' => 'f-live-'.$kind, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'live_'.$kind,
             'input_id' => 'f-live-'.$kind,
@@ -459,29 +460,29 @@ function config(): void {
             'is_config' => true,
         ])];
     }
-    $rows[] = [
+    $debug[] = [
         'label_html' => _TIME_DB,
         'label_id' => $labid = getFieldIds('', 'db_t')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'db_t', 'value' => $conf['db_t'], 'options' => $yesno]),
     ];
-    $rows[] = [
+    $panel[] = [
         'label_html' => _ADMINFOEDIT,
         'label_id' => $labid = getFieldIds('', 'adminfo')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'adminfo', 'value' => $conf['adminfo'], 'options' => $yesno]),
     ];
-    $rows[] = [
+    $site[] = [
         'label_html' => _SITE_CLOSE,
         'label_id' => $labid = getFieldIds('', 'close')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'close', 'value' => $conf['close'], 'options' => $yesno]),
     ];
-    $rows[] = [
+    $debug[] = [
         'label_html' => _DEVMODE,
         'label_id' => $labid = getFieldIds('', 'dev_mode')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'dev_mode', 'value' => $conf['dev_mode'] ?? 0, 'options' => $yesno]),
     ];
-    $taba = $tpl->getHtmlPart('div', ['rows' => $rows]);
-    $rows = [];
-    $rows[] = ['label_for' => 'f-defis', 'label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('input', [
+    $taba = $pane('globe2', _SITE, $site).$pane('palette', _CONFIG_LOOK, $look).$pane('cookie', _CONFIG_SESS, $sess).$pane('list-ul', _CONFIG_LISTS, $pager)
+        .$pane('layout-sidebar', _CONFIG_PANEL, $panel).$pane('bug', _CONFIG_DEBUG, $debug);
+    $meta[] =['label_for' => 'f-defis', 'label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'defis',
         'input_id' => 'f-defis',
@@ -491,7 +492,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-dletter', 'label_html' => _DLETTER, 'field_html' => $tpl->getHtmlFrag('input', [
+    $meta[] = ['label_for' => 'f-dletter', 'label_html' => _DLETTER, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'dletter',
         'input_id' => 'f-dletter',
@@ -500,32 +501,32 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = [
+    $meta[] = [
         'label_html' => _LTITLE,
         'label_id' => $labid = getFieldIds('', 'ltitle')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ltitle', 'value' => $conf['ltitle'], 'options' => $yesno]),
     ];
-    $rows[] = [
+    $meta[] = [
         'label_html' => _ADESC,
         'label_id' => $labid = getFieldIds('', 'adesc')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'adesc', 'value' => $conf['adesc'], 'options' => $yesno]),
     ];
-    $rows[] = [
+    $redir[] = [
         'label_html' => _FORCESSL,
         'label_id' => $labid = getFieldIds('', 'forcessl')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'forcessl', 'value' => $conf['forcessl'] ?? 0, 'options' => $yesno]),
     ];
-    $rows[] = [
+    $redir[] = [
         'label_html' => _FORCEHOST,
         'label_id' => $labid = getFieldIds('', 'forcehost')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'forcehost', 'value' => $conf['forcehost'] ?? 0, 'options' => $yesno]),
     ];
-    $rows[] = [
+    $mark[] = [
         'label_html' => _OGRAPH,
         'label_id' => $labid = getFieldIds('', 'agraph')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'agraph', 'value' => $conf['agraph'] ?? 1, 'options' => $yesno]),
     ];
-    $rows[] = [
+    $mark[] = [
         'label_for' => 'f-graph',
         'label_html' => _OGRAPHT,
         'hint_html' => _TPLVARS,
@@ -540,12 +541,12 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
+    $mark[] = [
         'label_html' => _SCHEMA,
         'label_id' => $labid = getFieldIds('', 'aschema')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'aschema', 'value' => $conf['aschema'] ?? 1, 'options' => $yesno]),
     ];
-    $rows[] = [
+    $mark[] = [
         'label_for' => 'f-schema',
         'label_html' => _SCHEMAT,
         'hint_html' => _TPLVARS,
@@ -560,7 +561,7 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $tabb = $tpl->getHtmlPart('div', ['rows' => $rows]);
+    $tabb = $pane('card-heading', _CONFIG_TITLES, $meta).$pane('signpost-split', _CONFIG_REDIR, $redir).$pane('braces', _CONFIG_MARKUP, $mark);
     $list = is_dir(BASE_DIR.'/lang') ? scandir(BASE_DIR.'/lang') : [];
     $opts = [];
     if (is_array($list)) {
@@ -597,7 +598,7 @@ function config(): void {
         'label_id' => $labid = getFieldIds('', 'alang')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'alang', 'value' => $conf['alang'], 'options' => $yesno]),
     ];
-    $tabc = $tpl->getHtmlPart('div', ['rows' => $rows]).getGeoipPanel();
+    $tabc = $pane('translate', _LANGUAGE, $rows).getGeoipPanel();
     $rows = [];
     $opts = [[
         'value_attr' => '0',
@@ -638,7 +639,7 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $tabd = $tpl->getHtmlPart('div', ['rows' => $rows]);
+    $tabd = $pane('slash-circle', _CENSORS, $rows);
     $cnt = 0;
     $size = 0;
     $dirs = [];
@@ -669,7 +670,7 @@ function config(): void {
             'options' => $yesno,
         ]),
     ];
-    $rows[] = [
+    $files[] = [
         'label_for' => 'f-css-f',
         'label_html' => _CSSDIR,
         'hint_html' => _CSSDIRINFO.' '._NOKOMA,
@@ -682,7 +683,7 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
+    $files[] = [
         'label_for' => 'f-script-f',
         'label_html' => _SCRIPTFILE,
         'hint_html' => _SCRIPTFILEINFO.' '._NOKOMA,
@@ -703,7 +704,7 @@ function config(): void {
         ['label' => _FILE_M, 'value' => filterDecimal($cnt, 0), 'icon' => 'files'],
         ['label' => _FILE_S, 'value' => filterSize($size), 'icon' => 'hdd'],
     ]]).$tpl->getHtmlFrag('kv-list', ['items' => $items]);
-    $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
+    $tabf = $pane('lightning-charge', _CONFIG_CACHE, $rows, $html).$pane('file-earmark-code', _CONFIG_ASSETS, $files);
     $content = '';
     foreach ([$taba, $tabb, $tabc, $tabd, $tabf] as $idx => $panel) {
         $content .= $tpl->getHtmlFrag('tabs-panel', [

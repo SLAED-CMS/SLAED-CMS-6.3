@@ -12,6 +12,9 @@ define('_FO_6','Wirkt bei der Installation die entsprechenden Rechte, um Kategor
 define('_FO_7','Zulassen, zu ver&#246;ffentlichen, zu Bearbeiten und l&#246;schen von Nachrichten und Themen im Forum?');
 define('_FO_8','Aktivieren Sie das Formular schnellere Antwort?');
 define('_FO_9','Zeigen das Datum der letzten Bearbeitung f&#252;r Nachrichten?');
+define('_FORUM_BUTTONS','Benutzer-Schaltflächen');
+define('_FORUM_LISTS','Themen und Listen');
+define('_FORUM_POST','Veröffentlichung');
 define('_SYNCH','Synchronisieren');
 define('_SYNCHOK','Die Forumssummen stimmen mit den Themen und Beiträgen überein.');
 define('_SYNCHFIX','Repariert. Foren: %d, Themen: %d.');

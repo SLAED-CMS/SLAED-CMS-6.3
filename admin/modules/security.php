@@ -499,18 +499,8 @@ function config(): void {
             ['value_attr' => '1', 'label_text' => _SEC_VIEW_1, 'is_selected' => $conf['security']['error'] == 1],
             ['value_attr' => '2', 'label_text' => _SEC_VIEW_2, 'is_selected' => $conf['security']['error'] == 2]],
     ]);
-    $rows = [
+    $main = [
         ['label_for' => 'f-error', 'label_html' => _SEC_VIEW, 'field_html' => $errorhtml],
-        [
-            'label_for' => 'f-blocker-cookie',
-            'label_html' => _SEC_COOKIE,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'blocker_cookie',
-                'input_id' => 'f-blocker-cookie',
-                'value_attr' => $conf['security']['blocker_cookie'],
-            ]),
-        ],
         [
             'label_for' => 'f-afile',
             'label_html' => _ADMIN_FILE,
@@ -537,6 +527,8 @@ function config(): void {
                 'value_attr' => intval($conf['security']['idle'] / 60),
             ]),
         ],
+    ];
+    $guard = [
         [
             'label_html' => _SEC_URL_GET,
             'label_id' => $labid = getFieldIds('', 'url_get')['label'],
@@ -587,34 +579,44 @@ function config(): void {
                 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
             ]),
         ],
+        [
+            'label_for' => 'f-blocker-cookie',
+            'label_html' => _SEC_COOKIE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'blocker_cookie',
+                'input_id' => 'f-blocker-cookie',
+                'value_attr' => $conf['security']['blocker_cookie'],
+            ]),
+        ],
     ];
     $cap = is_array($conf['security']['captcha'] ?? null) ? $conf['security']['captcha'] : [];
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     if (!Captcha::isStoreWritable()) {
-        $rows[] = ['label_html' => _CAPTCHA, 'field_html' => $tpl->getHtmlFrag('alert', ['text' => _CAPTCHA_STORE_WARN, 'meta' => '', 'type' => 'warn', 'is_warn' => true])];
+        $capt[] = ['label_html' => _CAPTCHA, 'field_html' => $tpl->getHtmlFrag('alert', ['text' => _CAPTCHA_STORE_WARN, 'meta' => '', 'type' => 'warn', 'is_warn' => true])];
     }
-    $rows[] = [
+    $capt[] = [
         'label_html' => _CAPTCHA_ACTIVE,
         'label_id' => $labid = getFieldIds('', 'cap_active')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_active', 'value' => (string)(int)!empty($cap['active']), 'options' => $yesno]),
     ];
     $opts = [['value_attr' => 'altcha', 'label_text' => 'ALTCHA', 'is_selected' => (string)($cap['provider'] ?? 'altcha') === 'altcha']];
-    $rows[] = [
+    $capt[] = [
         'label_for' => 'f-cap-provider',
         'label_html' => _CAPTCHA_PROVIDER,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_provider', 'selectid' => 'f-cap-provider', 'options' => $opts, 'is_config' => true]),
     ];
-    $rows[] = [
+    $capt[] = [
         'label_html' => _CAPTCHA_REGISTER,
         'label_id' => $labid = getFieldIds('', 'cap_register')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_register', 'value' => (string)(int)!empty($cap['register']), 'options' => $yesno]),
     ];
-    $rows[] = [
+    $capt[] = [
         'label_html' => _CAPTCHA_CONTACT,
         'label_id' => $labid = getFieldIds('', 'cap_contact')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_contact', 'value' => (string)(int)!empty($cap['contact']), 'options' => $yesno]),
     ];
-    $rows[] = [
+    $capt[] = [
         'label_html' => _CAPTCHA_COMMENTS,
         'label_id' => $labid = getFieldIds('', 'cap_comments')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_comments', 'value' => (string)(int)!empty($cap['comments']), 'options' => $yesno]),
@@ -628,7 +630,7 @@ function config(): void {
             'is_selected' => (string)($cap['login_user'] ?? 'after-fail') === $item['value'],
         ];
     }
-    $rows[] = [
+    $capt[] = [
         'label_for' => 'f-cap-login-user',
         'label_html' => _CAPTCHA_LOGIN_USER,
         'hint_html' => _CAPTCHA_LOGIN_HINT,
@@ -649,7 +651,7 @@ function config(): void {
             'is_selected' => (string)($cap['login_admin'] ?? 'always') === $item['value'],
         ];
     }
-    $rows[] = [
+    $capt[] = [
         'label_for' => 'f-cap-login-admin',
         'label_html' => _CAPTCHA_LOGIN_ADMIN,
         'hint_html' => _CAPTCHA_LOGIN_HINT,
@@ -670,7 +672,7 @@ function config(): void {
             'is_selected' => (string)($cap['difficulty'] ?? 'normal') === $item[0],
         ];
     }
-    $rows[] = [
+    $capt[] = [
         'label_for' => 'f-cap-difficulty',
         'label_html' => _CAPTCHA_DIFFICULTY,
         'hint_html' => _CAPTCHA_DIFFICULTY_HINT,
@@ -683,7 +685,7 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
+    $capt[] = [
         'label_for' => 'f-cap-ttl',
         'label_html' => _CAPTCHA_TTL,
         'hint_html' => _CAPTCHA_TTL_HINT,
@@ -697,13 +699,17 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
+    $main[] = [
         'label_html' => _SECRET_REGEN,
         'hint_html' => _SECRET_REGEN_HINT,
         'label_id' => ($fids = getFieldIds('', 'secret_regen'))['label'],
         'hint_id' => $fids['hint'],
         'field_html' => getTplRadioGroup(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'name' => 'secret_regen', 'value' => '0', 'options' => $yesno]),
     ];
+    $boxes = '';
+    foreach ([['shield-lock', _SYSTEM, $main], ['shield-exclamation', _SEC_ATTACKS, $guard], ['robot', _CAPTCHA, $capt]] as [$icon, $title, $rows]) {
+        $boxes .= $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
+    }
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -711,7 +717,7 @@ function config(): void {
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
-        'rows' => $rows,
+        'content_html' => $boxes,
         'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);

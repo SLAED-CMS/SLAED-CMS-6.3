@@ -660,16 +660,15 @@ function getMailPanel(): string {
     foreach ($slist as $key => $item) $slist[$key]['is_selected'] = $item['value_attr'] === $secur;
     $nossl = function_exists('stream_socket_enable_crypto') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MAIL_NOSSL]);
     $noprc = function_exists('proc_open') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MAIL_NOPROC]);
-    $rows = [];
     $fids = getFieldIds('', 'mailtrans');
-    $rows[] = getMailRow(_MAIL_TRANS, $tpl->getHtmlFrag('select', [
+    $wire[] = getMailRow(_MAIL_TRANS, $tpl->getHtmlFrag('select', [
         'name_attr' => 'mailtrans',
         'selectid' => $fids['input'],
         'options' => $tlist,
         'is_config' => true,
     ]), '', '', $fids);
     $fids = getFieldIds('', 'mailfname');
-    $rows[] = getMailRow(_MAIL_FROMNAME, $tpl->getHtmlFrag('input', [
+    $mess[] = getMailRow(_MAIL_FROMNAME, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailfname',
         'input_id' => $fids['input'],
@@ -679,7 +678,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', _MAIL_NAMEINFO, $fids);
     $fids = getFieldIds('', 'mailfmail');
-    $rows[] = getMailRow(_MAIL_FROMMAIL, $tpl->getHtmlFrag('input', [
+    $mess[] = getMailRow(_MAIL_FROMMAIL, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailfmail',
         'input_id' => $fids['input'],
@@ -689,7 +688,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', _MAIL_MAILINFO, $fids);
     $fids = getFieldIds('', 'mailreply');
-    $rows[] = getMailRow(_MAIL_REPLYTO, $tpl->getHtmlFrag('input', [
+    $mess[] = getMailRow(_MAIL_REPLYTO, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailreply',
         'input_id' => $fids['input'],
@@ -699,7 +698,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', _MAIL_REPLYINFO, $fids);
     $fids = getFieldIds('', 'mailbounce');
-    $rows[] = getMailRow(_MAIL_BOUNCE, $tpl->getHtmlFrag('input', [
+    $back[] = getMailRow(_MAIL_BOUNCE, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailbounce',
         'input_id' => $fids['input'],
@@ -709,7 +708,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', _MAIL_BOUNCEI, $fids);
     $fids = getFieldIds('', 'mailpophost');
-    $rows[] = getMailRow(_MAIL_POPHOST, $tpl->getHtmlFrag('input', [
+    $back[] = getMailRow(_MAIL_POPHOST, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailpophost',
         'input_id' => $fids['input'],
@@ -719,7 +718,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', _MAIL_POPINFO, $fids);
     $fids = getFieldIds('', 'mailpopport');
-    $rows[] = getMailRow(_MAIL_POPPORT, $tpl->getHtmlFrag('input', [
+    $back[] = getMailRow(_MAIL_POPPORT, $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'mailpopport',
         'input_id' => $fids['input'],
@@ -729,14 +728,14 @@ function getMailPanel(): string {
     $plist = $slist;
     foreach ($plist as $key => $item) $plist[$key]['is_selected'] = $item['value_attr'] === (string)($mail['popsecure'] ?? 'ssl');
     $fids = getFieldIds('', 'mailpopsec');
-    $rows[] = getMailRow(_MAIL_POPSEC, $tpl->getHtmlFrag('select', [
+    $back[] = getMailRow(_MAIL_POPSEC, $tpl->getHtmlFrag('select', [
         'name_attr' => 'mailpopsec',
         'selectid' => $fids['input'],
         'options' => $plist,
         'is_config' => true,
     ]).$nossl, '', '', $fids);
     $fids = getFieldIds('', 'mailpopuser');
-    $rows[] = getMailRow(_MAIL_POPUSER, $tpl->getHtmlFrag('input', [
+    $back[] = getMailRow(_MAIL_POPUSER, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailpopuser',
         'input_id' => $fids['input'],
@@ -746,7 +745,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', '', $fids);
     $fids = getFieldIds('', 'mailpoppass');
-    $rows[] = getMailRow(_MAIL_POPPASS, $tpl->getHtmlFrag('input', [
+    $back[] = getMailRow(_MAIL_POPPASS, $tpl->getHtmlFrag('input', [
         'itype' => 'password',
         'name_attr' => 'mailpoppass',
         'input_id' => $fids['input'],
@@ -757,7 +756,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', _MAIL_PASSINFO, $fids);
     $fids = getFieldIds('', 'mailhost');
-    $rows[] = getMailRow(_MAIL_HOST, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_MAIL_HOST, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailhost',
         'input_id' => $fids['input'],
@@ -766,7 +765,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), 'smtp', '', $fids);
     $fids = getFieldIds('', 'mailport');
-    $rows[] = getMailRow(_MAIL_PORT, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_MAIL_PORT, $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'mailport',
         'input_id' => $fids['input'],
@@ -774,14 +773,14 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), 'smtp', '', $fids);
     $fids = getFieldIds('', 'mailsecure');
-    $rows[] = getMailRow(_MAIL_SECURE, $tpl->getHtmlFrag('select', [
+    $wire[] = getMailRow(_MAIL_SECURE, $tpl->getHtmlFrag('select', [
         'name_attr' => 'mailsecure',
         'selectid' => $fids['input'],
         'options' => $slist,
         'is_config' => true,
     ]).$nossl, 'smtp', '', $fids);
     $fids = getFieldIds('', 'mailauth');
-    $rows[] = getMailRow(
+    $wire[] = getMailRow(
         _MAIL_AUTH,
         getTplRadioGroup(['labelledby' => $fids['label'], 'name' => 'mailauth', 'value' => (string)(int)($mail['auth'] ?? 0), 'options' => $yesno]),
         'smtp',
@@ -789,7 +788,7 @@ function getMailPanel(): string {
         ['label' => $fids['label']]
     );
     $fids = getFieldIds('', 'mailuser');
-    $rows[] = getMailRow(_USER, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_USER, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailuser',
         'input_id' => $fids['input'],
@@ -799,7 +798,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), 'smtp', '', $fids);
     $fids = getFieldIds('', 'mailpass');
-    $rows[] = getMailRow(_PASSWORD, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_PASSWORD, $tpl->getHtmlFrag('input', [
         'itype' => 'password',
         'name_attr' => 'mailpass',
         'input_id' => $fids['input'],
@@ -810,7 +809,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), 'smtp', _MAIL_PASSINFO, $fids);
     $fids = getFieldIds('', 'mailtime');
-    $rows[] = getMailRow(_MAIL_TIMEOUT, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_MAIL_TIMEOUT, $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'mailtime',
         'input_id' => $fids['input'],
@@ -818,7 +817,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), 'smtp', '', $fids);
     $fids = getFieldIds('', 'mailpath');
-    $rows[] = getMailRow(_MAIL_SENDPATH, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_MAIL_SENDPATH, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailpath',
         'input_id' => $fids['input'],
@@ -830,7 +829,7 @@ function getMailPanel(): string {
     foreach ([['mailbatch', _MAIL_BATCH, 'batch', '25'], ['mailrate', _MAIL_RATE, 'rate', '60'], ['mailtries', _MAIL_TRIES, 'tries', '5'],
         ['mailback', _MAIL_BACKOFF, 'backoff', '300'], ['mailkeep', _MAIL_KEEP, 'keep', '30'], ['mailbulk', _MAIL_KEEPBULK, 'keepbulk', '3']] as $item) {
         $fids = getFieldIds('', $item[0]);
-        $rows[] = getMailRow($item[1], $tpl->getHtmlFrag('input', [
+        $queue[] = getMailRow($item[1], $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => $item[0],
             'input_id' => $fids['input'],
@@ -839,7 +838,7 @@ function getMailPanel(): string {
         ]), '', '', $fids);
     }
     $fids = getFieldIds('', 'mailverify');
-    $rows[] = getMailRow(_MAIL_VERIFY, getTplRadioGroup([
+    $check[] = getMailRow(_MAIL_VERIFY, getTplRadioGroup([
         'labelledby' => $fids['label'],
         'describedby' => $fids['hint'],
         'name' => 'mailverify',
@@ -847,7 +846,7 @@ function getMailPanel(): string {
         'options' => $yesno,
     ]), '', _MAIL_VERIFYI, ['label' => $fids['label'], 'hint' => $fids['hint']]);
     $fids = getFieldIds('', 'mailttl');
-    $rows[] = getMailRow(_MAIL_DNSTTL, $tpl->getHtmlFrag('input', [
+    $check[] = getMailRow(_MAIL_DNSTTL, $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'mailttl',
         'input_id' => $fids['input'],
@@ -855,7 +854,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', '', $fids);
     $fids = getFieldIds('', 'mailto');
-    $rows[] = getMailRow(_MAIL_TEST, $tpl->getHtmlFrag('input', [
+    $wire[] = getMailRow(_MAIL_TEST, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailto',
         'input_id' => $fids['input'],
@@ -867,7 +866,7 @@ function getMailPanel(): string {
     ]).$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'op', 'value_attr' => 'mailtest', 'label' => _SEND, 'icon_name' => 'send',
         'is_green' => true]), '', _MAIL_TESTINFO, $fids);
     $fids = getFieldIds('', 'mtemp');
-    $rows[] = getMailRow(_MAILTEMP, $tpl->getHtmlFrag('textarea', [
+    $mess[] = getMailRow(_MAILTEMP, $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'mtemp',
         'input_id' => $fids['input'],
         'value_text' => (string)$conf['mtemp'],
@@ -877,7 +876,12 @@ function getMailPanel(): string {
         'is_config' => true,
         'describedby' => $fids['hint'],
     ]), '', _MAILTEMPINFO, $fids);
-    return $tpl->getHtmlPart('div', ['rows' => $rows]);
+    $html = '';
+    foreach ([['envelope', _MAIL_LETTER, $mess], ['send', _MAIL_TRANS, $wire], ['arrow-return-left', _MAIL_RETURNS, $back], ['hourglass-split', _NLQUEUE, $queue],
+        ['patch-check', _MAIL_CHECK, $check]] as [$icon, $title, $rows]) {
+        $html .= $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
+    }
+    return $html;
 }
 
 function mailconf(): void {

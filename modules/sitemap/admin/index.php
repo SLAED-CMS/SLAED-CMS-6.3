@@ -207,11 +207,18 @@ function config(): void {
         $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     }
     $mods = array_values(array_diff(scandir(BASE_DIR.'/modules') ?: [], ['.', '..', 'node']));
-    $rows = [
+    $scope = [
         ['label_html' => _MODULES, 'label_id' => $labid = getFieldIds('', 'mod')['label'], 'field_html' => getTplModuleChecks('mod', $conf['sitemap']['mod'] ?? '', $mods, $labid),
             'is_full' => true],
         ...($types ? [['label_html' => _NODE, 'label_id' => $tid = getFieldIds('', 'ntype')['label'],
             'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $tid, 'items' => $types]), 'is_full' => true]] : []),
+        ['label_html' => _MAP_GEN_H, 'label_id' => $labid = getFieldIds('', 'gen_h')['label'], 'field_html' => $yesno('gen_h', $conf['sitemap']['gen_h'] ?? 0, $labid)],
+        ['label_html' => _MAP_GEN_M, 'label_id' => $labid = getFieldIds('', 'gen_m')['label'], 'field_html' => $yesno('gen_m', $conf['sitemap']['gen_m'] ?? 0, $labid)],
+        ['label_html' => _MAP_GEN_C, 'label_id' => $labid = getFieldIds('', 'gen_c')['label'], 'field_html' => $yesno('gen_c', $conf['sitemap']['gen_c'] ?? 0, $labid)],
+        ['label_html' => _MAP_GEN_P, 'label_id' => $labid = getFieldIds('', 'gen_p')['label'], 'field_html' => $yesno('gen_p', $conf['sitemap']['gen_p'] ?? 0, $labid)],
+    ];
+    $file = [
+        ['label_html' => _MAP_AUTO, 'label_id' => $labid = getFieldIds('', 'auto')['label'], 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0, $labid)],
         [
             'label_for' => 'f-auto-t', 'label_html' => _MAP_AUTO_T,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -219,30 +226,36 @@ function config(): void {
                 'is_config' => true,
             ]),
         ],
-        ['label_html' => _MAP_AUTO, 'label_id' => $labid = getFieldIds('', 'auto')['label'], 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0, $labid)],
+        ['label_html' => _MAP_XSL, 'label_id' => $labid = getFieldIds('', 'xsl')['label'], 'field_html' => $yesno('xsl', $conf['sitemap']['xsl'] ?? 0, $labid)],
+        ['label_html' => _MAP_SITE, 'label_id' => $labid = getFieldIds('', 'txt')['label'], 'field_html' => $yesno('txt', $conf['sitemap']['txt'] ?? 0, $labid)],
+    ];
+    $freq = [
         ['label_for' => 'f-fr_h', 'label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
         ['label_for' => 'f-fr_m', 'label_html' => _MAP_FR_M, 'field_html' => getSitemapFreqSelect('fr_m', (string)($conf['sitemap']['fr_m'] ?? '0'))],
         ['label_for' => 'f-fr_c', 'label_html' => _MAP_FR_C, 'field_html' => getSitemapFreqSelect('fr_c', (string)($conf['sitemap']['fr_c'] ?? '0'))],
         ['label_for' => 'f-fr_p', 'label_html' => _MAP_FR_P, 'field_html' => getSitemapFreqSelect('fr_p', (string)($conf['sitemap']['fr_p'] ?? '0'))],
+    ];
+    $prio = [
         ['label_for' => 'f-pr_h', 'label_html' => _MAP_PR_H, 'field_html' => getSitemapPrioritySelect('pr_h', (string)($conf['sitemap']['pr_h'] ?? '0'))],
         ['label_for' => 'f-pr_m', 'label_html' => _MAP_PR_M, 'field_html' => getSitemapPrioritySelect('pr_m', (string)($conf['sitemap']['pr_m'] ?? '0'))],
         ['label_for' => 'f-pr_c', 'label_html' => _MAP_PR_C, 'field_html' => getSitemapPrioritySelect('pr_c', (string)($conf['sitemap']['pr_c'] ?? '0'))],
         ['label_for' => 'f-pr_p', 'label_html' => _MAP_PR_P, 'field_html' => getSitemapPrioritySelect('pr_p', (string)($conf['sitemap']['pr_p'] ?? '0'))],
+    ];
+    $date = [
         ['label_html' => _MAP_DAT_H, 'label_id' => $labid = getFieldIds('', 'dat_h')['label'], 'field_html' => $yesno('dat_h', $conf['sitemap']['dat_h'] ?? 0, $labid)],
         ['label_html' => _MAP_DAT_M, 'label_id' => $labid = getFieldIds('', 'dat_m')['label'], 'field_html' => $yesno('dat_m', $conf['sitemap']['dat_m'] ?? 0, $labid)],
         ['label_html' => _MAP_DAT_C, 'label_id' => $labid = getFieldIds('', 'dat_c')['label'], 'field_html' => $yesno('dat_c', $conf['sitemap']['dat_c'] ?? 0, $labid)],
         ['label_html' => _MAP_DAT_P, 'label_id' => $labid = getFieldIds('', 'dat_p')['label'], 'field_html' => $yesno('dat_p', $conf['sitemap']['dat_p'] ?? 0, $labid)],
-        ['label_html' => _MAP_GEN_H, 'label_id' => $labid = getFieldIds('', 'gen_h')['label'], 'field_html' => $yesno('gen_h', $conf['sitemap']['gen_h'] ?? 0, $labid)],
-        ['label_html' => _MAP_GEN_M, 'label_id' => $labid = getFieldIds('', 'gen_m')['label'], 'field_html' => $yesno('gen_m', $conf['sitemap']['gen_m'] ?? 0, $labid)],
-        ['label_html' => _MAP_GEN_C, 'label_id' => $labid = getFieldIds('', 'gen_c')['label'], 'field_html' => $yesno('gen_c', $conf['sitemap']['gen_c'] ?? 0, $labid)],
-        ['label_html' => _MAP_GEN_P, 'label_id' => $labid = getFieldIds('', 'gen_p')['label'], 'field_html' => $yesno('gen_p', $conf['sitemap']['gen_p'] ?? 0, $labid)],
-        ['label_html' => _MAP_XSL, 'label_id' => $labid = getFieldIds('', 'xsl')['label'], 'field_html' => $yesno('xsl', $conf['sitemap']['xsl'] ?? 0, $labid)],
-        ['label_html' => _MAP_SITE, 'label_id' => $labid = getFieldIds('', 'txt')['label'], 'field_html' => $yesno('txt', $conf['sitemap']['txt'] ?? 0, $labid)],
     ];
+    $boxes = '';
+    foreach ([['diagram-3', _MAP_SCOPE, $scope], ['file-earmark-text', _MAP_FILE, $file], ['clock-history', _MAP_FREQ, $freq], ['sort-numeric-down', _PRIORITY, $prio],
+        ['calendar-check', _MAP_DATE, $date]] as [$icon, $title, $rows]) {
+        $boxes .= $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
+    }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
-        'rows' => $rows,
+        'content_html' => $boxes,
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;
