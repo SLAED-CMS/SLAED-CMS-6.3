@@ -1797,8 +1797,9 @@ const DEMO_MON = [
   },
 ];
 
-/* The window series: which window the right side of the panel takes as its one standard. The four faces carry the same
-   four rooms (assets/win.js) and differ only in the set of values on the root; the desk mixes the axes in place */
+/* The window series: one window for the whole system. 01 and 02 are the windows of the panel of today, kept to compare
+   with; 03 is the set of the site and 04 the set of the panel. The four faces carry the same four rooms (assets/win.js)
+   and differ only in the set of values on the root; the desk mixes the axes in place */
 const DEMO_WIN = [
   {
     file: 'win-01-monitor.html',
@@ -1816,17 +1817,17 @@ const DEMO_WIN = [
   },
   {
     file: 'win-03-cabinet.html',
-    title: 'Окно кабинета',
-    note: 'Окно кабинета сайта, перенесённое в панель: тонкая рамка, радиус 8, плоская поверхность, значок на плашке и ' +
-      'полужирное название, без черты, поля 12. Один вид окна на панель и на сайт.',
-    tags: ['рамка тонкая', 'радиус 8', 'плоская', 'значок-плашка', 'без черты', 'поля 12'],
+    title: 'Стандарт сайта',
+    note: 'Набор стороны пользователя — окно, которое кабинет сайта носит уже сейчас: тонкая рамка, радиус 8, плоская ' +
+      'поверхность, значок на плашке и полужирное название, без черты и тени, поля 12, сворачивание справа.',
+    tags: ['рамка тонкая', 'радиус 8', 'плоская', 'значок-плашка', 'без черты', 'поля 12', 'без тени'],
   },
   {
     file: 'win-04-mixed.html',
-    title: 'Смешанный',
-    note: 'Рамка таблицы списка — тонкая, радиус 8, её же тень — и шапка мониторинга: моноширинный капс с иконкой и черта под ' +
-      'ней, поверхность плоская, поля 12. Окно, таблица и алерт получают один радиус на экране.',
-    tags: ['рамка тонкая', 'радиус 8', 'плоская', 'капс и иконка', 'черта', 'тень таблицы'],
+    title: 'Стандарт панели',
+    note: 'Набор стороны администратора: тонкая рамка, радиус 8, градиент под шапкой, моноширинный капс с иконкой и черта ' +
+      'под ним, поля 8, тень таблицы списка, сворачивание справа. Окно сворачивается нажатием в любом месте шапки.',
+    tags: ['рамка тонкая', 'радиус 8', 'градиент шапки', 'капс и иконка', 'черта', 'поля 8', 'тень'],
   },
 ];
 

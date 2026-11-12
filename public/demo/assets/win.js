@@ -2,7 +2,8 @@
    around the face). A face is one empty .wn-root carrying its set of values:
    - data-wn-frame="soft|strong" — the tone of the frame
    - data-wn-radius="1|2|3" — the step of the radius ladder
-   - data-wn-ground="flat|grad|sunken" — the surface: the page, the gradient of the monitor, the sunken block with white rows
+   - data-wn-ground="flat|grad|cap|sunken" — the surface: the page, the gradient of the monitor down the whole window, the
+     gradient under the head alone, the sunken block with white rows
    - data-wn-head="lamps|caps|link|badge" — the head: mono capitals with the three lamps or with the icon, the plain
      text of the settings block, the icon on a plate with a semibold name of the cabinet
    - data-wn-rule="on|off" — the line under the head
@@ -16,7 +17,7 @@
 const WN_AXES = [
   ['frame', 'Рамка', [['soft', 'Тонкая'], ['strong', 'Сильная']]],
   ['radius', 'Радиус', [['1', '4'], ['2', '8'], ['3', '12']]],
-  ['ground', 'Поверхность', [['flat', 'Плоская'], ['grad', 'Градиент'], ['sunken', 'Утопленная']]],
+  ['ground', 'Поверхность', [['flat', 'Плоская'], ['grad', 'Градиент'], ['cap', 'Градиент шапки'], ['sunken', 'Утопленная']]],
   ['head', 'Шапка', [['lamps', 'Капс и лампы'], ['caps', 'Капс и иконка'], ['link', 'Текст'], ['badge', 'Плашка']]],
   ['rule', 'Черта', [['on', 'Есть'], ['off', 'Нет']]],
   ['inset', 'Поля', [['tight', '8'], ['mid', '12'], ['wide', '16']]],
@@ -85,7 +86,7 @@ function getWnRooms() {
       getWnSwitch('wn-nomail', 'Регистрация без подтверждения на E-Mail?', false)}${getWnInput('wn-stop', 'Запрещённые имена', 'alter,drop,insert,outfile,select,truncate,union')}</div>` })}</div>`) +
   room('Сворачиваемые группы', 'Как «RSS-каналы» и «Дополнительные поля»: одно раскрыто, два свёрнуты', `<div class="wn-stack">${
     feed(1, false, ['success', 'Включён'])}${feed(2, true, ['neutral', 'Пусто'])}${feed(3, true, ['neutral', 'Пусто'])}</div>`) +
-  room('Рядом без окна', 'Короткая форма без групп и таблица остаются как сейчас', `<div class="sl-box"><div class="sl-div-form"><div class="sl-div-grid">${
+  room('Рядом без окна', 'Короткая форма без групп и таблица: рамки окна нет, строка формы той же высоты, что в окне', `<div class="sl-box"><div class="sl-div-form"><div class="sl-div-grid">${
     getWnInput('wn-cnum', 'Записей на странице сайта', '15', 'number', 'Пусто — как в общих настройках: 15.')}${getWnSelect('wn-csort', 'Сортировка', ['В порядке убывания', 'В порядке возрастания'])}${
     getWnSwitch('wn-calert', 'Уведомлять администраторов о новых поступлениях?', true)}</div>` +
     '<div class="sl-div-actions"><button type="button" class="sl-but-blue"><i class="bi bi-check2" aria-hidden="true"></i> Сохранить изменения</button></div></div></div>' +
@@ -118,6 +119,7 @@ function setWnDesk(root) {
   document.querySelector('[data-wn-say]').textContent = 'Набор: ' + said.join(' · ');
 }
 
+/* A press anywhere on the head of a folding window goes to its fold control, which stays the one button of the head */
 function initWn() {
   const root = document.querySelector('[data-wn-root]');
   if (!root) return;
@@ -137,7 +139,9 @@ function initWn() {
     if (e.target.closest('[data-wn-reset]')) {
       for (const [key, val] of Object.entries(face)) root.setAttribute('data-wn-' + key, val);
       setWnDesk(root);
+      return;
     }
+    if (!e.target.closest('a, button, input, select, textarea, label, [data-sl-toggle-control]')) e.target.closest('.wn-cap')?.querySelector('.wn-fold')?.click();
   });
 }
 

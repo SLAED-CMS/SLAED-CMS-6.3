@@ -59,6 +59,7 @@
   --wn-pad-x: var(--sl-space-5);
   --wn-pad-y: var(--sl-space-5);
   --wn-cap-y: var(--sl-space-4);
+  --wn-cap-h: calc(var(--sl-size-chip) + var(--wn-cap-y) * 2 + 1px);
   --wn-shade: none;
   display: grid;
   gap: var(--sl-space-8);
@@ -112,9 +113,14 @@
   --wn-round: var(--sl-radius-3);
 }
 
-/* Axis: ground */
+/* Axis: ground. The gradient of the monitor runs down the whole window, so it shows at full in a short window and hardly
+   in a tall one; the gradient of the head ends where the head ends, and a window reads the same at any height, folded or not */
 .wn-root[data-wn-ground="grad"] {
   --wn-fill: linear-gradient(var(--sl-surface), var(--sl-bg));
+}
+
+.wn-root[data-wn-ground="cap"] {
+  --wn-fill: linear-gradient(var(--sl-surface), var(--sl-bg)) top / 100% var(--wn-cap-h) no-repeat var(--sl-bg);
 }
 
 .wn-root[data-wn-ground="sunken"] {
@@ -154,7 +160,7 @@
   align-items: center;
   gap: var(--sl-space-4);
   box-sizing: border-box;
-  min-height: calc(var(--sl-size-chip) + var(--wn-cap-y) * 2 + 1px);
+  min-height: var(--wn-cap-h);
   padding: var(--wn-cap-y) var(--wn-pad-x);
 }
 
@@ -171,6 +177,10 @@
   flex: none;
   place-items: center;
   color: var(--sl-primary);
+}
+
+.wn-mark > .bi {
+  display: grid;
 }
 
 .wn-lamps {
@@ -218,8 +228,11 @@
   border-bottom: 1px solid var(--sl-border);
 }
 
+.wn-root[data-wn-rule="off"] {
+  --wn-cap-h: calc(var(--sl-size-chip) + var(--wn-pad-y));
+}
+
 .wn-root[data-wn-rule="off"] .wn-cap {
-  min-height: calc(var(--sl-size-chip) + var(--wn-pad-y));
   padding-top: var(--wn-pad-y);
   padding-bottom: 0;
 }
@@ -289,9 +302,22 @@
   font-size: var(--sl-size-icon-sm);
 }
 
-/* Axis: the side of the fold */
+/* Axis: the side of the fold. The glyph of the theme carries a right margin and a drop under the baseline for a line of
+   text; in a head the gap of the head parts the control from its neighbour, so the box ends where the glyph ends and
+   the control stands as far from the frame, and on the same line, as the mark at the other end. The whole head of a
+   folding window presses that control (win.js), so the head shows the hand */
+.wn-cap:has(> .wn-fold) {
+  cursor: pointer;
+}
+
 .wn-fold {
+  display: inline-grid;
   flex: none;
+  place-items: center;
+}
+
+.wn-fold::before {
+  margin: 0;
 }
 
 .wn-root[data-wn-fold="end"] .wn-fold {
@@ -326,9 +352,20 @@
 }
 
 /* The rows of a form lose their own ground on every ground but the sunken one, where they
-   stay the white tiles of the block of today, and reach the inset so their text starts under the name of the window */
+   stay the white tiles of the block of today, and reach the inset so their text starts under the name of the window.
+   Inside a window every rule between rows is the dashed one of the facts; the frame and the line under the head stay solid.
+   A row, in a window or beside one, is as tall as its control and its own inset, so the label and the field stand as far
+   from the rule over them as from the one under */
+.wn-root .sl-div-item {
+  min-height: 0;
+}
+
 .wn-win .sl-div-grid {
   margin-bottom: 0;
+}
+
+.wn-win .sl-div-item {
+  border-bottom-style: dashed;
 }
 
 .wn-win .sl-div-item:last-child {
