@@ -1606,6 +1606,7 @@ define('_SCHEDULER_BADCRON','Der Zeitplan ist nicht im Cron-Format: fünf Felder
 define('_SCHEDULER_BADLIM','Einträge pro Lauf: von 1 bis %d.');
 define('_SCHEDULER_PRIOUSE','Die Priorität %d hat bereits der Job „%s“: jeder Job hat eine eigene Priorität.');
 define('_SCHEDULER_NEXT','Start');
+define('_SCHEDULER_JOB','Job');
 define('_MONITOR_TIME_AGO','vor %s Sek.');
 define('_MONITOR_TIME_MIN','vor %s Min.');
 define('_MONITOR_TIME_NOW','Jetzt');

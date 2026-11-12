@@ -6,3 +6,4 @@
 
 define('_POLLEACH','Odpowiedź');
 define('_POLLTITLE','Pytanie');
+define('_VOTING_POLL','Ankieta');

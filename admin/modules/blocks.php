@@ -214,7 +214,7 @@ function add(array $sent = [], array $stop = []): void {
             ['nameattr' => 'op', 'valueattr' => 'addsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'grid-3x3-gap', 'title' => _BLOCK, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _CREATEBLOCK,
         'icon_name' => 'plus-lg',
     ])]);
@@ -258,7 +258,7 @@ function fileadd(): void {
             ['nameattr' => 'op', 'valueattr' => 'filecode'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'file-earmark-plus', 'title' => _BLOCKFILE, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _CREATEBLOCK,
         'icon_name' => 'plus-lg',
     ])]);
@@ -297,7 +297,7 @@ function fileedit(): void {
             ['nameattr' => 'op', 'valueattr' => 'filecode'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'code-slash', 'title' => _CODE, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _EDITBLOCK,
     ])]);
     setFoot();
@@ -456,7 +456,6 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
         'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which, 'param' => $param,
     ] = array_replace($row, $sent);
     $kind = ($url != '') ? _BLOCKRSS : (($bfile != '') ? _BLOCKFILE : _BLOCKHTML);
-    $cont .= $tpl->getHtmlFrag('kv-list', ['items' => [['label' => _BLOCK, 'text' => $title, 'chip' => $kind, 'tone' => 'neutral']]]);
     $rows = [[
         'label_for' => 'f-title',
         'label_html' => _TITLE, 'hint_html' => _ADDCONST, 'hint_id' => $hntid = getFieldIds('f-title')['hint'],
@@ -645,7 +644,8 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
             ['nameattr' => 'op', 'valueattr' => 'editsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'grid-3x3-gap', 'title' => _BLOCK, 'facts' => [['text' => (string)$row['title']]],
+            'chips' => [['tone' => 'neutral', 'label' => $kind]], 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVE,
     ])]);
     setFoot();

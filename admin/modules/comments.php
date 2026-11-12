@@ -184,7 +184,7 @@ function edit(): void {
             ['nameattr' => 'op', 'valueattr' => 'editsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
         ], array_map(static fn($k, $v): array => ['nameattr' => $k, 'valueattr' => (string)$v], array_keys($keep), $keep)),
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'chat-text', 'title' => _COMMENT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;

@@ -310,7 +310,6 @@ function add(): void {
             ]]),
         ]);
     }
-    $rows[] = ['label_html' => _ADD, 'field_html' => $answ, 'is_full' => true];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -319,7 +318,8 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('voting')],
             ['nameattr' => 'id', 'valueattr' => (string)$id],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'bar-chart', 'title' => _VOTING_POLL, 'facts' => $id ? [['text' => (string)$title]] : [],
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]).$answ,
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;

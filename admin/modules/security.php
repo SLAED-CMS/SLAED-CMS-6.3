@@ -94,7 +94,7 @@ function banlist(): void {
                 ['nameattr' => 'kind', 'valueattr' => 'ip'],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
             ],
-            'rows' => $iprows,
+            'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'globe2', 'title' => _IP, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $iprows])]),
             'submit_label' => _ADD,
             'icon_name' => 'plus-lg',
         ]);
@@ -187,7 +187,7 @@ function banlist(): void {
                 ['nameattr' => 'kind', 'valueattr' => 'user'],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
             ],
-            'rows' => $userrows,
+            'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'person-slash', 'title' => _USER, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $userrows])]),
             'submit_label' => _ADD,
             'icon_name' => 'plus-lg',
         ]);

@@ -2,6 +2,25 @@
 
 ## 2026-11-12
 
+### A form of one record and a form of one action stand in the window
+
+- **The window of a record form is named by the record** — "Администратор", "Блок", "Файловый блок", "Комментарий",
+  "Модуль", "Рассылка", "Задание" (`_SCHEDULER_JOB`), "Запрос", "Опрос" (`_VOTING_POLL`), "Материал", "Выпуск"
+  (`_MASTER_RELEASE`), "IP-адрес" and "Пользователь" of a ban. An edit shows the stored name of the record as the fact
+  of the head and an addition shows none; the kind of a block is a chip of the head and its line of facts over the
+  form is gone.
+- **The window of an action form is named by its tab** — "Обслуживание" of "База данных", "Сброс" of "Пользователи",
+  "Импорт" of "Материалы", "Удалить" of "Поиск", "Код" and "Редактировать" over the choice of a block file and of a
+  category.
+- **A form with tabs of its own puts one window under each tab** — "Категория", "Доступ" and "Форум" of a category,
+  the five tabs of rows of a Node type; the first carries the fact of an edit.
+- **The answers of a poll stand under the window "Опрос"** — a chain of windows of the form with the caption at the
+  left, no longer windows in the field of a row; the rule of `.sl-div-field` for them is gone.
+- **The head of a window that does not fold keeps one line** — the name is as wide as its word, the fact takes the
+  line that is left and ends in an ellipsis.
+- **A form that is one editor stands without a window** — the code of a block, the file and the XSL of the sitemap,
+  the query of "База данных", a file of "Файлы", the help of a section, the templates of the uploads.
+
 ### The sections of a page and the short forms of settings stand in the window
 
 - **A titled section over a form or over facts draws `fragments/pane.html`** — "Загрузить архив", "Установить", the

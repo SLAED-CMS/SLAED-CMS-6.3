@@ -122,7 +122,7 @@ function getNodeDiff(NodeType $type, Node $now, array $vals, array $ext = []): a
 }
 
 # The administrative form of one material: the shared rows of the module, then the rights only a moderator has, the state of a new material and the version of a stored one
-function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int $ver, NodeStatus $state, bool $clash = false): string {
+function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int $ver, NodeStatus $state, bool $clash = false, string $head = ''): string {
     global $afile, $tpl;
     $feat = $type->settings['features'];
     $rows = [];
@@ -184,7 +184,8 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
         'action_url' => $afile.'.php',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => $hidden,
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'file-text', 'title' => _NODE_ITEM, 'facts' => ($head !== '') ? [['text' => $head]] : [],
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'actions_html' => $act.$tpl->getHtmlFrag('button', ['submit_label' => $clash ? _OK : _SAVECHANGES, 'button_type' => 'submit']),
     ])]);
 }
@@ -489,7 +490,7 @@ function edit(): void {
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8')]) : '')
         .$open
         .getNodeReportRows($type, $node)
-        .getNodeAdminForm($type, $vals, $errs, $node->id, $ver, $node->status, $clash);
+        .getNodeAdminForm($type, $vals, $errs, $node->id, $ver, $node->status, $clash, $node->title);
     if ($card) {
         $when = fn(?string $val): string => ($val === null) ? _NO : format_time($val, _TIMESTRING);
         $rows = [
@@ -850,7 +851,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         'input_id' => 'f-ext', 'describedby' => 'f-ext-hint', 'value_attr' => $vals['ext'], 'maxlength_num' => 20])];
     $rows[] = ['label_for' => 'f-sort', 'label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sort', 'input_id' => 'f-sort',
         'value_attr' => $vals['sort']])];
-    $tabs[] = [_GENPREF, $rows];
+    $tabs[] = [_GENPREF, $rows, 'sliders'];
     $rows = [];
     $orders = ['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST];
     $rows[] = ['label_html' => _NODE_ORDERS, 'label_id' => 'f-orders-label', 'field_html' => $checks('f-orders-label', $pick('orders[]', $orders, $set['list']['orders']))];
@@ -876,13 +877,13 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         'options' => $opts([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3], $set['view']['side'])])];
     $rows[] = ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'top', 'selectid' => 'f-top',
         'options' => $opts([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3], $set['view']['top'])])];
-    $tabs[] = [_LIST, $rows];
+    $tabs[] = [_LIST, $rows, 'list-ul'];
     $rows = [];
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
         'pinned' => _NODE_FPIN,
         'submit' => _NODE_FSUBMIT, 'moderation' => _NODE_FMOD, 'schedule' => _NODE_FSCHED, 'related' => _NODE_RELATED, 'tree' => _NODE_FTREE];
     foreach ($feats as $key => $label) $rows[] = $flag('feat_'.$key, $set['features'][$key], $label, 'f-feat-'.$key.'-label');
-    $tabs[] = [_NODE_FEATURES, $rows];
+    $tabs[] = [_NODE_FEATURES, $rows, 'toggles'];
     $rows = [];
     $flow = $set['workflow'];
     $cur = ($flow['access'] === 'all') ? '0|0' : (($flow['access'] === 'user') ? '1|0' : '2|'.implode(',', $flow['groups']));
@@ -895,7 +896,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'lifetime', 'input_id' => 'f-lifetime', 'value_attr' => $flow['lifetime'],
         'describedby' => 'f-lifetime-hint', 'input_attr' => 'min="0" max="'.NodeQuery::LIFEMAX.'"'])];
     $rows[] = $flag('guestok', false, _NODE_GUESTOK, 'f-guestok-label');
-    $tabs[] = [_NODE_FLOW, $rows];
+    $tabs[] = [_NODE_FLOW, $rows, 'diagram-3'];
     $blocks = '';
     $list = $set['assets'];
     for ($i = 0; $i < 3; $i++) $list['#'.$i] = null;
@@ -952,7 +953,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         ]);
         $idx++;
     }
-    $tabs[] = [_NODE_ROLES, $blocks];
+    $tabs[] = [_NODE_ROLES, $blocks, ''];
     $rows = [];
     $integ = ['search' => _SEARCH, 'rss' => _RSS, 'sitemap' => _SITEMAP, 'blocks' => _BLOCKS];
     foreach ($integ as $key => $label) $rows[] = $flag('integ_'.$key, $set['integrations'][$key], $label, 'f-integ-'.$key.'-label');
@@ -960,11 +961,13 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'seo', 'selectid' => 'f-seo', 'options' => $opts(['website' => 'website',
         'article' => 'article',
         'news' => 'news'], $set['integrations']['seo'])])];
-    $tabs[] = [_NODE_INTEG, $rows];
+    $tabs[] = [_NODE_INTEG, $rows, 'plug'];
     $links = $panes = '';
-    foreach ($tabs as $num => [$label, $body]) {
+    foreach ($tabs as $num => [$label, $body, $icon]) {
         $links .= $tpl->getHtmlFrag('tabs-link', ['rel' => 'node-type-'.$num, 'is_active' => $num === 0, 'label' => $label, 'title' => $label]);
-        $panes .= $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'node-type-'.$num, 'content_html' => is_array($body) ? $tpl->getHtmlPart('div', ['rows' => $body]) : $body]);
+        $facts = ($num === 0 && !$new) ? [['text' => $vals['name']]] : [];
+        $panes .= $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'node-type-'.$num, 'content_html' => is_array($body) ? $tpl->getHtmlFrag('pane', ['icon' => $icon,
+            'title' => $label, 'facts' => $facts, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $body])]) : $body]);
     }
     return $tpl->getHtmlPart('tabs', ['id' => 'node-type', 'is_runtime' => true, 'is_subtabs' => true, 'tabs_html' => $links, 'content_html' => $panes]);
 }
@@ -1184,12 +1187,12 @@ function import(): void {
             'form_attr' => 'enctype="multipart/form-data"',
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'import'], ['name_attr' => 'token',
                 'value_attr' => getSiteToken('node')]],
-            'rows' => [
+            'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'upload', 'title' => _NODE_IMPORT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [
                 ['label_for' => 'f-file', 'label_html' => _NODE_JSON, 'field_html' => getFormFileField('file', 'f-file', 'application/json,.json')],
                 ['label_for' => 'f-tname', 'label_html' => _NODE_NEWNAME, 'hint_html' => htmlspecialchars(_NODE_NAMEHINT, ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-tname-hint',
                     'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'describedby' => 'f-tname-hint',
                         'value_attr' => $new, 'maxlength_num' => 20])],
-            ],
+            ]])]),
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_IMPORT, 'icon_name' => 'upload', 'button_type' => 'submit']),
         ])]);
     setFoot();

@@ -12759,6 +12759,22 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   flex-basis: 16%;
 }
 
+/* The head of a window that does not fold names one record: the name is as wide as its word and the fact takes the line that is left, cut with an ellipsis */
+.sl-pane-cap:not([data-sl-toggle-head]):has(> .sl-pane-fact) {
+  flex-wrap: nowrap;
+}
+
+.sl-pane-cap:not([data-sl-toggle-head]):has(> .sl-pane-fact) > .sl-pane-title {
+  flex: none;
+}
+
+.sl-pane-cap:not([data-sl-toggle-head]) > .sl-pane-fact {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sl-pane-chips {
   display: flex;
   flex: 1 1 0;
@@ -13143,16 +13159,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
 :where(:not(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side)) > .sl-pane:where(:has(+ .sl-pane)) {
   margin-bottom: var(--sl-space-4);
-}
-
-/* Windows in the field of a form row: the row keeps its own inset over the first and under the last one shown */
-.sl-div-field:has(> .sl-pane) {
-  display: grid;
-  gap: var(--sl-space-4);
-}
-
-.sl-div-field > .sl-pane {
-  margin-bottom: 0;
 }
 
 /* Form rows in a window, and the facts of a window of a page: dashed rules, no ground, out to the frame so a caption starts under the name; the side panel stacks them */

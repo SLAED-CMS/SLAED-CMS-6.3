@@ -752,7 +752,7 @@ function pointreset(): void {
             ['nameattr' => 'op', 'valueattr' => 'resave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('account')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'arrow-counterclockwise', 'title' => _NULLPOINTS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;

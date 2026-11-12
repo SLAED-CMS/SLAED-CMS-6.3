@@ -390,7 +390,8 @@ function share(): void {
         'action_url' => $afile.'.php?name=master&op=setshare',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('master')], ['nameattr' => 'ver', 'valueattr' => $ver]],
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_MASTER_SHAREDESC, htmlspecialchars($ver, ENT_QUOTES))])
-            .$tpl->getHtmlPart('div', ['rows' => [['label_for' => 'f-share', 'label_html' => _MASTER_SHARE, 'field_html' => $field]]]),
+            .$tpl->getHtmlFrag('pane', ['icon' => 'percent', 'title' => _MASTER_RELEASE, 'facts' => [['text' => $ver]],
+                'content_html' => $tpl->getHtmlPart('div', ['rows' => [['label_for' => 'f-share', 'label_html' => _MASTER_SHARE, 'field_html' => $field]]])]),
         'submit_label' => _SAVECHANGES,
     ]);
     echo getMasterHead(0).$tpl->getHtmlPart('box', ['content_html' => $form]);

@@ -1606,6 +1606,7 @@ define('_SCHEDULER_BADCRON','Harmonogram nie jest w formacie cron: pięć pól, 
 define('_SCHEDULER_BADLIM','Elementów na uruchomienie: od 1 do %d.');
 define('_SCHEDULER_PRIOUSE','Priorytet %d ma już zadanie „%s”: każde zadanie ma własny priorytet.');
 define('_SCHEDULER_NEXT','Start');
+define('_SCHEDULER_JOB','Zadanie');
 define('_MONITOR_TIME_AGO','%s s temu');
 define('_MONITOR_TIME_MIN','%s min temu');
 define('_MONITOR_TIME_NOW','Teraz');

@@ -499,7 +499,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` and `codemirror` write them onto the `<textarea>` of `editor-frame`, and the shell runtime copies the name onto the editable area of CodeMirror when it mounts; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. A code editor of `Editor::getCode()` is named by the `label` of its caller, or `_TEXT`.
 - **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing and a `<div>` value, which may carry the paragraphs of a text area. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
-- **The rows of one thing stand in a window.** `fragments/pane.html` (an additional field, a rule of "Замены", a scope of "Рейтинги", a feed of `rss`) puts its name in the head and its rows under it at the full width of the box, the caption left as in every form of the panel; a window standing in the field cell of another row (the answers of a poll) and the items of the side panel of the builder keep them stacked, as every nested grid. "Panel Window" holds the head, the fold and the chain.
+- **The rows of one thing stand in a window.** `fragments/pane.html` (an additional field, a rule of "Замены", a scope of "Рейтинги", a feed of `rss`) puts its name in the head and its rows under it at the full width of the box, the caption left as in every form of the panel; the items of the side panel of the builder keep them stacked, as every nested grid. "Panel Window" holds the head, the fold and the chain.
 - **A caption stands at the top of its field.** `.sl-form-row` and `.sl-value-row` of the site and `.sl-div-item` of the panel align to `start`; the first line of a caption meets the line of a single field (on the site by a top padding of half the field height less one line, in the panel by a caption line as high as a control), so a text area, a list or a picture keeps its caption at its top. A baseline alignment was tried and refused: a text area and a picture have no baseline, and the caption fell to their foot
 - **Every chip that shows a value names it.** A size, a count, a date, a status or a module in a chip carries a `title` of an existing constant (`_SIZE`, `_NODE_DLOADS`, `_ALLMATERIALS`, `_COMMENTS`, `_VOTES`, `_DATE`, `_STATUS`, `_MODUL`, `_RATING`, `_CATEGORY`), so a hover says what the figure is; a chip that is a button with its own words needs none
 - **Every button bursts when pressed.** `setPressBurst()` of `slaed.js` gives each `.sl-but*` and `.sl-but-mini` the burst of the favourite star (`.sl-is-burst`: the ring, the pop of the icon, two spark sets), in both themes on the same tokens `--sl-fav-*` and `--sl-spark-shadow`; the star and the rating keep their own burst on the answer of the server, and `--sl-time-scale` 0 stills it
@@ -782,9 +782,10 @@ under the text to the right — the width of the alert decides, not that of the 
 The window `fragments/pane.html` — a thin frame with the shadow of a list and the cap of `pane-cap.html`: an icon,
 which every window names, the title in capitals, a value on the right, a gradient that ends with the cap and a rule
 under it — frames what a page sets or tells under a name: an instrument of a board ("Мониторинг", "Статистика"), a
-short form of settings or a group of one, a section of a page. A list table never stands in a window. A form that adds
-or edits one record or runs one action, and a long form of settings without groups ("Конфигурации", the transport of
-"Почта", "Карта сайта", the settings of "Безопасность" and of "Форум"), stand in their `partials/box.html` without one.
+short form of settings or a group of one, a form of one record or of one action, a section of a page. A list table
+never stands in a window. A form that is one editor, the form of a group and a long form without groups
+("Конфигурации", the transport of "Почта", "Карта сайта", the settings of "Безопасность" and of "Форум", a user of
+"Пользователи") stand in their `partials/box.html` without one.
 
 - **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
   ("Очередь" of "Почта", "Поиск", "База данных") and above a form or a file into the page ("Карта сайта") with no
@@ -806,6 +807,22 @@ or edits one record or runs one action, and a long form of settings without grou
   The form holds the window, a note of the form stands over it and the submit under it. A form of settings with a
   table ("Пункты" of "Группы") puts its rows in the window and keeps the table under it without a frame, the submit
   under the table.
+- **A form of one record stands in a window named by the record.** The name is the record in the singular — "Блок",
+  "Администратор", "Комментарий", "Модуль", "Рассылка", "Задание", "Запрос", "Опрос", "Материал", "Выпуск", "IP-адрес"
+  and "Пользователь" of a ban — never the tab and never "Основные"; the submit stands under the window. An edit passes
+  the stored name of the record as the one row of `facts`, so the head reads "БЛОК Меню сайта" with the name in its
+  own case, and an addition passes none; the kind of a block is a chip of the head. A form of one action takes the
+  name of its tab: "Обслуживание" of "База данных", "Сброс" of "Пользователи", "Импорт" of "Материалы", "Удалить" of
+  "Поиск", "Код" and "Редактировать" over the choice of a block file and of a category.
+- **The head of one record keeps its height.** In a head that does not fold the name is as wide as its word and the
+  fact takes the line that is left, cut with an ellipsis; the columns of a fixed share belong to a folding head, where
+  one fact stands in one column down a stack.
+- **A form with tabs of its own puts one window under each tab**, named by the tab: "Категория", "Доступ" and "Форум"
+  of a category, "Основные", "Список", the features, the workflow and the integrations of a Node type. The first one
+  carries the fact of an edit; a tab that already holds windows (the file roles) keeps them.
+- **A form that is one editor stands without a window.** The code of a block, the file and the XSL of the sitemap,
+  the query of "База данных", a file of "Файлы", the help of a section and the templates of the uploads: the editor is
+  a frame with a head of its own.
 - **Facts in a window of a page read as its form rows.** A `kv-list` in a window keeps the two columns and the inset
   of the rows of `div.html`, with dashed rules out to the frame, so the facts and the fields of "Состояние" stand in
   one table; in a window of a board (a child of `.sl-ground`, `.sl-pane-split`, `.sl-pane-trio` or `.sl-pane-side`)
@@ -827,7 +844,8 @@ or edits one record or runs one action, and a long form of settings without grou
   the buttons of the caller before the plus (the moves of an item of the site builder).
 - **A chain adds, it does not fold.** With `next_id` the plus shows and hides the window of that id and the window
   itself is the toggled block, hidden under `is_hidden` until the plus before it is pressed: "Замены", the feeds of
-  `rss`, the answers of a poll. The head of such a window is not pressed.
+  `rss`, the answers of a poll, which stand under the window "Опрос" of their form. The head of such a window is not
+  pressed.
 - **A window inside a frame is flat.** In the inspector of the site builder a window carries neither shadow nor
   gradient (`assets/css/layout.css`).
 

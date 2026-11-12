@@ -1606,6 +1606,7 @@ define('_SCHEDULER_BADCRON','La planification n\'est pas au format cron : cinq c
 define('_SCHEDULER_BADLIM','Éléments par exécution : de 1 à %d.');
 define('_SCHEDULER_PRIOUSE','La priorité %d est déjà prise par la tâche « %s » : chaque tâche a sa propre priorité.');
 define('_SCHEDULER_NEXT','Lancement');
+define('_SCHEDULER_JOB','Tâche');
 define('_MONITOR_TIME_AGO','il y a %s s');
 define('_MONITOR_TIME_MIN','il y a %s min');
 define('_MONITOR_TIME_NOW','Maintenant');

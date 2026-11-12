@@ -314,7 +314,8 @@ function add(string $name = '', array $sent = [], string $note = ''): void {
             ['nameattr' => 'isnew', 'valueattr' => $isnew ? '1' : '0'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('scheduler')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'clock-history', 'title' => _SCHEDULER_JOB, 'facts' => $isnew ? [] : [['text' => $key]],
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVE,
     ])]);
     setHead();

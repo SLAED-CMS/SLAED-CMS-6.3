@@ -300,7 +300,8 @@ function edit(): void {
             ['nameattr' => 'type', 'valueattr' => (string)$mtype],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('modules')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'puzzle', 'title' => _MODUL, 'facts' => [['text' => $mod]],
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]).getAdminIconWindow();

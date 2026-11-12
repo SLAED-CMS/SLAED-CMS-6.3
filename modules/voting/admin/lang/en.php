@@ -6,3 +6,4 @@
 
 define('_POLLEACH','Variant of the answer');
 define('_POLLTITLE','Poll');
+define('_VOTING_POLL','Poll');

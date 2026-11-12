@@ -174,9 +174,12 @@ function add(): void {
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACCESS, 'rel' => 'categories-add-panel-1', 'title' => _ACCESS])
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _FORUM, 'rel' => 'categories-add-panel-2', 'title' => _FORUM]),
         'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-2', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])]),
+            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-0',
+                'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'folder', 'title' => _CATEGORY, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-1',
+                'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'key', 'title' => _ACCESS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-2',
+                'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'window-stack', 'title' => _FORUM, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])])]),
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -312,9 +315,12 @@ function subadd(): void {
                 .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACCESS, 'rel' => 'categories-subadd-panel-1', 'title' => _ACCESS])
                 .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _FORUM, 'rel' => 'categories-subadd-panel-2', 'title' => _FORUM]),
             'content_html' =>
-                $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
-                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
-                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-2', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])]),
+                $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-0',
+                    'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'folder', 'title' => _CATEGORY, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])])
+                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-1',
+                    'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'key', 'title' => _ACCESS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])])
+                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-2',
+                    'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'window-stack', 'title' => _FORUM, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])])]),
         ]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
@@ -364,11 +370,11 @@ function addedit(): void {
                 ['nameattr' => 'op', 'valueattr' => 'edit'],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('categories')],
             ],
-            'rows' => [[
+            'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'pencil-square', 'title' => _EDIT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
                 'label_for' => 'f-cid',
                 'label_html' => _CATEGORY,
                 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control'),
-            ]],
+            ]]])]),
             'submit_label' => _EDIT,
         ])]);
     } else {
@@ -505,9 +511,13 @@ function edit(): void {
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACCESS, 'rel' => 'categories-edit-panel-1', 'title' => _ACCESS])
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _FORUM, 'rel' => 'categories-edit-panel-2', 'title' => _FORUM]),
         'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-2', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])]),
+            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-0',
+                'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'folder', 'title' => _CATEGORY, 'facts' => [['text' => (string)$title]],
+                    'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-1',
+                'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'key', 'title' => _ACCESS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-2',
+                'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'window-stack', 'title' => _FORUM, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])])]),
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

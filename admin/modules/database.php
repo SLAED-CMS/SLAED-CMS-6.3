@@ -224,7 +224,7 @@ function service(): void {
             ['nameattr' => 'op', 'valueattr' => 'maintain'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('database')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'tools', 'title' => _DB_SERVICE, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _EXECUTE,
     ])]);
     echo $cont;

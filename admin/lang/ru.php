@@ -1606,6 +1606,7 @@ define('_SCHEDULER_BADCRON','Расписание не в формате cron: �
 define('_SCHEDULER_BADLIM','Записей за запуск: от 1 до %d.');
 define('_SCHEDULER_PRIOUSE','Приоритет %d уже занят заданием «%s»: у каждого задания свой приоритет.');
 define('_SCHEDULER_NEXT','Запуск');
+define('_SCHEDULER_JOB','Задание');
 define('_MONITOR_TIME_AGO','%s сек назад');
 define('_MONITOR_TIME_MIN','%s мин назад');
 define('_MONITOR_TIME_NOW','Сейчас');

@@ -1606,6 +1606,7 @@ define('_SCHEDULER_BADCRON','The schedule is not in cron format: five fields, mi
 define('_SCHEDULER_BADLIM','Items per run: from 1 to %d.');
 define('_SCHEDULER_PRIOUSE','Priority %d is already taken by the job "%s": every job has a priority of its own.');
 define('_SCHEDULER_NEXT','Launch');
+define('_SCHEDULER_JOB','Job');
 define('_MONITOR_TIME_AGO','%s sec ago');
 define('_MONITOR_TIME_MIN','%s min ago');
 define('_MONITOR_TIME_NOW','Now');

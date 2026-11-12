@@ -195,6 +195,7 @@ function add(): void {
     $days = getVar('post', 'days', 'num', 365);
     $lock = false;
     $again = false;
+    $facts = [];
     if ($id) {
         $sql = 'SELECT title, body, audit, apar, status FROM '.PREFIX_DB.'_newsletter WHERE id = :id';
         $camp = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id])) ?: setRedirect($afile.'.php?name=newsletter', false, 302, _NONE_FOUND, true);
@@ -208,6 +209,7 @@ function add(): void {
         $lock = !$open && !$copy;
         $again = $open && !$copy && $stat !== 0;
         $nid = ($open && !$copy) ? $id : 0;
+        if ($nid) $facts[] = ['text' => $title];
     }
     if (str_starts_with($pick, 'active-')) $pick = 'active-'.$days;
     setHead();
@@ -225,6 +227,7 @@ function add(): void {
             ['nameattr' => 'posttype', 'valueattr' => 'save'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('newsletter')],
         ],
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'envelope-paper', 'title' => _NEWSLETTER_JOB, 'facts' => $facts, 'content_html' => $tpl->getHtmlPart('div', [
         'rows' => [
             ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
@@ -274,6 +277,7 @@ function add(): void {
                 'field_unwrapped' => true,
             ],
         ],
+        ])]),
         'actions_html' => $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'launch', 'value_attr' => '1', 'label' => _NLLAUNCH, 'icon_name' => 'send',
             'is_green' => true, 'button_attr' => 'data-sl-confirm="'.htmlspecialchars(_NLLAUNCH.'?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"']),
         'submit_label' => _SAVE,

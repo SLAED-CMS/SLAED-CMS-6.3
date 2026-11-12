@@ -6,3 +6,4 @@
 
 define('_POLLEACH','Вариант ответа');
 define('_POLLTITLE','Вопрос');
+define('_VOTING_POLL','Опрос');

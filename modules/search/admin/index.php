@@ -503,7 +503,8 @@ function edit(): void {
             ['nameattr' => 'fmod', 'valueattr' => $fmod],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('search')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'search', 'title' => _SWORD, 'facts' => [['text' => (string)$word]],
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;
@@ -563,7 +564,7 @@ function delete(): void {
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=clear',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'trash', 'title' => _DELETE, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _DELETE,
         'icon_name' => 'trash',
         'is_danger' => true,

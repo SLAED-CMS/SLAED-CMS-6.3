@@ -60,4 +60,5 @@ define('_MASTER_KEEPSITE','Keep silent sites, days');
 define('_MASTER_KEEPSTAT','Keep daily totals, days');
 define('_MASTER_LIMIT','Automatic pause threshold (share of failed installs in percent)');
 define('_MASTER_JOBS','Saving also adds the scheduler jobs masterclean (daily totals and cleanup) and masterwatch (automatic pause, hourly) once.');
+define('_MASTER_RELEASE','Release');
 define('_MASTER','Master');
