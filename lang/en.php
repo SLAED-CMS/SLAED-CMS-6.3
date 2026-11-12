@@ -738,7 +738,7 @@ define('_SUCCSTATUS','The status was changed successfully.');
 define('_SEARCH','Search');
 define('_SEARCHLETMIN','Minimally admissible quantity of symbols in search inquiry');
 define('_SEC','sec');
-define('_SECCODEINCOR','The algorithm of checking for a real user has not been passed, please contact the project administration!');
+define('_SECCODEINCOR','The check for a real user has not been passed. Send the form once more, and if the refusal repeats, contact the project administration.');
 define('_SECURITY','Security');
 define('_SHARE','Share');
 define('_SELECTASITE','Read the information');

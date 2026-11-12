@@ -107,7 +107,6 @@ function newuser(): void {
             $nick = getVar('post', $unkey, 'text');
             $nick = ($nick) ? filterCutText(filterText($nick), 25) : '';
             $mail = getVar('post', 'mail', 'text');
-            $mail = ($mail) ? filterText($mail) : '';
             $captcha = getCaptcha('register');
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-'.$unkey,
@@ -215,7 +214,6 @@ function finnewuser(): void {
         if (!$stop) {
             $check = md5(getRandomString(10));
             $finishlink = getPublicUrl(['name' => $conf['name'], 'op' => 'activate', 'user' => urlencode($nick), 'num' => $check]);
-            $mail = filterText($mail);
             $done = $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code) VALUES (NULL, :name, :email, :password, NOW(), :code)',
                 ['name' => $nick, 'email' => $mail, 'password' => getPassHash($pass), 'code' => $check]
@@ -1051,17 +1049,17 @@ function passmail(): void {
                 .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } elseif (CaptchaStore::increment('pm:'.strtolower($email), 3600) > 3 || CaptchaStore::increment('pi:'.getIp(), 3600) > 10) {
-            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'passlost', 'email' => $email]));
+            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'passlost', 'email' => rawurlencode($email)]));
         } else {
             $link = $tpl->getHtmlFrag('link', [
-                'href' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
-                'title' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
-                'label_html' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
+                'href' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => rawurlencode($email)]),
+                'title' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => rawurlencode($email)]),
+                'label_html' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => rawurlencode($email)]),
             ]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = getMailFrame(getTplLines([sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link), _IFYOUDIDNOTASK], true, true));
             $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'passlost', 'email' => $email]));
+            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'passlost', 'email' => rawurlencode($email)]));
         }
     } else {
         passlost();

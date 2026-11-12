@@ -738,7 +738,7 @@ define('_SUCCSTATUS','Status został pomyślnie zmieniony.');
 define('_SEARCH','Szukaj');
 define('_SEARCHLETMIN','Minimalna dozwolona ilość znaków w wyszukiwanych haseł');
 define('_SEC','sek');
-define('_SECCODEINCOR','Nie udało się przejść algorytmu sprawdzającego dla prawdziwego użytkownika, prosimy o kontakt z administracją projektu!');
+define('_SECCODEINCOR','Sprawdzenie prawdziwego użytkownika nie powiodło się. Wyślij formularz jeszcze raz, a jeśli odmowa się powtórzy, skontaktuj się z administracją projektu.');
 define('_SECURITY','Bezpieczeństwo');
 define('_SHARE','Udostępnij');
 define('_SELECTASITE','Przeczytaj informacje');

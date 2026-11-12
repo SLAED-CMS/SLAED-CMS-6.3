@@ -738,7 +738,7 @@ define('_SUCCSTATUS','Le statut a été modifié avec succès.');
 define('_SEARCH','Recherche');
 define('_SEARCHLETMIN','Minimum le nombre de caractères dans une requête de recherche');
 define('_SEC','sec');
-define('_SECCODEINCOR','Impossible de passer l\'algorithme pour vérifier un utilisateur réel, veuillez contacter l\'administration du projet!');
+define('_SECCODEINCOR','La vérification d\'un utilisateur réel n\'a pas été passée. Envoyez le formulaire encore une fois et, si le refus se répète, contactez l\'administration du projet.');
 define('_SECURITY','Sécurité');
 define('_SHARE','Partager');
 define('_SELECTASITE','Lire les informations');

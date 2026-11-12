@@ -19,6 +19,18 @@
 - **Three heads changed their mark** — the commits carry an icon where the live lamp stood, the count of the active
   blocks takes the tone of a state as the groups above it, and "Опрос" runs its dots in the tone of the value.
 
+### An address with a plus or a long zone registers, and a refused captcha says to send the form again
+
+- **`checkemail()` takes the address as it was typed** — a plus in the name and a zone of up to 63 letters pass
+  (`ivan+news@gmail.com`, `name@site.photography`). The URL decoding that turned the plus into a space is gone from
+  the check, from the registration form shown again after a refusal and from the row the registration writes, and the
+  links of the password recovery carry the address encoded, since PHP reads a bare plus of a query as a space. An
+  address without a zone, with a space or a tag is refused as before; a percent code is no longer decoded and is
+  refused too. Held by `EmailCheckTest`.
+- **`_SECCODEINCOR` tells the visitor to send the form once more** — a form that stood open past the life of its
+  captcha (`ttl`, 600 s by default) is refused once and passes on the next send, so the text no longer sends the
+  visitor to the administration first; the six locales.
+
 ### The upload of an archive follows a found release, and the channels speak to a site owner
 
 - **The window "Загрузить архив" of "Обновления" stands only while the master offers a release** — the page goes

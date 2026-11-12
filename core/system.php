@@ -5842,11 +5842,11 @@ function is_active(string $mod, string $view = ''): int {
     return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
-# Check an address for its form and for the 255 characters of the columns that store it
+# Check an address as it was typed for its form and for the 255 characters of the columns that store it; a URL decoding here would turn its plus into a space
 function checkemail(string $mail): array {
  global $stop;
-    $mail = strtolower(filterText($mail, 1));
-    if ((!$mail) || strlen($mail) > 255 || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1.' '._ERROR2.' (email@domain.com)';
+    $mail = strtolower(trim($mail));
+    if ((!$mail) || strlen($mail) > 255 || (!preg_match("#^[_\.a-z0-9+-]+@([a-z0-9_-]+\.)+[a-z]{2,63}$#", $mail))) $stop[] = _ERROR1.' '._ERROR2.' (email@domain.com)';
     if ((strlen($mail) >= 4) && (substr($mail, 0, 4) == 'www.')) $stop[] = _ERROR1.' '._ERROR3.' (www.)';
     if (strrpos($mail, ' ') > 0) $stop[] = _ERROR1.' '._ERROR4.'.';
     return $stop ?? [];

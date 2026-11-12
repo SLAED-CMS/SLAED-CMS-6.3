@@ -738,7 +738,7 @@ define('_SUCCSTATUS','Der Status wurde erfolgreich geändert.');
 define('_SEARCH','Suche');
 define('_SEARCHLETMIN','Die minimal zulässige Menge der Symbole in der Suchabfrage');
 define('_SEC','sek');
-define('_SECCODEINCOR','Der Algorithmus zur Prüfung auf einen echten Benutzer konnte nicht bestanden werden, bitte kontaktieren Sie die Projektverwaltung!');
+define('_SECCODEINCOR','Die Prüfung auf einen echten Benutzer wurde nicht bestanden. Senden Sie das Formular erneut, und wenden Sie sich an die Projektverwaltung, falls sich die Ablehnung wiederholt.');
 define('_SECURITY','Sicherheit');
 define('_SHARE','Teilen');
 define('_SELECTASITE','Informationen lesen');
