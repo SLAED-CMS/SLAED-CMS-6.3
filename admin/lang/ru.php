@@ -1406,8 +1406,8 @@ define('_UPDATE_WHYWRITE','Сайт не смог сохранить файлы 
 define('_UPDATE_WHYOTHER','Причина: %s. Она описана в справке.');
 define('_UPDATE_NOTDONE','Не завершилась');
 define('_UPDATE_CHANNEL','Канал');
-define('_UPDATE_STABLE','Stable — проверенные выпуски');
-define('_UPDATE_BETA','Beta — выпуски до Stable');
+define('_UPDATE_STABLE','Stable — для рабочего сайта');
+define('_UPDATE_BETA','Beta — для тестовой копии');
 define('_UPDATE_LAST','Последняя проверка');
 define('_UPDATE_FOUND','Найденная версия');
 define('_UPDATE_NONE','Новее версии нет');
@@ -1503,6 +1503,7 @@ define('_UPDATE_UNDOFAIL','Установка сорвалась на шаге %
 define('_UPDATE_FAILED','Установка сорвалась');
 define('_UPDATE_BAKSIZE','Бэкап последней установки занимает %s.');
 define('_UPDATE_STATE','Состояние');
+define('_UPDATE_CHANHINT','Stable — выпуск уже проверен и подходит рабочему сайту. Beta — выпуск приходит раньше, но ещё проверяется и может содержать ошибки, поэтому выбирайте его только для тестовой копии. На Beta сайт получает и выпуски Stable.');
 define('_UPLOADS','Загрузки');
 define('_URLS','Ссылки');
 define('_USEREXIST','Пользователь уже существует!');

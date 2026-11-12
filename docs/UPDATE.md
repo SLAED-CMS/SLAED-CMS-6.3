@@ -361,7 +361,8 @@ scheduler of slaed.net; the shipped `config/scheduler.php` holds neither.
   (1); `update.steps` holds the marks of executed database steps. The file is not shipped, so the merge never touches
   it; `setup.php` writes it whole, beside the feature marks (`fields`, `points`, `ratings`, `node`) it already held.
 - **A pause withdraws the offer** from sites that already saw it: an answer without a manifest or with one below the
-  version found resets the version found in `state.json`, and the banner goes out. "Загрузить архив" asks the master
+  version found resets the version found in `state.json`, and the banner goes out. The window "Загрузить архив"
+  stands on the page only while a release is found, as the step after "Искать обновления"; the upload asks the master
   again first and accepts an archive only under the manifest the master serves now; without the master the upload by
   hand is closed with an explanation. So a paused release cannot be installed even from an archive of GitHub.
 - **Download** runs under `work.lock` through `master/file`, at most `Update::SPAN` = 40 s or half of

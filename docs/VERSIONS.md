@@ -2,6 +2,15 @@
 
 ## 2026-11-12
 
+### The upload of an archive follows a found release, and the channels speak to a site owner
+
+- **The window "Загрузить архив" of "Обновления" stands only while the master offers a release** — the page goes
+  "Искать обновления", then "Скачать" or the upload, then "Установить"; with no release found or a check that failed
+  there is nothing an upload could be accepted against, and the form is not shown.
+- **The channels say whom they suit** — "Stable — для рабочего сайта" and "Beta — для тестовой копии" in the switch
+  and in "Состояние", and the row of the switch carries a hint (`_UPDATE_CHANHINT`) that tells the two apart in plain
+  words, in the six locales.
+
 ### A form of one record and a form of one action stand in the window
 
 - **The window of a record form is named by the record** — "Администратор", "Блок", "Файловый блок", "Комментарий",

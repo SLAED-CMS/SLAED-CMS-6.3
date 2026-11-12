@@ -1406,8 +1406,8 @@ define('_UPDATE_WHYWRITE','Strona nie mogła zapisać plików w folderze storage
 define('_UPDATE_WHYOTHER','Powód: %s. Opisuje go pomoc.');
 define('_UPDATE_NOTDONE','Nie zakończono');
 define('_UPDATE_CHANNEL','Kanał');
-define('_UPDATE_STABLE','Stable: sprawdzone wydania');
-define('_UPDATE_BETA','Beta: wydania przed Stable');
+define('_UPDATE_STABLE','Stable — dla działającej strony');
+define('_UPDATE_BETA','Beta — dla kopii testowej');
 define('_UPDATE_LAST','Ostatnie sprawdzenie');
 define('_UPDATE_FOUND','Znaleziona wersja');
 define('_UPDATE_NONE','Brak nowszej wersji');
@@ -1503,6 +1503,7 @@ define('_UPDATE_UNDOFAIL','Instalacja nie powiodła się w kroku %1$d i została
 define('_UPDATE_FAILED','Instalacja nieudana');
 define('_UPDATE_BAKSIZE','Kopia ostatniej instalacji zajmuje %s.');
 define('_UPDATE_STATE','Stan');
+define('_UPDATE_CHANHINT','Stable — wydanie jest już sprawdzone i nadaje się dla działającej strony. Beta — wydanie przychodzi wcześniej, ale jest jeszcze sprawdzane i może zawierać błędy, dlatego wybieraj je tylko dla kopii testowej. Na kanale Beta strona otrzymuje też wydania Stable.');
 define('_UPLOADS','Pobierania');
 define('_URLS','Linki');
 define('_USEREXIST','Użytkownik już istnieje!');

@@ -217,7 +217,7 @@ function getUpdatePack(array $state, string $chan, string $look): array {
     foreach (['changed' => _UPDATE_MODIFIED, 'missing' => _UPDATE_MISSING, 'extra' => _UPDATE_EXTRA] as $key => $head) {
         if (!empty($audit[$key])) $out['html'] .= getUpdateList($head, (array)$audit[$key]);
     }
-    if ($reader === '' || $ready) return $out;
+    if ($reader === '' || $ready || !$man['ok']) return $out;
     $hint = sprintf(_UPDATE_UPHINT, (string)ini_get('upload_max_filesize'), (string)ini_get('post_max_size'));
     $out['html'] .= $tpl->getHtmlFrag('pane', ['icon' => 'cloud-upload', 'title' => _UPDATE_UPLOAD, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=update&op=upload',
@@ -252,7 +252,7 @@ function getUpdateSettings(): string {
     $sent = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_SENT]);
     $rows = [
         $radio('channel', _UPDATE_CHANNEL, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable', [['value' => 'stable', 'label' => _UPDATE_STABLE],
-            ['value' => 'beta', 'label' => _UPDATE_BETA]]),
+            ['value' => 'beta', 'label' => _UPDATE_BETA]], _UPDATE_CHANHINT),
         $radio('upcheck', _UPDATE_UPCHECK, (string)intval($sets['upcheck'] ?? 1), $yesno),
         $radio('upsite', _UPDATE_UPSITE, (string)intval($sets['upsite'] ?? 1), $yesno, _UPDATE_SITEHINT),
         $radio('keepbak', _UPDATE_KEEPBAK, (string)intval($sets['keepbak'] ?? 1), $yesno, ($back !== '' && is_dir(BASE_DIR.'/'.$back))

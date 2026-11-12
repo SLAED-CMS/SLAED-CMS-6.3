@@ -1406,8 +1406,8 @@ define('_UPDATE_WHYWRITE','Le site n\'a pas pu enregistrer de fichiers dans le d
 define('_UPDATE_WHYOTHER','Raison : %s. L\'aide la décrit.');
 define('_UPDATE_NOTDONE','Non aboutie');
 define('_UPDATE_CHANNEL','Canal');
-define('_UPDATE_STABLE','Stable : versions éprouvées');
-define('_UPDATE_BETA','Beta : versions avant Stable');
+define('_UPDATE_STABLE','Stable — pour un site en production');
+define('_UPDATE_BETA','Beta — pour une copie de test');
 define('_UPDATE_LAST','Dernière vérification');
 define('_UPDATE_FOUND','Version trouvée');
 define('_UPDATE_NONE','Aucune version plus récente');
@@ -1503,6 +1503,7 @@ define('_UPDATE_UNDOFAIL','L\'installation a échoué à l\'étape %1$d et a ét
 define('_UPDATE_FAILED','Installation échouée');
 define('_UPDATE_BAKSIZE','La sauvegarde de la dernière installation occupe %s.');
 define('_UPDATE_STATE','État');
+define('_UPDATE_CHANHINT','Stable — la version est déjà éprouvée et convient à un site en production. Beta — la version arrive plus tôt, mais elle est encore en cours de vérification et peut contenir des erreurs. Ne la choisissez que pour une copie de test. Avec Beta, le site reçoit aussi les versions Stable.');
 define('_UPLOADS','Télécharger');
 define('_URLS','Les liens');
 define('_USEREXIST','L\'utilisateur existe déjà!');

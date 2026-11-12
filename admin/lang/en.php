@@ -1406,8 +1406,8 @@ define('_UPDATE_WHYWRITE','The site could not save files to the storage/update/c
 define('_UPDATE_WHYOTHER','Reason: %s. The help describes it.');
 define('_UPDATE_NOTDONE','Not finished');
 define('_UPDATE_CHANNEL','Channel');
-define('_UPDATE_STABLE','Stable: tested releases');
-define('_UPDATE_BETA','Beta: releases before Stable');
+define('_UPDATE_STABLE','Stable — for a live site');
+define('_UPDATE_BETA','Beta — for a test copy');
 define('_UPDATE_LAST','Last check');
 define('_UPDATE_FOUND','Version found');
 define('_UPDATE_NONE','No newer version');
@@ -1503,6 +1503,7 @@ define('_UPDATE_UNDOFAIL','The installation failed on step %1$d and was rolled b
 define('_UPDATE_FAILED','Installation failed');
 define('_UPDATE_BAKSIZE','The backup of the last installation takes %s.');
 define('_UPDATE_STATE','State');
+define('_UPDATE_CHANHINT','Stable — the release is already tested and suits a live site. Beta — the release comes earlier, but it is still being tested and may contain errors, so choose it only for a test copy. On Beta the site also receives the Stable releases.');
 define('_UPLOADS','Uploads');
 define('_URLS','Links');
 define('_USEREXIST','the User already exists!');

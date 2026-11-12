@@ -1406,8 +1406,8 @@ define('_UPDATE_WHYWRITE','Die Website konnte keine Dateien im Ordner storage/up
 define('_UPDATE_WHYOTHER','Grund: %s. Die Hilfe beschreibt ihn.');
 define('_UPDATE_NOTDONE','Nicht abgeschlossen');
 define('_UPDATE_CHANNEL','Kanal');
-define('_UPDATE_STABLE','Stable: geprüfte Versionen');
-define('_UPDATE_BETA','Beta: Versionen vor Stable');
+define('_UPDATE_STABLE','Stable — für die produktive Website');
+define('_UPDATE_BETA','Beta — für eine Testkopie');
 define('_UPDATE_LAST','Letzte Prüfung');
 define('_UPDATE_FOUND','Gefundene Version');
 define('_UPDATE_NONE','Keine neuere Version');
@@ -1503,6 +1503,7 @@ define('_UPDATE_UNDOFAIL','Die Installation scheiterte in Schritt %1$d und wurde
 define('_UPDATE_FAILED','Installation gescheitert');
 define('_UPDATE_BAKSIZE','Die Sicherung der letzten Installation belegt %s.');
 define('_UPDATE_STATE','Zustand');
+define('_UPDATE_CHANHINT','Stable — die Version ist bereits geprüft und eignet sich für die produktive Website. Beta — die Version kommt früher, wird aber noch geprüft und kann Fehler enthalten. Wählen Sie Beta nur für eine Testkopie. Mit Beta erhält die Website auch die Stable-Versionen.');
 define('_UPLOADS','Uploads');
 define('_URLS','Links');
 define('_USEREXIST','Der Benutzer existiert schon!');
