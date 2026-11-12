@@ -859,6 +859,7 @@ function getProbeFeedLegacy(int $uid): string {
         $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty' => ['is_small' => true]]);
     }
     return $tpl->getHtmlPart('account-profile-feed', [
+        'tone' => 1,
         'head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY],
         'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts),
     ]);

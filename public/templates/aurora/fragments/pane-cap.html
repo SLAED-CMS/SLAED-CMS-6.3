@@ -1,0 +1,18 @@
+<div class="sl-pane-cap"{% if hint %} title="{{ hint }}"{% endif %}{% if is_fold %} data-sl-toggle-head{% endif %}>
+  {% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
+  <h3 class="sl-pane-title"{% if title_id %} id="{{ title_id }}"{% endif %}>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h3>
+  {% if chips %}
+  <span class="sl-pane-chips">
+    {% for chip in chips %}
+    <span class="sl-chip sl-chip-{{ chip.tone }}"{% if chip.id %} id="{{ chip.id }}"{% endif %}{% if chip.title %} title="{{ chip.title }}"{% endif %}{% if chip.is_live %} aria-live="polite" aria-atomic="true"{% endif %}>{% if chip.icon %}<i class="bi bi-{{ chip.icon }}" aria-hidden="true"></i>{% endif %}{{ chip.label }}</span>
+    {% endfor %}
+  </span>
+  {% endif %}
+  {% if live_title %}
+  <span class="sl-profile-feed-live" title="{{ live_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
+  {% endif %}
+  {{{ tools_html }}}
+  {% if is_fold %}
+  <span class="sl-plus sl-pane-fold{% if is_open %} sl-is-open{% endif %}" title="{{ plus_text }}" aria-label="{{ plus_text }}" data-sl-toggle-control="{{ id }}-rows" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"></span>
+  {% endif %}
+</div>

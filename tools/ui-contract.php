@@ -227,7 +227,7 @@ return [
         'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot',
         'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'metric', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
-        'pager', 'pager-dot', 'pager-item', 'pane', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
+        'pager', 'pager-dot', 'pager-item', 'pane', 'pane-cap', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
         'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn', 'pres-photo', 'pres-rain',
@@ -579,9 +579,9 @@ return [
         '.sl-alert-body, .sl-fm-ops input[type="text"], .sl-fm-win .sl-fm-rail-item > span, '
             .'.sl-lang-edit-row .sl-div-field input[type="text"], .sl-lang-edit-row .sl-div-field .sl-select-config, '
             .'.sl-lang-edit-row .sl-div-field .sl-select, .sl-list-bottom-pager, .sl-list-head-pager, .sl-modal-bar [data-sl-icon-search]',
-        # A filter field, the row list of the window, a panel of the profile facts and the frame every modal opens as: four boxes that stack their children
+        # A filter field, the row list of the window, the body of a window of the profile facts and the frame every modal opens as: four boxes that stack their children
         # The dialog is the canon of the window, and filing it inside one component's block would hide it from whoever edits either
-        '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-profile-panel, dialog.sl-modal[open]',
+        '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-pane-body, dialog.sl-modal[open]',
         # The row list and the dialog in the administrative theme, which carries no profile facts and no filter card of the changelog
         '.sl-fm-win .sl-fm-rows, dialog.sl-modal[open]',
         # The row of insertion ways, the tag list of a profile and a chip row of a Node list window: three rows that wrap at one gap, in screens that never meet
@@ -602,8 +602,34 @@ return [
     # The key is the `@media context` and the selector joined by two spaces, which is what `--cross` prints
     'divergent' => [
         '.sl-metric-name' =>
-            'admin shares the capitals of the name with the heads of its windows in one selector list, and aurora has no window head to share them with, '
-            .'so its name of a tile carries them in its own rule; the face, the size and the colour are the same',
+            'admin shares the capitals of the name with the heads of its windows in one selector list, and the head of a window of aurora is a semibold name, '
+            .'not capitals, so its name of a tile carries them in its own rule; the face, the size and the colour are the same',
+        # The window of the series, one class in two sets: the head of the panel is mono capitals over a rule, the head of the site an icon on a plate
+        '.sl-pane' =>
+            'the window of the site lifts under the pointer, so it carries the transition of its frame and its shade, which the window of the panel never '
+            .'changes; the panel positions its window in this rule, the site leaves that to the light of a frame, which a window of a settings grid does '
+            .'not take since it holds a non-modal dialog',
+        '.sl-pane-cap' =>
+            'the head of the panel is capitals over a solid rule and a beam crosses it, so it carries the rule and is positioned and clipped; the head of '
+            .'the site is parted from the body by its plate and has no rule, and wraps its chips under a long name on a phone',
+        '.sl-pane-cap > .bi' =>
+            'the icon of a head of the site stands on a plate as large as a chip in the tone of its category; the icon of a head of the panel is a bare '
+            .'glyph, sized and toned',
+        '.sl-pane-title' =>
+            'the name of a panel window takes its type from the list of capitals it shares with the meta and is cut with an ellipsis on one line; the name '
+            .'of a site window carries its own semibold type, takes the room the chips leave and wraps inside it',
+        '.sl-pane-chips' =>
+            'in the panel the chips take the room the facts of a head leave and close it at the right; on the site the name takes that room, so the chips '
+            .'are as wide as they are',
+        '.sl-pane-fold' =>
+            'the plus of the panel is pushed to the right by an auto margin and takes its tone and its hand from the glyph of sl-plus; on the site the '
+            .'growing name pushes it and the fold names its tone and its hand itself',
+        '.sl-pane-fold::before' =>
+            'the panel draws the plus with the glyph of sl-plus, which this rule only resizes and frees of its margin; the site has no such glyph - its '
+            .'sl-plus wraps an icon element - so the fold draws the glyph of the icon font itself',
+        '.sl-pane-body' =>
+            'the body of a panel window is a column a board may stretch, with rows of the form canon inside; the body of a site window is the grid of two '
+            .'tracks its form rows take by subgrid and the container those rows fold on',
         # The shorthand and the three longhands are not two spellings of one intent: every longhand a shorthand leaves out is reset to its initial value
         # So `list-style: disc outside` fixes the type where the longhands leave it alone
         'ul' =>
@@ -817,6 +843,14 @@ return [
             'the largest of the two vocabularies: eleven names the panel maps against thirty-three the site does, and not one is in both. The site link is the '
             .'whole card, cart, category and login language of a public page; the panel link is a row action. This is the pair the plan measured at over a hundred '
             .'lines, and it is two contracts rather than one contract with two spellings',
+        'fragments/pane-cap.html' =>
+            'one head in two sets. The panel head names its window with an h2 and may carry facts, a meta figure, a live chip PHP built and the plus of '
+            .'a chain; the site head is an h3 under the heading of its page, takes a marked name, an id and a hint, draws the icon and the id of a chip '
+            .'and its own live mark, and its plus may be born open. The classes, the order of the parts and the hooks of the fold are the same',
+        'fragments/pane.html' =>
+            'the panel window is a part of a board: it may fill its row, carry a second half, a live box and the next window of a chain, and it folds '
+            .'closed; the site window may be the one of the warnings and folds open or closed by is_open. The frame, the head and the folding body are '
+            .'the same',
         'fragments/pager-keys.html' =>
             'one key tip under one pager: the panel adds the keys of a canon list - rows, pick, edit, search, quick jump, the fold of the menu - and draws the tip '
             .'alone over and under a list without pages, where no arrow key turns a page; the site has no list keys and names only the two arrows',

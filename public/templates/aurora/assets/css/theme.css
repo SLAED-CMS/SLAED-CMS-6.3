@@ -437,7 +437,7 @@ h1.sl-title {
 }
 
 .sl-table-head th.sl-col-check,
-.sl-profile-hub-head[data-sl-toggle-control] {
+.sl-pane-cap[data-sl-toggle-head] {
   cursor: pointer;
 }
 
@@ -1573,7 +1573,7 @@ input[type="checkbox"]:disabled {
 
 /* The same disappearance serves the preset gallery of the settings page, where each option is its picture and nothing else */
 .sl-radio-group.sl-radio-switch input,
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) input {
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -1982,8 +1982,7 @@ button.sl-but-mini:hover,
 }
 
 .sl-form > *,
-.sl-opt-tile > *,
-.sl-profile-panel > * {
+.sl-pane-body > * {
   grid-column: 1 / -1;
 }
 
@@ -2019,7 +2018,7 @@ button.sl-but-mini:hover,
 }
 
 /* A direct row draws its parent's tracks through subgrid, or keeps a quarter without it; the selector carries no weight */
-:where(.sl-form, .sl-opt-tile) > .sl-form-row {
+:where(.sl-form, .sl-pane-body) > .sl-form-row {
   grid-template-columns: subgrid;
 }
 
@@ -3100,6 +3099,7 @@ pre code.hljs {
 
 .sl-tip:focus-visible,
 .sl-tip > button:focus-visible,
+.sl-pane-fold:focus-visible,
 [data-sl-repeat-add]:not([data-sl-repeat-add=""]):focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
@@ -5633,13 +5633,15 @@ dialog.sl-editor-emoji-panel {
   padding: var(--sl-space-4) 0 0;
 }
 
-/* A fold control shows one of two marks; the favourites shelf swaps its chevrons on the sl-is-closed state slaed.js sets */
+/* The control of the session list shows one of two marks */
 .sl-session-close,
-.sl-panel-toggle-closed,
-.sl-session-toggle.sl-is-open .sl-session-open,
-.sl-is-closed .sl-panel-toggle-open { display: none; }
-.sl-session-toggle.sl-is-open .sl-session-close,
-.sl-is-closed .sl-panel-toggle-closed { display: inline; }
+.sl-session-toggle.sl-is-open .sl-session-open {
+  display: none;
+}
+
+.sl-session-toggle.sl-is-open .sl-session-close {
+  display: inline;
+}
 
 .sl-user-card .sl-session-list {
   position: absolute;
@@ -6410,14 +6412,13 @@ dialog.sl-editor-emoji-panel {
   .sl-changelog-filter,
   .sl-changelog-results,
   .sl-opt-lamp,
-  .sl-profile-panel,
+  :not(.sl-opt-grid) > .sl-pane,
   .sl-search-panel,
   .sl-card-image,
   .sl-cat-tile,
   .sl-icat,
   .sl-node-head-win,
   .sl-oauth-card,
-  .sl-pmf-focus,
   .sl-pmf-mate,
   .sl-pmf-slot,
   .sl-profile-card,
@@ -6435,7 +6436,7 @@ dialog.sl-editor-emoji-panel {
   .sl-changelog-filter::before,
   .sl-changelog-results::before,
   .sl-opt-lamp::before,
-  .sl-profile-panel::before,
+  :not(.sl-opt-grid) > .sl-pane::before,
   .sl-search-panel::before,
   .sl-card-image::before,
   .sl-cat-tile::before,
@@ -6443,7 +6444,6 @@ dialog.sl-editor-emoji-panel {
   .sl-node-head-win::before,
   .sl-node-tile-cover::before,
   .sl-oauth-card::before,
-  .sl-pmf-focus::before,
   .sl-pmf-mate::before,
   .sl-pmf-slot::before,
   .sl-profile-card::before,
@@ -6498,7 +6498,7 @@ dialog.sl-editor-emoji-panel {
   .sl-changelog-filter:hover::before,
   .sl-changelog-results:hover::before,
   .sl-opt-lamp:hover::before,
-  .sl-profile-panel:hover::before,
+  :not(.sl-opt-grid) > .sl-pane:hover::before,
   .sl-search-panel:hover::before,
   .sl-card-image:hover::before,
   .sl-cat-tile:hover::before,
@@ -6506,7 +6506,6 @@ dialog.sl-editor-emoji-panel {
   .sl-node-head-win:hover::before,
   .sl-node-tile-cover:hover::before,
   .sl-oauth-card:hover::before,
-  .sl-pmf-focus:hover::before,
   .sl-pmf-mate:hover::before,
   .sl-pmf-slot:hover::before,
   .sl-profile-card:hover::before,
@@ -10596,31 +10595,39 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-4);
 }
 
-/* The tile is the container its rows watch, under a name of its own, and lays the two tracks they inherit */
-.sl-opt-tile,
-.sl-profile-panel {
-  container-type: inline-size;
-  container-name: sl-opt-box;
-  display: grid;
+/* Pane: the one window of the site, the frame with a head of fragments/pane.html and not the dialog of fragments/window.html; the --sl-pane-* tokens hold its values */
+/* It is positioned by the light of a frame alone, which a window of a settings grid does not carry: that one holds the non-modal dialog of an editor or of the file manager */
+.sl-pane {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
-  gap: var(--sl-space-4);
-  column-gap: var(--sl-space-6);
-  padding: var(--sl-space-5);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg);
+  border: 1px solid var(--sl-pane-border);
+  border-radius: var(--sl-pane-radius);
+  background: var(--sl-pane-bg);
+  box-shadow: var(--sl-pane-shadow);
   transition:
     border-color var(--sl-time-base) var(--sl-ease-out),
     box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
-/* A plate of the preset gallery lifts under the pointer exactly as the tile around it does */
-.sl-opt-tile:hover,
-.sl-profile-panel:hover,
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio:hover {
+/* A plate of the preset gallery lifts under the pointer exactly as the window around it does */
+.sl-pane:hover,
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) .sl-radio:hover {
   border-color: var(--sl-border-strong);
   box-shadow: var(--sl-shadow-raised);
+}
+
+/* The body is the container its rows watch, under a name of its own, and lays the two tracks they inherit; the plate parts the head from it, so it has no upper inset */
+.sl-pane-body {
+  container-type: inline-size;
+  container-name: sl-opt-box;
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
+  gap: var(--sl-space-4);
+  column-gap: var(--sl-space-6);
+  padding: 0 var(--sl-pane-pad-x) var(--sl-pane-pad-y);
 }
 
 .sl-opt-w2 {
@@ -10639,8 +10646,20 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-column: span 6;
 }
 
-/* The one head of the cabinet, fragments/panel-head.html, shared by the tiles, the panels, the feed, the hub and the shelves */
-.sl-profile-hub-head h3 > .bi {
+/* The one head of the site, fragments/pane-cap.html: a chip and the inset twice high, the icon on a plate in the tone of its category, the name, then the chips, the live mark and the plus */
+.sl-pane-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3);
+  box-sizing: border-box;
+  min-height: calc(var(--sl-size-chip) + var(--sl-pane-pad-y) * 2);
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
+  border-radius: calc(var(--sl-pane-radius) - 1px) calc(var(--sl-pane-radius) - 1px) 0 0;
+  background: var(--sl-pane-cap-bg);
+}
+
+.sl-pane-cap > .bi {
   display: grid;
   place-items: center;
   flex: 0 0 var(--sl-size-chip);
@@ -10652,10 +10671,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-size-icon-sm);
 }
 
-.sl-profile-hub-head h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
+/* The name takes the room the rest of the head leaves and wraps inside it, so the plus keeps its place at the right */
+.sl-pane-title {
+  flex: 1 1 8em;
+  min-width: 0;
   margin: 0;
   color: var(--sl-text-strong);
   font-size: var(--sl-font-small);
@@ -10663,15 +10682,52 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: var(--sl-line-tight);
 }
 
-.sl-opt-tile > p {
+.sl-pane-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sl-space-3);
+}
+
+/* The plus of a folding head is a glyph of the icon font, a minus while its window stands open; slaed.js sends a press anywhere on the head to it, so the name is not selected */
+.sl-pane-fold {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  color: var(--sl-primary);
+  cursor: pointer;
+}
+
+.sl-pane-fold::before {
+  content: "\f4f9";
+  font-family: "bootstrap-icons";
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+}
+
+.sl-pane-fold.sl-is-open::before {
+  content: "\f2e5";
+}
+
+.sl-pane-cap[data-sl-toggle-head] > .sl-pane-title {
+  user-select: none;
+}
+
+/* A head that stands without a frame, over the tiles of the cabinet and over the facts of the profile, keeps the height of a row and has no inset */
+:is(.sl-cab-main, .sl-profile-split-main) > .sl-pane-cap {
+  min-height: var(--sl-hub-head-height);
+  padding: 0;
+}
+
+.sl-pane-body > p {
   margin: 0;
   color: var(--sl-text-muted);
   font-size: var(--sl-font-small);
   line-height: var(--sl-line-normal);
 }
 
-/* A direct row of the tile is spaced by the tile's gap; a row inside its form keeps its own margin */
-.sl-opt-tile > .sl-form-row {
+/* A direct row of a body is spaced by the gap of the body; a row inside its form keeps its own margin */
+.sl-pane-body > .sl-form-row {
   margin-bottom: 0;
 }
 
@@ -10685,11 +10741,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* The file door under the face stands on its axis, as the face does; the gap of the door spaces its button, so the margin of a button would push it off that axis */
-.sl-opt-tile > .sl-file-door {
+.sl-pane-body > .sl-file-door {
   justify-content: center;
 }
 
-.sl-opt-tile > .sl-file-door > .sl-but {
+.sl-pane-body > .sl-file-door > .sl-but {
   margin-right: 0;
 }
 
@@ -10701,9 +10757,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   box-shadow: var(--sl-avatar-shadow);
 }
 
-/* The rows of a tile fold on the tile, not the window, under its own container name, since the shared name folds at 900 */
+/* The rows of a pane fold on its body, not on the viewport, under a container name of its own, since the shared name folds at 900 */
 @container sl-opt-box (width <= 420px) {
-  .sl-opt-tile .sl-form-row {
+  .sl-pane-body .sl-form-row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--sl-space-2);
     align-items: start;
@@ -10711,12 +10767,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* The gallery is the one control taller than its caption: the caption meets it at the top, as it meets a textarea */
-.sl-opt-tile .sl-form-row:has(.sl-radio-group:not(.sl-radio-switch)) {
+.sl-pane-body .sl-form-row:has(.sl-radio-group:not(.sl-radio-switch)) {
   align-items: start;
 }
 
 /* The hint shares the caption cell and asks for no width, or it sizes the caption column of the whole form */
-.sl-opt-tile .sl-form-row > div > small {
+.sl-pane-body .sl-form-row > div > small {
   display: block;
   width: 0;
   min-width: 100%;
@@ -10725,13 +10781,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* A control narrower than its track, the switch, stands at its right edge, where every full field ends */
-.sl-opt-tile .sl-form-field:has(> .sl-radio-switch) {
+.sl-pane-body .sl-form-field:has(> .sl-radio-switch) {
   display: flex;
   justify-content: flex-end;
 }
 
 /* The preset gallery is capped and scrolls with a step of air for the ring of the picked plate; a yes/no switch keeps its own geometry */
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) {
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--sl-avatar-width), 1fr));
   padding: var(--sl-space-1);
@@ -10740,7 +10796,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Each option is its picture: the radio hidden, the picture on the plate, the file manager's ring around the pick */
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio {
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) .sl-radio {
   position: relative;
   display: grid;
   padding: var(--sl-space-2);
@@ -10752,11 +10808,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio:has(input:focus-visible) {
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) .sl-radio:has(input:focus-visible) {
   box-shadow: var(--sl-shadow-focus);
 }
 
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-avatar {
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) .sl-avatar {
   display: block;
   width: 100%;
   height: auto;
@@ -10846,7 +10902,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Account profile: dense split card with identity rail, trust strip, fact panels and module hub */
-/* The profile card and the cabinet deck are boxed like the tile: the same border and radius, no shadow at rest */
+/* The profile card and the cabinet deck are boxed like the window: the same border and radius, no shadow at rest */
 .sl-profile-card,
 .sl-cab-deck {
   overflow: hidden;
@@ -11085,7 +11141,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: var(--sl-space-5);
 }
 
-.sl-profile-facts .sl-profile-panel {
+.sl-profile-facts .sl-pane-body {
   display: flex;
   flex-direction: column;
 }
@@ -11095,26 +11151,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-auto-rows: minmax(var(--sl-info-row-height), 1fr);
 }
 
-/* The cabinet and profile panel shares the rules of the settings tile; only the margin under its head is its own */
-.sl-profile-panel > .sl-profile-hub-head,
-.sl-profile-feed > .sl-profile-hub-head {
-  margin-bottom: var(--sl-space-4);
-}
-
-.sl-profile-wide {
-  margin-top: var(--sl-space-5);
-}
-
-.sl-profile-wide.sl-is-warn {
+.sl-pane.sl-is-warn {
   border-color: var(--sl-proof-border);
 }
 
-.sl-profile-wide.sl-is-warn h3 > .bi {
+.sl-pane.sl-is-warn > .sl-pane-cap > .bi {
   background: var(--sl-danger);
-}
-
-.sl-profile-wide .sl-profile-tags + .sl-profile-hub-head {
-  margin-top: var(--sl-space-5);
 }
 
 .sl-profile-info {
@@ -11193,8 +11235,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-primary);
 }
 
-.sl-profile-wide .sl-profile-chips {
+/* The chips of the rail stand in a window from its left edge and right under its head, without the step the rail parts them by */
+.sl-pane-body > .sl-profile-chips {
   justify-content: flex-start;
+  margin-top: 0;
 }
 
 .sl-profile-sign {
@@ -11206,19 +11250,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: var(--sl-space-3) var(--sl-space-6);
 }
 
-.sl-profile-hub-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-7);
-  min-height: var(--sl-hub-head-height);
-}
-
+/* The right slot of a cabinet row: the chips or the buttons of one entry */
 .sl-profile-hub-total {
   display: flex;
   gap: var(--sl-space-3);
 }
 
+.sl-pane-chips .sl-chip,
 .sl-profile-hub-total .sl-chip {
   margin: 0;
 }
@@ -11251,7 +11289,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-profile-feed .sl-tabs {
-  margin: var(--sl-space-4) 0 0;
+  margin: 0;
   border: 0;
   background: transparent;
 }
@@ -11293,7 +11331,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   height: var(--sl-scroll-height);
   overflow: hidden;
   border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
+  border-radius: var(--sl-radius-1);
   background: var(--sl-surface);
 }
 
@@ -11330,8 +11368,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   animation-play-state: paused;
 }
 
-/* The spinning indicator of a panel freezes together with the hovered feed scroll under it */
-:is(.sl-profile-panel, .sl-profile-feed):has(.sl-profile-scroll:hover) .sl-profile-feed-live i {
+/* The spinning indicator of a window freezes together with the hovered feed scroll under it */
+.sl-pane:has(.sl-profile-scroll:hover) .sl-profile-feed-live i {
   animation-play-state: paused;
 }
 
@@ -11391,7 +11429,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* The head of the deck stands in normal flow over the action tiles, so it carries the room the tiles keep from it */
-.sl-cab-main > .sl-profile-hub-head {
+.sl-cab-main > .sl-pane-cap {
   margin-bottom: var(--sl-space-5);
 }
 
@@ -11913,26 +11951,21 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-left: auto;
 }
 
-/* The focus deck folds through the toggle mechanic of slaed.js so its state outlives the page; paint containment keeps the strip in, overflow: clip does not */
+/* The focus deck is a window, so it folds through the toggle mechanic of slaed.js and its state outlives the page; paint containment keeps the strip in, overflow: clip does not */
 .sl-pmf-focus {
   contain: paint;
   margin-bottom: var(--sl-space-6);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-bg);
 }
 
-/* The head of the deck is the one cabinet head with the padding of the box it stands in; the line under it belongs to an open deck only */
-.sl-pmf-focus > .sl-profile-hub-head {
-  padding: var(--sl-space-4) var(--sl-space-5);
+/* The strip runs from frame to frame, so the body of its window hands its inset to the deck */
+.sl-pmf-focus .sl-pane-body {
+  padding: 0;
 }
-
-.sl-pmf-focus > .sl-profile-hub-head:not(.sl-is-closed) { border-bottom: 1px solid var(--sl-border-subtle); }
 
 .sl-pmf-deck {
   display: flex;
   gap: var(--sl-space-4);
-  padding: var(--sl-space-5);
+  padding: 0 var(--sl-pane-pad-x) var(--sl-pane-pad-y);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }
@@ -11945,7 +11978,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-3);
   padding: var(--sl-space-5) var(--sl-space-5) var(--sl-space-4);
   border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
+  border-radius: var(--sl-radius-2);
   background: linear-gradient(180deg, color-mix(in srgb, var(--sl-cat-tone) var(--sl-ico-mix), var(--sl-bg)), var(--sl-bg) 60%);
   scroll-snap-align: start;
   transition: border-color var(--sl-time-base) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out);
@@ -12222,21 +12255,23 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-top: 1px solid var(--sl-border-subtle);
 }
 
-/* Cabinet panels reuse sl-profile-panel; only the scroll-window sizing and column spacing are cabinet-specific */
-.sl-cab-main > .sl-profile-panel {
+/* The windows of a column of the cabinet and of the profile stand a step apart; the list inside a window takes the ground of the window */
+.sl-cab-main > .sl-pane,
+.sl-profile-split-main > .sl-pane,
+.sl-profile-card ~ .sl-pane {
   margin-top: var(--sl-space-5);
 }
 
-.sl-profile-panel .sl-profile-scroll {
+.sl-pane .sl-profile-scroll {
   height: var(--sl-panel-feed-height);
   background: var(--sl-bg);
 }
 
-.sl-profile-panel .sl-profile-scroll::before {
+.sl-pane .sl-profile-scroll::before {
   background: linear-gradient(180deg, var(--sl-bg), transparent);
 }
 
-.sl-profile-panel .sl-profile-scroll::after {
+.sl-pane .sl-profile-scroll::after {
   background: linear-gradient(0deg, var(--sl-bg), transparent);
 }
 
@@ -12312,11 +12347,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
   .sl-profile-info-row b {
     max-width: none;
-  }
-
-  .sl-profile-hub-head {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .sl-cab-row.sl-profile-entry {
@@ -12842,7 +12872,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 /* The same ring marks the picked plate of the preset gallery on the settings page, so one pick looks like one pick everywhere */
 .sl-fm-win .sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile,
-.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio:has(input:checked) {
+.sl-pane-body .sl-radio-group:not(.sl-radio-switch) .sl-radio:has(input:checked) {
   border-color: var(--sl-primary);
   box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
 }

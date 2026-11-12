@@ -12646,10 +12646,10 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg);
-  box-shadow: var(--sl-shadow-xs);
+  border: 1px solid var(--sl-pane-border);
+  border-radius: var(--sl-pane-radius);
+  background: var(--sl-pane-bg);
+  box-shadow: var(--sl-pane-shadow);
 }
 
 /* The gradient ends with the head, so a window reads the same at any height; the head is a chip, its inset twice and its rule high, and rounds its upper corners */
@@ -12659,12 +12659,12 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   align-items: center;
   gap: var(--sl-space-4);
   box-sizing: border-box;
-  min-height: calc(var(--sl-size-chip) + var(--sl-space-3) * 2 + 1px);
-  padding: var(--sl-space-3) var(--sl-space-4);
+  min-height: calc(var(--sl-size-chip) + var(--sl-pane-pad-y) * 2 + 1px);
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
   overflow: hidden;
-  border-bottom: 1px solid var(--sl-border);
-  border-radius: calc(var(--sl-radius-2) - 1px) calc(var(--sl-radius-2) - 1px) 0 0;
-  background: linear-gradient(var(--sl-surface), var(--sl-bg));
+  border-bottom: 1px solid var(--sl-pane-border);
+  border-radius: calc(var(--sl-pane-radius) - 1px) calc(var(--sl-pane-radius) - 1px) 0 0;
+  background: var(--sl-pane-cap-bg);
 }
 
 .sl-pane-cap > .bi {
@@ -12777,7 +12777,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
 .sl-pane:has(> .sl-collapsible:is([hidden], .sl-is-closed)) > .sl-pane-cap {
   border-bottom-color: transparent;
-  border-radius: calc(var(--sl-radius-2) - 1px);
+  border-radius: calc(var(--sl-pane-radius) - 1px);
 }
 
 @media (max-width: 1200px) {
@@ -12810,7 +12810,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: var(--sl-space-3) var(--sl-space-4);
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
 }
 
 /* A large window gives what its row has left to its picture, the last part of its body */

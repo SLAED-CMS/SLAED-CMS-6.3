@@ -1,13 +1,17 @@
 <div class="sl-opt-grid sl-opt-w6" id="favshelves">
   {% for shelf in shelves %}
-  <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-{{ shelf.tone }}">
-    {% include 'fragments/panel-head.html' with shelf %}
-    <div id="{{ shelf.fold }}" data-sl-toggle="{{ shelf.fold }}">
-      {% for row in shelf.rows %}
-      <div class="sl-cab-row"><i class="bi bi-{{ shelf.icon }}" aria-hidden="true"></i><b><a href="{{ row.href }}" title="{{ row.title }}">{{{ row.label_html }}}</a></b><span class="sl-profile-hub-total"><a class="sl-but-mini" href="{{ row.href }}" title="{{ show_label }}"><i class="bi bi-eye" aria-hidden="true"></i></a><button type="button" class="sl-but-mini" title="{{ del_label }}" hx-post="{{ row.del_href }}" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}' hx-include="#favseek, #favmod" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false"><i class="bi bi-trash" aria-hidden="true"></i></button></span></div>
-      {% endfor %}
+  <section id="{{ shelf.id }}" class="sl-pane sl-opt-w6 sl-cat-tone-{{ shelf.tone }}">
+    {% include 'fragments/pane-cap.html' with shelf %}
+    <div id="{{ shelf.id }}-rows" class="sl-collapsible" data-sl-toggle="{{ shelf.id }}-rows" data-sl-toggle-default="open">
+      <div class="sl-pane-body">
+        <div>
+          {% for row in shelf.rows %}
+          <div class="sl-cab-row"><i class="bi bi-{{ shelf.icon }}" aria-hidden="true"></i><b><a href="{{ row.href }}" title="{{ row.title }}">{{{ row.label_html }}}</a></b><span class="sl-profile-hub-total"><a class="sl-but-mini" href="{{ row.href }}" title="{{ show_label }}"><i class="bi bi-eye" aria-hidden="true"></i></a><button type="button" class="sl-but-mini" title="{{ del_label }}" hx-post="{{ row.del_href }}" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}' hx-include="#favseek, #favmod" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false"><i class="bi bi-trash" aria-hidden="true"></i></button></span></div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
   {% endfor %}
   {% if !shelves %}
   <div class="sl-opt-w6">

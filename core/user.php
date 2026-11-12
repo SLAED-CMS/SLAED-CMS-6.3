@@ -784,8 +784,8 @@ function getPrivatFocus(int $typ = 1): string {
     }
     return $tpl->getHtmlFrag('privat-focus', [
         'head' => [
-            'icon' => getIconName('focus'), 'title' => _PRFOCUS, 'fold' => 'prfocus',
-            'chips' => [['tone' => 'neutral', 'title' => _PRFOCUS, 'text' => sprintf(_PRFOCUSN, $new)]],
+            'icon' => getIconName('focus'), 'title' => _PRFOCUS, 'id' => 'prfocus', 'is_fold' => true, 'is_open' => true, 'plus_text' => _OPCL.': '._PRFOCUS,
+            'chips' => [['tone' => 'neutral', 'title' => _PRFOCUS, 'label' => sprintf(_PRFOCUSN, $new)]],
         ],
         'token' => $tok,
         'slots' => $slots,
@@ -1269,7 +1269,7 @@ function getProfileModules(int $uid = 0): array {
 }
 
 # Build the "last activity" feed with per-module tabs for a public profile, the fixed modules read in one UNION ALL round-trip
-function getProfileLastView(int $uid): string {
+function getProfileLastView(int $uid, int $tone = 1): string {
     global $db, $conf, $tpl, $prs, $com;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !is_moder('account'))) return '';
     $limit = 25;
@@ -1338,6 +1338,7 @@ function getProfileLastView(int $uid): string {
         $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty' => ['is_small' => true]]);
     }
     return $tpl->getHtmlPart('account-profile-feed', [
+        'tone' => $tone,
         'head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY],
         'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts),
     ]);
@@ -1488,7 +1489,8 @@ function getFavoriteList(int $obj = 0): string {
         $top = array_key_first($rows);
         if (!$last || $top > $last['id']) $last = ['id' => $top, 'title' => $rows[$top]['title'], 'mod' => $modul, 'time' => $times[$top] ?? ''];
         $shelves[$modul] = [
-            'key' => $modul, 'title' => getModuleName($modul), 'hint' => getModuleName($modul), 'fold' => 'favshelf-'.$modul,
+            'key' => $modul, 'title' => getModuleName($modul), 'hint' => getModuleName($modul),
+            'id' => 'favshelf-'.$modul, 'is_fold' => true, 'is_open' => true, 'plus_text' => _OPCL.': '.getModuleName($modul),
             'title_html' => filterTextHighlight(htmlspecialchars(getModuleName($modul), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek),
             'icon' => getIconName($modul), 'count' => count($rows), 'rows' => array_values($rows),
         ];
@@ -1516,7 +1518,7 @@ function getFavoriteList(int $obj = 0): string {
             $shelf['rows'] = array_values(array_filter($shelf['rows'], static fn(array $row): bool => mb_stripos($row['title'], $seek, 0, 'utf-8') !== false));
             $shelf['count'] = count($shelf['rows']);
         }
-        $shelf['chips'] = [['tone' => 'neutral', 'title' => _FAVORITES, 'text' => (string)$shelf['count']]];
+        $shelf['chips'] = [['tone' => 'neutral', 'title' => _FAVORITES, 'label' => (string)$shelf['count']]];
         if ($shelf['rows']) $view[] = $shelf;
     }
     $chips[] = ['label' => _ALL, 'icon' => getIconName('all'), 'href' => getSeoUrl($link), 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
@@ -1547,7 +1549,7 @@ function getFavoriteList(int $obj = 0): string {
         'seek_head' => [
             'icon' => getIconName('search'),
             'title' => _FAVOR_SEEK,
-            'chips' => [['tone' => 'info', 'id' => 'favtally', 'title' => _FAVORITES, 'text' => $tally, 'is_live' => true]],
+            'chips' => [['tone' => 'info', 'id' => 'favtally', 'title' => _FAVORITES, 'label' => $tally, 'is_live' => true]],
         ],
         'seek_label' => _FAVOR_SEEK,
         'seek_note' => _FAVOR_SEEKNOTE,

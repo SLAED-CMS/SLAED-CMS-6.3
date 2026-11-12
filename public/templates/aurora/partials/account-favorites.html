@@ -1,10 +1,12 @@
 {% include 'fragments/opt-lamps.html' %}
 <div class="sl-opt-grid">
-  <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-3">
-    {% include 'fragments/panel-head.html' with seek_head %}
-    <input class="sl-field" id="favseek" type="search" name="q" value="{{ seek }}" maxlength="60" placeholder="{{ seek_note }}" aria-label="{{ seek_label }}" hx-get="{{ seek_url }}" hx-trigger="input changed delay:300ms, search" hx-target="#favshelves" hx-swap="outerHTML" hx-include="#favmod" hx-push-url="false">
-    {% include 'partials/account-favorites-chips.html' %}
-    <p>{{ fold_note }}</p>
-  </div>
+  <section class="sl-pane sl-opt-w6 sl-cat-tone-3">
+    {% include 'fragments/pane-cap.html' with seek_head %}
+    <div class="sl-pane-body">
+      <input class="sl-field" id="favseek" type="search" name="q" value="{{ seek }}" maxlength="60" placeholder="{{ seek_note }}" aria-label="{{ seek_label }}" hx-get="{{ seek_url }}" hx-trigger="input changed delay:300ms, search" hx-target="#favshelves" hx-swap="outerHTML" hx-include="#favmod" hx-push-url="false">
+      {% include 'partials/account-favorites-chips.html' %}
+      <p>{{ fold_note }}</p>
+    </div>
+  </section>
   {% include 'partials/account-favorites-shelves.html' %}
 </div>

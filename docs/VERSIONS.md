@@ -11,6 +11,23 @@
   and in "Состояние", and the row of the switch carries a hint (`_UPDATE_CHANHINT`) that tells the two apart in plain
   words, in the six locales.
 
+### The cabinet of the site stands in the window
+
+- **One window on the site and in the panel** — the panels of the cabinet and of the profile, the tiles of the
+  settings, the shelves of the favourites and the focus of the private messages are `.sl-pane`, drawn by
+  `fragments/pane.html` and `fragments/pane-cap.html` of `aurora`; `.sl-profile-panel`, `.sl-opt-tile`,
+  `.sl-profile-hub-head` and `fragments/panel-head.html` are gone. A theme that copied them takes the new fragments.
+- **Seven tokens hold the window** — `--sl-pane-border`, `--sl-pane-radius`, `--sl-pane-bg`, `--sl-pane-cap-bg`,
+  `--sl-pane-pad-x`, `--sl-pane-pad-y`, `--sl-pane-shadow` in the API block of both themes; the panel reads them where
+  it wrote the values.
+- **The head is a chip and the inset twice high** — 50 px on the site, the icon on a plate in the tone of its
+  category, no rule; the interests and the groups of a profile are two windows, and the text fields of a profile
+  stand under the head "Дополнительные поля".
+- **A window of the site folds as one of the panel** — a press anywhere on the head of a shelf or of the focus, the
+  plus in place of the chevrons; the state is kept under a new key, so a shelf folded before opens once.
+- **The inner list of a window is rounded 4** and a slot of the focus 8, so nothing inside a window is rounded more
+  than it; the answer of an RSS feed appears inside the window "RSS-каналы".
+
 ### The long forms of the panel are parted into windows
 
 - **A long form stands in windows named by what they set** — "Конфигурации" in fourteen over its five tabs ("Сайт",

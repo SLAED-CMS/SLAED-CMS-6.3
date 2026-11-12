@@ -17,24 +17,26 @@
   {% if sec.alert_html %}{{{ sec.alert_html }}}{% endif %}
   <div class="sl-opt-grid">
     {% for tile in sec.tiles %}
-    <div class="sl-opt-tile sl-opt-w{{ tile.width }} sl-cat-tone-{{ tile.tone }}"{% if tile.hx_post %} hx-post="{{ tile.hx_post }}" hx-trigger="change" hx-params="{{ tile.hx_params }}" hx-target="{{ tile.hx_target }}" hx-swap="innerHTML" hx-push-url="false" data-sl-done="{{ tile.done_text }}"{% endif %}>
-      {% if tile.title %}{% include 'fragments/panel-head.html' with tile %}{% endif %}
-      {% if tile.face_src %}
-      <div class="sl-opt-face"{% if tile.face_id %} id="{{ tile.face_id }}"{% endif %}><img src="{{ tile.face_src }}" alt="{{ tile.face_alt }}" title="{{ tile.face_alt }}"></div>
-      {% endif %}
-      {% if tile.text %}
-      <p{% if tile.text_id %} id="{{ tile.text_id }}"{% endif %}>{{ tile.text }}</p>
-      {% endif %}
-      {% for fld in tile.fields %}
-      <div class="sl-form-row">
-        <div>{% include 'fragments/label.html' with fld %}{% if fld.hint %}<small id="{{ fld.hint_id }}">{{ fld.hint }}</small>{% endif %}</div>
-        <div class="sl-form-field">
-          {{{ fld.control_html }}}
+    <section class="sl-pane sl-opt-w{{ tile.width }} sl-cat-tone-{{ tile.tone }}"{% if tile.hx_post %} hx-post="{{ tile.hx_post }}" hx-trigger="change" hx-params="{{ tile.hx_params }}" hx-target="{{ tile.hx_target }}" hx-swap="innerHTML" hx-push-url="false" data-sl-done="{{ tile.done_text }}"{% endif %}>
+      {% include 'fragments/pane-cap.html' with tile %}
+      <div class="sl-pane-body">
+        {% if tile.face_src %}
+        <div class="sl-opt-face"{% if tile.face_id %} id="{{ tile.face_id }}"{% endif %}><img src="{{ tile.face_src }}" alt="{{ tile.face_alt }}" title="{{ tile.face_alt }}"></div>
+        {% endif %}
+        {% if tile.text %}
+        <p{% if tile.text_id %} id="{{ tile.text_id }}"{% endif %}>{{ tile.text }}</p>
+        {% endif %}
+        {% for fld in tile.fields %}
+        <div class="sl-form-row">
+          <div>{% include 'fragments/label.html' with fld %}{% if fld.hint %}<small id="{{ fld.hint_id }}">{{ fld.hint }}</small>{% endif %}</div>
+          <div class="sl-form-field">
+            {{{ fld.control_html }}}
+          </div>
         </div>
+        {% endfor %}
+        {% if tile.rows_html %}{{{ tile.rows_html }}}{% endif %}
       </div>
-      {% endfor %}
-      {% if tile.rows_html %}{{{ tile.rows_html }}}{% endif %}
-    </div>
+    </section>
     {% endfor %}
   </div>
 </section>

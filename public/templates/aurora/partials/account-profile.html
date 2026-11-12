@@ -48,7 +48,7 @@
     {% endif %}
   </aside>
   <div class="sl-profile-split-main">
-    {% include 'fragments/panel-head.html' with main_head %}
+    {% include 'fragments/pane-cap.html' with main_head %}
     <div class="sl-profile-trust">
       <div class="sl-profile-proof"><i class="bi bi-hourglass-split" aria-hidden="true"></i><b>{{ years_label }}: {{ years }}</b><small>{{ reg_note }}</small></div>
       <div class="sl-profile-proof{% if is_warned %} sl-is-warn{% endif %}"><i class="bi {% if is_warned %}bi-exclamation-triangle{% else %}bi-shield-check{% endif %}" aria-hidden="true"></i><b>{{ warn_title }}</b>{% if warn_note %}<small>{{ warn_note }}</small>{% endif %}</div>
@@ -56,36 +56,39 @@
     </div>
     <div class="sl-profile-facts">
       {% for panel in panels %}
-      <div class="sl-profile-panel">
-        {% include 'fragments/panel-head.html' with panel %}
-        <div class="sl-profile-info">
-          {% for row in panel.rows %}
-          <div class="sl-profile-info-row{% if row.is_private %} sl-profile-row-private{% endif %}"><i class="bi bi-{{ row.icon }}" aria-hidden="true"></i><span>{{ row.label }}</span>{% if row.value_html %}<b>{{{ row.value_html }}}</b>{% else %}<b title="{{ row.value }}"{% if row.is_hidden %} class="sl-profile-hidden"{% endif %}>{{ row.value }}</b>{% endif %}</div>
-          {% endfor %}
+      <section class="sl-pane">
+        {% include 'fragments/pane-cap.html' with panel %}
+        <div class="sl-pane-body">
+          <div class="sl-profile-info">
+            {% for row in panel.rows %}
+            <div class="sl-profile-info-row{% if row.is_private %} sl-profile-row-private{% endif %}"><i class="bi bi-{{ row.icon }}" aria-hidden="true"></i><span>{{ row.label }}</span>{% if row.value_html %}<b>{{{ row.value_html }}}</b>{% else %}<b title="{{ row.value }}"{% if row.is_hidden %} class="sl-profile-hidden"{% endif %}>{{ row.value }}</b>{% endif %}</div>
+            {% endfor %}
+          </div>
         </div>
-      </div>
+      </section>
       {% endfor %}
     </div>
-    {% if tags or group_chips %}
-    <div class="sl-profile-panel sl-profile-wide">
-      {% if tags %}
-      {% include 'fragments/panel-head.html' with tags_head %}
-      <div class="sl-profile-tags">{% for tag in tags %}<span class="sl-profile-tag"><i class="bi bi-tag" aria-hidden="true"></i>{{ tag }}</span>{% endfor %}</div>
-      {% endif %}
-      {% if group_chips %}
-      {% include 'fragments/panel-head.html' with groups_head %}
-      <div class="sl-profile-chips">{% for grp in group_chips %}<span class="sl-chip sl-chip-{{ grp.tone }}" title="{{ grp.name }}"><span>{{ grp.name }}</span></span>{% endfor %}</div>
-      {% endif %}
-    </div>
+    {% if tags %}
+    <section class="sl-pane">
+      {% include 'fragments/pane-cap.html' with tags_head %}
+      <div class="sl-pane-body">
+        <div class="sl-profile-tags">{% for tag in tags %}<span class="sl-profile-tag"><i class="bi bi-tag" aria-hidden="true"></i>{{ tag }}</span>{% endfor %}</div>
+      </div>
+    </section>
     {% endif %}
-    {% if field_html %}
-    <div class="sl-profile-panel sl-profile-wide">{{{ field_html }}}</div>
+    {% if group_chips %}
+    <section class="sl-pane">
+      {% include 'fragments/pane-cap.html' with groups_head %}
+      <div class="sl-pane-body">
+        <div class="sl-profile-chips">{% for grp in group_chips %}<span class="sl-chip sl-chip-{{ grp.tone }}" title="{{ grp.name }}"><span>{{ grp.name }}</span></span>{% endfor %}</div>
+      </div>
+    </section>
     {% endif %}
-    {% if has_warn_list %}
-    <div class="sl-profile-panel sl-profile-wide sl-is-warn">
-      {% include 'fragments/panel-head.html' with warn_head %}
-      {{{ warn_html }}}
-    </div>
+    {% if field_pane %}
+    {% include 'fragments/pane.html' with field_pane %}
+    {% endif %}
+    {% if warn_pane %}
+    {% include 'fragments/pane.html' with warn_pane %}
     {% endif %}
     {% if has_sign %}
     <div class="sl-profile-sign">
@@ -96,21 +99,21 @@
     {% endif %}
   </div>
 </div>
-<div class="sl-profile-panel sl-profile-wide sl-cat-tone-1">
-  {% include 'fragments/panel-head.html' with hub_head %}
-  <div class="sl-profile-scroll" data-sl-profile-scroll>
-    <div class="sl-profile-scroll-feed">
-      {% for row in hub %}
-      <div class="sl-cab-row sl-profile-entry sl-profile-hub-row">
-        <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i>{{ row.count }}</span>
-        <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
-        <a{% if row.href %} href="{{ row.href }}"{% endif %} title="{{ row.title }}">{{ row.title }}</a>
-        <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}</span>{% endif %}</span>
+<section class="sl-pane sl-cat-tone-1">
+  {% include 'fragments/pane-cap.html' with hub_head %}
+  <div class="sl-pane-body">
+    <div class="sl-profile-scroll" data-sl-profile-scroll>
+      <div class="sl-profile-scroll-feed">
+        {% for row in hub %}
+        <div class="sl-cab-row sl-profile-entry sl-profile-hub-row">
+          <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i>{{ row.count }}</span>
+          <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
+          <a{% if row.href %} href="{{ row.href }}"{% endif %} title="{{ row.title }}">{{ row.title }}</a>
+          <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}</span>{% endif %}</span>
+        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
   </div>
-</div>
-<div class="sl-profile-panel sl-profile-wide sl-cat-tone-2">
-  {{{ feed_html }}}
-</div>
+</section>
+{{{ feed_html }}}

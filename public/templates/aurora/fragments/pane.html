@@ -1,0 +1,14 @@
+<section{% if id %} id="{{ id }}"{% endif %} class="sl-pane{% if is_warn %} sl-is-warn{% endif %}">
+  {% include 'fragments/pane-cap.html' %}
+  {% if is_fold %}
+  <div id="{{ id }}-rows" class="sl-collapsible" data-sl-toggle="{{ id }}-rows" data-sl-toggle-default="{% if is_open %}open{% else %}closed{% endif %}"{% if not is_open %} hidden{% endif %}>
+    <div class="sl-pane-body">
+      {{{ content_html }}}
+    </div>
+  </div>
+  {% else %}
+  <div class="sl-pane-body">
+    {{{ content_html }}}
+  </div>
+  {% endif %}
+</section>

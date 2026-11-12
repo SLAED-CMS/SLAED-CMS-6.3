@@ -1,4 +1,6 @@
-<div class="sl-profile-feed">
-  {% include 'fragments/panel-head.html' with head %}
-  {{{ tabs_html }}}
-</div>
+<section class="sl-pane sl-profile-feed sl-cat-tone-{{ tone }}">
+  {% include 'fragments/pane-cap.html' with head %}
+  <div class="sl-pane-body">
+    {{{ tabs_html }}}
+  </div>
+</section>

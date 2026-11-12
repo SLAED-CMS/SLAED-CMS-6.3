@@ -535,7 +535,7 @@ function view(): void {
                 'name' => $nick,
                 'main_head' => [
                     'icon' => getIconName('profile'), 'title' => _PERSONALINFO,
-                    'total_html' => getActionMenu($uacts, true).$acts.$tpl->getHtmlFrag('share', [
+                    'tools_html' => getActionMenu($uacts, true).$acts.$tpl->getHtmlFrag('share', [
                         'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'uname' => urlencode($nick), 'route' => $route]),
                         'share_title' => $nick,
                     ]),
@@ -574,22 +574,20 @@ function view(): void {
                 'tags' => $tags,
                 'groups_head' => ['icon' => getIconName('groups'), 'title' => _USER_GROUPS],
                 'group_chips' => $chips,
-                'field_html' => $xtext,
-                'has_warn_list' => $wnum > 0,
-                'warn_head' => ['icon' => getIconName('warn'), 'title' => _UWARNS],
-                'warn_html' => $warnhtml,
+                'field_pane' => ($xtext !== '') ? ['icon' => getIconName('fields'), 'title' => _ACCOUNT_FIELDS, 'content_html' => $xtext] : [],
+                'warn_pane' => ($wnum > 0) ? ['icon' => getIconName('warn'), 'title' => _UWARNS, 'is_warn' => true, 'content_html' => $warnhtml] : [],
                 'has_sign' => !empty($sign),
                 'sign' => $sign,
                 'hub_head' => ['icon' => getIconName('hub'), 'title' => _ACCOUNT_HUB, 'live_title' => _ACCOUNT_HUB, 'chips' => array_values(array_filter([
-                    ['tone' => 'info', 'icon' => getIconName('items'), 'title' => _ACCOUNT_ITEMS, 'text' => (string)$sumn],
-                    ($sumc > 0) ? ['tone' => 'success', 'icon' => getIconName('rating'), 'title' => _RATING, 'text' => number_format($sumt / $sumc, 2)] : [],
-                    ['tone' => 'accent', 'icon' => getIconName('bookmark'), 'title' => _FAVORITES, 'text' => (string)$sumf],
+                    ['tone' => 'info', 'icon' => getIconName('items'), 'title' => _ACCOUNT_ITEMS, 'label' => (string)$sumn],
+                    ($sumc > 0) ? ['tone' => 'success', 'icon' => getIconName('rating'), 'title' => _RATING, 'label' => number_format($sumt / $sumc, 2)] : [],
+                    ['tone' => 'accent', 'icon' => getIconName('bookmark'), 'title' => _FAVORITES, 'label' => (string)$sumf],
                 ]))],
                 'hub' => $hub,
                 'col_items' => _ACCOUNT_ITEMS,
                 'col_rating' => _RATING,
                 'col_favs' => _FAVORITES,
-                'feed_html' => getProfileLastView($uid),
+                'feed_html' => getProfileLastView($uid, 2),
             ]);
             echo setComShow($uid, CommentMode::Open->value, $route);
             setFoot();
@@ -668,7 +666,7 @@ function profil(): void {
         'home_head' => [
             'icon' => getIconName('home'),
             'title' => _THISISYOURPAGE,
-            'chips' => ($seen !== '') ? [['tone' => 'neutral', 'icon' => getIconName('visit'), 'title' => _LAST_VISIT, 'text' => $seen]] : [],
+            'chips' => ($seen !== '') ? [['tone' => 'neutral', 'icon' => getIconName('visit'), 'title' => _LAST_VISIT, 'label' => $seen]] : [],
         ],
         'name' => (string)$inf['name'],
         'avatar' => getUserAvatarUrl(['avatar' => (string)($inf['avatar'] ?? '')]),

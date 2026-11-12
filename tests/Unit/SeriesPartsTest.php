@@ -12,7 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Template;
 
-# The parts of the series in the theme admin that the statistic and monitor screens share: their keys and their escaping
+# The parts of the series: in the theme admin those the statistic and monitor screens share, in aurora the window of the site; their keys and their escaping
 final class SeriesPartsTest extends TestCase
 {
     private static Template $view;
@@ -247,5 +247,42 @@ final class SeriesPartsTest extends TestCase
         $this->assertStringContainsString('no updates<', $groups[0]->querySelector('.sl-ext-note')->textContent);
         $this->assertNull($groups[1]->querySelector('.sl-ext-short, .sl-ext-good, .sl-ext-note'));
         $this->assertNotNull($groups[1]->querySelector('.sl-ext-chip.sl-ext-off'));
+    }
+
+    #[Test]
+    public function siteWindowTakesChipsToolsAndFold(): void
+    {
+        $site = new Template('aurora');
+        $part = static fn(array $data): \Dom\HTMLDocument => \Dom\HTMLDocument::createFromString(
+            '<!doctype html><html><body>'.$site->getHtmlFrag('pane', $data).'</body></html>',
+            LIBXML_NOERROR
+        );
+        $bare = $part(['title' => 'A<b>', 'icon' => 'hdd', 'content_html' => '<p id="in"></p>']);
+        $this->assertNotNull($bare->querySelector('section.sl-pane > .sl-pane-cap > i.bi-hdd[aria-hidden="true"]:first-child'));
+        $this->assertSame('A<b>', $bare->querySelector('h3.sl-pane-title')->textContent);
+        $this->assertNotNull($bare->querySelector('.sl-pane > .sl-pane-body > #in'));
+        $this->assertNull($bare->querySelector('.sl-pane-fold, .sl-pane-chips, .sl-collapsible, .sl-is-warn, [data-sl-toggle-head], [data-sl-toggle], [title]'));
+        $full = $part([
+            'title' => 'plain', 'title_html' => '<mark>T</mark>', 'title_id' => 'ttl', 'hint' => 'H<', 'icon' => 'star', 'is_warn' => true,
+            'chips' => [['tone' => 'info', 'label' => 'L<', 'icon' => 'grid', 'title' => 'C<', 'id' => 'chp', 'is_live' => true], ['tone' => 'neutral', 'label' => '7']],
+            'live_title' => 'live<', 'tools_html' => '<a id="tool"></a>', 'content_html' => '',
+        ]);
+        $this->assertNotNull($full->querySelector('.sl-pane.sl-is-warn > .sl-pane-cap[title="H<"] > h3#ttl.sl-pane-title > mark'));
+        $chip = $full->querySelector('.sl-pane-chips > #chp.sl-chip.sl-chip-info[aria-live="polite"][aria-atomic="true"]');
+        $this->assertNotNull($chip);
+        $this->assertSame('C<', $chip->getAttribute('title'));
+        $this->assertSame('L<', $chip->textContent);
+        $this->assertNotNull($chip->querySelector('i.bi-grid[aria-hidden="true"]'));
+        $this->assertNull($full->querySelector('.sl-pane-chips > .sl-chip-neutral[title], .sl-pane-chips > .sl-chip-neutral > i'));
+        $this->assertSame('live<', $full->querySelector('.sl-pane-chips + .sl-profile-feed-live')->getAttribute('title'));
+        $this->assertNotNull($full->querySelector('.sl-pane-cap > #tool:last-child'));
+        $open = $part(['id' => 'w1', 'title' => 'A', 'icon' => 'hdd', 'is_fold' => true, 'is_open' => true, 'plus_text' => 'P<', 'content_html' => '<p id="in"></p>']);
+        $plus = $open->querySelector('#w1.sl-pane > .sl-pane-cap[data-sl-toggle-head] > .sl-plus.sl-pane-fold.sl-is-open[data-sl-toggle-control="w1-rows"]:last-child');
+        $this->assertNotNull($plus);
+        $this->assertSame('P<', $plus->getAttribute('aria-label'));
+        $this->assertNotNull($open->querySelector('#w1-rows.sl-collapsible[data-sl-toggle="w1-rows"][data-sl-toggle-default="open"]:not([hidden]) > .sl-pane-body > #in'));
+        $shut = $part(['id' => 'w2', 'title' => 'A', 'icon' => 'hdd', 'is_fold' => true, 'plus_text' => 'P', 'content_html' => '<p id="in"></p>']);
+        $this->assertNotNull($shut->querySelector('#w2-rows.sl-collapsible[data-sl-toggle-default="closed"][hidden] > .sl-pane-body > #in'));
+        $this->assertNotNull($shut->querySelector('.sl-pane-fold:not(.sl-is-open)'));
     }
 }
