@@ -178,7 +178,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken('changelog')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);

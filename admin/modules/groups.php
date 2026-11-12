@@ -315,11 +315,11 @@ function points(): void {
             ['nameattr' => 'op', 'valueattr' => 'pointssave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('groups')],
         ],
-        'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'coin', 'title' => _POINTS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
             'label_html' => _UPDATE_POINTS,
             'label_id' => $labid = getFieldIds('', 'active')['label'],
             'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'active', 'value' => (string)$conf['points']['active'], 'options' => $yesno]),
-        ]]]).$tpl->getHtmlFrag('table', [
+        ]]])]).$tpl->getHtmlFrag('table', [
         'is_fixed' => true,
             'head' => $phead,
             'rows_html' => $prows,

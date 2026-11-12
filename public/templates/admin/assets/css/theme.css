@@ -12969,9 +12969,9 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   border-bottom: 1px solid var(--sl-border);
 }
 
-/* The rule under the last fact parts the list from the form or the notes that follow it; a list that ends its block, or a window, draws none */
+/* The rule under the last fact parts the list from the form or the notes that follow it; a list that ends its block, or a window of a board, draws none */
 .sl-kv-list:last-child > .sl-kv:last-child,
-.sl-pane .sl-kv:last-child {
+:where(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane .sl-kv:last-child {
   border-bottom: 0;
 }
 
@@ -12987,7 +12987,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 /* A window of a board keeps the narrow list: the value to the right, a dashed rule, and the rows share out what the window has left, so none keeps an empty foot */
-.sl-pane .sl-kv {
+:where(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane .sl-kv {
   grid-template-columns: var(--sl-monitor-table-width) minmax(0, 1fr);
   gap: var(--sl-space-5);
   padding: var(--sl-space-3) 0;
@@ -12995,12 +12995,12 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   font-size: var(--sl-font-small);
 }
 
-.sl-pane .sl-kv > dd {
+:where(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane .sl-kv > dd {
   display: block;
   text-align: right;
 }
 
-.sl-pane .sl-kv > dt {
+:where(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane .sl-kv > dt {
   color: var(--sl-text-muted);
 }
 
@@ -13056,7 +13056,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   min-width: 0;
 }
 
-.sl-pane .sl-kv .sl-long,
+:where(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane .sl-kv .sl-long,
 .sl-fm-props .sl-long {
   justify-content: flex-end;
 }
@@ -13155,12 +13155,15 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-bottom: 0;
 }
 
-/* Form rows in a window: dashed rules, no ground of their own, out to the frame so a caption starts under the name; the side panel stacks them */
-.sl-pane-body > .sl-div-grid {
+/* Form rows in a window, and the facts of a window of a page: dashed rules, no ground, out to the frame so a caption starts under the name; the side panel stacks them */
+.sl-pane-body > .sl-div-grid,
+.sl-pane-body > .sl-div-form > .sl-div-grid,
+:where(:not(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side)) > .sl-pane > .sl-pane-body > .sl-kv-list {
   margin: 0 calc(var(--sl-space-4) * -1);
 }
 
-:where(.sl-pane) .sl-div-item {
+:where(.sl-pane) .sl-div-item,
+:where(.sl-pane) .sl-kv {
   border-bottom-style: dashed;
   background: none;
 }

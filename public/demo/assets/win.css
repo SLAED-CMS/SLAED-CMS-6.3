@@ -1,6 +1,6 @@
 /* Window series (win-NN): the window of the right side of the panel, and nothing else. Every face shows the same four
-   rooms with the same content - gauges as on the monitor, settings in groups, folding groups, and a bare form with a
-   table beside them - and differs only in the set of values on .wn-root: the frame, the radius, the ground, the head,
+   rooms with the same content - gauges as on the monitor, settings in groups, folding groups, and a short form in one window
+   with a table under it - and differs only in the set of values on .wn-root: the frame, the radius, the ground, the head,
    the line under it, the inset, the shade and the side of the fold. An axis is an attribute, a face is a set of
    values, so the desk can mix any of them in place */
 .wn-desk {

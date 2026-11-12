@@ -369,7 +369,7 @@ function config(): void {
     $html = $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=save',
         'hidden' => $hidden,
-        'rows' => $cfgrows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $cfgrows])]),
         'submit_label' => _SAVECHANGES,
     ])]);
     $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHENABLED, 'content_html' => getSearchauditTable($elist, 'enabled')]);

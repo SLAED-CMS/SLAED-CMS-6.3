@@ -133,7 +133,8 @@ function votes(): void {
     if ($vote) {
         $field = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'reason', 'input_id' => 'f-reason', 'value_attr' => '', 'maxlength_num' => '255',
             'is_config' => true, 'is_required' => true]);
-        $note .= $tpl->getHtmlPart('box', ['title' => _RATINGS_ANNUL.' #'.$vote, 'content_html' => $tpl->getHtmlPart('form', [
+        $note .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'x-circle', 'title' => _RATINGS_ANNUL.' #'.$vote,
+            'content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => array_merge([
                 ['nameattr' => 'name', 'valueattr' => 'ratings'],
@@ -145,7 +146,7 @@ function votes(): void {
             'rows' => [['label_for' => 'f-reason', 'label_html' => _RATINGS_REASON, 'field_html' => $field]],
             'submit_label' => _RATINGS_ANNUL,
             'icon_name' => 'x-circle',
-        ])]);
+        ])])]);
     }
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $scope === '']];
     foreach ($names as $name => $label) $opts[] = ['value_attr' => $name, 'label_text' => $label, 'is_selected' => $name === $scope];

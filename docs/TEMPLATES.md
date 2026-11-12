@@ -781,9 +781,10 @@ under the text to the right — the width of the alert decides, not that of the 
 
 The window `fragments/pane.html` — a thin frame with the shadow of a list and the cap of `pane-cap.html`: an icon,
 which every window names, the title in capitals, a value on the right, a gradient that ends with the cap and a rule
-under it — is one of several on one screen: an instrument of a board ("Мониторинг", "Статистика") or a
-group of a form. A page that shows one thing under its tabs draws no window: the head of the page already names it, so
-a cap would repeat the title the reader has just read.
+under it — frames what a page sets or tells under a name: an instrument of a board ("Мониторинг", "Статистика"), a
+short form of settings or a group of one, a section of a page. A list table never stands in a window. A form that adds
+or edits one record or runs one action, and a long form of settings without groups ("Конфигурации", the transport of
+"Почта", "Карта сайта", the settings of "Безопасность" and of "Форум"), stand in their `partials/box.html` without one.
 
 - **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
   ("Очередь" of "Почта", "Поиск", "База данных") and above a form or a file into the page ("Карта сайта") with no
@@ -792,9 +793,23 @@ a cap would repeat the title the reader has just read.
   address of the sitemap); a value that repeats a row below it (the version of "Обновления") or that the reader
   already knows (the name of the database) goes. A `note` only qualifies the figure above it (the hits of the top
   query, the time of the last one); a figure of its own stands in a tile of its own with a label.
-- **Sections of one page are boxes.** Blocks of one task that appear one after another — the state, "Загрузить
-  архив", "Установка" of "Обновления" — are `partials/box.html` with `title`, a line of heading and no frame; the first
-  block, which the head of the page names, has no title.
+- **A section of a page is a window.** Blocks of one task that appear one after another — "Состояние", "Загрузить
+  архив", "Установить" of "Обновления", the working card and the text of a request of "Материалы" — are windows in one
+  `partials/box.html`, each with `icon` and `title`; where one section is a window the first block of the page is one
+  too, under a name of its own. A section whose body is a table (the three lists of "Поиск", the comments of a request,
+  the reports of a file) keeps `box.html` with `title`: a line of heading over the table and no frame.
+- **A window with a form of its own keeps the button.** The form with its row of actions is the body of such a window
+  (the upload and the installation of "Обновления", the working card, the annulment of a vote), so every button stays
+  with its section.
+- **A short form of settings stands in one window.** It is named `_GENPREF` ("Основные") with the icon `sliders`
+  where its tab says "Конфигурации", and by its tab where the tab has a name ("Доступ", "OAuth" of "Безопасность").
+  The form holds the window, a note of the form stands over it and the submit under it. A form of settings with a
+  table ("Пункты" of "Группы") puts its rows in the window and keeps the table under it without a frame, the submit
+  under the table.
+- **Facts in a window of a page read as its form rows.** A `kv-list` in a window keeps the two columns and the inset
+  of the rows of `div.html`, with dashed rules out to the frame, so the facts and the fields of "Состояние" stand in
+  one table; in a window of a board (a child of `.sl-ground`, `.sl-pane-split`, `.sl-pane-trio` or `.sl-pane-side`)
+  it is the narrow list with the value at the right.
 - **The groups of a form are windows.** A form that sets several things of one kind — the groups of "Пользователи",
   the upload rule of every module, an additional field, a file role of a Node type — puts each in a window with `id`,
   `icon` and `title`. Inside a window the rules between form rows are dashed, the rows carry no ground of their own and

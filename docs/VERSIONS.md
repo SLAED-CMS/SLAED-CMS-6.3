@@ -2,6 +2,25 @@
 
 ## 2026-11-12
 
+### The sections of a page and the short forms of settings stand in the window
+
+- **A titled section over a form or over facts draws `fragments/pane.html`** — "Загрузить архив", "Установить", the
+  rescue code and "Пробная установка" of "Обновления", the annulment of a vote in "Рейтинги", the source of a
+  material, the clone of a type and the working card with the text of a request in "Материалы". Each names an icon,
+  and a form of its own stands in the window with its button. A title over a table stays a heading of
+  `partials/box.html`: the lists of "Поиск", the comments of a request, the reports of a file, the remains of a type.
+- **The first block of "Обновления" is the window "Состояние"** (`_UPDATE_STATE`) — the facts, the notes and the row
+  of buttons; the page is windows 10 pixels apart.
+- **Every short form of settings stands in one window** — the tab "Конфигурации" of "Комментарии", "Фавориты",
+  "Редактор языков", "Журналы", "Почта", "Личные сообщения", "Статистика", "Обновления", "Журнал изменений", "Обратная
+  связь", "Мастер", "Материалы", "Поиск" and "Опросы" names it "Основные" (`_GENPREF`); "Доступ" and "OAuth" of
+  "Безопасность" name it by the tab. The submit stands under the window. "Пункты" of "Группы" puts its switch in a
+  window of that name and keeps the table of actions under it.
+- **A `kv-list` in a window of a page keeps the columns of its form rows** — dashed rules out to the frame; the narrow
+  list with the value at the right now belongs to a window of a board alone (a child of `.sl-ground`,
+  `.sl-pane-split`, `.sl-pane-trio` or `.sl-pane-side`).
+- **The key of a cloned type is a fact of the head** — the name of the window is capitals, the key keeps its case.
+
 ### The settings blocks move onto the window, and a window folds under its head
 
 - **`fragments/pane.html` of `admin` folds under the flag `is_fold`** — the body waits under the plus at the right end

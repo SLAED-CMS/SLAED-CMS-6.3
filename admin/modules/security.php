@@ -330,7 +330,7 @@ function passwd(): void {
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=security',
         'hidden' => $hidden,
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'key', 'title' => _ACCESS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;
@@ -452,7 +452,7 @@ function oauthkeys(): void {
             ['nameattr' => 'op', 'valueattr' => 'oauthsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'person-badge', 'title' => _SEC_OAUTH, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ])]);
     echo $cont;

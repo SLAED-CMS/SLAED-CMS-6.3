@@ -1502,6 +1502,7 @@ define('_UPDATE_UNDOREV','Przywrócono poprzednią wersję');
 define('_UPDATE_UNDOFAIL','Instalacja nie powiodła się w kroku %1$d i została wycofana (%2$s).');
 define('_UPDATE_FAILED','Instalacja nieudana');
 define('_UPDATE_BAKSIZE','Kopia ostatniej instalacji zajmuje %s.');
+define('_UPDATE_STATE','Stan');
 define('_UPLOADS','Pobierania');
 define('_URLS','Linki');
 define('_USEREXIST','Użytkownik już istnieje!');

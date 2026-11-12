@@ -1502,6 +1502,7 @@ define('_UPDATE_UNDOREV','Vorherige Version zurückgekehrt');
 define('_UPDATE_UNDOFAIL','Die Installation scheiterte in Schritt %1$d und wurde zurückgebaut (%2$s).');
 define('_UPDATE_FAILED','Installation gescheitert');
 define('_UPDATE_BAKSIZE','Die Sicherung der letzten Installation belegt %s.');
+define('_UPDATE_STATE','Zustand');
 define('_UPLOADS','Uploads');
 define('_URLS','Links');
 define('_USEREXIST','Der Benutzer existiert schon!');

@@ -1502,6 +1502,7 @@ define('_UPDATE_UNDOREV','Previous version returned');
 define('_UPDATE_UNDOFAIL','The installation failed on step %1$d and was rolled back (%2$s).');
 define('_UPDATE_FAILED','Installation failed');
 define('_UPDATE_BAKSIZE','The backup of the last installation takes %s.');
+define('_UPDATE_STATE','State');
 define('_UPLOADS','Uploads');
 define('_URLS','Links');
 define('_USEREXIST','the User already exists!');

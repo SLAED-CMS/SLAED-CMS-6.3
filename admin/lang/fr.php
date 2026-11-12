@@ -1502,6 +1502,7 @@ define('_UPDATE_UNDOREV','Version précédente revenue');
 define('_UPDATE_UNDOFAIL','L\'installation a échoué à l\'étape %1$d et a été annulée (%2$s).');
 define('_UPDATE_FAILED','Installation échouée');
 define('_UPDATE_BAKSIZE','La sauvegarde de la dernière installation occupe %s.');
+define('_UPDATE_STATE','État');
 define('_UPLOADS','Télécharger');
 define('_URLS','Les liens');
 define('_USEREXIST','L\'utilisateur existe déjà!');

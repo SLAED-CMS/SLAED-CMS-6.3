@@ -1502,6 +1502,7 @@ define('_UPDATE_UNDOREV','Возвращена предыдущая версия
 define('_UPDATE_UNDOFAIL','Установка сорвалась на шаге %1$d и откачена (%2$s).');
 define('_UPDATE_FAILED','Установка сорвалась');
 define('_UPDATE_BAKSIZE','Бэкап последней установки занимает %s.');
+define('_UPDATE_STATE','Состояние');
 define('_UPLOADS','Загрузки');
 define('_URLS','Ссылки');
 define('_USEREXIST','Пользователь уже существует!');

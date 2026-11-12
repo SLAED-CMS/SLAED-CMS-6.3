@@ -503,8 +503,9 @@ function edit(): void {
         ];
         $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'sync'], ['name_attr' => 'id', 'value_attr' => $node->id],
             ['name_attr' => 'type', 'value_attr' => $type->name], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
-        echo $tpl->getHtmlPart('box', ['title' => _NODE_SOURCE, 'content_html' => $tpl->getHtmlPart('form', ['action_url' => $afile.'.php', 'hidden' => $hidden,
-            'rows' => $rows, 'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_SYNCGO, 'icon_name' => 'arrow-repeat', 'button_type' => 'submit'])])]);
+        echo $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'link-45deg', 'title' => _NODE_SOURCE, 'content_html' => $tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php', 'hidden' => $hidden, 'rows' => $rows,
+            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_SYNCGO, 'icon_name' => 'arrow-repeat', 'button_type' => 'submit'])])])]);
     }
     setFoot();
 }
@@ -1114,7 +1115,8 @@ function typeclone(): void {
     setHead();
     echo getNodeAdminTabs('types')
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8')]) : '')
-        .$tpl->getHtmlPart('box', ['title' => _NODE_CLONE.': '.$old->name, 'content_html' => $tpl->getHtmlPart('form', [
+        .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'files', 'title' => _NODE_CLONE, 'facts' => [['text' => $old->name]],
+            'content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'clone'], ['name_attr' => 'type', 'value_attr' => $old->name],
                 ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]],
@@ -1123,7 +1125,7 @@ function typeclone(): void {
                     'value_attr' => $new, 'maxlength_num' => 20,
                 'is_required' => true])]],
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_CLONE, 'icon_name' => 'copy', 'button_type' => 'submit']),
-        ])]);
+        ])])]);
     setFoot();
 }
 
@@ -1258,7 +1260,7 @@ function config(): void {
             'action_url' => $afile.'.php',
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'config'], ['name_attr' => 'token',
                 'value_attr' => getSiteToken('node')]],
-            'rows' => $rows,
+            'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVECHANGES, 'button_type' => 'submit']),
         ])]);
     setFoot();
@@ -1309,9 +1311,10 @@ function support(): void {
     $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'support'], ['name_attr' => 'id', 'value_attr' => $node->id],
         ['name_attr' => 'version', 'value_attr' => $card['version']], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
     echo getNodeAdminTabs('')
-        .$tpl->getHtmlPart('box', ['title' => _NODE_CARD, 'content_html' => $tpl->getHtmlPart('form', ['action_url' => $afile.'.php', 'hidden' => $hidden, 'rows' => $rows,
+        .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'kanban', 'title' => _NODE_CARD, 'content_html' => $tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php', 'hidden' => $hidden, 'rows' => $rows,
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVECHANGES, 'button_type' => 'submit'])])])
-        .$tpl->getHtmlPart('box', ['title' => getModuleName($type->name), 'content_html' => $text])
+            .$tpl->getHtmlFrag('pane', ['icon' => 'file-text', 'title' => getModuleName($type->name), 'content_html' => $text])])
         .$tpl->getHtmlPart('box', ['title' => _COMMENTS, 'content_html' => ($talk === '') ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NOCOMMENTS])
             : $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => [['content' => _POSTEDBY, 'is_col_author' => true], ['content' => _DATE, 'is_col_date' => true],
                 ['content' => _COMMENT]], 'rows_html' => $talk])]);

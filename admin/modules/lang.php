@@ -280,7 +280,7 @@ function config(): void {
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('lang')],
         ],
-        'rows' => $rows,
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);

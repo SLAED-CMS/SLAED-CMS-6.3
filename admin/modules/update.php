@@ -53,7 +53,8 @@ function getUpdateView(): string {
         .getTplPostButton(['name' => 'update', 'op' => 'check'], 'arrow-repeat', _UPDATE_CHECK, '', $look).$pack['acts'];
     $rows = array_merge($rows, $last['rows'], [['label_html' => _FUNCTIONS, 'field_html' => $acts]]);
     $list = $tpl->getHtmlFrag('kv-list', ['items' => array_merge($items, $last['items'], $pack['items'])]).$notes.$last['notes'].$pack['notes'];
-    return $cont.$tpl->getHtmlPart('box', ['content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]).$pack['html'];
+    $pane = $tpl->getHtmlFrag('pane', ['icon' => 'activity', 'title' => _UPDATE_STATE, 'content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]);
+    return $cont.$tpl->getHtmlPart('box', ['content_html' => $pane.$pack['html']]);
 }
 
 # Why a check of the master did not finish, in words a site owner reads: what happened and what to do, the code itself only for a reason the panel does not know
@@ -124,7 +125,7 @@ function getUpdateLast(array $state): array {
     return $out;
 }
 
-# The box of the installation under a ready package: the space step 3 needs, the marks the preflight asks for and the button, closed while the space is short
+# The window of the installation under a ready package: the space step 3 needs, the marks the preflight asks for and the button, closed while the space is short
 function getUpdateInstall(array $state, array $man): string {
     global $afile, $db, $tpl;
     require_once BASE_DIR.'/core/classes/backup.php';
@@ -149,7 +150,7 @@ function getUpdateInstall(array $state, array $man): string {
         $rows[] = ['label_html' => _CONFIRM, 'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $key, 'value_attr' => '1', 'label_text' => $label,
             'is_required' => true])];
     }
-    return $tpl->getHtmlPart('box', ['title' => _UPDATE_INSTALL, 'content_html' => getUpdateRoom($room, $text, $room['old'])
+    return $tpl->getHtmlFrag('pane', ['icon' => 'download', 'title' => _UPDATE_INSTALL, 'content_html' => getUpdateRoom($room, $text, $room['old'])
         .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_INSTHINT])
         .$tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=update&op=install',
@@ -218,7 +219,7 @@ function getUpdatePack(array $state, string $chan, string $look): array {
     }
     if ($reader === '' || $ready) return $out;
     $hint = sprintf(_UPDATE_UPHINT, (string)ini_get('upload_max_filesize'), (string)ini_get('post_max_size'));
-    $out['html'] .= $tpl->getHtmlPart('box', ['title' => _UPDATE_UPLOAD, 'content_html' => $tpl->getHtmlPart('form', [
+    $out['html'] .= $tpl->getHtmlFrag('pane', ['icon' => 'cloud-upload', 'title' => _UPDATE_UPLOAD, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=update&op=upload',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [['name_attr' => 'token', 'value_attr' => getSiteToken('update')]],
@@ -260,7 +261,7 @@ function getUpdateSettings(): string {
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=update&op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('update')]],
-        'content_html' => $sent.$tpl->getHtmlPart('div', ['rows' => $rows]),
+        'content_html' => $sent.$tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ]);
     return checkPerms(CONFIG_DIR.'/update.php').$tpl->getHtmlPart('box', ['content_html' => $form]);
@@ -363,7 +364,8 @@ function setUpdateCode(string $title, string $lead, string $op, string $button, 
         'is_danger' => $danger,
     ]);
     setHead();
-    echo getUpdateHead(0).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $lead]).$tpl->getHtmlPart('box', ['title' => $title, 'content_html' => $form]);
+    echo getUpdateHead(0).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $lead])
+        .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'key', 'title' => $title, 'content_html' => $form])]);
     setFoot();
 }
 
@@ -399,7 +401,7 @@ function test(): void {
         foreach ($lists as [$head, $items]) if ($items) $cont .= getUpdateList($head, $items, $head === _UPDATE_CHANGED || $head === _UPDATE_DENIED);
     }
     setHead();
-    echo getUpdateHead(0).$tpl->getHtmlPart('box', ['title' => _UPDATE_TEST, 'content_html' => $cont]);
+    echo getUpdateHead(0).$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'clipboard-check', 'title' => _UPDATE_TEST, 'content_html' => $cont])]);
     setFoot();
 }
 

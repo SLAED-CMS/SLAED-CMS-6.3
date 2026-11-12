@@ -311,7 +311,8 @@ function getMasterSettings(): string {
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=master&op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('master')]],
-        'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MASTER_JOBS]).$tpl->getHtmlPart('div', ['rows' => $rows]),
+        'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MASTER_JOBS])
+            .$tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
         'submit_label' => _SAVECHANGES,
     ]);
     return checkPerms(CONFIG_DIR.'/master.php').$tpl->getHtmlPart('box', ['content_html' => $form]);
