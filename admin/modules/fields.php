@@ -125,13 +125,14 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
     foreach ([_FIELDIN => !empty($def['req']), _FIELDS_MULTI => !empty($def['multi']), _FIELDS_ON => !isset($def['active']) || !empty($def['active'])] as $text => $on) {
         if ($kept && $on) $chips[] = ['tone' => 'success', 'label' => $text];
     }
-    return $tpl->getHtmlPart('toggle-form-block', [
-        'block_id' => 'fi-'.$slug.'-'.$pos,
+    return $tpl->getHtmlFrag('pane', [
+        'id' => 'fi-'.$slug.'-'.$pos,
         'is_fold' => $fold,
-        'title' => _DETAILS.': '.$head,
-        'label_html' => htmlspecialchars($fold ? $head : trim(_FIELD.' '.$name), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-        'facts' => $facts,
-        'chips' => $chips,
+        'plus_text' => _DETAILS.': '.$head,
+        'icon' => 'input-cursor-text',
+        'title' => $fold ? $head : trim(_FIELD.' '.$name),
+        'facts' => $fold ? $facts : [],
+        'chips' => $fold ? $chips : [],
         'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
     ]);
 }

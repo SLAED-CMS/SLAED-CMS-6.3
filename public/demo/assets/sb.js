@@ -732,7 +732,7 @@
     }
   }
 
-  /* The items of a section, each a block of the panel's form (partials/toggle-form-block.html): the plus folds it out, its
+  /* The items of a section, each a folding window of the panel (fragments/pane.html): the plus folds it out, its
      state kept by the toggles of slaed.js under its own id */
   const getItemToggle = (base, i) => 'sbi-' + base.replace(/[^a-z0-9]/gi, '-') + i;
 
@@ -741,15 +741,17 @@
       <div class="sb-items">
         <div class="sb-group-head">${esc(def.label)} <span class="sl-chip sl-chip-neutral">${list.length}</span></div>
         <ol class="sb-item-list" data-sb-drop="items" data-sb-base="${esc(base)}">${list.map((one, i) => `
-          <li class="sl-toggle-form-block" draggable="true" data-sb-drag="item:${i}" data-sb-item="${esc(base + i)}">
-            <span class="sl-toggle-form-block-title">
+          <li class="sl-pane" draggable="true" data-sb-drag="item:${i}" data-sb-item="${esc(base + i)}">
+            <div class="sl-pane-cap" data-sl-toggle-head>
               <span class="sl-drag-handle" aria-hidden="true"></span>
-              <span class="sl-plus sl-toggle-form-block-toggle" title="Развернуть" aria-label="Развернуть" data-sl-toggle-control="${getItemToggle(base, i)}"></span>
-              ${one.icon ? ico(one.icon) : ''}
-              <span class="sl-toggle-form-block-label">${esc(one[def.name] || '—')}</span>
+              ${ico(one.icon || 'card-text')}
+              <h2 class="sl-pane-title">${esc(one[def.name] || '—')}</h2>
               <button type="button" class="sl-but-mini sl-is-muted sb-row-tool" data-sb-item-del="${esc(base)}" data-sb-n="${i}" title="Удалить" aria-label="Удалить">${ico('x-lg')}</button>
-            </span>
-            <div class="sl-div-grid" id="${getItemToggle(base, i)}" data-sl-toggle="${getItemToggle(base, i)}" data-sl-toggle-default="closed">${def.fields.map((f) => getField(f, base + i + '.' + f.key, one[f.key])).join('')}</div>
+              <span class="sl-plus sl-pane-fold" title="Развернуть" aria-label="Развернуть" data-sl-toggle-control="${getItemToggle(base, i)}"></span>
+            </div>
+            <div class="sl-collapsible" id="${getItemToggle(base, i)}" data-sl-toggle="${getItemToggle(base, i)}" data-sl-toggle-default="closed">
+              <div class="sl-pane-body"><div class="sl-div-grid">${def.fields.map((f) => getField(f, base + i + '.' + f.key, one[f.key])).join('')}</div></div>
+            </div>
           </li>`).join('')}
         </ol>
         <button type="button" class="sb-add" data-sb-item-add="${esc(base)}"${list.length >= def.max ? ' disabled' : ''}>${ico('plus-lg')}Добавить ${esc(def.one)}</button>
@@ -1321,7 +1323,7 @@
     if (out) out.textContent = t.value;
     const item = t.closest('[data-sb-item]');
     if (item) {
-      const name = item.querySelector('.sl-toggle-form-block-label');
+      const name = item.querySelector('.sl-pane-title');
       const def = item.closest('.sb-items');
       if (name && def && path.endsWith('.' + (getItemNameKey(path) || ''))) name.textContent = t.value || '—';
     }
@@ -1757,7 +1759,7 @@
           <span>${esc(one.author || '—')} · ${esc(one.note)}${JSON.stringify(one.layout) === live ? ' · сейчас на сайте' : ''}</span></span>
         <button type="button" class="sl-but" data-sb-restore="${i}">${ico('arrow-counterclockwise')}Вернуть в черновик</button>
         <div class="sb-story-secs">
-          <span class="sl-toggle-form-block-title"><span class="sl-plus sl-toggle-form-block-toggle" title="Секции этой версии" aria-label="Секции этой версии" data-sl-toggle-control="${box}"></span><span class="sl-toggle-form-block-label">Вернуть одну секцию · ${secs.length}</span></span>
+          <span><span class="sl-plus sl-pane-fold" title="Секции этой версии" aria-label="Секции этой версии" data-sl-toggle-control="${box}"></span>Вернуть одну секцию · ${secs.length}</span>
           <ul class="sb-issues" id="${box}" data-sl-toggle="${box}" data-sl-toggle-default="closed">${secs.map(([key, title, s]) =>
             getIssueRow(`data-sb-back="${i}:${esc(key)}:${esc(s.id)}"`, SB_TYPES[s.type].icon, getSecName(s), title, 'arrow-counterclockwise', true)).join('')}
           </ul>

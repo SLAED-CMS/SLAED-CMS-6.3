@@ -50,6 +50,28 @@ final class SeriesPartsTest extends TestCase
     }
 
     #[Test]
+    public function windowFoldsUnderItsPlusOrShowsTheNextOne(): void
+    {
+        $fold = self::getPart('pane', ['id' => 'w1', 'is_fold' => true, 'plus_text' => 'P<', 'icon' => 'star', 'title' => 'A', 'facts' => [['text' => 'k<']],
+            'chips' => [['tone' => 'success', 'label' => 'C']], 'content_html' => '<p id="in"></p>']);
+        $this->assertNotNull($fold->querySelector('#w1.sl-pane > .sl-pane-cap[data-sl-toggle-head] > .sl-plus.sl-pane-fold[data-sl-toggle-control="w1-rows"]:last-child'));
+        $this->assertSame('P<', $fold->querySelector('.sl-pane-fold')->getAttribute('aria-label'));
+        $rows = '#w1-rows.sl-collapsible[hidden][data-sl-toggle="w1-rows"][data-sl-toggle-default="closed"]';
+        $this->assertNotNull($fold->querySelector($rows.' > .sl-pane-body > #in'));
+        $this->assertSame('k<', $fold->querySelector('.sl-pane-title + .sl-pane-fact')->textContent);
+        $this->assertNotNull($fold->querySelector('.sl-pane-chips > .sl-chip.sl-chip-success'));
+        $this->assertNull($fold->querySelector('.sl-pane[data-sl-toggle]'), 'A folding window folds its body, the window itself is no toggled block');
+        $next = self::getPart('pane', ['id' => 'c1', 'next_id' => 'c2', 'is_hidden' => true, 'plus_text' => 'Add', 'icon' => 'rss', 'title' => 'B',
+            'content_html' => '<p id="in"></p>']);
+        $wind = '#c1.sl-pane.sl-hidden[data-sl-toggle="c1"][data-sl-toggle-default="closed"][data-sl-toggle-display="flex"]';
+        $this->assertNotNull($next->querySelector($wind.' > .sl-pane-body > #in'));
+        $plus = '.sl-pane-cap:not([data-sl-toggle-head]) > .sl-pane-fold[data-sl-toggle-control="c2"]';
+        $this->assertNotNull($next->querySelector($plus), 'The plus of a chain shows the next window');
+        $bare = self::getPart('pane', ['title' => 'A', 'icon' => 'hdd', 'content_html' => '']);
+        $this->assertNull($bare->querySelector('.sl-pane-fold, .sl-pane-fact, .sl-pane-chips, [data-sl-toggle-head], [data-sl-toggle]'));
+    }
+
+    #[Test]
     public function aTileCarriesItsChangeBesideItsNote(): void
     {
         $tile = self::getPart('metric-list', ['items' => [[

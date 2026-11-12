@@ -277,13 +277,13 @@ function add(): void {
         $a = $i + 1;
         $qval = is_string($body[$i] ?? null) ? $body[$i] : '';
         $aval = filterText((string)($answer[$i] ?? '0'));
-        $answ .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'voting-answer-'.$i,
-            'is_toggle_block' => true,
+        $answ .= $tpl->getHtmlFrag('pane', [
+            'id' => 'voting-answer-'.$i,
             'is_hidden' => $qval === '' && $i !== 0,
-            'toggle_target_id' => 'voting-answer-'.$a,
-            'title' => _ADD,
-            'label_html' => _POLLEACH.' - '.$a,
+            'next_id' => 'voting-answer-'.$a,
+            'plus_text' => _ADD,
+            'icon' => 'check2-circle',
+            'title' => _POLLEACH.' - '.$a,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => [
                 [
                     'label_for' => 'f-body-'.$i,

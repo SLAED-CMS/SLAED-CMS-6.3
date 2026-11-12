@@ -288,7 +288,7 @@
 
 .sl-menu-list-item:is(:hover, :focus-within) > .sb-row-tool,
 .sl-dimmed > .sb-row-tool,
-.sl-toggle-form-block .sb-row-tool {
+.sl-pane .sb-row-tool {
   opacity: 1;
 }
 
@@ -301,15 +301,15 @@
 
 /* The drag marks of the panel (sl-dragging, sl-drop-*) the theme draws on table rows, here on the rows of a list until
    the one drag of the panel takes lists (BUILDER.4) */
-:is(.sl-menu-list-item, .sl-toggle-form-block).sl-dragging {
+:is(.sl-menu-list-item, .sl-pane).sl-dragging {
   opacity: var(--sl-fade-disabled);
 }
 
-:is(.sl-menu-list-item, .sl-toggle-form-block).sl-drop-above {
+:is(.sl-menu-list-item, .sl-pane).sl-drop-above {
   box-shadow: 0 calc(var(--sl-row-border) * -1) 0 var(--sl-primary-strong);
 }
 
-:is(.sl-menu-list-item, .sl-toggle-form-block).sl-drop-below {
+:is(.sl-menu-list-item, .sl-pane).sl-drop-below {
   box-shadow: 0 var(--sl-row-border) 0 var(--sl-primary-strong);
 }
 
@@ -574,8 +574,8 @@
 }
 
 
-/* Items of a section: blocks of the form canon (sl-toggle-form-block), the plus folds each out; the title row carries
-   the grip, the name and the delete */
+/* Items of a section: folding windows of the panel (sl-pane) inside the frame of the inspector, so without shadow and
+   gradient; the head carries the grip, the icon, the name, the delete and the plus */
 .sb-items .sb-group-head {
   margin: 0 0 var(--sl-space-3);
   padding: 0;
@@ -589,26 +589,17 @@
   list-style: none;
 }
 
-.sb-item-list .sl-toggle-form-block + .sl-toggle-form-block {
-  margin-top: 0;
+.sb-item-list .sl-pane {
+  margin: 0;
+  box-shadow: none;
 }
 
-.sb-item-list .sl-toggle-form-block-title {
-  display: flex;
-  width: 100%;
+.sb-item-list .sl-pane-cap {
+  background: none;
 }
 
-.sb-item-list .sl-toggle-form-block-label {
+.sb-item-list .sl-pane-title {
   flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  color: var(--sl-text);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.sb-item-list .sl-div-grid {
-  margin: var(--sl-space-3) 0 0;
 }
 
 .sb-keys {
@@ -826,6 +817,17 @@
 /* A publication of the history folds out its sections, each brought back alone */
 .sb-story-secs {
   flex: 1 0 100%;
+}
+
+.sb-story-secs > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  color: var(--sl-primary-strong);
+}
+
+.sb-story-secs .sl-pane-fold {
+  margin-left: 0;
 }
 
 .sb-story-secs > .sb-issues {

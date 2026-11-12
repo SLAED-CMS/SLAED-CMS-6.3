@@ -384,6 +384,7 @@ function tplconfig(): void {
     $blocks = '';
     require_once BASE_DIR.'/core/classes/filemanager.php';
     $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _UPLOADS_VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
+    $icons = ['image' => 'file-earmark-image', 'audio' => 'file-earmark-music', 'video' => 'file-earmark-play', 'document' => 'file-earmark-text', 'archive' => 'file-earmark-zip'];
     foreach ($typm as $i => $type) {
         $form = ($type === 'full') ? _EDITOR_FULLSIZE.' (size=full)' : $type;
         $text = (string)($conf['filetype'][$type] ?? '');
@@ -392,11 +393,12 @@ function tplconfig(): void {
         foreach (explode(' · ', sprintf(_EDITOR_SIZE, ($text === '') ? 0 : substr_count($text, "\n") + 1, mb_strlen($text))) as $one) {
             $facts[] = ['text' => mb_strtoupper(mb_substr($one, 0, 1)).mb_substr($one, 1)];
         }
-        $blocks .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'upt-'.$type,
+        $blocks .= $tpl->getHtmlFrag('pane', [
+            'id' => 'upt-'.$type,
             'is_fold' => true,
-            'title' => _DETAILS.': '.$form,
-            'label_html' => htmlspecialchars($form, ENT_QUOTES, 'UTF-8'),
+            'plus_text' => _DETAILS.': '.$form,
+            'icon' => $icons[$kind] ?? 'file-earmark',
+            'title' => $form,
             'facts' => $facts,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
                 'label_html' => '',
@@ -482,13 +484,13 @@ function config(): void {
         $name = basename($file);
         $dirs[] = ['value_attr' => $name, 'label_text' => basename(UPLOADS_DIR).'/'.$file, 'is_selected' => $conf['uploads']['dir'] == $name];
     }
-    $blocks = $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'upb-catalog', 'label_html' => _UPLOADS_CATALOG, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
+    $blocks = $tpl->getHtmlFrag('pane', ['id' => 'upb-catalog', 'icon' => 'folder2-open', 'title' => _UPLOADS_CATALOG, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
         'label_for' => 'f-dir',
         'label_html' => _DIRDEF,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'is_config' => true, 'options' => $dirs]),
     ]]])]);
     $tform = $boxes('ttyp', $conf['uploads']['typ'], _TPFORM);
-    $blocks .= $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'upb-output', 'label_html' => _UPLOADS_OUTPUT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [
+    $blocks .= $tpl->getHtmlFrag('pane', ['id' => 'upb-output', 'icon' => 'paperclip', 'title' => _UPLOADS_OUTPUT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => [
         $tform + ['hint_html' => sprintf(_TPFORMIN, _UPLOADS_TPLS)],
         $limit('twidth', _TPWIDTH, $conf['uploads']['width'], '', 'min="1"'),
         $limit('theight', _TPHEIGHT, $conf['uploads']['height'], '', 'min="1"'),
@@ -524,11 +526,12 @@ function config(): void {
         foreach ([_F_8 => $rul['userupload'], _F_9 => $rul['guestupload']] as $text => $on) {
             if ($on === 1) $chips[] = ['tone' => 'success', 'label' => $text];
         }
-        $blocks .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'upb-'.$val,
+        $blocks .= $tpl->getHtmlFrag('pane', [
+            'id' => 'upb-'.$val,
             'is_fold' => true,
-            'title' => _DETAILS.': '.$name,
-            'label_html' => htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+            'plus_text' => _DETAILS.': '.$name,
+            'icon' => 'folder',
+            'title' => $name,
             'facts' => $facts,
             'chips' => $chips,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $mrows]),

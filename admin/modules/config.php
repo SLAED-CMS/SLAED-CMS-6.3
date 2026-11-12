@@ -955,13 +955,13 @@ function replace(): void {
                 ]),
             ],
         ];
-        $blok .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'fi'.$c,
-            'is_toggle_block' => true,
+        $blok .= $tpl->getHtmlFrag('pane', [
+            'id' => 'fi'.$c,
             'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
-            'toggle_target_id' => 'fi'.$next,
-            'title' => _ADD,
-            'label_html' => _REPLACE_FIELD.' '.$next,
+            'next_id' => 'fi'.$next,
+            'plus_text' => _ADD,
+            'icon' => 'arrow-left-right',
+            'title' => _REPLACE_FIELD.' '.$next,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
         ]);
     }

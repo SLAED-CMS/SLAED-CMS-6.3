@@ -939,11 +939,12 @@ function getNodeTypeTabs(array $vals, bool $new): string {
         foreach ([_NODE_ACTIVE => $def['active'], _NODE_CANLINK => $def['canlink'], _NODE_CANREP => $def['report']] as $text => $on) {
             if ($name !== '' && $on) $chips[] = ['tone' => 'success', 'label' => $text];
         }
-        $blocks .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'node-role-'.$idx,
+        $blocks .= $tpl->getHtmlFrag('pane', [
+            'id' => 'node-role-'.$idx,
             'is_fold' => true,
-            'title' => _DETAILS.': '.$head,
-            'label_html' => $esc($head),
+            'plus_text' => _DETAILS.': '.$head,
+            'icon' => 'paperclip',
+            'title' => $head,
             'facts' => $facts,
             'chips' => $chips,
             'content_html' => $cell,

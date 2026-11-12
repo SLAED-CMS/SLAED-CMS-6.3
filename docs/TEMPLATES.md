@@ -499,7 +499,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` and `codemirror` write them onto the `<textarea>` of `editor-frame`, and the shell runtime copies the name onto the editable area of CodeMirror when it mounts; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. A code editor of `Editor::getCode()` is named by the `label` of its caller, or `_TEXT`.
 - **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing and a `<div>` value, which may carry the paragraphs of a text area. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
-- **A block of the rows of one thing spans its box.** `partials/toggle-form-block.html` (an additional field, a rule of "Замены", a scope of "Рейтинги", a feed of `rss`) puts its name with the toggle `+` in a cap and its rows under it at the full width of the box, the caption left as in every form of the panel; a block standing in the field cell of another row (the answers of a poll) and the items of the side panel of the builder keep them stacked, as every nested grid.
+- **The rows of one thing stand in a window.** `fragments/pane.html` (an additional field, a rule of "Замены", a scope of "Рейтинги", a feed of `rss`) puts its name in the head and its rows under it at the full width of the box, the caption left as in every form of the panel; a window standing in the field cell of another row (the answers of a poll) and the items of the side panel of the builder keep them stacked, as every nested grid. "Panel Window" holds the head, the fold and the chain.
 - **A caption stands at the top of its field.** `.sl-form-row` and `.sl-value-row` of the site and `.sl-div-item` of the panel align to `start`; the first line of a caption meets the line of a single field (on the site by a top padding of half the field height less one line, in the panel by a caption line as high as a control), so a text area, a list or a picture keeps its caption at its top. A baseline alignment was tried and refused: a text area and a picture have no baseline, and the caption fell to their foot
 - **Every chip that shows a value names it.** A size, a count, a date, a status or a module in a chip carries a `title` of an existing constant (`_SIZE`, `_NODE_DLOADS`, `_ALLMATERIALS`, `_COMMENTS`, `_VOTES`, `_DATE`, `_STATUS`, `_MODUL`, `_RATING`, `_CATEGORY`), so a hover says what the figure is; a chip that is a button with its own words needs none
 - **Every button bursts when pressed.** `setPressBurst()` of `slaed.js` gives each `.sl-but*` and `.sl-but-mini` the burst of the favourite star (`.sl-is-burst`: the ring, the pop of the icon, two spark sets), in both themes on the same tokens `--sl-fav-*` and `--sl-spark-shadow`; the star and the rating keep their own burst on the answer of the server, and `--sl-time-scale` 0 stills it
@@ -781,8 +781,8 @@ under the text to the right — the width of the alert decides, not that of the 
 
 The window `fragments/pane.html` — a thin frame with the shadow of a list and the cap of `pane-cap.html`: an icon,
 which every window names, the title in capitals, a value on the right, a gradient that ends with the cap and a rule
-under it — is an instrument among several on one screen, a board: "Мониторинг" and
-"Статистика". A page that shows one thing under its tabs draws no window: the head of the page already names it, so
+under it — is one of several on one screen: an instrument of a board ("Мониторинг", "Статистика") or a
+group of a form. A page that shows one thing under its tabs draws no window: the head of the page already names it, so
 a cap would repeat the title the reader has just read.
 
 - **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
@@ -795,6 +795,26 @@ a cap would repeat the title the reader has just read.
 - **Sections of one page are boxes.** Blocks of one task that appear one after another — the state, "Загрузить
   архив", "Установка" of "Обновления" — are `partials/box.html` with `title`, a line of heading and no frame; the first
   block, which the head of the page names, has no title.
+- **The groups of a form are windows.** A form that sets several things of one kind — the groups of "Пользователи",
+  the upload rule of every module, an additional field, a file role of a Node type — puts each in a window with `id`,
+  `icon` and `title`. Inside a window the rules between form rows are dashed, the rows carry no ground of their own and
+  reach the frame, so a caption starts under the name of the window. Windows in a stack stand 10 pixels apart, as in a
+  row of a board.
+- **A window folds under its head.** `is_fold` hides the body under the plus at the right end of the head
+  (`plus_text` names it), folded by default, the choice kept by the browser under `<id>-rows`. The head carries
+  `data-sl-toggle-head`: `public/plugins/system/slaed.js` sends a press anywhere on it to the plus, which stays the one
+  button of the head; a press on a control or one that ends a selection in the head folds nothing, and the name of a
+  folding head is not selectable. A folded window is its head alone, without the rule under it.
+- **The head tells what a folded window holds.** `facts` (rows of `text`) stand after the name in columns of a fixed
+  share of the width, so one fact stands in one column down the screen, in small muted text and in their own case — a
+  key, a path and an extension are read as they are typed; `chips` (rows of `tone` and `label`) close the head before
+  the plus. At 1200 pixels and narrower the facts and the chips take a second line under the name. `tools_html` puts
+  the buttons of the caller before the plus (the moves of an item of the site builder).
+- **A chain adds, it does not fold.** With `next_id` the plus shows and hides the window of that id and the window
+  itself is the toggled block, hidden under `is_hidden` until the plus before it is pressed: "Замены", the feeds of
+  `rss`, the answers of a poll. The head of such a window is not pressed.
+- **A window inside a frame is flat.** In the inspector of the site builder a window carries neither shadow nor
+  gradient (`assets/css/layout.css`).
 
 ## Button Weight
 
@@ -1508,7 +1528,7 @@ size (aurora: `presentation.css`).
 The screen is written once on the theme `admin` (`partials/layout-*.html`, `fragments/layout-field.html`,
 `assets/js/layout.js`, `assets/css/layout.css`); a site theme brings only its sections
 and places. It is built of the canon of the panel — the parts of a window for the inspector, `div-row.html`,
-`menu-list-item.html` for the tree, `menu-grid-item.html` for the cards, `toggle-form-block.html` for the items, the
+`menu-list-item.html` for the tree, `menu-grid-item.html` for the cards, `fragments/pane.html` for the items, the
 file field, the capsule of the editors — and keeps own CSS only for the three columns, the frame of the canvas, the
 schemas of the cards, the swatches, the rings and the toolbar on the page.
 

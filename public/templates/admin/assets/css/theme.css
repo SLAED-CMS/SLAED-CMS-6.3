@@ -1474,6 +1474,7 @@ pre code.hljs {
 
 .sl-tip:focus-visible,
 .sl-tip > button:focus-visible,
+.sl-pane-fold:focus-visible,
 [data-sl-repeat-add]:not([data-sl-repeat-add=""]):focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
@@ -1890,151 +1891,6 @@ pre code.hljs {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-}
-
-/* A block of the rows of one thing: its name with the toggle in a cap, the rows under it over the full width of the box with the caption left, as every form of the panel */
-.sl-toggle-form-block {
-  padding: var(--sl-space-3) var(--sl-space-4);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
-  background-color: var(--sl-surface);
-}
-
-.sl-toggle-form-block + .sl-toggle-form-block {
-  margin-top: var(--sl-space-4);
-}
-
-.sl-toggle-form-block > .sl-toggle-form-block-title {
-  display: flex;
-  margin-bottom: var(--sl-space-3);
-}
-
-.sl-toggle-form-block .sl-div-grid {
-  margin-bottom: 0;
-}
-
-/* Folding block: the gap under the cap belongs to the folding rows, so a folded block is its cap alone, centred */
-.sl-toggle-form-block > .sl-toggle-form-block-title:has(+ .sl-collapsible) {
-  min-height: var(--sl-chip-height);
-  margin-bottom: 0;
-}
-
-.sl-toggle-form-block > .sl-collapsible > .sl-div-grid {
-  margin-top: var(--sl-space-3);
-}
-
-/* Facts and chips of a cap: the name and every fact take a fixed share of the width, so one fact stands in one column down the screen, and the chips keep the right edge */
-.sl-toggle-form-block-title:has(> .sl-muted) {
-  flex-wrap: wrap;
-}
-
-.sl-toggle-form-block-title:has(> .sl-muted) > .sl-toggle-form-block-label {
-  flex: 0 0 22%;
-}
-
-.sl-toggle-form-block-title > .sl-muted {
-  flex: 0 0 11%;
-}
-
-.sl-toggle-form-block-title > .sl-toggle-form-block-label + .sl-muted {
-  flex-basis: 16%;
-}
-
-.sl-toggle-form-block-chips {
-  display: flex;
-  flex: 1 1 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--sl-space-2);
-}
-
-@media (max-width: 1200px) {
-  .sl-toggle-form-block-title:has(> .sl-muted) > .sl-toggle-form-block-label {
-    flex: 1 1 auto;
-    max-width: calc(100% - var(--sl-size-icon-sm) - var(--sl-space-3));
-  }
-
-  .sl-toggle-form-block-title > .sl-muted,
-  .sl-toggle-form-block-title > .sl-toggle-form-block-label + .sl-muted {
-    flex: 0 1 auto;
-  }
-
-  .sl-toggle-form-block-chips {
-    flex: 1 1 auto;
-  }
-}
-
-/* The side panel keeps the rows of a block stacked, the caption over its field, as its narrow column asks */
-.sl-div-side .sl-toggle-form-block .sl-div-grid,
-.sl-div-side .sl-toggle-form-block .sl-div-item {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.sl-div-side .sl-toggle-form-block .sl-div-item {
-  gap: var(--sl-space-3);
-}
-
-.sl-toggle-form-block-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  padding-top: 0;
-  color: var(--sl-primary-strong);
-  line-height: var(--sl-size-icon-sm);
-  vertical-align: middle;
-}
-
-.sl-toggle-form-block-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--sl-size-icon-sm);
-  height: var(--sl-size-icon-sm);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--sl-success);
-  cursor: pointer;
-  line-height: 1;
-  vertical-align: middle;
-  transition:
-    color var(--sl-time-base) var(--sl-ease-out),
-    transform var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-toggle-form-block-toggle:hover,
-.sl-toggle-form-block-toggle:focus {
-  color: var(--sl-success-strong);
-  outline: none;
-  transform: scale(1.1);
-}
-
-.sl-toggle-form-block-toggle:focus-visible {
-  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
-  outline-offset: var(--sl-ring-gap);
-}
-
-.sl-toggle-form-block-toggle.sl-is-open,
-.sl-toggle-form-block-toggle.sl-is-open:hover,
-.sl-toggle-form-block-toggle.sl-is-open:focus {
-  color: var(--sl-danger);
-}
-
-.sl-toggle-form-block-toggle.sl-is-open:hover,
-.sl-toggle-form-block-toggle.sl-is-open:focus {
-  color: var(--sl-danger-strong);
-}
-
-.sl-toggle-form-block-toggle.sl-plus::before {
-  color: currentColor;
-  margin: 0;
-}
-
-.sl-toggle-form-block-label {
-  cursor: default;
-  line-height: var(--sl-size-icon-sm);
-  vertical-align: middle;
 }
 
 .sl-box {
@@ -12879,6 +12735,95 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-left: 0;
 }
 
+/* Head parts: a name that outgrows its head ends in an ellipsis; beside facts the name and every fact take a fixed share of the width, and a fact keeps its case */
+.sl-pane-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pane-cap:has(> .sl-pane-fact) > .sl-pane-title {
+  flex: 0 0 22%;
+}
+
+.sl-pane-fact {
+  flex: 0 0 11%;
+  min-width: 0;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.sl-pane-title + .sl-pane-fact {
+  flex-basis: 16%;
+}
+
+.sl-pane-chips {
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+}
+
+/* The plus of a head: its box ends where its glyph ends, as large as the icon at the other end and as far from the frame */
+.sl-pane-fold {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  margin-left: auto;
+}
+
+.sl-pane-fold::before {
+  width: var(--sl-size-icon-xs);
+  height: var(--sl-size-icon-xs);
+  margin: 0;
+  font-size: var(--sl-size-icon-xs);
+}
+
+.sl-pane-cap > :is(.sl-pane-meta, .sl-live-chip) ~ .sl-pane-fold {
+  margin-left: 0;
+}
+
+/* Folding head: slaed.js sends a press anywhere on it to its plus, so it shows the hand and its name is not selected; folded, the window is its head alone */
+.sl-pane-cap[data-sl-toggle-head] {
+  cursor: pointer;
+}
+
+.sl-pane-cap[data-sl-toggle-head] > .sl-pane-title {
+  user-select: none;
+}
+
+.sl-pane:has(> .sl-collapsible:is([hidden], .sl-is-closed)) > .sl-pane-cap {
+  border-bottom-color: transparent;
+  border-radius: calc(var(--sl-radius-2) - 1px);
+}
+
+@media (max-width: 1200px) {
+  .sl-pane-cap:has(> .sl-pane-fact) {
+    flex-wrap: wrap;
+    row-gap: var(--sl-space-2);
+  }
+
+  .sl-pane-cap:has(> .sl-pane-fact) > .sl-pane-title {
+    flex-basis: calc(100% - (var(--sl-size-icon-xs) + var(--sl-space-4)) * 2);
+  }
+
+  .sl-pane-cap:has(> .sl-pane-fact) > :is(.sl-pane-fact, .sl-pane-chips) {
+    order: 1;
+  }
+
+  .sl-pane-fact,
+  .sl-pane-title + .sl-pane-fact {
+    flex: 0 1 auto;
+  }
+
+  .sl-pane-chips {
+    flex: 1 1 auto;
+  }
+}
+
 .sl-pane-body {
   display: flex;
   flex: 1;
@@ -13191,9 +13136,46 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   margin-bottom: 0;
 }
 
-/* A window on a screen of its own, outside the rows of the series: the rhythm of a box under it, a list inside it, tiles alone end with the body */
-:not(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane {
+/* A window on a screen of its own: the rhythm of a box under it, the gap of a series row to a window after it, both weak so a frame sets its own */
+:where(:not(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side)) > .sl-pane {
   margin-bottom: var(--sl-space-5);
+}
+
+:where(:not(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side)) > .sl-pane:where(:has(+ .sl-pane)) {
+  margin-bottom: var(--sl-space-4);
+}
+
+/* Windows in the field of a form row: the row keeps its own inset over the first and under the last one shown */
+.sl-div-field:has(> .sl-pane) {
+  display: grid;
+  gap: var(--sl-space-4);
+}
+
+.sl-div-field > .sl-pane {
+  margin-bottom: 0;
+}
+
+/* Form rows in a window: dashed rules, no ground of their own, out to the frame so a caption starts under the name; the side panel stacks them */
+.sl-pane-body > .sl-div-grid {
+  margin: 0 calc(var(--sl-space-4) * -1);
+}
+
+:where(.sl-pane) .sl-div-item {
+  border-bottom-style: dashed;
+  background: none;
+}
+
+:where(.sl-pane) .sl-div-item:hover {
+  background: var(--sl-tint);
+}
+
+.sl-div-side .sl-pane .sl-div-grid,
+.sl-div-side .sl-pane .sl-div-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sl-div-side .sl-pane .sl-div-item {
+  gap: var(--sl-space-3);
 }
 
 .sl-pane-body > .sl-table-shell {

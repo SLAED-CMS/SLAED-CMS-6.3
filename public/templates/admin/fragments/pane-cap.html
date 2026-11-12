@@ -1,8 +1,22 @@
-<div class="sl-pane-cap">
+<div class="sl-pane-cap"{% if is_fold %} data-sl-toggle-head{% endif %}>
   {% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
   <h2 class="sl-pane-title">{{ title }}</h2>
+  {% for fact in facts %}
+  <span class="sl-pane-fact">{{ fact.text }}</span>
+  {% endfor %}
+  {% if chips %}
+  <span class="sl-pane-chips">
+    {% for chip in chips %}
+    <span class="sl-chip sl-chip-{{ chip.tone }}">{{ chip.label }}</span>
+    {% endfor %}
+  </span>
+  {% endif %}
   {% if meta %}
   <span class="sl-pane-meta">{{ meta }}</span>
   {% endif %}
   {{{ live_html }}}
+  {{{ tools_html }}}
+  {% if is_fold or next_id %}
+  <span class="sl-plus sl-pane-fold" title="{{ plus_text }}" aria-label="{{ plus_text }}" data-sl-toggle-control="{% if is_fold %}{{ id }}-rows{% else %}{{ next_id }}{% endif %}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"></span>
+  {% endif %}
 </div>

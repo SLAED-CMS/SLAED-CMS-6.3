@@ -1008,8 +1008,9 @@ function config(): void {
             ]),
         ],
     ];
-    $boxes = $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'acb-avatar', 'label_html' => _ACCOUNT_AVATAR, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $face])]);
-    $boxes .= $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'acb-entry', 'label_html' => _ACCOUNT_ENTRY, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
+    $boxes = $tpl->getHtmlFrag('pane', ['id' => 'acb-avatar', 'icon' => 'person-bounding-box', 'title' => _ACCOUNT_AVATAR,
+        'content_html' => $tpl->getHtmlPart('div', ['rows' => $face])]);
+    $boxes .= $tpl->getHtmlFrag('pane', ['id' => 'acb-entry', 'icon' => 'person-check', 'title' => _ACCOUNT_ENTRY, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

@@ -1,6 +1,12 @@
-<section class="sl-pane{% if is_fill %} sl-pane-fill{% endif %}"{% if live_html %} data-sl-live-box{% endif %}>
+<section{% if id %} id="{{ id }}"{% endif %} class="sl-pane{% if is_fill %} sl-pane-fill{% endif %}{% if is_hidden %} sl-hidden{% endif %}"{% if live_html %} data-sl-live-box{% endif %}{% if next_id %} data-sl-toggle="{{ id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}" data-sl-toggle-display="flex"{% endif %}>
   {% include 'fragments/pane-cap.html' %}
-  {% if right_html %}
+  {% if is_fold %}
+  <div id="{{ id }}-rows" class="sl-collapsible" data-sl-toggle="{{ id }}-rows" data-sl-toggle-default="closed" hidden>
+    <div class="sl-pane-body">
+      {{{ content_html }}}
+    </div>
+  </div>
+  {% elseif right_html %}
   <div class="sl-pane-body sl-pane-two">
     <div>
       {{{ content_html }}}

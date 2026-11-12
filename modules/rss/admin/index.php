@@ -45,13 +45,13 @@ function rss(): void {
                 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'selectid' => 'f-field3-'.$c, 'options' => $opts]),
             ],
         ]]);
-        $rows[] = $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'rss'.$c,
-            'is_toggle_block' => true,
+        $rows[] = $tpl->getHtmlFrag('pane', [
+            'id' => 'rss'.$c,
             'is_hidden' => $name === '' && $c !== 0,
-            'toggle_target_id' => 'rss'.$indx,
-            'title' => _ADD,
-            'label_html' => _RSSC.' '.$indx,
+            'next_id' => 'rss'.$indx,
+            'plus_text' => _ADD,
+            'icon' => 'rss',
+            'title' => _RSSC.' '.$indx,
             'content_html' => $block,
         ]);
     }

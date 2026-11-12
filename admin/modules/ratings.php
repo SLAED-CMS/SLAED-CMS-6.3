@@ -51,11 +51,12 @@ function ratings(): void {
                 'is_ratings_days' => true,
             ]),
         ]]);
-        $blocks .= $tpl->getHtmlPart('toggle-form-block', [
-            'block_id' => 'rt-'.str_replace('.', '-', $val),
+        $blocks .= $tpl->getHtmlFrag('pane', [
+            'id' => 'rt-'.str_replace('.', '-', $val),
             'is_fold' => true,
-            'title' => _DETAILS.': '.$scopes[$val],
-            'label_html' => htmlspecialchars($scopes[$val], ENT_QUOTES, 'UTF-8'),
+            'plus_text' => _DETAILS.': '.$scopes[$val],
+            'icon' => 'star',
+            'title' => $scopes[$val],
             'facts' => [['text' => sprintf(_RATINGS_SUM, $days)]],
             'chips' => $chips,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),

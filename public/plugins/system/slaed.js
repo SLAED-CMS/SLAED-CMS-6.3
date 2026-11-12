@@ -753,6 +753,18 @@
         }
     }
 
+    // A press anywhere on a head marked data-sl-toggle-head goes to the toggle control inside it, unless it lands on a control or ends a selection in the head
+    function setToggleHeads() {
+        document.addEventListener('click', function (event) {
+            var head = event.target.closest ? event.target.closest('[data-sl-toggle-head]') : null;
+            if (!head || event.target.closest('a, button, input, select, textarea, label, [data-sl-toggle-control]')) return;
+            var pick = window.getSelection ? window.getSelection() : null;
+            if (pick && !pick.isCollapsed && head.contains(pick.anchorNode)) return;
+            var control = head.querySelector('[data-sl-toggle-control]');
+            if (control) control.click();
+        });
+    }
+
     // Editor assets: a page load carries the engines as plain tags; a fragment over htmx names them to this loader, which adds only what the page lacks
     var edwait = null;
     var edseen = {};
@@ -3114,6 +3126,7 @@
         setCategoryMain();
         setPressBurst();
         setToggleBlocks();
+        setToggleHeads();
         setFloating(document);
         setFloatOutsideClose();
         setEditorInsertHandler();

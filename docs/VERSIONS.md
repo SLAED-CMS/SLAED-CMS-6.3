@@ -2,6 +2,25 @@
 
 ## 2026-11-12
 
+### The settings blocks move onto the window, and a window folds under its head
+
+- **`fragments/pane.html` of `admin` folds under the flag `is_fold`** — the body waits under the plus at the right end
+  of the head, and a press anywhere on the head goes to that plus: the head carries `data-sl-toggle-head`, which
+  `public/plugins/system/slaed.js` serves for any head. A press on a control, or one that ends a selection in the head,
+  folds nothing; the name of a folding head is not selectable. A folded window is its head alone, and the browser keeps
+  the choice under the ids the blocks had.
+- **The head takes `facts`, `chips` and `tools_html`** — the facts stand in columns of a fixed share of the width in
+  their own case, the chips close the head before the plus, the tools are the buttons of the caller. At 1200 pixels and
+  narrower the facts and the chips take a second line.
+- **With `next_id` the plus adds** — it shows and hides the next window of a chain, as in "Замены", the feeds of `rss`
+  and the answers of a poll; the head of such a window is not pressed.
+- **`partials/toggle-form-block.html` and the rules of `.sl-toggle-form-block` are gone** — "Замены", "Дополнительные
+  поля", "Рейтинги", the rules and the templates of the file manager, the settings of "Пользователи", the file roles
+  of a Node type, the feeds of `rss`, the answers of a poll and the items of the site builder draw the window, each
+  with an icon. Inside a window the rules between form rows are dashed and the rows reach the frame; windows in a
+  stack stand 10 pixels apart; in the inspector of the builder a window has neither shadow nor gradient. The line of
+  sections in the history of publications wears the plus of the window.
+
 ### The window of the panel takes one standard, and a form row is as tall as its field
 
 - **`fragments/pane.html` of `admin` is the one window of the panel** — a thin frame of radius 8 with the shadow of a

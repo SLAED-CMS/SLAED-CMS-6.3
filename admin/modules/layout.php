@@ -736,7 +736,7 @@ function getLayoutTones(string $now): array {
     return $out;
 }
 
-# The rows of a list of items, each a block of the form canon with its fields, its tools and its place among the others; an item is the site's one at its place
+# The rows of a list of items, each a window of the panel with its fields, its tools and its place among the others; an item is the site's one at its place
 function getLayoutItems(array $desc, mixed $list, string $owner, mixed $live = null, array $addrs = []): string {
     global $tpl;
     $out = '';
@@ -744,12 +744,17 @@ function getLayoutItems(array $desc, mixed $list, string $owner, mixed $live = n
     $fields = is_array($desc['fields'] ?? null) ? $desc['fields'] : [];
     $name = (string)($desc['name'] ?? '');
     $max = intval($desc['max'] ?? 0);
+    $mark = '';
+    foreach ($fields as $one) {
+        if (is_array($one) && ($one['type'] ?? '') === 'icon') $mark = (string)($one['key'] ?? '');
+    }
     foreach ($list as $i => $item) {
         $item = is_array($item) ? $item : [];
         $label = trim((string)($item[$name] ?? '')) ?: getConst((string)($desc['label'] ?? '')).' '.($i + 1);
-        $cap = $tpl->getHtmlPart('layout-item', ['num' => $i, 'label' => $label, 'up_text' => _LAYOUT_UP, 'down_text' => _LAYOUT_DOWN, 'del_text' => _LAYOUT_DELITEM,
+        $acts = $tpl->getHtmlPart('layout-item', ['num' => $i, 'up_text' => _LAYOUT_UP, 'down_text' => _LAYOUT_DOWN, 'del_text' => _LAYOUT_DELITEM,
             'is_first' => $i === 0, 'is_last' => $i === count($list) - 1]);
-        $out .= $tpl->getHtmlPart('toggle-form-block', ['block_id' => 'sl-lay-item-'.$owner.'-'.$i, 'label_html' => $cap,
+        $icon = ($mark !== '' && preg_match('/^[a-z0-9-]+$/', (string)($item[$mark] ?? '')) === 1) ? $item[$mark] : 'card-text';
+        $out .= $tpl->getHtmlFrag('pane', ['id' => 'sl-lay-item-'.$owner.'-'.$i, 'icon' => $icon, 'title' => $label, 'tools_html' => $acts,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => getLayoutRows($fields, $item, 'item['.$i.']', '', is_array($live[$i] ?? null) ? $live[$i] : null, $addrs)])]);
     }
     return $tpl->getHtmlPart('layout-items', ['title' => getConst((string)($desc['label'] ?? '')), 'num' => count($list).($max ? ' / '.$max : ''), 'items_html' => $out,

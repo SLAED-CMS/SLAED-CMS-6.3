@@ -302,25 +302,22 @@
   gap: var(--sl-space-2);
 }
 
-/* Items of a section or a part: blocks of the form canon, each its caption with its moves over its own rows */
+/* Items of a section or a part: windows inside the frame of the inspector, so without shadow and gradient, each its name with its moves over its own rows */
 .sl-lay-items .sl-lay-head {
   margin-top: 0;
 }
 
-.sl-lay-items .sl-toggle-form-block + .sl-toggle-form-block {
+.sl-lay-items > .sl-pane {
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.sl-lay-items > .sl-pane + .sl-pane {
   margin-top: var(--sl-space-2);
 }
 
-.sl-lay-items .sl-toggle-form-block-title {
-  display: flex;
-  width: 100%;
-}
-
-.sl-lay-item-cap {
-  overflow: hidden;
-  font-weight: var(--sl-weight-semibold);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.sl-lay-items .sl-pane-cap {
+  background: none;
 }
 
 .sl-lay-item-acts {
@@ -831,8 +828,20 @@
   color: var(--sl-text-muted);
 }
 
+/* History sections: those of one publication fold under the plus of a window, which stands before their count */
 .sl-lay-story-secs {
   margin: var(--sl-space-2) 0 0 var(--sl-space-4);
+}
+
+.sl-lay-story-secs > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  color: var(--sl-primary-strong);
+}
+
+.sl-lay-story-secs .sl-pane-fold {
+  margin-left: 0;
 }
 
 .sl-lay-story-secs .sl-lay-issues {
