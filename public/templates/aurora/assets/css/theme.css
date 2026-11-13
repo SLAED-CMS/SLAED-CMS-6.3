@@ -4684,8 +4684,8 @@ dialog.sl-editor-emoji-panel {
 /* The tools of a block stand in its head at the right, on the padding of the block: the gear of its administrator, and the live chip of a poll */
 .sl-block .sl-vote-tools,
 .sl-block-tools {
-  top: var(--sl-space-6);
-  right: var(--sl-space-6);
+  top: var(--sl-pane-pad-y);
+  right: var(--sl-pane-pad-x);
   min-height: var(--sl-size-chip);
 }
 
@@ -4930,7 +4930,7 @@ dialog.sl-editor-emoji-panel {
   padding: var(--sl-space-6) var(--sl-space-6);
   background: var(--sl-surface);
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
+  border-radius: var(--sl-radius-2);
 }
 .sl-search-panel input.sl-field {
   flex: 1 1 240px;
@@ -5257,16 +5257,12 @@ dialog.sl-editor-emoji-panel {
   pointer-events: none;
 }
 
-/* Blocks: positioning anchors for corner tool clusters */
+/* Blocks: positioning anchors for corner tool clusters; the frame is the one of a window and is drawn with it, the inset is the inset of a window */
 .sl-block {
   position: relative;
-  background: var(--sl-surface);
   display: flow-root;
-  padding: var(--sl-space-6);
-  border-radius: var(--sl-radius-2);
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
   margin-bottom: var(--sl-space-8);
-  border: 1px solid var(--sl-border-subtle);
-  box-shadow: var(--sl-shadow-xs);
 }
 
 .sl-block-content {
@@ -8052,7 +8048,9 @@ td.sl-fl-col-stat {
   margin-bottom: var(--sl-space-5);
 }
 
-.sl-forum-top .sl-heading {
+/* The name of a page in the head of a window keeps one line too and ends in an ellipsis; the hint of the head holds the whole of it */
+.sl-forum-top .sl-heading,
+h1.sl-pane-title {
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -8063,6 +8061,33 @@ td.sl-fl-col-stat {
 .sl-forum-top .sl-pull-right {
   flex: none;
   float: none;
+}
+
+/* Forum: the messages of a topic stand in a window of fragments/pane.html named by the topic, as far from the row of the pager as that row keeps off what follows it */
+.sl-pane:has(> .sl-pane-body > div > .sl-forum-post) {
+  margin-bottom: var(--sl-space-7);
+}
+
+/* A message carries its own inset, so the body spaces nothing; a dashed rule parts two messages, and the first and the last give their outer inset to the window */
+.sl-pane-body:has(> div > .sl-forum-post) {
+  gap: 0;
+}
+
+.sl-pane-body > div:has(> .sl-forum-post) + div {
+  border-top: 1px dashed var(--sl-border);
+}
+
+.sl-pane-body > div:first-child > .sl-forum-post {
+  padding-top: 0;
+}
+
+.sl-pane-body > div:last-child > .sl-forum-post {
+  padding-bottom: 0;
+}
+
+/* The quick reply in its window ends with its button: the form adds no margin under it */
+.sl-pane-body > .sl-forum-reply-form > .sl-form {
+  margin-bottom: 0;
 }
 
 .sl-forum-foot {
@@ -8582,12 +8607,6 @@ a.sl-chip-neutral {
 
   .sl-block {
     margin-bottom: var(--sl-space-7);
-    padding: var(--sl-space-5) var(--sl-space-6);
-  }
-
-  .sl-block .sl-vote-tools,
-  .sl-block-tools {
-    top: var(--sl-space-5);
   }
 
   .sl-grid {
@@ -9263,25 +9282,6 @@ a.sl-chip-neutral {
   color: var(--sl-on-solid);
 }
 
-/* Error page: 404/access/ban message layout shared by setExit */
-.sl-msg {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--sl-space-8);
-  box-sizing: border-box;
-  background: linear-gradient(
-    160deg,
-    var(--sl-surface) 0%,
-    var(--sl-bg-subtle) 100%
-  );
-}
-
-.sl-msg-card {
-  width: 100%;
-  max-width: var(--sl-msg-width);
-  padding: var(--sl-space-9) var(--sl-space-9) var(--sl-space-8);
 /* Captcha hidden: the wrapper leaves the flow and the widget floats beside the button in the dress of a popover */
 .sl-captcha[data-display="floating"] {
   position: absolute;
@@ -9324,6 +9324,25 @@ a.sl-chip-neutral {
   filter: drop-shadow(0 1px 0 var(--sl-border-muted));
 }
 
+/* Error page: 404/access/ban message layout shared by setExit */
+.sl-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--sl-space-8);
+  box-sizing: border-box;
+  background: linear-gradient(
+    160deg,
+    var(--sl-surface) 0%,
+    var(--sl-bg-subtle) 100%
+  );
+}
+
+.sl-msg-card {
+  width: 100%;
+  max-width: var(--sl-msg-width);
+  padding: var(--sl-space-9) var(--sl-space-9) var(--sl-space-8);
   text-align: center;
   background: var(--sl-bg);
   border: 1px solid var(--sl-border);
@@ -10625,23 +10644,23 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-4);
 }
 
-/* Pane: the one window of the site, the frame with a head of fragments/pane.html and not the dialog of fragments/window.html; the --sl-pane-* tokens hold its values */
-/* It is positioned by the light of a frame alone, which a window of a settings grid does not carry: that one holds the non-modal dialog of an editor or of the file manager */
-.sl-pane {
-  display: flex;
-  flex-direction: column;
+/* Pane: the one window of the site, fragments/pane.html and not the dialog of fragments/window.html; the --sl-pane-* tokens hold the frame, which a block wears too */
+.sl-pane,
+.sl-block {
   min-width: 0;
   border: 1px solid var(--sl-pane-border);
   border-radius: var(--sl-pane-radius);
   background: var(--sl-pane-bg);
   box-shadow: var(--sl-pane-shadow);
-  transition:
-    border-color var(--sl-time-base) var(--sl-ease-out),
-    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
-/* A plate of the preset gallery lifts under the pointer exactly as the window around it does */
-.sl-pane:hover,
+/* It is positioned by the light of a frame alone, which a window of a settings grid does not carry: that one holds the non-modal dialog of an editor or of the file manager */
+.sl-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A plate of the preset gallery lifts under the pointer; the window around it stays still, as a block of the side column does */
 .sl-pane-body .sl-radio-group:not(.sl-radio-switch) .sl-radio:hover {
   border-color: var(--sl-border-strong);
   box-shadow: var(--sl-shadow-raised);
@@ -10676,7 +10695,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-column: span 6;
 }
 
-/* The one head of the site, fragments/pane-cap.html: a chip and the inset twice high, the icon on a plate in the tone of its category, the name, then the chips, the live mark and the plus */
+/* The one head of the site, fragments/pane-cap.html: a chip and the inset twice high, the bare icon in the tone of its category, the name, the chips, the live mark, the plus */
 .sl-pane-cap {
   display: flex;
   flex-wrap: wrap;
@@ -10690,26 +10709,37 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-pane-cap > .bi {
-  display: grid;
-  place-items: center;
-  flex: 0 0 var(--sl-size-chip);
-  width: var(--sl-size-chip);
-  height: var(--sl-size-chip);
-  border-radius: var(--sl-radius-1);
-  background: var(--sl-cat-tone, var(--sl-primary));
-  color: var(--sl-on-solid);
+  flex: none;
+  color: var(--sl-cat-tone, var(--sl-primary));
   font-size: var(--sl-size-icon-sm);
+  line-height: 1;
 }
 
-/* The name takes the room the rest of the head leaves and wraps inside it, so the plus keeps its place at the right */
+/* The name takes the room the rest of the head leaves and wraps inside it, so the plus keeps its place at the right; it is set as a heading of a block was */
 .sl-pane-title {
   flex: 1 1 8em;
   min-width: 0;
   margin: 0;
   color: var(--sl-text-strong);
-  font-size: var(--sl-font-small);
-  font-weight: var(--sl-weight-semibold);
+  font-size: var(--sl-font-h3);
+  font-weight: var(--sl-weight-normal);
   line-height: var(--sl-line-tight);
+}
+
+.sl-pane-title a {
+  color: inherit;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pane-title a:hover {
+  color: var(--sl-primary);
+}
+
+/* A block of the side column wears the head of a window inside its own inset: the head adds none and keeps off the content by the inset of a window */
+.sl-block > .sl-pane-cap {
+  min-height: var(--sl-size-chip);
+  margin-bottom: var(--sl-pane-pad-y);
+  padding: 0;
 }
 
 .sl-pane-chips {
@@ -10939,6 +10969,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
+}
+
+/* A window inside the frame of the deck carries no shade: the frame around it is its edge already */
+.sl-cab-deck .sl-pane {
+  box-shadow: none;
 }
 
 .sl-profile-split {
@@ -11186,7 +11221,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-pane.sl-is-warn > .sl-pane-cap > .bi {
-  background: var(--sl-danger);
+  color: var(--sl-danger);
 }
 
 .sl-profile-info {
@@ -11775,8 +11810,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: grid;
   grid-template-columns: 396px minmax(0, 1fr);
   overflow: hidden;
-  border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
 }
 

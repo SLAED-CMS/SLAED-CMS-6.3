@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $db, $conf, $tpl, $prv, $pnt;
+$bicon = 'people';
 if (is_user()) {
     $userinfo = getUserInfo();
     $uid = intval($userinfo['id']);

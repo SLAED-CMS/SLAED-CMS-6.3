@@ -626,15 +626,7 @@ function view(): void {
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]],
                 getPageSpan($conf['forum']), $num, '', 'page');
             $favor = getFavoriteButton($topic, $conf['name']);
-            $cont = $tpl->getHtmlFrag('forum-topic-view', [
-                'open' => true,
-                'atopic' => $atopic,
-                'areply' => $areply,
-                'title' => filterTextHighlight($rows[0][5], $word),
-                'favor' => $favor,
-                'share_url' => $share,
-                'share_title' => $rows[0][5],
-            ]);
+            $posts = '';
             foreach ($rows as $val) {
                 $fid = $val[0];
                 $fcat = $val[2];
@@ -737,7 +729,7 @@ function view(): void {
                 $edit = getActionMenu($eitems);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'is_quick' => true, 'content' => $body['text']]);
                 if ($fields) $text .= filterTextHighlight($fields, $word);
-                $cont .= $tpl->getHtmlFrag('forum-post', [
+                $posts .= $tpl->getHtmlFrag('forum-post', [
                     'id' => $fid,
                     'username' => $avname,
                     'username_html' => $uname_html,
@@ -762,6 +754,15 @@ function view(): void {
                 ]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
+            $cont = $tpl->getHtmlFrag('pane', [
+                'icon' => 'chat-left-text',
+                'title_html' => filterTextHighlight($rows[0][5], $word),
+                'hint' => $rows[0][5],
+                'level' => 1,
+                'chips' => [['tone' => 'neutral', 'icon' => 'chat', 'label' => $numfor, 'title' => _MESSAGES]],
+                'tools_html' => $favor.$tpl->getHtmlFrag('share', ['share_url' => $share, 'share_title' => $rows[0][5]]),
+                'content_html' => $posts,
+            ]);
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, ['op' => 'view', 'id' => $topic, 'route' => $rows[0][25]],
                 getPageSpan($conf['forum']), $num, '', 'page');
             $foot = $tpl->getHtmlFrag('forum-topic-view', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum,
@@ -794,6 +795,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         ]) : '';
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
+            'is_label_hidden' => true,
             'label_id' => $labid = getFieldIds('', 'hometext')['label'],
             'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                 'id' => '1',
@@ -820,7 +822,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             'fields' => $rows,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => $hide, 'label' => _SEND, 'icon_name' => 'send']),
         ]);
-        return $tpl->getHtmlFrag('title', ['title' => _QUICKREPLY, 'is_level_two' => true]).$cont;
+        return $tpl->getHtmlFrag('pane', ['icon' => 'reply', 'title' => _QUICKREPLY, 'content_html' => $cont]);
     }
     return '';
 }

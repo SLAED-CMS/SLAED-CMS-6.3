@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
+$bicon = 'search';
 $content = $tpl->getHtmlFrag('search-form', [
     'is_block' => true,
     'search_label' => _SEARCH,

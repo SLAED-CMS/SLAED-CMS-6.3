@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
+$bicon = 'images';
 $path = UPLOADS_DIR.'/presentation/sites/thumb';
 $ban = [];
 $dir = opendir($path);

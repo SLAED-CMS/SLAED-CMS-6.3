@@ -101,9 +101,8 @@
   color: var(--sl-pres-muted-text);
 }
 
-/* The window on this page, fragments/pane-cap.html in a .sl-pane: the frame and the ground of the page palette, no lift under the hand, a plain body inset on all four sides */
-.sl-pres .sl-pane,
-.sl-pres .sl-pane:hover {
+/* The window on this page, fragments/pane-cap.html in a .sl-pane: the frame and the ground of the page palette, a plain body inset of its own on all four sides */
+.sl-pres .sl-pane {
   position: relative;
   border-color: var(--sl-pres-border);
   background: var(--sl-pres-panel-bg);
@@ -112,7 +111,7 @@
 
 .sl-pres .sl-pane-body {
   display: block;
-  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
+  padding: var(--sl-pane-pad-y) var(--sl-space-5);
 }
 
 .sl-pres .sl-pane > .sl-pane-body > :first-child {
@@ -124,7 +123,7 @@
   min-height: calc(var(--sl-size-chip) + var(--sl-space-3) * 2 + 1px);
   border-bottom: 1px solid var(--sl-pres-border);
   background: none;
-  padding: var(--sl-space-3) var(--sl-pane-pad-x);
+  padding: var(--sl-space-3) var(--sl-space-5);
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
@@ -132,12 +131,7 @@
 }
 
 .sl-pres .sl-pane-cap > .bi {
-  display: inline-block;
-  flex: none;
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  background: none;
+  line-height: inherit;
   font-size: var(--sl-size-icon-xs);
   color: var(--sl-pres-link-text);
 }
@@ -2102,7 +2096,7 @@
   gap: var(--sl-space-2);
   align-content: start;
   min-height: calc(var(--sl-pres-height) / 2);
-  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
+  padding: var(--sl-pane-pad-y) var(--sl-space-5);
 }
 
 .sl-pres-bcard {
@@ -2158,7 +2152,7 @@
   gap: var(--sl-space-2);
   align-items: center;
   border-bottom: 1px dashed var(--sl-pres-border);
-  padding: var(--sl-space-2) var(--sl-pane-pad-x);
+  padding: var(--sl-space-2) var(--sl-space-5);
 }
 
 .sl-pres-rules > span:last-child {
@@ -4547,7 +4541,7 @@
   grid-template-columns: var(--sl-size-icon-xl) 1fr;
   gap: var(--sl-space-3);
   border-bottom: 1px dashed var(--sl-pres-border);
-  padding: var(--sl-space-4) var(--sl-pane-pad-x);
+  padding: var(--sl-space-4) var(--sl-space-5);
   transition: background-color var(--sl-time-slow) var(--sl-ease-out);
 }
 

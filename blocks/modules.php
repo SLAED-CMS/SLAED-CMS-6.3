@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $tpl;
+$bicon = 'grid';
 $mods_1 = $tpl->getHtmlFrag('link', ['href' => HOME_PATH, 'title' => _HOME, 'label' => _HOME, 'is_module' => true]);
 $mods_2 = '';
 $mods_3 = '';

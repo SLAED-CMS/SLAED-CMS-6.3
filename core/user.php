@@ -438,7 +438,7 @@ function getUserBlock(): string {
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
         $userblock = $prs->filterContent($userblock, true, 'profile', 2, '', ['profile', $uid], true);
-        return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock]);
+        return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock, 'icon' => 'list-ul', 'level' => 2]);
     }
     return '';
 }

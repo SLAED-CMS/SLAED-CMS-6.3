@@ -1,0 +1,140 @@
+/* Forum topic series (frm-NN): the page of one topic in the column of the site. Every face shows the same topic, the
+   same pager and the same quick reply (assets/frm.js) and differs only in the set of values on .fr-root: where the
+   window of the site (.sl-pane of the theme) stands, the rule between two messages, the window of the form and the
+   place of the topic buttons. The window itself is the theme's; this file holds the desk and what a window of
+   messages needs that a window of form rows does not */
+.fr-desk {
+  display: grid;
+  gap: var(--sl-space-4);
+  margin-bottom: var(--sl-space-7);
+  padding: var(--sl-space-4) var(--sl-space-5);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+}
+
+.fr-desk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-6);
+}
+
+.fr-desk-cap,
+.fr-axis-cap {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.fr-axis {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.fr-desk .sl-seg-cell {
+  width: auto;
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.fr-desk-set {
+  flex: 1 1 20em;
+  margin: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.fr-desk-reset {
+  margin-left: auto;
+}
+
+/* Axis: the rule between two messages is the dashed one a window of the series draws between its rows */
+.fr-root[data-fr-rule="dash"] .fr-post + .fr-post {
+  border-top: 1px dashed var(--sl-border);
+}
+
+/* The theme draws that rule in a window of messages by itself, so the value "no rule" takes it off again */
+.fr-root[data-fr-rule="off"] .fr-post + .fr-post {
+  border-top: 0;
+}
+
+/* Axis: the size of the name of a head, for a window and for a block; 18 regular is what the theme draws, the small ones are semibold */
+:root[data-fr-type="small"] .sl-pane-title {
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-semibold);
+}
+
+:root[data-fr-type="h4"] .sl-pane-title {
+  font-size: var(--sl-font-h4);
+  font-weight: var(--sl-weight-semibold);
+}
+
+:root[data-fr-type="h2"] .sl-pane-title {
+  font-size: var(--sl-font-h2);
+}
+
+/* Axis: the size of the bare icon of a head; 18 is what the theme draws, the other three are the steps beside it */
+:root[data-fr-isize="xs"] .sl-pane-cap > .bi {
+  font-size: var(--sl-size-icon-xs);
+}
+
+:root[data-fr-isize="md"] .sl-pane-cap > .bi {
+  font-size: var(--sl-size-icon-md);
+}
+
+:root[data-fr-isize="lg"] .sl-pane-cap > .bi {
+  font-size: var(--sl-size-icon-lg);
+}
+
+/* The row of the pager stands midway between the two windows: the window keeps off it by what the row keeps under */
+.fr-topic {
+  margin-bottom: var(--sl-space-7);
+}
+
+/* The body of the window of the messages spaces nothing, since a message carries its own inset */
+.fr-topic > .sl-pane-body {
+  gap: 0;
+}
+
+.fr-topic .fr-post:first-child > .sl-forum-post {
+  padding-top: 0;
+}
+
+.fr-topic > .sl-pane-body > .fr-post:last-child > .sl-forum-post {
+  padding-bottom: 0;
+}
+
+/* The tools of a head stand after its chips, on the middle line of the head */
+.fr-tools {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+/* Inside the one window the pager and the form are parts of it, each under the dashed rule of the series */
+.fr-part {
+  padding-top: var(--sl-space-5);
+  border-top: 1px dashed var(--sl-border);
+}
+
+.fr-part > .sl-forum-foot {
+  margin-bottom: var(--sl-space-5);
+}
+
+.fr-part > h2 {
+  margin-top: 0;
+}
+
+.fr-pane .sl-forum-reply-form > .sl-form {
+  margin-bottom: 0;
+}
+
+/* The still of the editor keeps the height the live form gives its mount */
+.fr-editor {
+  height: 300px;
+}

@@ -5291,7 +5291,7 @@ function getRssBlock(int $bid): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => time(), 'bid' => $bid]);
     }
     $menu = getBlockMenu($bid, '', (string)$title);
-    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2),
+    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2), 'icon' => 'rss', 'level' => 2,
         'dial_html' => $menu ? $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $menu]) : '']);
 }
 
@@ -5892,16 +5892,18 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
             return $content;
             break;
             case 'o':
-            return $tpl->getHtmlFrag('block-all', ['title' => $btitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref, 'dial_html' => $bdial]);
+            return $tpl->getHtmlFrag('block-all', ['title' => $btitle, 'content' => $content, 'icon' => $bicon ?: 'grid-3x3-gap', 'href' => $bhref, 'dial_html' => $bdial,
+                'level' => 2]);
             break;
             default:
             echo $tpl->getHtmlFrag('block-all', [
                 'title' => $btitle,
                 'content' => $content,
-                'icon_name' => $bicon,
+                'icon' => $bicon ?: 'grid-3x3-gap',
                 'href' => $bhref,
                 'dial_html' => $bdial,
-                'is_before_content' => $side === 'c',
+                'level' => 2,
+                'is_plain' => $side === 'c',
                 'pick' => ($layout instanceof Layout && $layout->isBuildMode()) ? 'blk:'.$bid : '',
             ]);
             break;

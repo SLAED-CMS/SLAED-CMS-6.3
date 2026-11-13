@@ -845,7 +845,7 @@ return [
             .'lines, and it is two contracts rather than one contract with two spellings',
         'fragments/pane-cap.html' =>
             'one head in two sets. The panel head names its window with an h2 and may carry facts, a meta figure, a live chip PHP built and the plus of '
-            .'a chain; the site head is an h3 under the heading of its page, takes a marked name, an id and a hint, draws the icon and the id of a chip '
+            .'a chain; the site head is an h3 unless its level or is_plain says other, takes a marked or a linked name, an id and a hint, draws the icon and the id of a chip '
             .'and its own live mark, and its plus may be born open. The classes, the order of the parts and the hooks of the fold are the same',
         'fragments/pane.html' =>
             'the panel window is a part of a board: it may fill its row, carry a second half, a live box and the next window of a chain, and it folds '
@@ -896,8 +896,8 @@ return [
             .'hangs the raw counts on the element as data attributes for the live swap to read. One producer feeds both and passes is_lead either way',
         'partials/block-sidebar.html' =>
             'the panel sidebar block is a div with an h3 that collapses on a slide and carries an icon and the two collapse glyphs; the site block is a section '
-            .'with an h2 and no icon, because a heading rank follows the document it sits in and the two documents are the page shells canon does not cover. The '
-            .'collapse hook is the same name in both',
+            .'with an h2 in the head of a window and its bare icon, because a heading rank follows the document it sits in and the two documents are the '
+            .'page shells canon does not cover. The collapse hook is the same name in both',
         'partials/div.html' =>
             'the panel container knows what it is wrapping - a menu grid, a collapsible - and the site container is a div '
             .'with an id, a title and at most one of two classes. The row form differs the same way: the panel includes its own row fragment, the site writes the '

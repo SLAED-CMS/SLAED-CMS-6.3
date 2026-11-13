@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $db, $locale, $conf, $tpl;
+$bicon = 'bar-chart';
 $where = "modul = '' AND time <= now()";
 $params = [];
 if ($conf['multilingual'] == 1) {

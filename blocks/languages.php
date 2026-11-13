@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $locale, $tpl;
+$bicon = 'translate';
 $langlist = [];
 foreach (scandir(BASE_DIR.'/lang') ?: [] as $file) {
     if (preg_match('#^(.+)\.php$#', $file, $part)) $langlist[] = $part[1];

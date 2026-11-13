@@ -4011,7 +4011,7 @@ dialog.sl-editor-emoji-panel {
     var(--sl-bg-muted) 100%
   );
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
+  border-radius: var(--sl-radius-2);
   overflow: hidden;
 }
 
@@ -4144,8 +4144,8 @@ dialog.sl-editor-emoji-panel {
     var(--sl-bg) 0%,
     var(--sl-bg-muted) 100%
   );
-  border-radius: var(--sl-admin-tight-title-radius);
-  box-shadow: var(--sl-bar-shadow);
+  border-radius: var(--sl-radius-2);
+  box-shadow: var(--sl-shadow-xs);
   overflow: hidden;
 }
 

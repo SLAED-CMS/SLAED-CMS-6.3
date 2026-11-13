@@ -451,14 +451,14 @@
   /* The rail height is a sum of tokens, not of text, which is why its caption is held to one line */
   --sl-opt-rail-height: 68px;
   --sl-panel-feed-height: 150px;
-  /* The window of the site: its frame and its ground, a head on that same ground, one inset on both axes and a shade of nothing */
-  --sl-pane-border: var(--sl-border);
+  /* The window of the site wears the frame of a block: its border, its ground under the head too, its inset and its shade */
+  --sl-pane-border: var(--sl-border-subtle);
   --sl-pane-radius: var(--sl-radius-2);
-  --sl-pane-bg: var(--sl-bg);
-  --sl-pane-cap-bg: linear-gradient(var(--sl-bg), var(--sl-bg));
-  --sl-pane-pad-x: var(--sl-space-5);
+  --sl-pane-bg: var(--sl-surface);
+  --sl-pane-cap-bg: linear-gradient(var(--sl-surface), var(--sl-surface));
+  --sl-pane-pad-x: var(--sl-space-6);
   --sl-pane-pad-y: var(--sl-space-5);
-  --sl-pane-shadow: 0 0 0 0px rgba(0, 0, 0, 0);
+  --sl-pane-shadow: var(--sl-shadow-xs);
   --sl-pmf-ava-width: 26px;
   --sl-pmf-ava-height: 26px;
   --sl-pmf-blank-width: 420px;

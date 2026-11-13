@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $tpl;
+$bicon = 'box-arrow-in-right';
 $captcha = getCaptcha('login');
 $content = $tpl->getHtmlFrag('block-login-form', [
     'nickname_label' => _NICKNAME,

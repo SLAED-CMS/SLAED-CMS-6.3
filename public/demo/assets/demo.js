@@ -1832,6 +1832,41 @@ const DEMO_WIN = [
   },
 ];
 
+/* The forum topic series: where the window of the site stands on the page of one topic. The four faces carry the same
+   topic, pager and quick reply (assets/frm.js) and differ only in the set of values on the root; the desk mixes the
+   axes in place and switches the page between five and fifteen messages */
+const DEMO_FORUM = [
+  {
+    file: 'frm-01-flat.html',
+    title: 'Как есть',
+    note: 'Страница темы, какой её печатает сайт сегодня: строка названия с кнопками, сообщения без рамки и без черты между ними, ' +
+      'пагинатор с кнопками и форма быстрого ответа под своим заголовком. Точка отсчёта для трёх остальных.',
+    tags: ['без окна', 'без черты', 'форма как есть'],
+  },
+  {
+    file: 'frm-02-single.html',
+    title: 'Одно окно',
+    note: 'Вся тема в одном окне сайта: название в шапке окна, сообщения, пагинатор и форма быстрого ответа внутри, каждая часть ' +
+      'под пунктиром серии. Окно во всю высоту страницы: на пятнадцати сообщениях его рамка целиком на экран не попадает.',
+    tags: ['одно окно', 'пунктир', 'пагинатор внутри', 'форма внутри'],
+  },
+  {
+    file: 'frm-03-pair.html',
+    title: 'Два окна',
+    note: 'Сообщения в окне «Тема», форма в окне «Быстрый ответ», пагинатор и кнопки между ними вне окон — как пагинатор под окнами ' +
+      'констант и кнопка под окном формы в панели. Окно темы не меняет состав, когда формы нет: у гостя и в закрытой теме. ' +
+      'Подписи «Текст» над редактором в окне нет: форму называет шапка окна.',
+    tags: ['окно сообщений', 'пунктир', 'пагинатор под окном', 'форма в окне'],
+  },
+  {
+    file: 'frm-04-rule.html',
+    title: 'Пунктир',
+    note: 'Сообщения без окна, между ними только пунктир серии; строка названия остаётся заголовком страницы. В окне стоит одна ' +
+      'форма быстрого ответа. Колонка текста не сужается на поля окна.',
+    tags: ['без окна', 'пунктир', 'форма в окне'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -1855,6 +1890,7 @@ const DEMO_SERIES = [
   { key: 'statistic', title: 'Статистика', addr: 'admin.php?name=statistic', items: DEMO_STAT },
   { key: 'monitor', title: 'Мониторинг', addr: 'admin.php?name=monitor', items: DEMO_MON },
   { key: 'windows', title: 'Окна панели', addr: 'admin.php?name=monitor, account&op=config, rss', items: DEMO_WIN },
+  { key: 'forum', title: 'Тема форума', addr: 'index.php?name=forum&op=view', items: DEMO_FORUM },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -2071,7 +2107,7 @@ function getChromeBand(caption) {
 const CHROME_SIDE = `
   <aside id="sidebar">
     <section class="sl-block">
-      <h2 class="sl-title">Опрос</h2>
+      <div class="sl-pane-cap"><i class="bi bi-bar-chart" aria-hidden="true"></i><h2 class="sl-pane-title">Опрос</h2></div>
       <div class="sl-block-content">
         <div class="sl-vote">
           <h3 class="sl-vote-title">Какой текстовый редактор кода вы используете?</h3>
@@ -2120,7 +2156,7 @@ const CHROME_SIDE = `
       </div>
     </section>
     <section class="sl-block">
-      <h2 class="sl-title">Пользователи</h2>
+      <div class="sl-pane-cap"><i class="bi bi-people" aria-hidden="true"></i><h2 class="sl-pane-title">Пользователи</h2></div>
       <div class="sl-block-content">
         <div class="sl-session-lines">
           <div class="sl-session-line"><i class="bi bi-person-fill" aria-hidden="true"></i><span>Пользователей</span><b>1</b></div>

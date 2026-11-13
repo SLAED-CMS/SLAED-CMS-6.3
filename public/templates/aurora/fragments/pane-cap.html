@@ -1,6 +1,6 @@
 <div class="sl-pane-cap"{% if hint %} title="{{ hint }}"{% endif %}{% if is_fold %} data-sl-toggle-head{% endif %}>
   {% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
-  <h3 class="sl-pane-title"{% if title_id %} id="{{ title_id }}"{% endif %}>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h3>
+  <{% if is_plain %}div{% elseif level %}h{{ level }}{% else %}h3{% endif %} class="sl-pane-title"{% if title_id %} id="{{ title_id }}"{% endif %}>{% if title_html %}{{{ title_html }}}{% elseif href %}<a href="{{ href }}" title="{{ title }}">{{ title }}</a>{% else %}{{ title }}{% endif %}</{% if is_plain %}div{% elseif level %}h{{ level }}{% else %}h3{% endif %}>
   {% if chips %}
   <span class="sl-pane-chips">
     {% for chip in chips %}

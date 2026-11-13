@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $db, $tpl;
+$bicon = 'chat-dots';
 
 $rows = '';
 $result = getForumTopics('id, title, time, lname, lpost, ltime, status', '97, 98', 3);

@@ -1,5 +1,8 @@
 <section class="sl-block">
-  <h2 class="sl-title" title="{{ close }}" data-sl-toggle-control="sl-block-{{ id }}">{{ title }}</h2>
+  <div class="sl-pane-cap" title="{{ close }}" data-sl-toggle-control="sl-block-{{ id }}">
+    <i class="bi bi-{% if icon_name %}{{ icon_name }}{% else %}grid-3x3-gap{% endif %}" aria-hidden="true"></i>
+    <h2 class="sl-pane-title">{{ title }}</h2>
+  </div>
   <div id="sl-block-{{ id }}" class="sl-block-content" data-sl-toggle="sl-block-{{ id }}">
     {{{ content_html }}}
   </div>

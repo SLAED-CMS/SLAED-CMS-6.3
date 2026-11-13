@@ -10,5 +10,6 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl, $layout;
+$bicon = 'list';
 $items = ($layout instanceof Layout) ? $layout->getMenu('main') : [];
 $content = $items ? $tpl->getHtmlFrag('block-menu', ['items' => $items]) : '';

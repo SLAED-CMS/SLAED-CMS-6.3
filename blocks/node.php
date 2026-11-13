@@ -11,6 +11,7 @@ if (!defined('BLOCK_FILE')) {
 
 # The one file block of Node, set by its types, mode and limit in _blocks.param; its materials come from getNodeFeed(), which the feed section of the site builder reads too
 global $fld, $tpl, $prs;
+$bicon = 'collection';
 $set = getNodeBlockParam($param);
 $content = null;
 if ($set === null) {
