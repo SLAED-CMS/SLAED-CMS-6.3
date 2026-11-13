@@ -9282,6 +9282,48 @@ a.sl-chip-neutral {
   width: 100%;
   max-width: var(--sl-msg-width);
   padding: var(--sl-space-9) var(--sl-space-9) var(--sl-space-8);
+/* Captcha hidden: the wrapper leaves the flow and the widget floats beside the button in the dress of a popover */
+.sl-captcha[data-display="floating"] {
+  position: absolute;
+  margin: 0;
+}
+
+.sl-user-captcha:has(> .sl-captcha[data-display="floating"]),
+.sl-oauth-captcha:has(> .sl-captcha[data-display="floating"]) {
+  display: contents;
+}
+
+.sl-captcha .altcha[data-display="floating"] {
+  z-index: var(--sl-z-popover);
+  filter: none;
+}
+
+.sl-captcha .altcha[data-display="floating"] .altcha-main {
+  width: max-content;
+  min-width: var(--sl-popover-min-width);
+  max-width: calc(100vw - var(--sl-space-6) * 2);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  color: var(--sl-text);
+  background-color: var(--sl-bg);
+  border-color: var(--sl-border-muted);
+  border-radius: var(--sl-radius-2);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-captcha .altcha[data-display="floating"] .altcha-floating-arrow {
+  margin-top: 1px;
+  border-bottom-color: var(--sl-bg);
+  filter: drop-shadow(0 -1px 0 var(--sl-border-muted));
+}
+
+.sl-captcha .altcha[data-display="floating"][data-floating-position="top"] .altcha-floating-arrow {
+  margin-top: 0;
+  margin-bottom: 1px;
+  border-top-color: var(--sl-bg);
+  border-bottom-color: transparent;
+  filter: drop-shadow(0 1px 0 var(--sl-border-muted));
+}
+
   text-align: center;
   background: var(--sl-bg);
   border: 1px solid var(--sl-border);

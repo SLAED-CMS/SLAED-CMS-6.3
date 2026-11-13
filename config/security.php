@@ -23,6 +23,7 @@ return [
             'ttl' => '600',
             'difficulty' => 'normal',
             'storage' => 'file',
+            'display' => 'floating',
         ],
         'dump_age' => '7',
         'dump_skip' => '.git/

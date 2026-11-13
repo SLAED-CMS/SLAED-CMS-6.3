@@ -606,6 +606,27 @@ function config(): void {
         'label_html' => _CAPTCHA_PROVIDER,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_provider', 'selectid' => 'f-cap-provider', 'options' => $opts, 'is_config' => true]),
     ];
+    $opts = [];
+    foreach ([['floating', _CAPTCHA_HIDDEN], ['standard', _CAPTCHA_VISIBLE]] as $item) {
+        $opts[] = [
+            'value_attr' => $item[0],
+            'label_text' => $item[1],
+            'is_selected' => (($cap['display'] ?? '') === 'standard' ? 'standard' : 'floating') === $item[0],
+        ];
+    }
+    $capt[] = [
+        'label_for' => 'f-cap-display',
+        'label_html' => _CAPTCHA_LOOK,
+        'hint_html' => _CAPTCHA_LOOK_HINT,
+        'hint_id' => $hntid = getFieldIds('f-cap-display')['hint'],
+        'field_html' => $tpl->getHtmlFrag('select', [
+            'describedby' => $hntid,
+            'name_attr' => 'cap_display',
+            'selectid' => 'f-cap-display',
+            'options' => $opts,
+            'is_config' => true,
+        ]),
+    ];
     $capt[] = [
         'label_html' => _CAPTCHA_REGISTER,
         'label_id' => $labid = getFieldIds('', 'cap_register')['label'],
@@ -752,6 +773,7 @@ function configsave(): void {
             'captcha' => [
                 'active' => getVar('post', 'cap_active', 'num', 0),
                 'provider' => getVar('post', 'cap_provider', 'var', 'altcha'),
+                'display' => getVar('post', 'cap_display', 'var', 'floating'),
                 'register' => getVar('post', 'cap_register', 'num', 0),
                 'contact' => getVar('post', 'cap_contact', 'num', 0),
                 'comments' => getVar('post', 'cap_comments', 'num', 0),

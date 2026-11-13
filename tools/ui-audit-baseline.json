@@ -1,5 +1,5 @@
 {
-    "generated": "2026-11-12T21:33:00Z",
+    "generated": "2026-11-13T13:43:39Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -25,7 +25,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 202,
+            "single": 201,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,

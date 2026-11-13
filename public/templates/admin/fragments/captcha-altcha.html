@@ -1,5 +1,5 @@
 <script type="application/json" class="sl-altcha-i18n" data-lang="{{ lang_code }}">{{{ strings_json }}}</script>
-<div class="sl-captcha">
+<div class="sl-captcha" data-display="{{ display }}">
   <altcha-widget challenge="{{ challenge }}" name="{{ field_name }}" auto="onsubmit" language="{{ lang_code }}" configuration="{{ config_attr }}"></altcha-widget>
   <input type="text" name="{{ hp_name }}" value="" class="sl-captcha-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <input type="hidden" name="{{ ts_name }}" value="{{ ts_value }}">

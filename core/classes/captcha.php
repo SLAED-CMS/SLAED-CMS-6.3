@@ -35,18 +35,20 @@ class AltchaCaptchaProvider implements CaptchaProvider {
     private const ALGO = 'SHA-256';
     private const FIELD = 'altcha';
 
-    # Render the ALTCHA v3 widget (3.5.0): external build with the self-hosted same-origin worker plugins/altcha/altcha-sha.js, so a strict CSP works without blob:
+    # Render the ALTCHA v3 widget (3.5.0) over the worker plugins/altcha/altcha-sha.js, so a strict CSP needs no blob:; any look but standard is hidden until the submit
     public function html(string $act): string {
         global $tpl, $conf, $locale;
         $url = HOME_PATH.'index.php?go=captcha&act='.rawurlencode($act);
+        $look = ($conf['security']['captcha']['display'] ?? '') === 'standard' ? 'standard' : 'floating';
         return $tpl->getHtmlFrag('captcha-altcha', [
+            'display'       => $look,
             'script_attr'   => 'type="module"',
             'script_src'    => Template::getAssetUrl('plugins/altcha/altcha-init.js'),
             'challenge'     => $url,
             'field_name'    => self::FIELD,
             'lang_code'     => (string)($locale ?: ($conf['language'] ?? 'en')),
             'strings_json'  => $this->strings(),
-            'config_attr'   => '{"hideFooter":true,"hideLogo":true}',
+            'config_attr'   => json_encode(['hideFooter' => true, 'hideLogo' => true, 'display' => $look, 'floatingPersist' => true]),
             'hp_name'       => Captcha::honeypotField(),
             'ts_name'       => Captcha::timeField(),
             'ts_value'      => Captcha::timeToken(),

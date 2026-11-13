@@ -1758,6 +1758,10 @@ define('_CAPTCHA_TTL_HINT','Wie lange eine ausgegebene Challenge gültig bleibt.
 define('_SECRET_REGEN','Sicherheitsschlüssel neu generieren');
 define('_SECRET_REGEN_HINT','Erzeugt beim Speichern einen neuen site-weiten Schlüssel und macht alle CSRF-Tokens, Captcha-Challenges und obfuskierte Feldnamen ungültig.');
 define('_CAPTCHA_STORE_WARN','Das Captcha-Verzeichnis storage/captcha ist nicht beschreibbar. ALTCHA kann kein Secret erzeugen oder Lösungen prüfen.');
+define('_CAPTCHA_LOOK','Darstellung');
+define('_CAPTCHA_LOOK_HINT','Ein verborgenes Captcha nimmt im Formular keinen Platz ein. Die Prüfung läuft nach dem Klick auf die Schaltfläche, und so lange steht daneben eine kleine Anzeige. Ein sichtbares Captcha zeigt im Formular einen Rahmen mit Kontrollkästchen.');
+define('_CAPTCHA_HIDDEN','Verborgen');
+define('_CAPTCHA_VISIBLE','Sichtbar');
 define('_UPLOADS_ROOT','Site');
 define('_UPLOADS_TREE','Verzeichnisbaum');
 define('_UPLOADS_PROPS','Eigenschaften');

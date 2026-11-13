@@ -10532,6 +10532,47 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   color: var(--sl-on-solid);
 }
 
+/* Captcha hidden: the wrapper leaves the flow and the widget floats beside the button in the dress of a popover */
+.sl-captcha[data-display="floating"] {
+  position: absolute;
+  margin: 0;
+}
+
+.sl-admin-login-list li:has(.sl-captcha[data-display="floating"]) {
+  position: absolute;
+}
+
+.sl-captcha .altcha[data-display="floating"] {
+  z-index: var(--sl-z-popover);
+  filter: none;
+}
+
+.sl-captcha .altcha[data-display="floating"] .altcha-main {
+  width: max-content;
+  min-width: var(--sl-popover-min-width);
+  max-width: calc(100vw - var(--sl-space-6) * 2);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  color: var(--sl-text);
+  background-color: var(--sl-bg);
+  border-color: var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  box-shadow: var(--sl-popover-shadow);
+}
+
+.sl-captcha .altcha[data-display="floating"] .altcha-floating-arrow {
+  margin-top: 1px;
+  border-bottom-color: var(--sl-bg);
+  filter: drop-shadow(0 -1px 0 var(--sl-border-strong));
+}
+
+.sl-captcha .altcha[data-display="floating"][data-floating-position="top"] .altcha-floating-arrow {
+  margin-top: 0;
+  margin-bottom: 1px;
+  border-top-color: var(--sl-bg);
+  border-bottom-color: transparent;
+  filter: drop-shadow(0 1px 0 var(--sl-border-strong));
+}
+
 /* Error page: 404/access/ban message layout shared by setExit */
 .sl-msg {
   display: flex;

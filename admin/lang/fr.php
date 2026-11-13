@@ -1758,6 +1758,10 @@ define('_CAPTCHA_TTL_HINT','Durée pendant laquelle un défi émis reste valide.
 define('_SECRET_REGEN','Régénérer la clé secrète du site');
 define('_SECRET_REGEN_HINT','Génère une nouvelle clé secrète globale à l’enregistrement et invalide tous les jetons CSRF, défis captcha et noms de champs obfusqués.');
 define('_CAPTCHA_STORE_WARN','Le répertoire storage/captcha n’est pas accessible en écriture. ALTCHA ne peut pas générer de secret ni vérifier les solutions.');
+define('_CAPTCHA_LOOK','Apparence');
+define('_CAPTCHA_LOOK_HINT','Un captcha masqué n\'occupe aucune place dans le formulaire. La vérification s\'exécute après le clic sur le bouton, et un petit indicateur s\'affiche à côté pendant ce temps. Un captcha visible affiche dans le formulaire un cadre avec une case à cocher.');
+define('_CAPTCHA_HIDDEN','Masqué');
+define('_CAPTCHA_VISIBLE','Visible');
 define('_UPLOADS_ROOT','Site');
 define('_UPLOADS_TREE','Arborescence du site');
 define('_UPLOADS_PROPS','Propriétés');
