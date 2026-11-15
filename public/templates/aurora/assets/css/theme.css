@@ -90,7 +90,9 @@ a .sl-letter:hover {
   margin: 0 0 var(--sl-space-4) 0;
 }
 
-h1.sl-title {
+/* The name of a material in a preview is an h2 under the name of the form page and keeps the face it has on its own page */
+h1.sl-title,
+.sl-preview h2.sl-title {
   font-size: var(--sl-font-h1);
   color: var(--sl-text-strong);
 }
@@ -7678,15 +7680,16 @@ button.sl-seg-cell:hover {
   color: var(--sl-text);
 }
 
-/* Comments: comment card layout */
+/* Comments: comment card layout; a comment stands in the window of the list and carries its own inset, as a message of a forum topic does */
 .sl-comment {
   display: flex;
   gap: var(--sl-space-9);
-  margin-bottom: var(--sl-space-8);
+  padding: var(--sl-space-5) 0;
 }
 
-#repcrows > .sl-empty {
-  margin-bottom: var(--sl-space-8);
+/* The status zone of the comment form takes no row of its window until an answer fills it */
+#repcstat:not(:has(*)) {
+  display: none;
 }
 
 /* A reply and a row of a check list tree are indented by their depth, which the row carries as a custom property rather than as one class per level */
@@ -8029,31 +8032,44 @@ h1.sl-pane-title {
   float: none;
 }
 
-/* Forum: the messages of a topic stand in a window of fragments/pane.html named by the topic, as far from the row of the pager as that row keeps off what follows it */
-.sl-pane:has(> .sl-pane-body > div > .sl-forum-post) {
+/* Forum: the messages of a topic stand in a window named by the topic, as far from the row of the pager as that row keeps off what follows; the comments keep that step */
+.sl-pane:has(> .sl-pane-body > div > .sl-forum-post),
+#repcsave > .sl-pane {
   margin-bottom: var(--sl-space-7);
 }
 
-/* A message carries its own inset, so the body spaces nothing; a dashed rule parts two messages, and the first and the last give their outer inset to the window */
+/* A message carries its own inset, so the body spaces nothing; a dashed rule parts two messages or two comments, and the first and the last give their outer inset to the window */
 .sl-pane-body:has(> div > .sl-forum-post) {
   gap: 0;
 }
 
-.sl-pane-body > div:has(> .sl-forum-post) + div {
+.sl-pane-body > div:has(> .sl-forum-post) + div,
+#repcrows > div:not(:first-child) > .sl-comment {
   border-top: 1px dashed var(--sl-border);
 }
 
-.sl-pane-body > div:first-child > .sl-forum-post {
+.sl-pane-body > div:first-child > .sl-forum-post,
+#repcrows > div:first-child > .sl-comment {
   padding-top: 0;
 }
 
-.sl-pane-body > div:last-child > .sl-forum-post {
+.sl-pane-body > div:last-child > .sl-forum-post,
+#repcrows > div:last-child > .sl-comment {
   padding-bottom: 0;
 }
 
-/* The quick reply in its window ends with its button: the form adds no margin under it */
-.sl-pane-body > .sl-forum-reply-form > .sl-form {
+/* A form in a window adds no margin under its button, the gap of the body spaces what stands over its fields, and a dashed rule parts a form from a text or a form above it */
+.sl-pane-body > form > .sl-form,
+.sl-pane-body > .sl-alert,
+.sl-pane-body > .sl-section,
+.sl-pane-body > #repcstat > .sl-alert {
   margin-bottom: 0;
+}
+
+.sl-pane-body > .sl-section + form,
+.sl-pane-body > form + form {
+  padding-top: var(--sl-space-4);
+  border-top: 1px dashed var(--sl-border);
 }
 
 .sl-forum-foot {
@@ -8069,6 +8085,13 @@ h1.sl-pane-title {
 .sl-forum-foot .sl-pager {
   flex: 1 1 var(--sl-layout-sidebar);
   min-width: 0;
+  padding: 0;
+  border-top: 0;
+}
+
+/* The pager of the comments stands under their window as the foot of a topic does: no rule, no inset, one step to the form */
+#repcsave > .sl-pager {
+  margin-bottom: var(--sl-space-7);
   padding: 0;
   border-top: 0;
 }
@@ -9060,7 +9083,6 @@ a.sl-chip-neutral {
 
 /* Responsive fallbacks: forum posts, comments, cards and pagination */
 @media (max-width: 768px) {
-  .sl-comment,
   .sl-forum-post {
     margin-bottom: var(--sl-space-7);
     padding-bottom: var(--sl-space-7);

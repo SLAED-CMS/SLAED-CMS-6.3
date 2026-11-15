@@ -1,5 +1,5 @@
 <article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-fullview">
-  <h1 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{{ title }}{% if fresh_html %} {{{ fresh_html }}}{% endif %}</h1>
+  <{% if is_preview %}h2{% else %}h1{% endif %} class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{{ title }}{% if fresh_html %} {{{ fresh_html }}}{% endif %}</{% if is_preview %}h2{% else %}h1{% endif %}>
   <div class="sl-meta">
     <ul class="sl-pull-right">
       {% if is_comm %}

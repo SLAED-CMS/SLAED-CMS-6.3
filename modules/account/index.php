@@ -16,8 +16,6 @@ function account(): void {
     } else {
         setHead(['title' => _USERREGLOGIN]);
         $captcha = getCaptcha('login');
-        $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN, 'is_level_one' => true]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-user-name',
             'label' => _NICKNAME,
@@ -58,7 +56,12 @@ function account(): void {
                 ]),
         ]);
         $after .= Oauth::getButtons();
-        $cont .= $tpl->getHtmlPart('form-add', [
+        echo $tpl->getHtmlPart('form-add', [
+            'icon' => getIconName('logins'),
+            'title' => _USERREGLOGIN,
+            'hint' => _USERREGLOGIN,
+            'level' => 1,
+            'note_html' => $stop ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '',
             'action' => getSeoUrl(['name' => $conf['name']]),
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')])
                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'back', 'value_attr' => getBackUrl()]).$fields,
@@ -66,7 +69,6 @@ function account(): void {
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'login', 'label' => _USERLOGIN, 'icon_name' => 'box-arrow-in-right']),
             'after_submit' => $after,
         ]);
-        echo $cont;
         setFoot();
     }
 }
@@ -94,14 +96,10 @@ function newuser(): void {
         profil();
     } else {
         setHead(['title' => _REGNEWUSER]);
-        if ($stop) {
-            $cont = $tpl->getHtmlFrag('title', ['title' => _NEWUSERERROR, 'is_level_one' => true]);
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-        } else {
-            $cont = $tpl->getHtmlFrag('title', ['title' => _REGNEWUSER, 'is_level_one' => true]);
-        }
+        $title = $stop ? _NEWUSERERROR : _REGNEWUSER;
+        $note = $stop ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         if (!$conf['users']['reg']) {
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
+            $cont = $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_one' => true]).$note.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
         } else {
             $unkey = substr(getSecret('field'), 0, 32);
             $nick = getVar('post', $unkey, 'text');
@@ -177,7 +175,12 @@ function newuser(): void {
                     ]),
             ]);
             $after .= Oauth::getButtons();
-            $cont .= $tpl->getHtmlPart('form-add', [
+            $cont = $tpl->getHtmlPart('form-add', [
+                'icon' => 'person-plus',
+                'title' => $title,
+                'hint' => $title,
+                'level' => 1,
+                'note_html' => $note,
                 'action' => getSeoUrl(['name' => $conf['name']]),
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'captcha' => $captcha,
@@ -223,15 +226,18 @@ function finnewuser(): void {
         if (!$stop) {
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
-                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]);
-                $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]);
                 $fields = $tpl->getHtmlFrag('field-value', ['label' => _UNICKNAME, 'value_text' => $nick])
                     .$tpl->getHtmlFrag('field-value', ['label' => _PASSWORD, 'value_text' => $pass]);
                 $hidden = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => $conf['name']])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'activate'])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'user', 'value_attr' => urlencode($nick)])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'num', 'value_attr' => $check]);
-                $cont .= $tpl->getHtmlPart('form-add', [
+                $cont = $tpl->getHtmlPart('form-add', [
+                    'icon' => 'person-check',
+                    'title' => _ACCOUNTCREATED,
+                    'hint' => _ACCOUNTCREATED,
+                    'level' => 1,
+                    'note_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]),
                     'action' => HOME_PATH.'index.php',
                     'method' => 'get',
                     'no_enctype' => true,
@@ -940,11 +946,9 @@ function passlost(): void {
         setHead([
             'title' => _PASSWORDLOST,
         ]);
-        $cont = $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true]);
         $info = ($email) ? _PASSLOSP : _PASSLOSC;
         $send = ($email) ? _SENDPASSWORD : _SEND;
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
+        $note = ($stop ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '').$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-email',
             'label' => _EMAIL,
@@ -981,13 +985,17 @@ function passlost(): void {
                     'icon_name' => 'person-plus',
                     'is_footer_button' => true]),
         ]);
-        $cont .= $tpl->getHtmlPart('form-add', [
+        echo $tpl->getHtmlPart('form-add', [
+            'icon' => getIconName('keys'),
+            'title' => _PASSWORDLOST,
+            'hint' => _PASSWORDLOST,
+            'level' => 1,
+            'note_html' => $note,
             'action' => getSeoUrl(['name' => $conf['name']]),
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'passmail', 'label' => $send, 'icon_name' => 'send']),
             'after_submit' => $after,
         ]);
-        echo $cont;
         setFoot();
     } elseif (is_user()) {
         profil();
@@ -2058,8 +2066,12 @@ function unsub(): void {
     } elseif ($post) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACCOUNT_UNSUBOK, $show)]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACCOUNT_UNSUBASK, $show)]);
-        $cont .= $tpl->getHtmlPart('form-add', [
+        $cont = $tpl->getHtmlPart('form-add', [
+            'icon' => 'envelope-x',
+            'title' => _MAIL_UNSUB,
+            'hint' => _MAIL_UNSUB,
+            'level' => 1,
+            'note_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACCOUNT_UNSUBASK, $show)]),
             'action' => getSeoUrl(['name' => $conf['name'], 'op' => 'unsub', 'key' => $key, 'mail' => rawurlencode($mail)]),
             'no_enctype' => true,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'unsub', 'label' => _MAIL_UNSUB, 'icon_name' => 'envelope-x']),

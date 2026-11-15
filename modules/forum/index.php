@@ -814,15 +814,15 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
-        $cont = $tpl->getHtmlPart('form-add', [
+        return $tpl->getHtmlPart('form-add', [
+            'icon' => 'reply',
+            'title' => _QUICKREPLY,
             'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
-            'is_reply' => true,
             'fields' => $rows,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => $hide, 'label' => _SEND, 'icon_name' => 'send']),
         ]);
-        return $tpl->getHtmlFrag('pane', ['icon' => 'reply', 'title' => _QUICKREPLY, 'content_html' => $cont]);
     }
     return '';
 }
@@ -945,13 +945,12 @@ function add(): void {
     }
     if ($form) {
         setHead(['title' => $info, 'ctitle' => ($fid || $ftext) ? $ctitle : '', 'kind' => 'utility', 'robots' => 'noindex, follow']);
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
+        $note = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $psubject = (!$subh) ? $subject : '';
         $view = ['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)], 'fmt' => getStoreFormat('forum.body')];
-        if ($hometext) $cont .= getTplPreviewContent($view);
+        $cont = $hometext ? getTplPreviewContent($view) : '';
         $userinfo = getUserInfo();
-        if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
-        $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);
+        if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $note .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-postname',
             'label' => _YOURNAME,
@@ -1000,10 +999,14 @@ function add(): void {
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('forum'), 'input_attr' => '']);
         $cont .= $tpl->getHtmlPart('form-add', [
+            'icon' => getIconName('write'),
+            'title' => $info,
+            'hint' => $info,
+            'level' => 1,
+            'note_html' => $note,
             'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
-            'is_reply' => true,
             'fields' => $rows,
             'submit' => $hide.$tpl->getHtmlFrag('form-submit', ['op' => 'send', 'acts' => [
                 ['name' => 'posttype', 'value' => 'preview', 'icon' => 'eye', 'label' => _PREVIEW],

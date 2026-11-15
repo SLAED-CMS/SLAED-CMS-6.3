@@ -45,7 +45,6 @@ function contact(): void {
         $info = '';
     }
     setHead(['title' => $title]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_one' => true]);
     $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-id',
         'label' => _TO,
@@ -72,20 +71,8 @@ function contact(): void {
             'name_attr' => 'message', 'input_id' => 'f-message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true,
         ]),
     ]);
-    $form = ($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
-        'action' => getSeoUrl(['name' => $conf['name']]),
-        'method' => 'post',
-        'form_name' => 'post',
-        'no_enctype' => true,
-        'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')]).$fields,
-        'captcha' => getCaptcha('contact'),
-        'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
-            'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
-            'op' => 'contact',
-            'label' => _SEND,
-            'icon_name' => 'send',
-        ]),
-    ]);
+    $sent = false;
+    $note = '';
     if (getVar('post', 'send', 'num') == '1') {
         $id = getVar('post', 'id', 'num');
         $sname = getVar('post', 'sname', 'name');
@@ -116,16 +103,35 @@ function contact(): void {
             ]);
             $mailer->addQueue(['kind' => 'contact', 'email' => $to, 'title' => $subject, 'body' => $msg, 'sender' => $semail, 'prio' => 1, 'client' => true]);
             if (is_user()) $pnt->addEvent('message', 'contact', 'req:'.bin2hex(random_bytes(16)), intval($user[0]));
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 5]);
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
+            $sent = true;
         } else {
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-            $cont .= $form;
+            $note = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         }
-    } else {
-        $cont .= $form;
     }
-    echo $cont;
+    if ($sent) {
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 5]);
+        echo $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
+    } else {
+        echo $tpl->getHtmlPart('form-add', [
+            'icon' => 'envelope',
+            'title' => $title,
+            'hint' => $title,
+            'level' => 1,
+            'note_html' => $note.($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info]) : ''),
+            'action' => getSeoUrl(['name' => $conf['name']]),
+            'method' => 'post',
+            'form_name' => 'post',
+            'no_enctype' => true,
+            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')]).$fields,
+            'captcha' => getCaptcha('contact'),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
+                'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
+                'op' => 'contact',
+                'label' => _SEND,
+                'icon_name' => 'send',
+            ]),
+        ]);
+    }
     setFoot();
 }
 

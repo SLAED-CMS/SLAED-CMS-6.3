@@ -1,4 +1,10 @@
-<form action="{% if action %}{{ action }}{% else %}index.php?name={{ name }}&amp;op=add{% endif %}" method="{% if method %}{{ method }}{% else %}post{% endif %}" name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"{% if form_id %} id="{{ form_id }}"{% endif %}{% if is_reply %} class="sl-forum-reply-form"{% endif %}{% if not no_enctype %} enctype="multipart/form-data"{% endif %}{% if form_attr %} {{{ form_attr }}}{% endif %}>
+{% if title %}
+<section class="sl-pane">
+  {% include 'fragments/pane-cap.html' %}
+  <div class="sl-pane-body">
+    {% if note_html %}{{{ note_html }}}{% endif %}
+{% endif %}
+<form action="{% if action %}{{ action }}{% else %}index.php?name={{ name }}&amp;op=add{% endif %}" method="{% if method %}{{ method }}{% else %}post{% endif %}" name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"{% if form_id %} id="{{ form_id }}"{% endif %}{% if not no_enctype %} enctype="multipart/form-data"{% endif %}{% if form_attr %} {{{ form_attr }}}{% endif %}>
   <div class="sl-form">
     {% if fields %}{{{ fields }}}{% endif %}
     {% if captcha or submit %}
@@ -10,3 +16,7 @@
     {% if after_submit %}{{{ after_submit }}}{% endif %}
   </div>
 </form>
+{% if title %}
+  </div>
+</section>
+{% endif %}

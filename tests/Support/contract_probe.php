@@ -681,6 +681,9 @@ function getProbeCommentThread(): array {
         'marked' => (string)($db->getSqlRow($db->getSqlQuery('SELECT deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => intval($kid['id'])]))['deleted'] ?? ''),
         'reply' => $com->addComment('voting', $tid, 'thread probe under a tombstone', 'Probe', '', intval($kid['id']))['error'],
     ];
+    $whole = $com->getThread('voting', $tid);
+    $out['tomb']['count'] = [$com->getTargetCount('voting', $tid), count(array_filter($whole, static fn(array $v): bool => $v['deleted'] === '')), count($whole),
+        $com->getTargetCount('voting', 0)];
     foreach (array_reverse(array_slice($made, 2)) as $one) $com->deleteComment($one);
     $bare = $com->getList('voting', $tid, 1);
     $out['tomb']['gone'] = !in_array(intval($kid['id']), array_column($bare['rows'], 'id'), true);

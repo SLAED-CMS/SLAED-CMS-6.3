@@ -452,7 +452,8 @@ class FeedTest extends TestCase
         $this->assertStringContainsString("\$url = getVar('req', 'url', 'url', '');", self::getCode('modules/account/index.php'));
         $this->assertStringContainsString('    echo getRssView($url);', self::getCode('modules/account/index.php'), 'The cabinet refuses an empty address by a check of its own');
         $rss = self::getCode('modules/rss/index.php');
-        $this->assertStringContainsString("if (getVar('post', 'send', 'num') == 1) \$cont .= getRssView(\$url);", $rss, 'The feed page stays silent on a sent empty address');
+        $view = "if (\$conf['rss']['use'] == 1 && getVar('post', 'send', 'num') == 1) echo getRssView(\$url);";
+        $this->assertStringContainsString($view, $rss, 'The feed page stays silent on a sent empty address');
         $this->assertSame(2, substr_count($rss, "'name' => 'send', 'val' => '1'"), 'A feed form of the page is not told from the form of the code');
         $core = self::getCode('core/system.php');
         $this->assertStringContainsString('$content = getRssBody($url) ?? $content;', $core, 'A failed refresh keeps the stored body');

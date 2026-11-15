@@ -23,8 +23,6 @@ function recommend(): void {
     $fname = getVar('post', 'fname', 'name');
     $femail = getVar('post', 'femail', 'text');
     setHead(['title' => _RECOMMTITLE]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $fields = $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-'.$unkey,
         'label' => _YOURNAME,
@@ -53,7 +51,12 @@ function recommend(): void {
             'name_attr' => 'femail', 'input_id' => 'f-femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true,
         ]),
     ]);
-    $cont .= $tpl->getHtmlPart('form-add', [
+    echo $tpl->getHtmlPart('form-add', [
+        'icon' => 'hand-thumbs-up',
+        'title' => _RECOMMTITLE,
+        'hint' => _RECOMMTITLE,
+        'level' => 1,
+        'note_html' => $stop ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '',
         'action' => getSeoUrl(['name' => $conf['name']]),
         'method' => 'post',
         'form_name' => 'post',
@@ -62,7 +65,6 @@ function recommend(): void {
         'captcha' => getCaptcha('contact'),
         'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'label' => _SEND, 'icon_name' => 'send']),
     ]);
-    echo $cont;
     setFoot();
 }
 

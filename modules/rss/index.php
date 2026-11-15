@@ -35,7 +35,6 @@ function info(): void {
         $lim++;
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT, 'kind' => 'utility']);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _RSS, 'is_level_one' => true]);
     $fields = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSS_INFO_TEXT]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-mod',
@@ -59,7 +58,7 @@ function info(): void {
             'cols_num' => 45, 'rows_num' => 3, 'input_id' => 'f-rsscode', 'value_text' => $rsslink, 'input_attr' => 'OnClick="this.select()"',
         ]),
     ]);
-    $cont .= $tpl->getHtmlPart('form-add', [
+    $forms = $tpl->getHtmlPart('form-add', [
         'action' => getSeoUrl(['name' => $conf['name']]),
         'method' => 'post',
         'form_name' => 'post',
@@ -69,8 +68,7 @@ function info(): void {
     ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
-        $cont .= $tpl->getHtmlFrag('block-content', ['is_section' => true, 'has_hr' => true]);
-        $cont .= $tpl->getHtmlPart('form-add', [
+        $forms .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
@@ -82,7 +80,7 @@ function info(): void {
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'name' => 'send', 'val' => '1', 'label' => _OK]),
         ]);
-        $cont .= $tpl->getHtmlPart('form-add', [
+        $forms .= $tpl->getHtmlPart('form-add', [
             'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
@@ -96,9 +94,9 @@ function info(): void {
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'name' => 'send', 'val' => '1', 'label' => _OK]),
         ]);
-        if (getVar('post', 'send', 'num') == 1) $cont .= getRssView($url);
     }
-    echo $cont;
+    echo $tpl->getHtmlFrag('pane', ['icon' => getIconName('rss'), 'title' => _RSS, 'hint' => _RSS, 'level' => 1, 'content_html' => $forms]);
+    if ($conf['rss']['use'] == 1 && getVar('post', 'send', 'num') == 1) echo getRssView($url);
     setFoot();
 }
 

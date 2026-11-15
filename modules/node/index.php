@@ -949,8 +949,8 @@ function setNodeForm(): void {
                     $node = getNodeWriter($type)->getNodePreview($type, $input, $state);
                     $one = ($type->ext === 'event') ? ['starts' => $input->ext['starts'], 'ends' => ($input->ext['ends'] === '') ? null : $input->ext['ends'],
                         'place' => trim($input->ext['place'])] : [];
-                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, $node, getNodeViewData($type, $node, 'view'), '',
-                        getNodeExtVars($type, $node, $one))]);
+                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, $node,
+                        ['is_preview' => true] + getNodeViewData($type, $node, 'view'), '', getNodeExtVars($type, $node, $one))]);
                 } else {
                     $node = getNodeWriter($type)->addNode($type, $input, $state);
                     if ($state === NodeStatus::Pending && $type->settings['workflow']['notify']['pending']) {
@@ -976,11 +976,10 @@ function setNodeForm(): void {
     $send = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('node'), 'input_attr' => ''])
         .$tpl->getHtmlFrag('form-submit', ['acts' => [['name' => 'action', 'value' => 'preview', 'icon' => 'eye', 'label' => _PREVIEW],
             ['name' => 'action', 'value' => 'submit', 'icon' => 'send', 'label' => _SEND]]]);
-    echo $tpl->getHtmlFrag('title', ['title' => getModuleName($type->name).' - '._ADD, 'is_level_one' => true])
-        .(($note !== '') ? $tpl->getHtmlFrag('alert', ['text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8'), 'is_warn' => true]) : '')
-        .$prev
-        .$tpl->getHtmlPart('form-add', ['action' => getSeoUrl(['name' => $type->name, 'op' => 'add']), 'form_name' => 'nodeadd', 'fields' => $rows,
-            'captcha' => getCaptcha('comment'), 'submit' => $send]);
+    $title = getModuleName($type->name).' - '._ADD;
+    echo $prev.$tpl->getHtmlPart('form-add', ['icon' => getIconName($type->name), 'title' => $title, 'hint' => $title, 'level' => 1,
+        'note_html' => ($note !== '') ? $tpl->getHtmlFrag('alert', ['text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8'), 'is_warn' => true]) : '',
+        'action' => getSeoUrl(['name' => $type->name, 'op' => 'add']), 'form_name' => 'nodeadd', 'fields' => $rows, 'captcha' => getCaptcha('comment'), 'submit' => $send]);
     setFoot();
 }
 

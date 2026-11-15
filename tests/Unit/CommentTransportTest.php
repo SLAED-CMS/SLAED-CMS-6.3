@@ -161,6 +161,14 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString('WHERE k.pid = 0', $root, 'The rank is not counted over the roots the page renders');
     }
 
+    # A reply answered as a fragment stands at the depth the list gives it, as the row read by its id alone knows none
+    #[Test]
+    public function aFreshReplyKeepsTheDepthOfItsBranch(): void
+    {
+        $code = $this->getSource('core/user.php', 'addComment');
+        $this->assertStringContainsString("getCommentView(['depth' => \$data['rows'][\$at]['depth']] + \$row", $code, 'A fresh reply is answered at the depth of a root');
+    }
+
     # The rest of a capped branch is appended by its own control, which also stays an ordinary link that expands the branch on the server
     #[Test]
     public function theRestOfABranchIsAppendedByItsOwnControl(): void

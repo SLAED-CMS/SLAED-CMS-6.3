@@ -179,16 +179,22 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, array
     ]);
 }
 
-# Render the comment list of one target from the comment subsystem; the rows get a container of their own, because a fragment appends to them and the pager is no comment
+# Render the comment list of one target as a window with the pager under it; the rows get a container of their own, as a fragment appends to them, and the chip is refilled by id
 function getCommentList(int $cid, string $mod, int $page, int $full, ?string $route): string {
     global $conf, $tpl, $com;
     $mod = filterVar($mod);
     $data = $com->getList($mod, $cid, $page ?: 1, $full);
     $pag = ['name' => $mod, 'op' => 'view', 'id' => $cid, 'route' => $route, 'page' => getVar('get', 'page', 'num')];
     $rows = ($data['total'] < 1)
-        ? $tpl->getHtmlFrag('empty', ['is_small' => true, 'icon_name' => 'chat-left-text', 'title_text' => _NOCOMMENTS])
+        ? $tpl->getHtmlFrag('empty', ['is_small' => true, 'is_pane' => true, 'icon_name' => 'chat-left-text', 'title_text' => _NOCOMMENTS])
         : getCommentRows($data, $mod, $cid, getSiteToken(), $pag);
-    $out = $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]);
+    $out = $tpl->getHtmlFrag('pane', [
+        'icon' => getIconName('comm'),
+        'title' => _COMMENTS,
+        'level' => 2,
+        'chips' => [['tone' => 'neutral', 'label' => $data['total'] ? $com->getTargetCount($mod, $cid) : 0, 'title' => _COMMENTS, 'id' => 'repcnum', 'is_live' => true]],
+        'content_html' => $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]),
+    ]);
     if ($data['total'] < 1) return $out;
     return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, getPageSpan($conf['comments']), $data['page'], '#comm', 'com');
 }
@@ -233,18 +239,17 @@ function getCommentBranch(): void {
     echo $cont;
 }
 
-# Render the comment list, status zone and form of an item as three regions; the editor field is named, not numbered, because a numeric id collides with comment ids
+# Render the comments of an item as two windows, the list and the form with the status zone in its body; the editor field is named, as a numeric id collides with comment ids
 function setComShow(int $id, int $acomm, ?string $route): string {
     global $conf, $user, $tpl, $com;
     $full = getVar('get', 'all', 'num', 0);
     $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage($full ?: getVar('get', 'at', 'num', 0));
     $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
-    $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full, $route)]);
+    $cont = $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full, $route)]);
     $stat = '';
-    $form = '';
+    $form = $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => '']);
     if ($mode !== CommentMode::Disabled && !is_user() && $conf['comments']['anonpost'] == 0) {
-        $form = $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getLoginUrl()), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        $form .= $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getLoginUrl()), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } elseif ($mode !== CommentMode::Disabled) {
         $userinfo = getUserInfo();
         $note = !is_moder($conf['name']) && ($mode === CommentMode::Moderated || !empty($userinfo['access']) || (!is_user() && $conf['comments']['anonpost'] == 1));
@@ -288,6 +293,9 @@ function setComShow(int $id, int $acomm, ?string $route): string {
             'hx_swap' => 'afterbegin',
         ]);
         $form = $tpl->getHtmlPart('form-add', [
+            'icon' => 'reply',
+            'title' => _COMMENTREPLY,
+            'note_html' => $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => $stat]),
             'action' => $post,
             'form_id' => 'formcsave',
             'form_name' => 'post',
@@ -297,7 +305,7 @@ function setComShow(int $id, int $acomm, ?string $route): string {
             'submit' => $submit,
         ]);
     }
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => $stat]).$form;
+    $cont .= $form;
     return $tpl->getHtmlFrag('block-content', ['id' => 'comm', 'is_comments_section' => true, 'content' => $cont]);
 }
 
@@ -486,6 +494,7 @@ function addComment(): void {
         return;
     }
     $data = $com->getList($mod, $id, $page);
+    $chip = $tpl->getHtmlFrag('swap-oob', ['id' => 'repcnum', 'is_fill' => true, 'text' => $com->getTargetCount($mod, $id)]);
     $numb = $data['first'];
     $at = -1;
     foreach ($data['rows'] as $pos => $one) {
@@ -504,6 +513,7 @@ function addComment(): void {
             'label' => (string)_COMMENT.': '.$row['id'],
             'is_card_id' => true,
         ]));
+        echo $chip;
         return;
     }
     $size = $data['limit'];
@@ -521,7 +531,7 @@ function addComment(): void {
     foreach ($off ? $com->getBranch($off, 500)['rows'] : [] as $kid) $oob .= $tpl->getHtmlFrag('swap-oob', ['id' => $kid['id']]);
     if ($at > 0) header('HX-Retarget: [id=\''.$data['rows'][$at - 1]['id'].'\']');
     header('HX-Reswap: '.($at > 0 ? 'afterend' : ($total === 1 ? 'innerHTML' : 'afterbegin')));
-    echo getCommentView($row, $row['pid'] ? 0 : $numb, getSiteToken()).$oob;
+    echo getCommentView(['depth' => $data['rows'][$at]['depth']] + $row, $row['pid'] ? 0 : $numb, getSiteToken()).$oob.$chip;
 }
 
 # Read the place of one forum post from its rows, never from the request: category, topic with its status, author; a missing post answers category 0 and no right is read

@@ -6389,16 +6389,19 @@ function updateCommentStatus(): void {
     echo getCommentView($row, $numb, getSiteToken());
 }
 
-# Remove one comment as a moderator and answer nothing; the removal is named by the response, so a refused delete takes no element out of the page
+# Remove one comment as a moderator and answer the new count for the chip alone; the removal is named by the response, so a refused delete takes no element out of the page
 function deleteComment(): void {
     global $tpl, $com;
-    if (!$com->deleteComment(getVar('req', 'id', 'num', 0))) {
+    $id = getVar('req', 'id', 'num', 0);
+    $row = $com->getComment($id);
+    if (!$com->deleteComment($id)) {
         header('HX-Retarget: #repcstat');
         header('HX-Reswap: innerHTML');
         echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         return;
     }
     header('HX-Reswap: delete');
+    if ($row) echo $tpl->getHtmlFrag('swap-oob', ['id' => 'repcnum', 'is_fill' => true, 'text' => $com->getTargetCount($row['modul'], $row['cid'])]);
 }
 
 # Voting result save

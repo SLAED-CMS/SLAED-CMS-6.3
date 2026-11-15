@@ -220,6 +220,13 @@ class Comment {
         return $out;
     }
 
+    # Count the comments one target shows its viewer out of the set the list reads: a moderator counts the hidden ones too, and a removed comment kept as a tombstone is no comment
+    public function getTargetCount(string $mod, int $id): int {
+        if (!$this->checkTargetView($mod, $id)) return 0;
+        [$cte, $pars] = $this->getKeepCte($mod, $id);
+        return $this->getTotal('keep AS k JOIN '.PREFIX_DB.'_comment AS c ON c.id = k.id WHERE c.deleted IS NULL', $pars, $cte.' ');
+    }
+
     # Return the whole discussion of one target, every root followed by its full branch, without a walk over pages; a material the context may not read answers none
     public function getThread(string $mod, int $id): array {
         if (!$this->checkTargetView($mod, $id)) return [];

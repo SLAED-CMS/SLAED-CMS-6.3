@@ -320,6 +320,17 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('_COMMENTS_GONE', $this->getSource('core/user.php', 'getCommentView'));
     }
 
+    # The count of a target is every comment its thread shows, replies with the roots, without the tombstone that only holds a branch
+    #[Test]
+    public function theCountOfATargetLeavesTheTombstoneOut(): void
+    {
+        $data = $this->getProbe();
+        [$count, $live, $whole, $none] = $data['tomb']['count'];
+        $this->assertSame($live, $count, 'The count of a target differs from the comments its thread shows');
+        $this->assertLessThan($whole, $count, 'The count of a target took the tombstone for a comment');
+        $this->assertSame(0, $none, 'A target without comments answered a count');
+    }
+
     # Removing an account keeps its comments and drops only the reference to it, so no discussion loses a row and no branch loses a parent
     #[Test]
     public function removingAnAccountKeepsItsCommentsAndTheirBranches(): void
