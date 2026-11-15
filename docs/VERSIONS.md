@@ -51,6 +51,46 @@ The reference is `docs/TEMPLATES.md`, "Panel Window" and "Segmented Switch".
 
 The reference is `docs/TEMPLATES.md`, "Panel Window", "Admin List Contract" and "Segmented Switch".
 
+### Every section of the debug panel is a window
+
+- **The debug panel of both themes** prints each of its sections through `fragments/pane.html` with an icon and a name
+  in the head. The head carries no colour of its section, the tone stays with the values inside.
+- **`fragments/pane.html` of both themes takes `is_debug`** — the class `sl-pane-debug` on the window and `tabindex`,
+  `role` and `aria-label` on its body, which scrolls a long token sideways. In the theme `admin` the text of a debug
+  window takes the grey smoothing of every window.
+- **Breaking for a theme made from `admin` or `aurora`:** `fragments/debug-section.html` and the classes
+  `.sl-debug-section*` are gone. Such a theme prints `is_debug` in its `fragments/pane.html` and takes the rules of
+  `.sl-pane-debug`; the fragment it kept is read by nothing.
+
+The reference is `docs/TEMPLATES.md`, "Panel Window".
+
+### The frames beside a window of the panel read its tokens, and the freeze of the theme API is lifted
+
+- **One rule of the theme `admin`** writes the line and the corner of `.sl-pane` and of seven frames beside it:
+  `.sl-metric`, `.sl-block-sidebar`, `.sl-mcard`, `.sl-toolbar`, `.sl-preview`, `.sl-msg-card` and `.sl-fm-shell`.
+- **The gradient of a window** stands under the blocks of the side column, the menu cards of the home, the toolbar and
+  the rail of the folded column, which read `--sl-pane-bg`. The toolbar and the rail keep `--sl-bar-shadow`.
+- **The message page of both themes** reads the line, the corner and the shade of a window. The static
+  `public/error.html` takes `--sl-border-subtle`, the radius of 8 and `--sl-shadow-xs` in its own `:root`.
+- **The API of a theme is no longer frozen.** A token that lost its last reader is removed with that reader; the
+  roster `api` of `tools/ui-audit-baseline.json` and the test of the lost names are gone.
+- **Breaking for a theme made from `admin`:** the token `--sl-msg-shadow` is gone.
+
+The reference is `docs/TEMPLATES.md`, "Panel Window" and "Theme Contract".
+
+### The three cockpits of the panel wear its window
+
+- **The cockpit of the home, of "Мониторинг" and of "Статистика"** is `section.sl-pane.sl-cockpit` with the head of
+  `fragments/pane-cap.html`. Its frame, its ground and its shade come from the tokens of a window, and its corner comes
+  down from radius 12 to 8. The line of state stands in the middle of the head, over the lamp, and the rule over the
+  strip of figures is dashed.
+- **`fragments/pane-cap.html` of `admin` takes `state_html`**, the line of state a cockpit hands in.
+- **Breaking for a theme that kept `partials/cockpit.html`:** the keys `cap_icon`, `cap_text` and `nav_html` are
+  `icon`, `title` and `tools_html`, and the head `.sl-cockpit-top` is gone.
+- **The settings tab of "RSS-каналы"** stands in the window "Основные".
+
+The reference is `docs/TEMPLATES.md`, "Panel Window" and "Parts Of A Screen".
+
 ## 2026-11-14
 
 ### The gradient of a window runs down the whole window, and a window of the site takes an inset of 12

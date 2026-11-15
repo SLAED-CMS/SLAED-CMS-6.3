@@ -536,7 +536,7 @@ The window of the site is the window of the panel in the values of `aurora`: one
 
 | Part | Where | Carries |
 |---|---|---|
-| A window | `fragments/pane.html`, `.sl-pane` | the keys of the head, `content_html`, `id`, `is_warn` for the window of the warnings, `is_fold` with `is_open` for a body that folds; a partial whose body is markup of its own writes `section.sl-pane` itself and includes the head |
+| A window | `fragments/pane.html`, `.sl-pane` | the keys of the head, `content_html`, `id`, `is_warn` for the window of the warnings, `is_fold` with `is_open` for a body that folds, `is_debug` for a section of the debug panel (the class `sl-pane-debug` on the window, `tabindex`, `role` and the name of the window on its body); a partial whose body is markup of its own writes `section.sl-pane` itself and includes the head |
 | The head | `fragments/pane-cap.html`, `.sl-pane-cap` | `icon` (bare, in `--sl-cat-tone`), `title` or `title_html`, or `title` with `href` for a linked name; the name is an `h3` unless `level` gives the rank of its heading or `is_plain` asks a `div`; `title_id`, `hint`, `chips` (`tone`, `label`, `icon`, `title`, `id`, `is_live`), `meta` for a value at the right end (`.sl-pane-meta`, the name of the panel) with `meta_tone` for its `data-sl-tone` and `meta_icon`, `live_title` for the turning mark, `tools_html`, and `is_fold` with `id`, `is_open` and `plus_text` for the plus |
 | The body | `.sl-pane-body` | a grid of two tracks, caption and field; a direct child spans both, a direct `.sl-form-row` takes them by `subgrid` |
 
@@ -548,7 +548,7 @@ The window of the site is the window of the panel in the values of `aurora`: one
 - **The presentation wears the head of the panel.** Under `.sl-pres` (`assets/css/presentation.css`) a window takes the frame and the ground of the page palette (`--sl-pres-border`, `--sl-pres-panel-bg`) and an inset of 12 of its own, whatever a block of the site takes; its head is mono capitals with a bare icon of `--sl-size-icon-xs`, a rule and the value `meta` at the right in the tone of a link or in its own, a chip and 8 twice and the rule high (43 px); its body is a plain box inset on all four sides, with no inset where rows run from frame to frame (the block layout, the cache tree), and a rule between rows inside it is dashed. A frame that carries the head is a window; the sections, the hero, the illustrated scenes, the tiles (the gallery, the principles, the pulse, the voices), the cockpit, the ticker, the rail, the rings and the code console are not, and the cockpit and the tiles keep radius 12. The model of the hero `.sl-pres-core` is a drawing, not a window, and the heads over the groups that draw no frame (the block system, the commits, the board of the statistics, the voices) stand without one: all of them are the same fragment. `modules/presentation/index.php` builds every head by one closure (`icon`, `title`, `meta`, `meta_tone`, `meta_icon`); `plugins/presentation/presentation.js` writes the route, the focus, the mode of the cache and the poll into `.sl-pane-meta`. The head of the section `sections/voices.html` writes the same markup itself, since its name is a text the builder edits in place.
 - **A fold is the fold of the panel.** The plus is the one control, `[data-sl-toggle-head]` on the head sends a press anywhere on it to the plus (`setToggleHeads()` of `public/plugins/system/slaed.js`), the body stands in `#<id>-rows.sl-collapsible`, and the state lives under that id. A shelf of the favourites and the focus of the messages stand open by default, so their plus is born with `sl-is-open`.
 - **Nothing inside a window is rounded more than the window.** The inner list `.sl-profile-scroll` takes `--sl-radius-1`, a slot of the focus `--sl-radius-2`.
-- **The frames beside a window share its radius.** The panel of the search `.sl-search-panel` and the two panes `.sl-duo` of the mailbox and of the rail of a Node list are no windows — they carry no head — and stand at `--sl-radius-2` in the frame `--sl-border`.
+- **The frames beside a window share its radius.** The panel of the search `.sl-search-panel` and the two panes `.sl-duo` of the mailbox and of the rail of a Node list are no windows — they carry no head — and stand at `--sl-radius-2` in the frame `--sl-border`. The card of the message page `.sl-msg-card` reads the line, the corner and the shade of a window from `--sl-pane-*` and keeps its own ground and inset.
 
 ## Settings Page Contract
 
@@ -829,8 +829,32 @@ of a dialog is `fragments/window.html` (`docs/WINDOW.md`), another component.
   the plain name of a head of the site takes none.
 - **The bounds.** A window is a frame with a head. A list table, a tile of figures and a block of the side column are
   no windows; the folding panels of the home page keep the bar they share with the blocks of the side menu, since the
-  bar is navigation and a window is content. The block of the side column `.sl-block-sidebar` shares the radius and
-  the shade of a window all the same. Nothing inside a window is rounded more than the window.
+  bar is navigation and a window is content. Nothing inside a window is rounded more than the window.
+- **The frames beside a window read its tokens.** One rule of `theme.css` writes the line `--sl-pane-border` and the
+  corner `--sl-pane-radius` of `.sl-pane` and of seven frames that are no windows: the tile `.sl-metric`, the block of
+  the side column `.sl-block-sidebar`, the menu card of the home `.sl-mcard`, the toolbar `.sl-toolbar`, the preview
+  `.sl-preview` of `partials/preview.html`, the card of the message page `.sl-msg-card` and the shell of the file
+  manager `.sl-fm-shell`. The block, the menu card, the toolbar and the rail of the folded side column wear the
+  gradient `--sl-pane-bg` as well. The block and the card take `--sl-pane-shadow`, the toolbar and the rail keep
+  `--sl-bar-shadow`, and the tile stands on `--sl-bg`. A row of the menu `.sl-menu-list-item` in a block keeps a
+  gradient of its own, since a row has to differ from the ground of its block. The card of the message page reads the
+  line, the corner and the shade of a window in both themes and keeps its own ground and inset; the static
+  `public/error.html`, which reads no theme, draws its card in the values of `aurora` from its own `:root`. The quota of the file manager draws the line
+  `--sl-pane-border` over itself inside the shell, so a rule always stands under the bar of the buttons. The canvas of
+  the site builder `.sl-lay-frame` and the frame of an editor `.sl-editor-card` are components of their own and read
+  none of these.
+- **A cockpit is a window.** The home, "Мониторинг" and "Статистика" open with `section.sl-pane.sl-cockpit` ("Parts Of
+  A Screen"): the frame, the corner, the ground and the shade are those of every window, and the head is
+  `pane-cap.html` with the line of state in its middle, over the lamp. The rule over the strip of figures is dashed,
+  in `--sl-pane-border`. The head of a cockpit takes no beam, its one light is the scan ("Motion").
+- **A section of the debug panel is a window.** `getVariables()` of `core/system.php` prints every section — the
+  figures of the system, the error log, the variables of the request, the queries — through `fragments/pane.html` of
+  the theme in use with `icon`, `title`, `content_html` and the flag `is_debug`, on a page and in an answer of a
+  numeric `go`. The flag puts the class `sl-pane-debug` on the window and `tabindex`, `role="group"` and the name of
+  the window on its body, a block that scrolls a long token sideways. The head carries no colour of its section: the
+  tone stays with the values inside (`.sl-debug-info`, `-success`, `-warn`, `-danger`). The scroll of the body, the
+  look of the error log and the list `drop` of the screenshot rig hang on that one class. No other rule sets a debug
+  window apart: in the panel it takes the light round its frame and the grey smoothing of its text, as every window.
 - **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
   ("Очередь" of "Почта", "Поиск", "База данных") and above a form or a file into the page ("Карта сайта") with no
   frame round them.
@@ -1057,7 +1081,7 @@ switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движе�
 
 | Effect | Where | How |
 |---|---|---|
-| A light round the frame under the hand, blue into violet | every framed block of both themes: in the panel the cockpit, the tiles, the windows, the sidebar blocks (not on the rail), the metrics, the tiles of the file manager, the ratings and the messages; on the site the blocks, the cabinet, the profile, the messages, the catalogue tiles, the node heads and covers, the changelog, the search and the framed blocks of the presentation. Not on controls, popovers and dialogs, nor where a block draws both of its own pseudo-elements (the voices, the principles and the commits of the presentation), holds a non-modal window (`.sl-duo`, a window of a settings grid, `.sl-opt-grid > .sl-pane`), or loses the subpixel smoothing of its text once positioned (the changelog, the debug sections, the file manager shell, the list tables and the form blocks of the panel, the events of the presentation: 36 to 113 of 255) | `::before` (`::after` where the block draws its own), made only under the hand, a turning cone cut by a mask to the line of the frame, so it bends round every corner; one family of tokens draws it in each theme: `--sl-aurora-dur` one turn (0s turns it off), `--sl-aurora-width` the line, `--sl-aurora-mix` the share of the frame lit, `--sl-aurora-border` and `--sl-aurora-ring` the colour it starts in and the one of its head. `sl-aurora` turns `--sl-aurora-turn`, registered without inheritance, and carries the opacity, so a still page shows none |
+| A light round the frame under the hand, blue into violet | every framed block of both themes: in the panel the cockpit, the tiles, the windows, the sidebar blocks (not on the rail), the metrics, the tiles of the file manager, the ratings and the messages; on the site the blocks, the cabinet, the profile, the messages, the catalogue tiles, the node heads and covers, the changelog, the search and the framed blocks of the presentation. Not on controls, popovers and dialogs, nor where a block draws both of its own pseudo-elements (the voices, the principles and the commits of the presentation), holds a non-modal window (`.sl-duo`, a window of a settings grid, `.sl-opt-grid > .sl-pane`), or loses the subpixel smoothing of its text once positioned (the changelog, the file manager shell, the list tables and the form blocks of the panel, the events of the presentation: 36 to 113 of 255) | `::before` (`::after` where the block draws its own), made only under the hand, a turning cone cut by a mask to the line of the frame, so it bends round every corner; one family of tokens draws it in each theme: `--sl-aurora-dur` one turn (0s turns it off), `--sl-aurora-width` the line, `--sl-aurora-mix` the share of the frame lit, `--sl-aurora-border` and `--sl-aurora-ring` the colour it starts in and the one of its head. `sl-aurora` turns `--sl-aurora-turn`, registered without inheritance, and carries the opacity, so a still page shows none |
 | The scan, a line of light going down the panel now and then | `.sl-cockpit` | `::after`, 1 px under the glow of `--sl-tint-strong` and `--sl-tint`, `sl-cockpit-scan`, at most `--sl-fade-disabled` |
 | The comet round the lamp, in every state and the one beam there | `.sl-cockpit-plate` | `::before`, `sl-cockpit-spin`; the rules of the cockpit set its pace by the state, a multiple of `--sl-alert-dur` |
 | The glow of a circle, at the share of the gauges of the presentation | `.sl-cockpit-ring .sl-knob-val`, `.sl-cockpit-plate` | `--sl-knob-mix`, not the shared `--sl-ring-mix`; it does not move, so it stands with the rules of the cockpit, outside the block |
@@ -1152,7 +1176,7 @@ holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter(
 |---|---|---|
 | The ground | `pane-ground.html`, `.sl-ground` | `content_html`. The column of the windows of a board on the ground of the page; it draws nothing of its own |
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
-| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `state_html` (a line of state before the chip, which a cockpit hands in), `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list never enters a window: its summary stands above the table in `note_html` of `getTplAdminList()` |
+| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `state_html` (a line of state before the chip, which a cockpit hands in), `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height, `is_debug` for a section of the debug panel (the class `sl-pane-debug` on the window, `tabindex`, `role` and the name of the window on its body; "Panel Window"). A list never enters a window: its summary stands above the table in `note_html` of `getTplAdminList()` |
 | A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
 | Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good`; `chip` with `tone` after the text (section "Facts Of A Page") |
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
@@ -1815,8 +1839,8 @@ The repeated audit of 2026-11-01 (`docs/VERSIONS.md`) left these, each with its 
 - **The strip of the archive**, `target-size`: "The Engine Of The Parts" above; the equal means were checked on the live page.
 - **`landmark-unique` on the builder:** axe compares the `main` of the panel with the `main` of the site inside the frame.
   They are two documents, and nothing needs changing.
-- **The theme `aurora` inside the frame of the builder**, contrast: `.sl-generates` 2.65, the legends of the debug panel 2.74 and
-  3, `.sl-builder-name` 2.75. This is the theme of the site, which no audit has covered.
+- **The theme `aurora` inside the frame of the builder**, contrast: `.sl-generates` 2.65 and
+  `.sl-builder-name` 2.75. This is the theme of the site, which no audit has covered.
 - **`color-contrast` incomplete:** axe gave up on 76 thousand nodes on gradients and overlays. Outside "Статистика",
   "Мониторинг" and the cockpit of the home, which were measured by pixels, nobody read them by hand. In those three only the
   note "на хост" of a tile and the mark "00" of the dial stay under the norm by that measure; both read on the shot, as the

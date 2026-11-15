@@ -33,9 +33,12 @@
      one line that slides between the same two arrows, with the names in rows, or with the numbers of the pager
    - data-wn-helpstick="on|off" — the rail stays in view while the text scrolls, or leaves with it
    - data-wn-helphead="on|off" — the first heading of a help page, which says the name of the page again: shown or not
-   - data-wn-seg="now|edge|plate|ring" — the segmented switch of the whole page: as it is; a line round the plate in both
-     schemes and round the track in the dark one, the colours kept; a lighter plate in the dark scheme, where the
+   - data-wn-seg="now|edge|plate|ring" — the segmented switch of the whole page: as it was, without a line; a line round
+     the plate and round the track in both schemes, the colours kept; a lighter plate in the dark scheme, where the
      plate is the ground of the page on a track one step lighter; the lighter plate with both lines
+   The theme carries the help chosen on the desk as well (one window, the names in one line that stay in view, the first
+   heading kept, the line round the switch): that set is the set of the face, and the room draws it with the window of
+   the theme
    - data-wn-ask="<axis> <axis> …" — the axes the face asks about: the desk draws only those, and a room stands only when
      it serves one of them; without the attribute the face shows every axis and every room
    This file fills the root with the rooms, the same in every face, and puts the desk over it: a button
@@ -355,7 +358,7 @@ function initWn() {
   root.insertAdjacentHTML('beforebegin', getWnDesk(axes));
   sync();
   setWnHelp(root);
-  if (asks.length && asks.every((key) => key.startsWith('help'))) {
+  if (asks.length && asks.every((key) => key.startsWith('help') || key === 'seg')) {
     document.querySelectorAll('.sl-tabs-nav-main .sl-tabs-link').forEach((tab) => tab.classList.toggle('sl-is-active', tab.textContent === 'Справка'));
   }
   root.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} }));

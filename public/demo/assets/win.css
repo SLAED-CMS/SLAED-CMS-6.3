@@ -1,8 +1,9 @@
-/* Window series (win-NN): the window of the right side of the panel, and nothing else. Every face shows the same six
+/* Window series (win-NN): the window of the right side of the panel, and nothing else. Every face shows the same seven
    rooms with the same content - tabs over a window and a list, gauges as on the monitor, settings in groups, folding groups, a
-   short form in one window with a table under it, and the two picker windows - and differs only in the set of values on
+   short form in one window with a table under it, the two picker windows and the help of a section - and differs only in the set of values on
    .wn-root: the frame, the radius, the ground, the head, the line under it, the inset, the shade, the side of the fold, the
-   form, the line and the ground of a tab, the rule, the head and the hover of a list and the tabs of a picker. An axis is an
+   form, the line and the ground of a tab, the rule, the head and the hover of a list, the tabs of a picker, the window and the rail of
+   the help and the segmented switch. An axis is an
    attribute, a face is a set of values, so the desk can mix any of them in place; a face that asks about a part of the
    axes (data-wn-ask) shows only their rooms */
 .wn-desk {
@@ -879,7 +880,7 @@ body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) [data-wn-rail=
   flex: none;
   width: 100%;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
+  box-shadow: inset 0 0 0 1px var(--sl-seg-border);
   pointer-events: none;
   content: "";
 }
@@ -913,15 +914,15 @@ body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) [data-wn-rail=
   white-space: nowrap;
 }
 
-/* Axis: the segmented switch, for every switch of the page, the desk included. The shadows that part the plate from the track in the light scheme are
-   black on a dark ground in the dark one, so the plate takes a lighter step there and the track a line round it; the line round the plate is for both
-   schemes, a white plate on a pale track loses its edge as well */
+/* Axis: the segmented switch, for every switch of the page, the desk included. The theme carries the answer chosen on the desk - a line round the plate
+   and round the track in both schemes - but demo.css lays its own switch of before over the one of the theme, so the axis hands the track the shadow
+   of the theme back and writes the line of the plate as the theme does; the plate one step lighter in the dark scheme stays to compare with */
 body:has(.wn-root:is([data-wn-seg="plate"], [data-wn-seg="ring"])) .sl-seg:not(.sl-seg-pager) {
   --sl-seg-knob-bg: light-dark(var(--sl-bg), var(--sl-border-strong));
 }
 
 body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) .sl-seg {
-  box-shadow: var(--sl-shadow-inset), inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
+  box-shadow: var(--sl-seg-shadow);
 }
 
 body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) .sl-seg:not(.sl-seg-pager) {
