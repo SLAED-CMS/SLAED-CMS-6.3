@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
   <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The help room shows the editor of the help page as a still: the sheet of the editor and its skin of the theme -->
+  <link rel="stylesheet" href="../plugins/editors/toastui/assets/toastui-editor.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/editors/toastui/skin.css">
   <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
   <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/win.css?v=' + Date.now() + '">');</script>
   <script src="../plugins/system/global-func.js"></script>
@@ -16,7 +19,8 @@
 <body>
   <!-- The set the owner chose for the side of the administrator: the thin frame, radius 8, the gradient down the whole window, mono capitals with the icon, a line under the head, the inset of 8, the shadow, the fold at the right -->
   <template data-st-face data-st-module="config" data-st-title="Окно панели" data-st-icon="window-stack" data-st-tabs="Главная:|Справка:info">
-    <div class="wn-root" data-wn-root data-wn-frame="soft" data-wn-radius="2" data-wn-ground="grad" data-wn-head="caps" data-wn-rule="on" data-wn-inset="tight" data-wn-shade="xs" data-wn-fold="end"></div>
+    <div class="wn-root" data-wn-root data-wn-frame="soft" data-wn-radius="2" data-wn-ground="grad" data-wn-head="caps" data-wn-rule="on" data-wn-inset="tight" data-wn-shade="xs" data-wn-fold="end" data-wn-tabs="folder" data-wn-tabline="pane" data-wn-tabfill="own" data-wn-rows="soft" data-wn-listcap="caps" data-wn-rowhover="tint" data-wn-picks="seg"
+      data-wn-helpwin="one" data-wn-helptoc="line" data-wn-helpstick="on" data-wn-helphead="on" data-wn-seg="edge" data-wn-ask="helpwin helptoc helpstick helphead seg"></div>
   </template>
   <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
   <script>document.write('<script src="assets/win.js?v=' + Date.now() + '"><\/script>');</script>

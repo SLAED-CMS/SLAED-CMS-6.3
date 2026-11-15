@@ -21,23 +21,10 @@
   color: var(--sl-d-rank);
 }
 
-/* The groups of the panel: two lists of one ladder step, the threshold, a node on the rail, the group with its rank, its share of members */
-.sl-ladder-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sl-space-3);
-  margin: 0 0 var(--sl-space-5);
-  font-size: var(--sl-font-h4);
-}
-
-.sl-ladder-head small {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-  font-weight: var(--sl-weight-normal);
-}
-
-.sl-ladder-sort {
+/* The groups of the panel: two windows, each a list of one ladder step, the threshold, a node on the rail, the group with its rank, its share of members */
+/* The sort button closes the head of its window at the right end, after the fact a narrow head moves back; the selector outweighs the margin a mini button sets itself */
+.sl-pane-cap > .sl-ladder-sort {
+  order: 2;
   margin-left: auto;
 }
 
@@ -2692,38 +2679,19 @@ dialog.sl-editor-emoji-panel {
   padding: 0 var(--sl-space-3);
 }
 
+/* The groups of the emoji window and the sources of the icon window are the segmented switch; this rule only places the track of the groups, never wider than the window */
 .sl-editor-emoji-tabs {
-  display: flex;
-  gap: var(--sl-space-2);
+  align-self: flex-start;
+  max-width: calc(100% - var(--sl-space-3) * 2);
   margin: var(--sl-space-3) var(--sl-space-3);
   overflow: hidden;
 }
 
-/* Emoji tabs reuse the popup button pair: secondary look idle, primary (blue) when active */
-.sl-editor-emoji-tab {
-  background: var(--sl-surface);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
-  color: var(--sl-text);
-  cursor: pointer;
+/* A cell of a picker carries a word, so it takes the inset of a button and keeps its width; the plain cell is sized for an icon */
+.sl-editor-emoji-tabs > .sl-seg-cell,
+.sl-modal-bar > .sl-seg > .sl-seg-cell {
   flex: 0 0 auto;
-  font-size: var(--sl-font-small);
-  height: var(--sl-size-icon-lg);
   padding: 0 var(--sl-space-5);
-}
-
-.sl-editor-emoji-tab:hover {
-  border-color: var(--sl-border-strong);
-}
-
-.sl-editor-emoji-tab.active {
-  background: var(--sl-primary);
-  border-color: var(--sl-primary);
-  color: var(--sl-on-solid);
-}
-
-.sl-editor-emoji-tab.active:hover {
-  background: var(--sl-primary-strong);
 }
 
 .sl-editor-emoji-grid {
@@ -2764,7 +2732,6 @@ dialog.sl-editor-emoji-panel {
   max-height: calc(100vh - var(--sl-emoji-full-gap));
 }
 
-.sl-editor-emoji-tab:focus-visible,
 .sl-editor-emoji-item:focus-visible {
   box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
   outline: 0;
@@ -3624,7 +3591,7 @@ dialog.sl-editor-emoji-panel {
   margin-left: auto;
 }
 
-/* The head of a canon list and of the file list stays in view above the fans of the rows; the row in hand takes the tint softly, a picked row a stronger one */
+/* The head of a canon list and of the file list stays in view above the fans of the rows; the row in hand of any list takes the tint of a window row, a picked row a stronger */
 .sl-table-list-sort[data-sl-density] thead th,
 .sl-fm-scroll thead th {
   position: sticky;
@@ -3636,7 +3603,7 @@ dialog.sl-editor-emoji-panel {
   transition: background-color var(--sl-time-base) var(--sl-ease-out);
 }
 
-.sl-table-list-sort[data-sl-density] tbody tr:hover > td {
+.sl-table-list-sort tbody tr:hover > td {
   background-color: var(--sl-tint);
 }
 
@@ -3700,6 +3667,7 @@ dialog.sl-editor-emoji-panel {
   .sl-table-list-sort[data-sl-density="cards"] {
     display: block;
     border: 0;
+    background: none;
     box-shadow: none;
   }
 
@@ -3870,6 +3838,7 @@ dialog.sl-editor-emoji-panel {
 
   .sl-table-list-sort[data-sl-density] {
     border: 0;
+    background: none;
     box-shadow: none;
   }
 
@@ -5112,32 +5081,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   min-width: 0;
 }
 
-.sl-icon-modal-tabs {
-  display: flex;
-  gap: var(--sl-space-2);
-}
-
-.sl-icon-modal-tabs button {
-  height: var(--sl-size-control);
-  padding: 0 var(--sl-space-5);
-  border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-pill);
-  background: var(--sl-bg);
-  color: var(--sl-text-muted);
-  font-weight: var(--sl-weight-bold);
-  cursor: pointer;
-  transition:
-    border-color var(--sl-time-base) var(--sl-ease-out),
-    background-color var(--sl-time-base) var(--sl-ease-out),
-    color var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-icon-modal-tabs button.sl-is-active {
-  border-color: var(--sl-primary);
-  background: var(--sl-primary);
-  color: var(--sl-on-solid);
-}
-
 .sl-icon-modal-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
@@ -5475,11 +5418,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     animation: sl-bar-flash var(--sl-knob-dur) var(--sl-ease-out);
   }
 
-  /* The grid under the windows drifts on its own layer, one cell a cycle, so a move repaints nothing */
-  .sl-ground-lines::before {
-    animation: sl-ground-drift var(--sl-ground-dur) linear infinite;
-  }
-
   /* The beam crosses the light head of a window in its own turn, in the tint a light head can carry */
   .sl-pane-cap::after {
     content: "";
@@ -5603,12 +5541,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-@keyframes sl-ground-drift {
-  to {
-    transform: translate(var(--sl-ground-width), var(--sl-ground-width));
-  }
-}
-
 @keyframes sl-bar-flash {
   30% {
     box-shadow: 0 0 var(--sl-space-6) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent);
@@ -5713,14 +5645,14 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  width: var(--sl-switch-width);
-  height: var(--sl-switch-height);
+  width: auto;
+  height: var(--sl-seg-height);
   min-width: var(--sl-switch-width);
   gap: 0;
-  padding: var(--sl-space-1);
+  padding: var(--sl-seg-pad-y) var(--sl-seg-pad-x);
   border-radius: var(--sl-radius-pill);
-  background: var(--sl-border);
-  box-shadow: inset 0 0 0 1px var(--sl-scrim-subtle);
+  background: var(--sl-seg-bg);
+  box-shadow: var(--sl-seg-shadow);
   transition:
     background var(--sl-time-base) var(--sl-ease-out),
     box-shadow var(--sl-time-base) var(--sl-ease-out);
@@ -5734,13 +5666,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   content: "";
   position: absolute;
   z-index: var(--sl-z-base);
-  top: var(--sl-switch-gap);
-  left: var(--sl-switch-gap);
-  width: calc(100% / 2 - var(--sl-switch-gap));
-  height: calc(100% - var(--sl-switch-gap) * 2);
+  top: 0;
+  left: 0;
+  width: calc(100% / 2);
+  height: 100%;
   border-radius: var(--sl-radius-pill);
-  background: var(--sl-bg);
-  box-shadow: var(--sl-switch-knob-shadow);
+  background: var(--sl-seg-knob-bg);
+  box-shadow: var(--sl-seg-knob-shadow);
   transition:
     left var(--sl-time-base) var(--sl-ease-in-out),
     box-shadow var(--sl-time-base) var(--sl-ease-out);
@@ -5757,12 +5689,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 100%;
-  height: var(--sl-radio-height);
+  height: var(--sl-seg-height);
   min-width: 0;
   margin: 0;
-  padding: 0;
-  color: var(--sl-text-muted);
+  padding: 0 var(--sl-space-4);
+  color: var(--sl-seg-text);
   font-size: var(--sl-font-small);
   line-height: 20px;
   text-align: center;
@@ -5784,7 +5717,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-radio-group.sl-radio-switch:has(input[value="0"]:checked)
   .sl-radio:has(input:checked) {
-  color: var(--sl-text-muted);
+  color: var(--sl-seg-knob-text);
 }
 
 .sl-radio-group.sl-radio-switch input {
@@ -5795,7 +5728,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-radio-group.sl-radio-switch:focus-within {
   box-shadow:
-    inset 0 0 0 1px var(--sl-scrim-subtle),
+    var(--sl-seg-shadow),
     var(--sl-shadow-focus);
 }
 
@@ -6435,7 +6368,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: var(--sl-seg-pad-y) var(--sl-seg-pad-x);
   border-radius: var(--sl-radius-pill);
   background: var(--sl-seg-bg);
-  box-shadow: var(--sl-shadow-inset);
+  box-shadow: var(--sl-seg-shadow);
 }
 
 .sl-seg-cell {
@@ -6537,6 +6470,7 @@ button.sl-seg-cell:hover {
   left: var(--sl-space-1);
   height: var(--sl-size-chip);
   background: var(--sl-primary-strong);
+  box-shadow: var(--sl-shadow-raised);
 }
 
 .sl-seg-pager .sl-seg-cell.sl-is-active {
@@ -6545,6 +6479,61 @@ button.sl-seg-cell:hover {
 
 .sl-seg-pager:not([data-sl-knob-ready]) .sl-seg-cell.sl-is-active {
   background: var(--sl-primary-strong);
+  box-shadow: var(--sl-shadow-raised);
+}
+
+/* Contents rail: the sections of a help page as the segmented switch in one line over the window of the help; it stays in view on the ground of the page */
+.sl-toc {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  min-width: 0;
+  margin: 0 0 var(--sl-space-4);
+  padding: var(--sl-space-3) 0;
+  border-bottom: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+/* A strip longer than the rail slides inside its view between the two arrows of the pager; the view keeps the round ends of the track */
+.sl-toc-view {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  border-radius: var(--sl-radius-pill);
+  scrollbar-width: none;
+}
+
+.sl-toc.sl-is-fit > .sl-but-mini {
+  display: none;
+}
+
+.sl-toc .sl-seg-cell {
+  flex: 0 0 auto;
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+}
+
+/* A section named in the rail stops under it: admin-ui.js writes the height of the rail */
+.sl-toc ~ .sl-pane h2 {
+  scroll-margin-top: calc(var(--sl-d-toc, 0px) + var(--sl-space-5));
+}
+
+/* The help text in a window takes the inset of the window, and the editor under it stands from edge to edge of its box as the window does */
+.sl-pane-body > .sl-markdown {
+  padding: 0;
+}
+
+.sl-pane-body > .sl-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.sl-box:has(> .sl-pane > .sl-pane-body > .sl-markdown) + .sl-box .sl-div-item-full {
+  padding-right: 0;
+  padding-left: 0;
 }
 
 /* Pagination: the pager is the container its steps measure, not the window; the page line drops under the row when narrow */
@@ -7062,13 +7051,14 @@ button.sl-but-mini {
   color: var(--sl-on-solid);
 }
 
-/* Tables: list view; one frame round the table and a line between rows, the cards keep their own frames */
+/* Tables: list view; one frame round the table, the ground of a window down the whole list and the line of a row in a window between rows, the cards keep their own frames */
 .sl-table-list-sort {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-2);
+  background: var(--sl-pane-bg);
   box-shadow: var(--sl-shadow-xs);
 }
 
@@ -7077,14 +7067,10 @@ button.sl-but-mini {
   background-color: var(--sl-primary-subtle);
 }
 
-.sl-table-list-sort tr:hover {
-  background-color: var(--sl-surface);
-}
-
 /* The end padding is larger than the start one, so the texts of two columns stand 12px apart */
 .sl-table-list-sort td {
   padding: 0 var(--sl-space-3) 0 var(--sl-space-2);
-  border-bottom: 1px dashed var(--sl-border-strong);
+  border-bottom: 1px dashed var(--sl-border);
 }
 
 /* A centred column keeps its title over the middle of its values: equal sides, and in a sortable table a lane for the mark on the right of the title and of every cell alike */
@@ -7156,20 +7142,28 @@ button.sl-but-mini {
   transform: translateX(-50%);
 }
 
+/* A head cell paints the first colour of the ground of the list, so a head that stays in view hides the rows passing under it */
 .sl-table-list-sort th {
   font-weight: var(--sl-weight-bold);
   border-bottom: 1px solid var(--sl-border);
   padding: 0 var(--sl-space-6) 0 var(--sl-space-2);
   text-align: left;
-  background-color: var(--sl-bg-muted);
+  background-color: var(--sl-surface);
 }
 
-/* A short line parts two column titles; it is painted as the background, so it needs no position and leaves a sticky head as it is */
-.sl-table-list-sort thead th + th {
-  background-image: linear-gradient(var(--sl-text-subtle), var(--sl-text-subtle));
-  background-position: left center;
-  background-repeat: no-repeat;
-  background-size: 1px 50%;
+/* A short line parts two column titles; it is a part of the cell and no layer of its ground, and the low weight of the selector leaves a sticky head as it is */
+.sl-table-list-sort :where(thead) th {
+  position: relative;
+}
+
+.sl-table-list-sort thead th + th::before {
+  position: absolute;
+  top: var(--sl-space-3);
+  bottom: var(--sl-space-3);
+  left: 0;
+  width: 1px;
+  background: var(--sl-text-subtle);
+  content: "";
 }
 
 .sl-table-list-sort th:last-child {
@@ -7593,7 +7587,7 @@ button.sl-but-mini {
   }
 }
 
-/* Tabs: tab strip and panels */
+/* Tabs: tab strip and panels; the line of the strip and the frame of the open tab are the line of a window */
 .sl-tabs-nav {
   display: flex;
   flex-wrap: wrap;
@@ -7601,7 +7595,7 @@ button.sl-but-mini {
   padding: 0 var(--sl-space-1);
   margin: 0;
   list-style: none;
-  border-bottom: 1px solid var(--sl-border-strong);
+  border-bottom: 1px solid var(--sl-pane-border);
 }
 
 .sl-tabs-nav-sub {
@@ -7650,7 +7644,7 @@ button.sl-but-mini {
 
 .sl-tabs-link.sl-is-active {
   position: relative;
-  border-color: var(--sl-border-strong);
+  border-color: var(--sl-pane-border);
   background: var(--sl-bg);
 }
 
@@ -10647,6 +10641,11 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   border-top: 0;
 }
 
+/* A block under the toolbar draws the line above itself, and the quota of the shell does too, in the line of a window head */
+.sl-fm-shell .sl-fm-quota {
+  border-top: 1px solid var(--sl-pane-border);
+}
+
 /* Closed properties give their column to the list; the weight of the plain class lets the narrow steps below, where the column is a row of its own, keep theirs */
 .sl-fm-split:where(:has(> .sl-fm-side[hidden])) {
   grid-template-columns: 250px minmax(0, 1fr);
@@ -12573,7 +12572,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   }
 }
 
-/* Series ground: a grid under the windows of a page, on a layer of its own that stands a cell over the top and the left, so it drifts one cell and comes back unseen */
+/* Series ground: the column of the windows of a board, on the ground of the page */
 .sl-ground {
   position: relative;
   display: grid;
@@ -12584,21 +12583,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-ground > * {
   position: relative;
   min-width: 0;
-}
-
-.sl-ground > .sl-ground-lines {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.sl-ground-lines::before {
-  content: "";
-  position: absolute;
-  inset: calc(var(--sl-ground-width) * -1) 0 0 calc(var(--sl-ground-width) * -1);
-  background-image: linear-gradient(var(--sl-bg-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-bg-subtle) 1px, transparent 1px);
-  background-size: var(--sl-ground-width) var(--sl-ground-width);
 }
 
 /* Series rows: one grid of three columns, so the edges of the windows meet from row to row; a split is one large window and a side of windows sharing its height */
@@ -12669,7 +12653,8 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 .sl-pane-title,
 .sl-pane-meta,
 .sl-metric-name,
-.sl-ext-cap {
+.sl-ext-cap,
+.sl-table-list-sort thead th {
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   font-weight: var(--sl-weight-normal);

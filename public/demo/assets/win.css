@@ -1,8 +1,10 @@
-/* Window series (win-NN): the window of the right side of the panel, and nothing else. Every face shows the same four
-   rooms with the same content - gauges as on the monitor, settings in groups, folding groups, and a short form in one window
-   with a table under it - and differs only in the set of values on .wn-root: the frame, the radius, the ground, the head,
-   the line under it, the inset, the shade and the side of the fold. An axis is an attribute, a face is a set of
-   values, so the desk can mix any of them in place */
+/* Window series (win-NN): the window of the right side of the panel, and nothing else. Every face shows the same six
+   rooms with the same content - tabs over a window and a list, gauges as on the monitor, settings in groups, folding groups, a
+   short form in one window with a table under it, and the two picker windows - and differs only in the set of values on
+   .wn-root: the frame, the radius, the ground, the head, the line under it, the inset, the shade, the side of the fold, the
+   form, the line and the ground of a tab, the rule, the head and the hover of a list and the tabs of a picker. An axis is an
+   attribute, a face is a set of values, so the desk can mix any of them in place; a face that asks about a part of the
+   axes (data-wn-ask) shows only their rooms */
 .wn-desk {
   display: grid;
   gap: var(--sl-space-4);
@@ -388,8 +390,555 @@
   margin-inline: calc(var(--sl-space-4) * -1);
 }
 
+/* A window and a list side by side under one tab strip, and the two picker windows */
+.wn-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: start;
+  gap: var(--sl-space-4);
+}
+
+.wn-duo.wn-halves {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* The theme carries the set the owner chose on this desk, so every axis below writes only the values the theme does not: the other answers stay to compare with */
+
+/* Axis: the line of the tab strip, for the folders and the underline. The strip of the page head stands outside the root, so the rule asks the page for the root */
+body:has(.wn-root:not([data-wn-tabs="pills"])[data-wn-tabline="strong"]) .sl-tabs-nav {
+  border-bottom-color: var(--sl-border-strong);
+}
+
+body:has(.wn-root[data-wn-tabs="folder"][data-wn-tabline="strong"]) .sl-tabs-link.sl-is-active {
+  border-color: var(--sl-border-strong);
+}
+
+/* Axis: the ground of an idle folder */
+body:has(.wn-root[data-wn-tabs="folder"][data-wn-tabfill="pane"]) .sl-tabs-link:not(.sl-is-active) {
+  background: var(--sl-pane-bg);
+}
+
+body:has(.wn-root[data-wn-tabs="folder"][data-wn-tabfill="none"]) .sl-tabs-link:not(.sl-is-active) {
+  background: none;
+}
+
+/* Axis: the form of a tab. The underline: a word with no ground and no frame, the open one on a brand line laid over the line of the strip */
+body:has(.wn-root[data-wn-tabs="line"]) .sl-tabs-nav {
+  gap: var(--sl-space-3);
+}
+
+body:has(.wn-root[data-wn-tabs="line"]) .sl-tabs-link {
+  border-color: transparent;
+  background: none;
+}
+
+body:has(.wn-root[data-wn-tabs="line"]) .sl-tabs-link.sl-is-active::after {
+  height: var(--sl-space-1);
+  background: var(--sl-primary);
+}
+
+/* The pills: no line under the strip, an idle tab is the pill of the header menu of the site, the open one is filled as the open tab of a picker */
+body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-nav {
+  gap: var(--sl-space-2);
+  padding: 0;
+  border-bottom: 0;
+}
+
+body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-link {
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--sl-border);
+}
+
+body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-link.sl-is-active {
+  background: var(--sl-primary);
+  box-shadow: none;
+  color: var(--sl-on-solid);
+}
+
+body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-link.sl-is-active::after {
+  content: none;
+}
+
+/* Axis: the rule between the rows of a list table */
+.wn-root[data-wn-rows="strong"] .sl-table-list-sort td {
+  border-bottom-color: var(--sl-border-strong);
+}
+
+/* Axis: the head of a list. The theme runs the ground of the window down the list and sets the titles in window capitals; the list of before had its own plate and bold titles */
+.wn-root[data-wn-listcap="own"] .sl-table-list-sort {
+  background: none;
+}
+
+.wn-root[data-wn-listcap="own"] .sl-table-list-sort th {
+  background-color: var(--sl-bg-muted);
+}
+
+.wn-root:is([data-wn-listcap="own"], [data-wn-listcap="pane"]) .sl-table-list-sort thead th {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: var(--sl-weight-bold);
+  letter-spacing: normal;
+  text-transform: none;
+  color: inherit;
+}
+
+/* Axis: the row under the pointer. One row of the stand keeps that state, so a screen without a pointer shows it too */
+.wn-root .sl-table-list-sort .wn-hot > td {
+  background-color: var(--sl-tint);
+}
+
+.wn-root[data-wn-rowhover="own"] .sl-table-list-sort tbody tr:is(:hover, .wn-hot) > td {
+  background-color: var(--sl-surface);
+}
+
+/* Axis: the tabs of a picker window, the segmented switch in the theme. A window of the stand is no modal, so it places the track and insets its cells as a modal bar does */
+.wn-win .sl-seg {
+  align-self: flex-start;
+}
+
+.wn-win .sl-seg > .sl-seg-cell {
+  flex: 0 0 auto;
+  padding: 0 var(--sl-space-5);
+}
+
+/* The forms the pickers wore before: pills, rectangles, and "mixed" - the emoji window in rectangles beside the icon window in pills */
+.wn-root:is([data-wn-picks="pills"], [data-wn-picks="rects"], [data-wn-picks="mixed"]) .wn-win .sl-seg {
+  gap: var(--sl-space-2);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.wn-root[data-wn-picks="pills"] .wn-win .sl-seg > .sl-seg-cell,
+.wn-root[data-wn-picks="mixed"] .wn-win .sl-seg:not(.sl-editor-emoji-tabs) > .sl-seg-cell {
+  border: 1px solid var(--sl-border-strong);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-bold);
+}
+
+.wn-root[data-wn-picks="rects"] .wn-win .sl-seg > .sl-seg-cell,
+.wn-root[data-wn-picks="mixed"] .wn-win .sl-editor-emoji-tabs > .sl-seg-cell {
+  height: var(--sl-size-icon-lg);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+}
+
+.wn-root:is([data-wn-picks="pills"], [data-wn-picks="rects"], [data-wn-picks="mixed"]) .wn-win .sl-seg > .sl-seg-cell.sl-is-active {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  box-shadow: none;
+  color: var(--sl-on-solid);
+}
+
+/* The help room: the text of a help page as the theme prints it, bare or in windows, the rail of its sections over it, the editor under it */
+/* The room is a grid: neither a rail of names in one line nor the still of the editor, which keeps the widths its script wrote, may widen its column */
+.wn-help,
+[data-wn-help-form] {
+  min-width: 0;
+}
+
+[data-wn-help-form] {
+  overflow-x: clip;
+}
+
+/* Beside a window of the help the editor stands from edge to edge of its box too, without the inset of a form row */
+.wn-root:not([data-wn-helpwin="none"]) [data-wn-help-form] .sl-div-item {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+/* A section named in the rail stops under the rail: win.js writes the height the rail takes while it stays in view */
+.wn-help h2 {
+  scroll-margin-top: calc(var(--wn-rail-h, 0px) + var(--sl-space-5));
+}
+
+/* Axis: the first heading of a help page */
+.wn-root[data-wn-helphead="off"] .sl-markdown h1 {
+  display: none;
+}
+
+/* Axis: the window. A window stands from edge to edge of the box, as every window of a page does, so the text gives up its own inset */
+.wn-root:not([data-wn-helpwin="none"]) .wn-help > .sl-markdown {
+  padding: 0;
+}
+
+/* A window of the help lays its body as running text, and the name of a section in a head carries no margin of a heading */
+.wn-help .sl-pane-body {
+  display: block;
+}
+
+/* The first heading opens the text, in a window or bare, so it carries no margin over it */
+.wn-help .sl-pane-body > :first-child,
+.wn-help [data-wn-part="intro"] > [data-wn-body] > :first-child {
+  margin-top: 0;
+}
+
+.wn-help .sl-pane-body > :last-child {
+  margin-bottom: 0;
+}
+
+.wn-help .sl-pane-cap > h2 {
+  margin: 0;
+}
+
+/* A window round every section: the windows part the sections, so the rule between two of them goes */
+.wn-root[data-wn-helpwin="parts"] .wn-help hr {
+  display: none;
+}
+
+.wn-root[data-wn-helpwin="parts"] .wn-help [data-wn-part] {
+  margin: 0 0 var(--sl-space-4);
+}
+
+.wn-root[data-wn-helpwin="parts"] .wn-help [data-wn-part]:last-child {
+  margin-bottom: 0;
+}
+
+/* Axis: the rail of the sections. It stays in view on a ground of its own, so the text passing under it does not show through */
+.wn-rail {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-sticky);
+  display: none;
+  margin: 0 0 var(--sl-space-5);
+  padding: var(--sl-space-3) 0;
+  border-bottom: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.wn-root:not([data-wn-helptoc="none"]) .wn-rail {
+  display: block;
+}
+
+/* Axis: the rail while the text scrolls */
+.wn-root[data-wn-helpstick="off"] .wn-rail {
+  position: static;
+}
+
+/* Over a window the rail stands on the ground of the page, a step from the frame under it */
+.wn-root:not([data-wn-helpwin="none"]) .wn-rail {
+  margin-bottom: var(--sl-space-4);
+}
+
+.wn-rail-run {
+  display: none;
+  align-items: center;
+  gap: var(--sl-space-4);
+  min-width: 0;
+}
+
+.wn-root[data-wn-helptoc="line"] [data-wn-rail="line"],
+.wn-root[data-wn-helptoc="rows"] [data-wn-rail="rows"],
+.wn-root[data-wn-helptoc="steps"] [data-wn-rail="steps"] {
+  display: flex;
+}
+
+.wn-rail a {
+  text-decoration: none;
+}
+
+/* A strip longer than the rail slides inside its view, without a bar of its own, between two arrows of the pager; a strip that fits shows no arrows */
+.wn-rail-view {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.wn-rail-run.wn-is-fit > .sl-but-mini {
+  display: none;
+}
+
+/* The snake: a card for a section, and one line through the middle of the cards. win.js places a card by its number; the line of a card reaches half the
+   gap on both sides, and the last card of a row turns the line down to the row under it, which runs back. The turn is a narrow bracket with the corner of
+   a window, so the cards stand a step from the edges of the rail */
+.wn-snake {
+  --wn-stop-min: 170px;
+  --wn-turn: var(--sl-space-5);
+  isolation: isolate;
+  gap: var(--sl-space-5) var(--sl-space-6);
+  padding: 0 var(--wn-turn);
+}
+
+.wn-root[data-wn-helptoc="snake"] [data-wn-rail="snake"] {
+  display: grid;
+}
+
+.wn-stop {
+  --wn-way: var(--sl-border-strong);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  box-sizing: border-box;
+  height: var(--sl-size-icon-lg);
+  min-width: 0;
+  padding: 0 var(--sl-space-4) 0 var(--sl-space-2);
+  border: 1px solid var(--sl-pane-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.wn-stop > b {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--sl-size-icon-md);
+  height: var(--sl-size-icon-md);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.wn-stop > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wn-stop:hover {
+  color: var(--sl-primary-strong);
+}
+
+/* The way the reader has gone is drawn in the brand colour: the cards behind, their lines and turns, and the line into the card being read */
+.wn-stop.wn-is-done {
+  --wn-way: var(--sl-primary);
+  color: var(--sl-text);
+}
+
+.wn-stop.wn-is-done > b {
+  background: var(--sl-primary-subtle);
+  color: var(--sl-primary-strong);
+}
+
+.wn-stop.sl-is-active {
+  border-color: var(--sl-primary);
+  color: var(--sl-text);
+}
+
+.wn-stop.sl-is-active > b {
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.wn-stop::before {
+  position: absolute;
+  z-index: -1;
+  top: calc(50% - 1px);
+  right: calc(var(--sl-space-6) / -2 - 1px);
+  left: calc(var(--sl-space-6) / -2 - 1px);
+  height: var(--sl-space-1);
+  background: var(--wn-way);
+  content: "";
+}
+
+.wn-stop.sl-is-active::before {
+  background: linear-gradient(to right, var(--sl-primary) 50%, var(--wn-way) 50%);
+}
+
+.wn-stop.sl-is-active.wn-is-back::before {
+  background: linear-gradient(to left, var(--sl-primary) 50%, var(--wn-way) 50%);
+}
+
+.wn-stop.wn-is-first::before,
+.wn-stop.wn-is-last.wn-is-back::before {
+  left: 50%;
+}
+
+.wn-stop.wn-is-last:not(.wn-is-back)::before {
+  right: 50%;
+}
+
+.wn-stop.wn-is-turn::after {
+  position: absolute;
+  z-index: -1;
+  top: calc(50% - 1px);
+  left: calc(100% + 1px);
+  box-sizing: border-box;
+  width: var(--wn-turn);
+  height: calc(var(--sl-size-icon-lg) + var(--sl-space-5) + var(--sl-space-1));
+  border: var(--sl-space-1) solid var(--wn-way);
+  border-left: 0;
+  border-radius: 0 var(--sl-radius-2) var(--sl-radius-2) 0;
+  content: "";
+}
+
+.wn-stop.wn-is-turn.wn-is-back::after {
+  right: calc(100% + 1px);
+  left: auto;
+  border-right: 0;
+  border-left: var(--sl-space-1) solid var(--wn-way);
+  border-radius: var(--sl-radius-2) 0 0 var(--sl-radius-2);
+}
+
+/* The timeline: the names stand over the dots of one line, the line fills in the brand colour up to the section being read, and the strip slides
+   between two arrows of the pager when it is longer than the rail. win.js writes the length of the filled part */
+.wn-root[data-wn-helptoc="time"] [data-wn-rail="time"] {
+  display: flex;
+}
+
+.wn-time-way {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+  padding-bottom: var(--sl-space-5);
+}
+
+.wn-time-way::before,
+.wn-time-fill {
+  position: absolute;
+  bottom: calc(var(--sl-space-5) / 2 - 1px);
+  left: 0;
+  height: var(--sl-space-1);
+  content: "";
+}
+
+.wn-time-way::before {
+  right: 0;
+  background: var(--sl-border-strong);
+}
+
+.wn-time-fill {
+  width: var(--wn-time-fill, 0);
+  background: var(--sl-primary);
+  transition: width var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.wn-time-stop {
+  position: relative;
+  flex: 1 0 auto;
+  padding: 0 var(--sl-space-5) var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-tight);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.wn-time-stop::after {
+  position: absolute;
+  bottom: calc(var(--sl-space-5) * -1);
+  left: 50%;
+  box-sizing: border-box;
+  width: var(--sl-space-5);
+  height: var(--sl-space-5);
+  border: var(--sl-space-1) solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+  transform: translateX(-50%);
+  content: "";
+}
+
+.wn-time-stop:hover,
+.wn-time-stop.sl-is-active {
+  color: var(--sl-primary-strong);
+}
+
+.wn-time-stop:hover::after,
+.wn-time-stop.wn-is-done::after {
+  border-color: var(--sl-primary);
+}
+
+.wn-time-stop.sl-is-active::after {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wn-time-fill {
+    transition: none;
+  }
+}
+
+/* The names in one line: the track is as long as its names and slides between the arrows, as the timeline does. Its view keeps the round ends of the
+   track, so a track cut by the view still ends in a pill */
+[data-wn-rail="line"] > .wn-rail-view {
+  border-radius: var(--sl-radius-pill);
+}
+
+
+.wn-rail-run:not([data-wn-rail="steps"]) .sl-seg-cell {
+  flex: 0 0 auto;
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+}
+
+/* The names in rows: the track wraps and takes the corner of a window, a pill of three rows would be a circle */
+[data-wn-rail="rows"] > .sl-seg {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  border-radius: var(--sl-radius-2);
+}
+
+/* The numbers: the rail of the pager, and the name of the section being read beside it */
+.wn-rail-now {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Axis: the segmented switch, for every switch of the page, the desk included. The shadows that part the plate from the track in the light scheme are
+   black on a dark ground in the dark one, so the plate takes a lighter step there and the track a line round it; the line round the plate is for both
+   schemes, a white plate on a pale track loses its edge as well */
+body:has(.wn-root:is([data-wn-seg="plate"], [data-wn-seg="ring"])) .sl-seg:not(.sl-seg-pager) {
+  --sl-seg-knob-bg: light-dark(var(--sl-bg), var(--sl-border-strong));
+}
+
+body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) .sl-seg {
+  box-shadow: var(--sl-shadow-inset), inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
+}
+
+body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) .sl-seg:not(.sl-seg-pager) {
+  --sl-seg-knob-shadow: var(--sl-shadow-raised), inset 0 0 0 1px var(--sl-border-strong);
+}
+
+/* On a phone a card of the snake is its number alone, so a row still holds several and the rail stays low */
+@media (max-width: 600px) {
+  /* An axis of many values wraps on the desk, or its track would widen the page past a phone */
+  .wn-axis,
+  .wn-desk .sl-seg {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .wn-desk .sl-seg {
+    border-radius: var(--sl-radius-2);
+  }
+
+  .wn-snake {
+    --wn-stop-min: 40px;
+  }
+
+  .wn-stop {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .wn-stop > span {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
-  .wn-trio {
+  .wn-trio,
+  .wn-duo,
+  .wn-duo.wn-halves {
     grid-template-columns: minmax(0, 1fr);
   }
 }

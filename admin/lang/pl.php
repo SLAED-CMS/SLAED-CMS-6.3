@@ -971,7 +971,7 @@ define('_POINTS_BADDIFF','Zmiana salda musi być liczbą całkowitą od -1000000
 define('_POINTS_BADSAVE','Saldo nie zostało zmienione: system punktów odrzucił korektę.');
 define('_POINTS_TWICE','Ta korekta salda została już zapisana. Sprawdź saldo; ponowne wysłanie formularza zapisze nową korektę.');
 define('_POINTS_RESETMORE','Resetowanie nie zostało zakończone. Wyślij formularz ponownie, aby kontynuować.');
-define('_POINTS_JOURNAL','Dziennik punktów');
+define('_POINTS_JOURNAL','Dziennik');
 define('_POINTS_NOMARK','Aktualizacja danych 8.0 nie została wykonana: punkty są zamknięte do zapisu.');
 define('_POSITION','Pozycja');
 define('_PRACT','Aktywacja prywatne wiadomości?');

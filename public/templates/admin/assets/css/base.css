@@ -296,8 +296,7 @@
   --sl-figure-dur: calc(0.9s * var(--sl-time-scale));
   --sl-figure-text: var(--sl-success-strong);
   --sl-figure-shadow: 0 0 var(--sl-space-5) var(--sl-success);
-  /* The series of the panel: the grid of a ground drifting by one cell and the lamps of a window head fading in turn */
-  --sl-ground-dur: calc(6s * var(--sl-time-scale));
+  /* The series of the panel: the lamps of a window head fading in turn */
   --sl-pane-dur: calc(2.8s * var(--sl-time-scale));
   /* The window of the series: its frame, its ground, a gradient down the whole window under a head whose own ground is clear, its inset and its shade */
   --sl-pane-border: var(--sl-border);
@@ -455,8 +454,7 @@
   --sl-graph-pad-x: 40px;
   /* The strip of the months of an archive with the years under its bars */
   --sl-archive-height: 96px;
-  /* The cell of the grid under the windows of a page and the width under which a tile of figures takes the next row */
-  --sl-ground-width: 32px;
+  /* The width under which a tile of figures takes the next row */
   --sl-metric-min-width: 150px;
   /* A painted group name keeps the hue of its group, taken from its parent, and the lightness its scheme reads: 4.5:1 for any stored colour */
   --sl-group-text: light-dark(oklch(from currentColor min(l, 0.5) c h), oklch(from currentColor max(l, 0.7) c h));
@@ -504,22 +502,22 @@
   --sl-popover-min-width: 220px;
   --sl-popover-max-width: 520px;
   --sl-popover-shadow: 0 6px 14px var(--sl-shadow-color);
-  --sl-radio-height: 20px;
   --sl-rail-width: 3px;
   --sl-rail-max-width: 150px;
   --sl-ratings-width: 4ch;
   --sl-row-bg: color-mix(in srgb, var(--sl-success) 25%, transparent);
   --sl-search-min-width: 120px;
   --sl-search-max-width: 220px;
-  /* The plain segmented switch: a sunken track, cells over it and a raised plate under the chosen one */
+  /* The plain segmented switch: a sunken track, cells over it and a raised plate under the chosen one; a line round the plate and round the track in both schemes */
   --sl-seg-height: var(--sl-size-control);
   --sl-seg-pad-x: 0;
   --sl-seg-pad-y: 0;
   --sl-seg-bg: var(--sl-bg-muted);
+  --sl-seg-shadow: var(--sl-shadow-inset), inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
   --sl-seg-text: var(--sl-text-muted);
   --sl-seg-knob-bg: var(--sl-bg);
   --sl-seg-knob-text: var(--sl-text);
-  --sl-seg-knob-shadow: var(--sl-shadow-raised);
+  --sl-seg-knob-shadow: var(--sl-shadow-raised), inset 0 0 0 1px var(--sl-border-strong);
   --sl-select-width: 350px;
   --sl-mode-width: var(--sl-set-width);
   --sl-mode-height: var(--sl-size-control);
@@ -534,10 +532,8 @@
   --sl-skel-tile-height: 78px;
   --sl-sort-width: 10px;
   --sl-switch-bg: color-mix(in srgb, var(--sl-primary) 35%, var(--sl-bg));
+  /* The switch is the segmented switch of two answers and reads its tokens; this is the least width it takes */
   --sl-switch-width: 58px;
-  --sl-switch-height: 24px;
-  --sl-switch-gap: 2px;
-  --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));
   /* Components: the extended statistics panel - ring, arc, dimension bar and figure columns */
   --sl-statx-max-width: 120px;
   --sl-statx-ring: 12px;

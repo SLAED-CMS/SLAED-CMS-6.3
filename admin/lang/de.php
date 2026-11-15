@@ -971,7 +971,7 @@ define('_POINTS_BADDIFF','Die Änderung des Kontostands muss eine ganze Zahl von
 define('_POINTS_BADSAVE','Der Kontostand wurde nicht geändert: das Punktesystem hat die Korrektur abgelehnt.');
 define('_POINTS_TWICE','Diese Korrektur des Kontostands wurde bereits gespeichert. Prüfen Sie den Kontostand; ein erneutes Senden des Formulars bucht eine neue Korrektur.');
 define('_POINTS_RESETMORE','Das Zurücksetzen ist nicht abgeschlossen. Senden Sie das Formular erneut, um fortzufahren.');
-define('_POINTS_JOURNAL','Punktejournal');
+define('_POINTS_JOURNAL','Journal');
 define('_POINTS_NOMARK','Die Datenaktualisierung 8.0 wurde nicht ausgeführt: Punkte sind für Schreibzugriffe gesperrt.');
 define('_POSITION','Position');
 define('_PRACT','Aktivieren persönliche Nachrichten?');

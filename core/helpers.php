@@ -596,7 +596,16 @@ function setTplAdminInfoPage(array $data = []): void {
             }
         }
     }
-    $info = $tpl->getHtmlPart('div', ['class' => 'sl-markdown', 'content_html' => $prs->filterContent($doc, false, $mod)]);
+    $html = $prs->filterContent($doc, false, $mod);
+    $parts = [];
+    if (preg_match_all('#<h2 id="([^"]+)">(.*?)</h2>#su', $html, $hits, PREG_SET_ORDER)) {
+        foreach ($hits as $i => $hit) {
+            $parts[] = ['href' => '#'.$hit[1], 'title' => html_entity_decode(strip_tags($hit[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 'is_now' => $i === 0];
+        }
+    }
+    $rail = count($parts) > 1 ? $tpl->getHtmlFrag('toc', ['label' => _ADM_PARTS, 'prev_text' => _BACK, 'next_text' => _NEXT, 'rows' => $parts]) : '';
+    $note = $tpl->getHtmlPart('div', ['class' => 'sl-markdown', 'content_html' => $html]);
+    $info = $rail.$tpl->getHtmlFrag('pane', ['icon' => 'info-circle', 'title' => _MANUAL, 'content_html' => $note]);
     $body = ($alert !== '' ? $alert : '').$tpl->getHtmlPart('box', ['content_html' => $info]);
     $head = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '');
     if ($head === 'true') {

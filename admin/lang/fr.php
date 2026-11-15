@@ -971,7 +971,7 @@ define('_POINTS_BADDIFF','La modification du solde doit être un nombre entier d
 define('_POINTS_BADSAVE','Le solde n\'a pas été modifié : le système de points a refusé la correction.');
 define('_POINTS_TWICE','Cette correction du solde a déjà été enregistrée. Vérifiez le solde ; renvoyer le formulaire enregistre une nouvelle correction.');
 define('_POINTS_RESETMORE','La réinitialisation n\'est pas terminée. Envoyez à nouveau le formulaire pour continuer.');
-define('_POINTS_JOURNAL','Journal des points');
+define('_POINTS_JOURNAL','Journal');
 define('_POINTS_NOMARK','La mise à jour des données 8.0 n\'a pas été exécutée : les points sont fermés en écriture.');
 define('_POSITION','Position');
 define('_PRACT','Activer les messages privés?');

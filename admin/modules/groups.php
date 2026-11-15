@@ -10,7 +10,8 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function groups(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _MANUAL]]);
+    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=journal', 'name=groups&op=info'],
+        'tabs' => [_HOME, _ADD, _POINTS, _POINTS_JOURNAL, _MANUAL]]);
     $result = $db->getSqlQuery('SELECT g.id, g.name, g.intro, g.points, g.extra, g.`rank`, g.color, COUNT(u.id) FROM '.PREFIX_DB.'_groups AS g'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
         .' GROUP BY g.id, g.name, g.intro, g.points, g.extra, g.`rank`, g.color ORDER BY g.points, g.id');
@@ -52,13 +53,15 @@ function groups(): void {
     }
     usort($steps['extra'], fn($a, $b) => ($b['users'] <=> $a['users']) ?: ($a['id'] <=> $b['id']));
     $heads = [
-        'ladder' => ['list_id' => 'sl-ladder-points', 'icon_name' => 'bar-chart-steps', 'title' => _GROUPS_LADDER, 'note' => _GROUPS_LADDERI,
-            'sort_key' => 'points', 'sort_title' => _GROUPS_BYPOINTS, 'is_desc' => false, 'is_extra' => false],
-        'extra' => ['list_id' => 'sl-ladder-extra', 'icon_name' => 'patch-check', 'title' => _GROUPS_SPECIAL, 'note' => _GROUPS_SPECIALI,
-            'sort_key' => 'users', 'sort_title' => _GROUPS_BYUSERS, 'is_desc' => true, 'is_extra' => true],
+        'ladder' => ['list_id' => 'sl-ladder-points', 'icon' => 'bar-chart-steps', 'title' => _GROUPS_LADDER, 'note' => _GROUPS_LADDERI,
+            'sort_key' => 'points', 'sort_title' => _GROUPS_BYPOINTS, 'is_desc' => false],
+        'extra' => ['list_id' => 'sl-ladder-extra', 'icon' => 'patch-check', 'title' => _GROUPS_SPECIAL, 'note' => _GROUPS_SPECIALI,
+            'sort_key' => 'users', 'sort_title' => _GROUPS_BYUSERS, 'is_desc' => true],
     ];
     foreach ($heads as $key => $head) {
-        if ($steps[$key]) $cont .= $tpl->getHtmlPart('group-ladder', $head + ['steps' => $steps[$key]]);
+        if (!$steps[$key]) continue;
+        $cap = ['icon' => $head['icon'], 'title' => $head['title'], 'facts' => [['text' => $head['note']]], 'tools_html' => $tpl->getHtmlFrag('group-sort', $head)];
+        $cont .= $tpl->getHtmlPart('group-ladder', ['cap' => $cap, 'list_id' => $head['list_id'], 'is_extra' => $key === 'extra', 'steps' => $steps[$key]]);
     }
     if (!$list) $cont .= $tpl->getHtmlFrag('empty', ['act_url' => $afile.'.php?name=groups&op=add']);
     echo $cont;
@@ -160,8 +163,8 @@ function add(): void {
     $result = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY points, id');
     while ([$sid, $sname, $spts] = $db->getSqlRow($result)) if ((int)$sid !== (int)$gid) $ladder[] = ['name' => (string)$sname, 'points' => (int)$spts];
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
-        'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=journal', 'name=groups&op=info'],
+        'tabs' => [_HOME, _ADD, _POINTS, _POINTS_JOURNAL, _MANUAL], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $form = $tpl->getHtmlPart('group-form', [
         'action_url' => $afile.'.php',
@@ -329,18 +332,24 @@ function points(): void {
         'submit_label' => _SAVE,
     ]);
     $box = $tpl->getHtmlPart('box', ['content_html' => $pointv]);
-    if ($mark) {
-        echo getPointsJournal($box);
-    } else {
-        echo getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _MANUAL],
-            'tab' => 2]).checkPerms(CONFIG_DIR.'/points.php').$tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'is_warn' => true]).$box;
-    }
+    $note = $mark ? '' : $tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'is_warn' => true]);
+    echo getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=journal', 'name=groups&op=info'],
+        'tabs' => [_HOME, _ADD, _POINTS, _POINTS_JOURNAL, _MANUAL],
+        'tab' => 2]).checkPerms(CONFIG_DIR.'/points.php').$note.$box;
     setFoot();
 }
 
-# The journal of the points under its filter as a list of the canon, the rules form above it; the count stops at 5000 rows and the pages at 100
-function getPointsJournal(string $note): string {
+# The journal of the points under its filter as a list of the canon; the count stops at 5000 rows and the pages at 100, and without the 8.0 data mark the points are closed
+function journal(): void {
     global $db, $afile, $conf, $tpl;
+    setHead();
+    if (($conf['update']['points'] ?? '') !== '8.0.0') {
+        echo getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=journal', 'name=groups&op=info'],
+            'tabs' => [_HOME, _ADD, _POINTS, _POINTS_JOURNAL, _MANUAL],
+            'tab' => 3]).$tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'is_warn' => true]);
+        setFoot();
+        return;
+    }
     $uid = getVar('get', 'uid', 'num', 0);
     $act = getVar('get', 'act', 'word', '');
     $day = getVar('get', 'day', 'date', '');
@@ -375,20 +384,19 @@ function getPointsJournal(string $note): string {
         ]];
     }
     $keep = array_filter(['uid' => $uid, 'act' => $act, 'day' => $day]);
-    return getTplAdminList([
-        'head_html' => getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
-            'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 2, 'part' => [2], 'subtitle_html' => $tpl->getHtmlFrag('list-filter', [
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=journal', 'name=groups&op=info'],
+            'tabs' => [_HOME, _ADD, _POINTS, _POINTS_JOURNAL, _MANUAL], 'tab' => 3, 'part' => [3], 'subtitle_html' => $tpl->getHtmlFrag('list-filter', [
                 'action_url' => $afile.'.php',
                 'label' => _POINTS_JOURNAL,
                 'is_part' => true,
-                'hidden' => [['nameattr' => 'name', 'valueattr' => 'groups'], ['nameattr' => 'op', 'valueattr' => 'points']],
+                'hidden' => [['nameattr' => 'name', 'valueattr' => 'groups'], ['nameattr' => 'op', 'valueattr' => 'journal']],
                 'fields' => [
                     ['field_id' => 'sl-pts-uid', 'label' => _USER.' '._ID, 'name_attr' => 'uid', 'itype' => 'number', 'is_count' => true, 'value' => $uid ? (string)$uid : ''],
                     ['field_id' => 'sl-pts-act', 'label' => _TYPE, 'name_attr' => 'act', 'options' => $opts, 'is_now' => true],
                     ['field_id' => 'sl-pts-day', 'label' => _DATE, 'name_attr' => 'day', 'itype' => 'date', 'value' => $day],
                 ],
-            ])]).checkPerms(CONFIG_DIR.'/points.php'),
-        'note_html' => $note,
+            ])]),
         'is_fixed' => true,
         'key' => 'groups-points',
         'head' => [
@@ -401,13 +409,14 @@ function getPointsJournal(string $note): string {
             ['content' => _NOTE, 'is_truncate' => true],
         ],
         'rows' => $rows,
-        'href' => $afile.'.php?name=groups&op=points'.($keep ? '&'.http_build_query($keep) : '').'&',
+        'href' => $afile.'.php?name=groups&op=journal'.($keep ? '&'.http_build_query($keep) : '').'&',
         'page' => $num,
         'pages' => $pages,
         'count' => $count,
         'limit' => $lim,
-        'reset_url' => $keep ? $afile.'.php?name=groups&op=points' : '',
+        'reset_url' => $keep ? $afile.'.php?name=groups&op=journal' : '',
     ]);
+    setFoot();
 }
 
 function pointssave(): void {
@@ -455,8 +464,8 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
-        'tabs' => [_HOME, _ADD, _POINTS, _MANUAL],
+        'ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=journal', 'name=groups&op=info'],
+        'tabs' => [_HOME, _ADD, _POINTS, _POINTS_JOURNAL, _MANUAL],
     ]);
 }
 
@@ -467,5 +476,6 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'points': points(); break;
     case 'pointssave': pointssave(); break;
+    case 'journal': journal(); break;
     case 'info': info(); break;
 }

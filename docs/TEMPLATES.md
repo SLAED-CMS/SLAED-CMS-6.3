@@ -677,6 +677,13 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
   handler checks `checkAdminPost()` and returns to its list with a flash. `setTplAdminInfoPage()` passes `post` on.
 - **A column title is one word.** No title of a list on the site or in the panel carries two words, a slash or a cut
   form (`cutstr()` of a constant): where the constant of a form says more, the head takes a one-word constant of its own.
+- **A list of the panel wears the ground and the head of a window.** `.sl-table-list-sort` of the theme `admin` paints
+  `--sl-pane-bg` down the whole list, and its column titles stand in the mono capitals of a window head, by the one
+  rule that sets `.sl-pane-title`. A head cell paints `--sl-surface`, the first colour of that ground, because a head
+  that stays in view has to hide the rows passing under it. The rule between two rows is dashed `--sl-border`, as
+  between two rows in a window, and the row under the pointer takes `--sl-tint` in every list, a canon one or not. The
+  short line between two titles is a pseudo-element of the cell and no layer of its ground, so the contrast registry
+  reads the ground the cell paints. The cards of a list and the list of a phone carry no ground of the list.
 - **A record names its module honestly.** A list, a filter or a group that says which module a record belongs to
   takes `getModuleTitle()`: a Node type is the module and its type («Материалы - Новости»), never a module of its own, and
   any other module its name alone, never its key.
@@ -901,6 +908,13 @@ of a dialog is `fragments/window.html` (`docs/WINDOW.md`), another component.
   pressed.
 - **A window inside a frame is flat.** In the inspector of the site builder a window carries neither shadow nor
   gradient (`assets/css/layout.css`).
+- **The help of a section stands in a window.** `setTplAdminInfoPage()` prints the help text in `fragments/pane.html`
+  named by `_MANUAL`, from edge to edge of its box, with the rail of its sections over it ("Segmented Switch"). The
+  text takes the inset of the window, and the editor of a super administrator under it stands from edge to edge of its
+  own box, without a window.
+- **The tab strip of a page draws the line of a window.** The line under `.sl-tabs-nav` and the frame of its open tab
+  read `--sl-pane-border`, so the strip and the windows under it are parted by one line. A tab keeps the form of a
+  folder and an idle tab its own gradient.
 
 ## Button Weight
 
@@ -1128,8 +1142,7 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
 
 A screen that shows a state rather than rows — "Статистика", "Мониторинг", the summaries of the others — is built of these
 parts. Each lives once in the theme `admin`: the markup in `fragments/`, the rules in `theme.css`, the behaviour in
-`admin-ui.js`, the tokens in `base.css` and `tools/ui-contract.php` (`--sl-ground-width`, `--sl-ground-dur`,
-`--sl-pane-dur`, `--sl-metric-min-width`). A page has something of its own only where the other has no like: the dial of
+`admin-ui.js`, the tokens in `base.css` and `tools/ui-contract.php` (`--sl-pane-dur`, `--sl-metric-min-width`). A page has something of its own only where the other has no like: the dial of
 the day in the lamp of "Статистика", the pulse in the lamp of "Мониторинг". The tokens `--sl-statx-*` stay with the dial, the bars of rows
 and the log of days. `SeriesPartsTest`
 holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter()`, `getTplLongCell()` and that a list draws no window.
@@ -1137,7 +1150,7 @@ holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter(
 
 | Part | Fragment, class | Keys and notes |
 |---|---|---|
-| The ground | `pane-ground.html`, `.sl-ground` | `content_html`. Its grid drifts on a layer of its own, `.sl-ground-lines`, by `transform`: the drift measured 5.7% and 14.5% of a core (renderer, GPU) against 4.8% and 13.2% without it and 20.4% and 43.5% by `background-position` |
+| The ground | `pane-ground.html`, `.sl-ground` | `content_html`. The column of the windows of a board on the ground of the page; it draws nothing of its own |
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
 | A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `state_html` (a line of state before the chip, which a cockpit hands in), `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list never enters a window: its summary stands above the table in `note_html` of `getTplAdminList()` |
 | A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
@@ -1271,8 +1284,32 @@ pager — is one component, `sl-seg`, in the `theme.css` of both themes; the fac
 - **A switch of a screen is the plain `sl-seg`.** The span of the rhythm of "Статистика" (`24ч`, `7д`, `30д`) and the
   day of its cockpit (`Сейчас`, `Вчера`, `partials/statistic-cockpit.html`, the rail `stat-day`) wear the same track
   and plate; the cockpit keeps its mono capitals only for the words of an archive and of a picked day.
-- **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-text`,
-  `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
+- **A picker window wears the plain `sl-seg` too.** The groups of the emoji window (`partials/emoji-panel.html`, one
+  markup in both themes) and the sources of the icon window of the panel (`fragments/window-bar-icons.html`) are a
+  track without a rail and without a plate of its own: the chosen cell wears the plate itself. Their cells carry
+  words, so they take an inset of `--sl-space-5` and keep their width. The track of the groups keeps the class
+  `sl-editor-emoji-tabs` and a cell `sl-editor-emoji-tab` as the hooks of `plugins/system/emoji.js`, which marks the
+  chosen group with `sl-is-active`; the track is as wide as its cells and never wider than the window.
+- **A line parts the plate from the track.** The shadows that part them in the light scheme are black on a dark ground
+  in the dark one, where the plate is the ground of the page on a track one step lighter. So `--sl-seg-knob-shadow`
+  carries a line of `--sl-border-strong` round the plate, and `--sl-seg-shadow` a line round the track, in both
+  schemes: `--sl-border-strong` in the light one and `--sl-border` in the dark one, so the switch reads the same size
+  in both. The plate of `sl-seg-pager` is the brand colour and keeps the plain
+  `--sl-shadow-raised`. The switch «Да / Нет» of the panel (`.sl-radio-switch`) is the same switch of
+  two answers and reads the same tokens: it is `--sl-seg-height` tall, its knob stands from edge to edge of the track,
+  its words take an inset of `--sl-space-4`; the track is `--sl-seg-bg` under `--sl-seg-shadow`, the knob
+  `--sl-seg-knob-bg` under `--sl-seg-knob-shadow`, the words `--sl-seg-text` and `--sl-seg-knob-text`. Only the track
+  of the answer «Да» is its own, `--sl-success`, and `--sl-switch-width` is the least width it takes.
+- **The rail of a help page is the plain `sl-seg` in one line.** `setTplAdminInfoPage()` reads the `h2` of the rendered
+  help and hands them to `fragments/toc.html` as `rows` (`href`, `title`, `is_now`), with `label`, `prev_text` and
+  `next_text`; a help of fewer than two sections prints no rail. The rail `.sl-toc` stands over the window of the help
+  and stays in view (`position: sticky`); its strip slides inside `.sl-toc-view` between two `sl-but-mini` arrows, which
+  go when the strip fits. `setTocRail()` of `assets/js/admin-ui.js` marks the section under the rail while the text
+  scrolls, keeps the section a press named until the reader scrolls himself, slides the strip to it, and writes the
+  height of the rail into `--sl-d-toc`, which the `scroll-margin-top` of a section heading reads. Without the script
+  the cells are plain links to the sections.
+- **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-shadow`,
+  `--sl-seg-text`, `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
   of the plain `sl-seg`; a modifier reads semantic tokens straight instead of redeclaring them, because a custom property
   declared in `theme.css` counts as scoped. `--sl-mode-width`, `--sl-mode-height` and `--sl-mode-bg` stay the cell, the
   plate and the track of `sl-seg-mode`.
@@ -1436,7 +1473,7 @@ Every reader passes the raw column and its title, and every template takes the r
 
 | Template | Prints |
 |---|---|
-| `partials/group-ladder.html` | one list: the heading with its icon, subtitle and sort button, and the `ol.sl-ladder` of its steps; `sl-ladder-extra` dashes the rail of the special groups |
+| `partials/group-ladder.html` | one list in a window: `fragments/pane-cap.html` from `cap` (the icon, the name, the subtitle as a fact, the sort button `fragments/group-sort.html` as `tools_html`) and the `ol.sl-ladder` of its steps in the body; `sl-ladder-extra` dashes the rail of the special groups |
 | `fragments/group-step.html` | one step `sl-ladder-step`: the threshold or the mark «Специальная», the node on the rail, the rank before the name, the description, «Участников: N» or «Пусто — участников нет» over the share bar, the dial |
 | `partials/group-form.html` | the form `sl-rank-form` with its three windows (`.sl-pane` with `fragments/pane-cap.html`): «Готовый ранг», «Свой ранг» (the console and the preview), «Группа» |
 

@@ -3188,6 +3188,77 @@
         document.querySelectorAll('#sl-set-saver').forEach(function (pick) { pick.value = String(getSaverWait() / 60000); });
     }
     // Д11 The screensaver lives where the layout of the panel carries its badge; it starts once phoenix.js, deferred after this file, has run
+    // The rail of the sections of a help page marks the section under it while the text scrolls, keeps the one a press named until the reader scrolls himself, and slides its strip
+    function setTocRail(nav) {
+        var box = nav.parentNode;
+        var view = nav.querySelector('.sl-toc-view');
+        var cells = Array.prototype.slice.call(nav.querySelectorAll('.sl-seg-cell'));
+        var heads = cells.map(function (cell) { return document.getElementById(decodeURIComponent(cell.hash.slice(1))); });
+        var steps = nav.querySelectorAll('[data-sl-toc-go]');
+        var now = 0;
+        var pin = false;
+        if (nav.hasAttribute('data-sl-toc-ready') || !cells.length || heads.indexOf(null) !== -1) return;
+        nav.setAttribute('data-sl-toc-ready', '');
+        function setEnds() {
+            nav.classList.toggle('sl-is-fit', view.scrollWidth <= view.clientWidth + 1);
+            steps[0].classList.toggle('sl-is-muted', view.scrollLeft < 1);
+            steps[1].classList.toggle('sl-is-muted', view.scrollLeft + view.clientWidth > view.scrollWidth - 2);
+        }
+        function setSize() {
+            box.style.setProperty('--sl-d-toc', nav.offsetHeight + 'px');
+            setEnds();
+        }
+        function setNow(at) {
+            if (at === now) return;
+            now = at;
+            cells.forEach(function (cell, i) {
+                cell.classList.toggle('sl-is-active', i === at);
+                if (i === at) cell.setAttribute('aria-current', 'location');
+                else cell.removeAttribute('aria-current');
+            });
+            view.scrollTo({ left: cells[at].offsetLeft - (view.clientWidth - cells[at].offsetWidth) / 2, behavior: window.isMotionStill() ? 'auto' : 'smooth' });
+        }
+        function setRead() {
+            var edge = nav.getBoundingClientRect().bottom + 24;
+            var hit = 0;
+            if (!nav.isConnected) return setGone();
+            if (pin) return;
+            heads.forEach(function (head, i) {
+                if (head.getBoundingClientRect().top <= edge) hit = i;
+            });
+            setNow(hit);
+        }
+        function setTurn() {
+            window.requestAnimationFrame(setRead);
+        }
+        function setFree() {
+            pin = false;
+        }
+        function setGone() {
+            window.removeEventListener('scroll', setTurn);
+            ['wheel', 'touchmove', 'keydown'].forEach(function (type) { window.removeEventListener(type, setFree); });
+        }
+        nav.addEventListener('click', function (event) {
+            var cell = event.target.closest('.sl-seg-cell');
+            var step = event.target.closest('[data-sl-toc-go]');
+            if (step) view.scrollBy({ left: step.getAttribute('data-sl-toc-go') * view.clientWidth * 0.7, behavior: window.isMotionStill() ? 'auto' : 'smooth' });
+            if (!cell) return;
+            pin = true;
+            setNow(cells.indexOf(cell));
+        });
+        ['wheel', 'touchmove', 'keydown'].forEach(function (type) { window.addEventListener(type, setFree, { passive: true }); });
+        window.addEventListener('scroll', setTurn, { passive: true });
+        view.addEventListener('scroll', function () { window.requestAnimationFrame(setEnds); }, { passive: true });
+        if (window.ResizeObserver) new ResizeObserver(setSize).observe(nav);
+        setSize();
+        setRead();
+    }
+    function setTocRails(root) {
+        root.querySelectorAll('[data-sl-toc]').forEach(setTocRail);
+    }
+    document.addEventListener('htmx:load', function (event) {
+        if (event.target.querySelectorAll) setTocRails(event.target);
+    });
     function setSaverWatch() {
         if (!document.querySelector('.sl-phx-badge')) return;
         ['pointermove', 'pointerdown', 'keydown', 'wheel'].forEach(function (name) {
@@ -3269,6 +3340,7 @@
             setMenuFind();
             setListPicked();
             setSaverWatch();
+            setTocRails(document);
         });
     } else {
         addFileStep();
@@ -3285,5 +3357,6 @@
         setMenuFind();
         setListPicked();
         setSaverWatch();
+        setTocRails(document);
     }
 })();

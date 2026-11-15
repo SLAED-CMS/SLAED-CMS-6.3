@@ -211,7 +211,7 @@ return [
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'form-side', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
-        'fresh-now', 'fresh-week', 'gauge', 'graph', 'ground', 'group', 'guard', 'header', 'hub-head', 'hub-row',
+        'fresh-now', 'fresh-week', 'gauge', 'graph', 'group', 'guard', 'header', 'hub-head', 'hub-row',
         'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot',
         'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'metric', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
@@ -408,14 +408,8 @@ return [
         '.sl-div-field label input, .sl-inline-gap',
         # The count badge of a sidebar block and one field of a list filter: two components sharing three declarations by coincidence
         '.sl-filter-field, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
-        # The tab strip of the icon picker and the filter row of the file manager window: two rows of one gap, met by two components that share nothing else
-        # They were in two files until the window became the theme's
-        '.sl-fm-win .sl-fm-filters, .sl-icon-modal-tabs',
         # The name cell of the file manager and a field row of the language editor
         '.sl-fm-name, .sl-lang-edit-row .sl-div-field',
-        # The tab standing open in the icon window and the chosen icon of the rank console: two solid choices of the brand colour that share nothing else
-        # Merging would file the rank console inside the icon window, five thousand lines from where either is edited
-        '.sl-icon-modal-tabs button.sl-is-active, .sl-rank-icons button[aria-pressed="true"]',
         # The key list of the pager tip and the feature list of the panel login: two bare lists laid out as a grid with one gap, which share nothing else
         # Merging would file the login card inside the pager, two files apart from where either is edited
         '.sl-admin-login-list, .sl-pager-tip-keys',

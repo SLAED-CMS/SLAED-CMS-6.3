@@ -1,0 +1,12 @@
+<nav class="sl-toc" aria-label="{{ label }}" data-sl-toc>
+  <button type="button" class="sl-but-mini" data-sl-toc-go="-1" title="{{ prev_text }}" aria-label="{{ prev_text }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+  <div class="sl-toc-view">
+    <span class="sl-seg" data-sl-knob="toc">
+      <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+      {% for item in rows %}
+      <a href="{{ item.href }}" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}"{% if item.is_now %} aria-current="location"{% endif %}>{{ item.title }}</a>
+      {% endfor %}
+    </span>
+  </div>
+  <button type="button" class="sl-but-mini" data-sl-toc-go="1" title="{{ next_text }}" aria-label="{{ next_text }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+</nav>

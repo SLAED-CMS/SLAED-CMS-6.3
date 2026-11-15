@@ -126,10 +126,11 @@ final class SeriesPartsTest extends TestCase
     }
 
     #[Test]
-    public function groundHoldsItsLinesAndRowsTheirWindows(): void
+    public function groundHoldsItsWindowsAloneAndRowsTheirs(): void
     {
         $ground = self::getPart('pane-ground', ['content_html' => '<p id="in"></p>']);
-        $this->assertNotNull($ground->querySelector('.sl-ground > .sl-ground-lines[aria-hidden="true"] + #in'));
+        $this->assertNotNull($ground->querySelector('.sl-ground > #in:first-child'));
+        $this->assertNull($ground->querySelector('.sl-ground-lines'), 'The ground draws no grid of its own');
         $split = self::getPart('pane-row', ['content_html' => '<p id="big"></p>', 'side_html' => '<p id="small"></p>']);
         $this->assertNotNull($split->querySelector('.sl-pane-split > #big + .sl-pane-side > #small'));
         $this->assertNotNull(self::getPart('pane-row', ['content_html' => '<p id="in"></p>'])->querySelector('.sl-pane-trio > #in'));

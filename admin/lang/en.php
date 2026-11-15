@@ -971,7 +971,7 @@ define('_POINTS_BADDIFF','The change of the balance must be a whole number from 
 define('_POINTS_BADSAVE','The balance was not changed: the points subsystem refused the correction.');
 define('_POINTS_TWICE','This balance correction was already saved. Check the balance; sending the form again books a new correction.');
 define('_POINTS_RESETMORE','The reset is not finished. Submit the form again to continue it.');
-define('_POINTS_JOURNAL','Points journal');
+define('_POINTS_JOURNAL','Journal');
 define('_POINTS_NOMARK','The 8.0 data update has not been run: points are closed for writing.');
 define('_POSITION','Position');
 define('_PRACT','Activate personal messages?');

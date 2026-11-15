@@ -3996,38 +3996,18 @@ dialog.sl-editor-emoji-panel {
   padding: 0 var(--sl-space-3);
 }
 
+/* The groups of the emoji window are the segmented switch of the theme; this rule only places the track, as wide as its cells and never wider than the window */
 .sl-editor-emoji-tabs {
-  display: flex;
-  gap: var(--sl-space-2);
+  align-self: flex-start;
+  max-width: calc(100% - var(--sl-space-3) * 2);
   margin: var(--sl-space-3) var(--sl-space-3);
   overflow: hidden;
 }
 
-/* Emoji tabs reuse the popup button pair: secondary look idle, primary (blue) when active */
-.sl-editor-emoji-tab {
-  background: var(--sl-surface);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
-  color: var(--sl-text);
-  cursor: pointer;
+/* A cell of the picker carries a word, so it takes the inset of a button and keeps its width; the plain cell is sized for an icon */
+.sl-editor-emoji-tabs > .sl-seg-cell {
   flex: 0 0 auto;
-  font-size: var(--sl-font-small);
-  height: var(--sl-size-icon-lg);
   padding: 0 var(--sl-space-5);
-}
-
-.sl-editor-emoji-tab:hover {
-  border-color: var(--sl-border-strong);
-}
-
-.sl-editor-emoji-tab.active {
-  background: var(--sl-primary);
-  border-color: var(--sl-primary);
-  color: var(--sl-on-solid);
-}
-
-.sl-editor-emoji-tab.active:hover {
-  background: var(--sl-primary-strong);
 }
 
 .sl-editor-emoji-grid {
@@ -4068,7 +4048,6 @@ dialog.sl-editor-emoji-panel {
   max-height: calc(100vh - var(--sl-emoji-full-gap));
 }
 
-.sl-editor-emoji-tab:focus-visible,
 .sl-editor-emoji-item:focus-visible {
   box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
   outline: 0;
@@ -6539,7 +6518,7 @@ dialog.sl-editor-emoji-panel {
   padding: var(--sl-seg-pad-y) var(--sl-seg-pad-x);
   border-radius: var(--sl-radius-pill);
   background: var(--sl-seg-bg);
-  box-shadow: var(--sl-shadow-inset);
+  box-shadow: var(--sl-seg-shadow);
 }
 
 .sl-seg-cell {
@@ -6669,6 +6648,7 @@ button.sl-seg-cell:hover {
   left: var(--sl-space-1);
   height: var(--sl-size-chip);
   background: var(--sl-primary-strong);
+  box-shadow: var(--sl-shadow-raised);
 }
 
 .sl-seg-pager .sl-seg-cell.sl-is-active {
@@ -6677,6 +6657,7 @@ button.sl-seg-cell:hover {
 
 .sl-seg-pager:not([data-sl-knob-ready]) .sl-seg-cell.sl-is-active {
   background: var(--sl-primary-strong);
+  box-shadow: var(--sl-shadow-raised);
 }
 
 .sl-top-social {

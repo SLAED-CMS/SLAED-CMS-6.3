@@ -1,5 +1,55 @@
 # Versions
 
+## 2026-11-15
+
+### The switch «Да / Нет» of the panel wears the line of the segmented switch
+
+- **`.sl-radio-switch` of the theme `admin`** is the segmented switch of two answers: 28 px tall where it was 24,
+  the knob from edge to edge of the track, the words with an inset, the colours and the lines of `sl-seg` in both
+  schemes; the track of «Да» stays green.
+- **Breaking for a theme made from `admin`:** the tokens `--sl-switch-height`, `--sl-switch-gap`,
+  `--sl-switch-knob-shadow` and `--sl-radio-height` are gone from `admin`.
+
+### The grid under the windows of a board is gone
+
+- **"Статистика" and "Мониторинг"** stand on the plain ground of the page: the drifting grid `.sl-ground-lines` of
+  `fragments/pane-ground.html`, its rules and its animation `sl-ground-drift` left the theme `admin`.
+- **Breaking for a theme made from `admin`:** the tokens `--sl-ground-width` and `--sl-ground-dur` are gone.
+
+### The journal of the points takes a tab of its own, and the ladders of «Группы» stand in windows
+
+- **A new address** `admin.php?name=groups&op=journal` holds the journal of the points with its filter; the tab «Пункты»
+  keeps the switch and the rules. The filter and the pager of the journal lead to the new address.
+- **The two lists of the tab «Главная»** stand in the window `.sl-pane` with the head of a window; the classes
+  `sl-ladder-head` left the theme, the sort button is `fragments/group-sort.html`.
+
+### The help of a section stands in a window under a rail of its sections, and the segmented switch gets a line
+
+- **A help page of the panel** prints its text in the window `fragments/pane.html` named «Справка». Over it stands
+  the rail `fragments/toc.html`: the `h2` of the help as the segmented switch in one line, which stays in view, marks
+  the section being read and slides between two arrows. A help of fewer than two sections has no rail. The new classes
+  are `sl-toc` and `sl-toc-view`, the script is `setTocRail()` of `admin-ui.js`.
+- **The segmented switch of both themes** draws a line round its plate and round its track in both schemes. The
+  new token is `--sl-seg-shadow`; `--sl-seg-knob-shadow` changed its value. The plate of the pager is as it was.
+- **A theme made from `admin` or `aurora`** takes the two values, or keeps a plate that is lost on a dark track.
+
+The reference is `docs/TEMPLATES.md`, "Panel Window" and "Segmented Switch".
+
+### The tabs, the lists and the picker windows of the panel take the lines and the ground of a window
+
+- **The tab strip** of the theme `admin` draws its line and the frame of its open tab in `--sl-pane-border`, where it
+  read `--sl-border-strong`.
+- **A list** `.sl-table-list-sort` paints `--sl-pane-bg` down its whole height, its column titles stand in the mono
+  capitals of a window head on `--sl-surface`, the rule between rows is dashed `--sl-border`, and the row under the
+  pointer takes `--sl-tint` in every list. The short line between two titles became a pseudo-element of the cell.
+- **The emoji window of both themes and the icon window of the panel** wear the segmented switch `sl-seg`. The rules
+  of `.sl-icon-modal-tabs` left the theme `admin` and the own look of `.sl-editor-emoji-tab` left both themes; the two
+  classes of the emoji window stay as hooks of its script.
+- **A theme made from `aurora` or `admin`** takes the new `partials/emoji-panel.html` or marks the chosen group of its
+  own tabs by `sl-is-active`: the script no longer writes the class `active`.
+
+The reference is `docs/TEMPLATES.md`, "Panel Window", "Admin List Contract" and "Segmented Switch".
+
 ## 2026-11-14
 
 ### The gradient of a window runs down the whole window, and a window of the site takes an inset of 12

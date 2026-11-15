@@ -562,7 +562,7 @@ final class AdminGuardTest extends TestCase
         }
         $this->assertDoesNotMatchRegularExpression("/\['name_attr' => '(user_password2?|pass2?|apwd2?|mail|email|aemail)',/", $site.$form.$this->getFile('admin/index.php'),
             'A credential field has no type');
-        foreach ([['admin/modules/logs.php', 'logview'], ['admin/modules/logs.php', 'logins'], ['admin/modules/groups.php', 'getPointsJournal']] as [$path, $func]) {
+        foreach ([['admin/modules/logs.php', 'logview'], ['admin/modules/logs.php', 'logins'], ['admin/modules/groups.php', 'journal']] as [$path, $func]) {
             $body = $this->getBody($path, $func);
             $this->assertStringNotContainsString('\d{4}-\d{2}-\d{2}', $body, $path.' '.$func.' reads a date by its own pattern');
             $this->assertMatchesRegularExpression("/getVar\('get', '(from|day)', 'date', ''\)/", $body, $path.' '.$func.' reads no date by its type');

@@ -552,15 +552,16 @@
   --sl-search-shadow:
     inset 0 1px 1px 0 light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     0 1px 2px light-dark(rgba(42, 48, 60, 0.12), rgba(0, 0, 0, 0.5));
-  /* The plain segmented switch: a sunken track, cells over it and a raised plate under the chosen one */
+  /* The plain segmented switch: a sunken track, cells over it and a raised plate under the chosen one; a line round the plate and round the track in both schemes */
   --sl-seg-height: var(--sl-size-control);
   --sl-seg-pad-x: 0;
   --sl-seg-pad-y: 0;
   --sl-seg-bg: var(--sl-bg-muted);
+  --sl-seg-shadow: var(--sl-shadow-inset), inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
   --sl-seg-text: var(--sl-text-muted);
   --sl-seg-knob-bg: var(--sl-bg);
   --sl-seg-knob-text: var(--sl-text-strong);
-  --sl-seg-knob-shadow: var(--sl-shadow-raised);
+  --sl-seg-knob-shadow: var(--sl-shadow-raised), inset 0 0 0 1px var(--sl-border-strong);
   /* The panel the user card unfolds is pinned this far above the card's bottom edge and may not grow past it */
   --sl-session-gap: 36px;
   --sl-shot-max-height: min(62vh, 460px);

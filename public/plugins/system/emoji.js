@@ -372,7 +372,7 @@
         }
         Array.prototype.forEach.call(tabs.querySelectorAll('.sl-editor-emoji-tab'), function(btn) {
             var on = btn.getAttribute('data-cat') === cat;
-            btn.classList.toggle('active', on);
+            btn.classList.toggle('sl-is-active', on);
             if (on) btn.setAttribute('aria-current', 'true');
         });
         sizePanel();
