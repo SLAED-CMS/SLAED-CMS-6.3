@@ -402,8 +402,8 @@ function getStatStrip(array $data): array {
 function getStatCockpit(array $data, array $view, string $clock, int $every): string {
     global $tpl;
     return $tpl->getHtmlPart('cockpit', [
-        'cap_icon' => 'graph-up',
-        'cap_text' => _STATISTIC.' · '.getStatMonthName($data['key']),
+        'icon' => 'graph-up',
+        'title' => _STATISTIC.' · '.getStatMonthName($data['key']),
         'tone' => 'ok',
         'rings' => [
             ['key' => 'human', 'label' => _STATISTIC_HUMAN, 'title' => _STATISTIC_HUMAN],
@@ -420,7 +420,7 @@ function getStatCockpit(array $data, array $view, string $clock, int $every): st
         ],
         'state_html' => $tpl->getHtmlPart('statistic-cockpit', ['is_state' => true, 'is_now' => $view['state']['is_now'], 'pace_cap' => _STATISTIC_PACE]),
         'lamp_html' => $tpl->getHtmlPart('statistic-cockpit', ['is_lamp' => true, 'clock_html' => $clock]),
-        'nav_html' => $tpl->getHtmlPart('statistic-cockpit', [
+        'tools_html' => $tpl->getHtmlPart('statistic-cockpit', [
             'is_nav' => true,
             'is_now' => $view['state']['is_now'],
             'set_text' => _STATISTIC_DIAL,

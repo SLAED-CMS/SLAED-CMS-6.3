@@ -84,7 +84,7 @@ function rss(): void {
             ]),
         ],
     ];
-    $content = $tab === 1 ? $tpl->getHtmlPart('div', ['rows' => $prefs]) : $sourcehtml;
+    $content = $tab === 1 ? $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $prefs])]) : $sourcehtml;
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=rss&op=save',
         'hidden' => [

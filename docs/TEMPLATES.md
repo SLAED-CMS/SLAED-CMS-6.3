@@ -1050,7 +1050,7 @@ switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движе�
 | An arc fills to its share | `.sl-cockpit-ring .sl-knob-val` | `stroke-dasharray` over `--sl-knob-dur` on `--sl-alert-ease`; `partials/cockpit.html` starts it at `0 100`, so the first poll fills it from zero |
 | A figure runs from its value to the new one, swollen and green until it stops, one series in both themes | the rings, the strip, the tiles and the queues of the panel, the figures of the presentation, the shares and votes of a poll | `setFigureRun()` of `plugins/system/slaed.js`, the one run, with `getFigureText()`, `getFigureParts()` and `getFigureValue()` beside it; the first fill from a dash runs and flares too. It sets `sl-is-counting` and runs for the length of the first animation the theme gives it: `sl-figure-lit` over `--sl-figure-dur` holds `--sl-figure-text` and `--sl-figure-shadow`, `sl-figure-fade` takes them off after it, `sl-figure-swell` settles from 1.4 over both; an inline figure is an inline block while it runs. The pulse of the monitor keeps `sl-cockpit-fresh` of its own tone. `slFigure` keeps the goal; a still page, a hidden tab or a theme with no flare writes the value at once |
 | A glare follows the hand over a tile | `.sl-menu-grid > .sl-mcard`, `.sl-metric` | one `pointermove`, not of a touch, written once a frame by `setTileGlare()`: `--sl-d-x`, `--sl-d-y` |
-| A beam crosses the solid heads in their turn | `.sl-dashboard-panel-head`, `.sl-block-sidebar h3`, `.sl-pane-cap` | `setBeamTurns()` writes the place of each head in `--sl-d-turn` |
+| A beam crosses the solid heads in their turn | `.sl-dashboard-panel-head`, `.sl-block-sidebar h3`, `.sl-pane-cap` but for the head of a cockpit, which keeps the scan as its one light | `setBeamTurns()` writes the place of each head in `--sl-d-turn` |
 | A press spreads from the pointer | `.sl-mcard-link` of the home grid, `.sl-menu-list-item` of `.sl-admin-sidebar`, `.sl-block-sidebar-count-row`, `.sl-cockpit button` | one `pointerdown` appends `span[data-sl-ripple]` with `--sl-d-x`, `--sl-d-y`, removed when `sl-ripple` over `--sl-ripple-dur` ends; not from the dial or the drag handle |
 
 The laws of a move:
@@ -1109,6 +1109,9 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
   and with it everything its box covers on the same layer: the wires of the block scene take `will-change: transform`,
   GPU 119 → 61 % on the system screen. A layer under a part that stands on a half pixel pulls that part onto a layer as
   well, where it rasters apart, so the map of the presentation keeps its wires in the scene.
+- **An animation goes with its box.** A rule that takes a pseudo-element away by `content: none` sets `animation: none`
+  beside it: an endless animation left declared there is restyled every frame though nothing is drawn (the head of a
+  cockpit, style 46 → 69 ms/s on the monitor).
 - **Nothing inherited per move.** A value written on every pointer move or frame is registered by `@property` with
   `inherits: false` and written on the element that reads it, never an inherited custom property on `body` or a scene:
   `--sl-d-pointer-x`, `--sl-d-pointer-y` of the pointer light, `--sl-d-gate-y`. A rule that reads such a value from its
@@ -1136,14 +1139,14 @@ holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter(
 |---|---|---|
 | The ground | `pane-ground.html`, `.sl-ground` | `content_html`. Its grid drifts on a layer of its own, `.sl-ground-lines`, by `transform`: the drift measured 5.7% and 14.5% of a core (renderer, GPU) against 4.8% and 13.2% without it and 20.4% and 43.5% by `background-position` |
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
-| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list never enters a window: its summary stands above the table in `note_html` of `getTplAdminList()` |
+| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `state_html` (a line of state before the chip, which a cockpit hands in), `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list never enters a window: its summary stands above the table in `note_html` of `getTplAdminList()` |
 | A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
 | Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good`; `chip` with `tone` after the text (section "Facts Of A Page") |
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
 | A meter | `meter.html`, `.sl-meter`, drawn by `getTplMeter()` | a share of a real limit with the role `meter` and `--sl-d-part`; `is_row` is the form inside a table row |
 | The extensions | `ext.html`, `.sl-ext` | `groups`: `label`, `have_text`, `is_short`, `chips` (`name`, `is_ok`, `is_lost`, `is_off`, `state_text`), `notes` |
 | A chart | `series.html` | `id`, `kind`, `json`, drawn by the engine below; the host stays empty until the engine draws it |
-| A cockpit | `partials/cockpit.html`, with `monitor-cockpit.html` and `statistic-cockpit.html` | `cap_icon`, `cap_text`, `rings`, `strip`, and the parts of the page `state_html`, `nav_html`, `lamp_html`. The lamp holds its face: the checks of the home, the pulse of "Мониторинг", the dial of "Статистика" |
+| A cockpit | `partials/cockpit.html`, with `monitor-cockpit.html` and `statistic-cockpit.html` | A window `section.sl-pane.sl-cockpit` with the head of `pane-cap.html`: `icon`, `title`, `rings`, `strip`, and the parts of the page `state_html`, `live_html` or `tools_html`, `lamp_html`. The state stands in the middle of the head, over the lamp; `is_state` with `loud` and the flag of the tone draws the line of state alone, which the home and "Мониторинг" hand in as `state_html`. The lamp holds its face: the checks of the home, the pulse of "Мониторинг", the dial of "Статистика" |
 
 The rules of the parts:
 

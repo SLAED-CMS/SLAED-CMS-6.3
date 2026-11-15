@@ -52,6 +52,8 @@ const states = {
   'home-pointer': { auth: 'admin', url: '/admin.php', run: 'pointer' },
   'home-nudge': { auth: 'admin', url: '/admin.php', run: 'nudge' },
   'home-scene': { auth: 'admin', url: '/admin.php', run: 'scene' },
+  'stat-idle': { auth: 'admin', url: '/admin.php?name=statistic', run: 'idle' },
+  'mon-idle': { auth: 'admin', url: '/admin.php?name=monitor', run: 'idle' },
   'pres-top': { auth: '', url: '/presentation', run: 'idle' },
   'pres-quiet': { auth: '', url: '/presentation', run: 'idle', top: 7200 },
   'pres-pipeline': { auth: '', url: '/presentation', run: 'idle', at: '#pipeline' },

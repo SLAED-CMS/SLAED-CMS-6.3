@@ -5536,6 +5536,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     pointer-events: none;
   }
 
+  /* The head of a cockpit takes no beam, the scan is its one light; the animation goes with the box, or the pseudo-element not drawn is restyled every frame */
+  .sl-cockpit > .sl-pane-cap::after {
+    content: none;
+    animation: none;
+  }
+
   /* The ripple of a press on a home tile, a row of the menu or of its counters and a control of the cockpit: a layer over the control clips a disc spreading from the pointer */
   :is(.sl-mcard-link, .sl-block-sidebar-count-row, .sl-cockpit button):has(> [data-sl-ripple]) {
     position: relative;
@@ -7884,29 +7890,23 @@ button.sl-but-mini {
   font-weight: var(--sl-weight-bold);
 }
 
-/* Cockpit: the twin of the presentation cockpit; its state is one sl-knob-ok, -warn or -danger class on the panel, each ring keeps its own share's */
-.sl-cockpit {
-  position: relative;
-  margin-bottom: var(--sl-space-3);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
-  background: linear-gradient(var(--sl-surface), var(--sl-bg));
-  padding: var(--sl-space-6);
-}
-
-/* Three columns with equal sides: the state stands in the middle between the edges whatever the width of the caption at the left and the chip at the right */
-.sl-cockpit-top {
+/* Cockpit: a window of the panel, the twin of the presentation cockpit, its state one sl-knob-* class on it; the equal side columns of its head hold the state over the lamp */
+.sl-cockpit > .sl-pane-cap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--sl-space-4);
 }
 
-.sl-cockpit-top > .sl-live-chip {
-  justify-self: end;
+/* The icon shares the first column with the name, which steps aside by the icon and the gap of the head and wraps, since beside the switch of the day a cut would hide the month */
+.sl-cockpit > .sl-pane-cap > :is(.bi, .sl-pane-title) {
+  grid-area: 1 / 1;
 }
 
-.sl-cockpit-top > span,
+.sl-cockpit > .sl-pane-cap > .sl-pane-title {
+  padding-left: calc(var(--sl-size-icon-xs) + var(--sl-space-4));
+  white-space: normal;
+}
+
+.sl-cockpit-state,
 .sl-clock-mid :is(small, span) {
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
@@ -7915,20 +7915,16 @@ button.sl-but-mini {
   color: var(--sl-text-muted);
 }
 
-.sl-cockpit-top > span .bi {
+/* The line of state moves with the alert of its tone; its small words take the strong step, which holds 4.5:1 where red and orange do not */
+.sl-cockpit-state .bi {
   display: inline-block;
   margin-right: var(--sl-space-3);
-  color: var(--sl-primary);
-}
-
-/* The line of state moves with the alert of its tone; its small words take the strong step, which holds 4.5:1 where red and orange do not */
-.sl-cockpit-top > .sl-cockpit-state .bi {
   color: var(--sl-knob-tone);
 }
 
-.sl-cockpit.sl-knob-ok > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-success-strong); }
-.sl-cockpit.sl-knob-warn > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-warning-strong); }
-.sl-cockpit.sl-knob-danger > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-danger-strong); }
+.sl-cockpit.sl-knob-ok .sl-cockpit-state { color: var(--sl-success-strong); }
+.sl-cockpit.sl-knob-warn .sl-cockpit-state { color: var(--sl-warning-strong); }
+.sl-cockpit.sl-knob-danger .sl-cockpit-state { color: var(--sl-danger-strong); }
 
 .sl-cockpit.sl-knob-warn .sl-cockpit-state .bi {
   animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
@@ -8030,7 +8026,7 @@ button.sl-but-mini {
   gap: var(--sl-space-8);
   align-items: center;
   justify-items: center;
-  margin: var(--sl-space-7) 0 var(--sl-space-3);
+  margin: var(--sl-space-5) 0 var(--sl-space-3);
 }
 
 .sl-cockpit-float:has(> .sl-cockpit-plate) {
@@ -8045,7 +8041,7 @@ button.sl-but-mini {
   justify-content: center;
   gap: var(--sl-space-3) var(--sl-space-8);
   margin: var(--sl-space-6) 0 0;
-  border-top: 1px solid var(--sl-border);
+  border-top: 1px dashed var(--sl-pane-border);
   padding: var(--sl-space-5) 0 0;
   list-style: none;
   font-family: var(--sl-face-mono);
@@ -8435,7 +8431,7 @@ button.sl-but-mini {
 }
 
 /* A lull: every check passed and the site empty; the comet drifts round in a quarter of a minute and the bars lie flat and still */
-.sl-cockpit.sl-knob-info > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-primary-strong); }
+.sl-cockpit.sl-knob-info .sl-cockpit-state { color: var(--sl-primary-strong); }
 
 .sl-cockpit.sl-knob-info .sl-cockpit-plate::before {
   animation-duration: calc(var(--sl-alert-dur) * 8);
@@ -8517,6 +8513,7 @@ button.sl-but-mini {
   .sl-cockpit-gauges {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sl-space-6);
+    width: 100%;
     max-width: calc(var(--sl-gauge-width) * 2 + var(--sl-space-6));
     margin-inline: auto;
   }
@@ -8527,13 +8524,13 @@ button.sl-but-mini {
   }
 }
 
-/* A narrow content column: the caption and the chip share the first line and the state the middle of the second */
+/* A narrow content column: the name and the chip share the first line and the state the middle of the second */
 @media (max-width: 768px) {
-  .sl-cockpit-top {
+  .sl-cockpit > .sl-pane-cap {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .sl-cockpit-top > .sl-cockpit-state {
+  .sl-cockpit > .sl-pane-cap > .sl-cockpit-state {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: center;
@@ -11386,12 +11383,13 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   }
 }
 
-/* The head of the statistic: the switch of the day and the steps of the months at the right of its cockpit; the pace in the line of state, the lull in the blue of the theme */
+/* The head of the statistic: the day switch and the month steps at its right, drawn into the height of a chip; the pace in the line of state, the lull in the blue of the theme */
 .sl-cockpit-nav {
   justify-self: end;
   display: inline-flex;
   align-items: center;
   gap: var(--sl-space-2);
+  margin-block: calc((var(--sl-size-chip) - var(--sl-size-control)) / 2);
 }
 
 .sl-cockpit-nav > .sl-live-chip {
@@ -12653,10 +12651,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   inset: calc(var(--sl-ground-width) * -1) 0 0 calc(var(--sl-ground-width) * -1);
   background-image: linear-gradient(var(--sl-bg-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-bg-subtle) 1px, transparent 1px);
   background-size: var(--sl-ground-width) var(--sl-ground-width);
-}
-
-.sl-ground > .sl-cockpit {
-  margin: 0;
 }
 
 /* Series rows: one grid of three columns, so the edges of the windows meet from row to row; a split is one large window and a side of windows sharing its height */

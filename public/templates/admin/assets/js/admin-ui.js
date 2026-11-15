@@ -1260,7 +1260,7 @@
     }
     /* Motion over the page: the place of every solid head in the order its beam crosses; the light that follows the pointer is slaed.js's */
     function setBeamTurns() {
-        document.querySelectorAll('.sl-dashboard-panel-head, .sl-block-sidebar h3, .sl-pane-cap').forEach(function (head, i) {
+        document.querySelectorAll('.sl-dashboard-panel-head, .sl-block-sidebar h3, :not(.sl-cockpit) > .sl-pane-cap').forEach(function (head, i) {
             head.style.setProperty('--sl-d-turn', i);
         });
     }
@@ -2483,7 +2483,7 @@
     // One reading over the page, each box that its chip keeps on air: the cockpit, and the tiles and the chart of the traffic; the first draw carries the chart in its host
     function setMonitorView(page, data) {
         var box = page.querySelector('.sl-cockpit');
-        var pane = page.querySelector('.sl-pane[data-sl-live-box]');
+        var pane = page.querySelector('.sl-pane[data-sl-live-box]:not(.sl-cockpit)');
         var host = document.getElementById('sl-monitor-live');
         if (!box.hasAttribute('data-sl-live-paused')) setMonitorCockpit(box, data);
         if (pane.hasAttribute('data-sl-live-paused')) return;

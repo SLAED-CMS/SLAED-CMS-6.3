@@ -613,7 +613,8 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
   (`--tone=`). Per window of 4 s: CPU of every process (`SystemInfo.getProcessInfo`), script, style and layout time from
   `Performance.getMetrics`, frames from a `requestAnimationFrame` counter.
 - **The states.** `home-idle`, `home-pointer`, `home-nudge` (a pointer in a circle at the edge, entering no element),
-  `home-scene` (one round of Phoenix in windows of 1.5 s by act), `pres-top`, `pres-quiet` (y 7200), `pres-pipeline`,
+  `home-scene` (one round of Phoenix in windows of 1.5 s by act), `stat-idle` and `mon-idle` (the top of "Статистика"
+  and of "Мониторинг", their cockpits in sight), `pres-top`, `pres-quiet` (y 7200), `pres-pipeline`,
   `pres-guard`, `pres-system`, `pres-workbench`, `pres-runtime`, `pres-dev`, `pres-live`, `pres-dna`, `pres-archive`,
   `pres-showcase`, `pres-voices`, `pres-pulse` (each section at its start), `pres-pointer`, `pres-nudge`, `pres-scroll`
   (a wheel of 40 px, 60 a second), `forum-idle` (the forum home as a guest, every section marked new); `--states=a,b`
@@ -661,6 +662,12 @@ The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the 
 | The aurora on the framed blocks of the panel, drawn by the `--sl-aurora-*` tokens (the pair holds the uncommitted panel CSS of another session too) | panel, idle / pointer | 68 → 63 / 87 → 91 | 81 → 79 / 87 → 98 | 95 → 91 / 165 → 203 | 5 → 5 / 14 → 17 | 120 / 120 → 116 |
 | The presentation pauses by scene and block, not by section; the dashes of the block scene on a layer of their own; the pulse strip sleeps once its line reached its aim (2026-11-07, 5 rounds) | presentation, system / development / guard / top | 50 → 48 / 51 → 35 / 82 → 78 / 65 → 63 | 119 → 61 / 17 → 16 / 55 → 53 / 62 → 61 | 29 → 29 / 37 → 34 / 69 → 61 / 29 → 28 | 2 → 2 / 17 → 11 / 26 → 22 / 14 → 14 | 120 |
 | The live dot of aurora (forum sections, user block, profile) pulses by a ring on `transform` and `opacity` instead of `sl-live-pulse` on `box-shadow`; the crops `forum-dot`, `avatar-dot`, `profile-dot` stay within 37 of 255, past the tolerance only at the edge of the halo in the first moments, taken by the owner (2026-11-09, 5 rounds) | forum, idle, 16 dots | 122 → 73 | 96 → 45 | 600 → 86 | 1 → 2 | 116 → 120 |
+| The cockpits wear the window of the panel, their head without the beam of a window (2026-11-15; markup and CSS as a pair, the files of the commit and of the tree swapped between the rounds) | panel, idle: home / statistic / monitor | 53 → 53 / 57 → 58 / 43 → 43 | 60 → 57 / 61 → 62 / 60 → 60 | 80 → 83 / 59 → 60 / 51 → 55 | 4 → 4 / 20 → 20 / 5 → 5 | 120 |
+
+The head of a cockpit with the beam of a window cost renderer 61 → 64 % on the home and 65 → 67 % on the statistic (six rounds), so
+it takes none. Taken off by `content: none` alone the beam cost more than it did drawn: the animation stays declared on a
+pseudo-element that has no box, and style on the monitor went 46 → 69 ms/s (three rounds) until `animation: none` stood
+beside it.
 
 The style time the forum rings still cost is not their own: the marquee of the head (`step` on `width`) and the two live icons
 of the side blocks (`sl-live-pulse` on `box-shadow`) are refused by the compositor on the same page, and while one

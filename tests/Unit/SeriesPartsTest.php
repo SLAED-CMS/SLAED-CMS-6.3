@@ -92,20 +92,22 @@ final class SeriesPartsTest extends TestCase
     {
         $view = \Dom\HTMLDocument::createFromString('<!doctype html><html><body>'.self::$view->getHtmlPart('cockpit', [
             'tone' => 'ok',
-            'cap_icon' => 'graph-up',
-            'cap_text' => 'C<',
+            'icon' => 'graph-up',
+            'title' => 'C<',
             'rings' => [['key' => 'human', 'label' => 'L<', 'title' => 'T<']],
             'strip' => [['key' => 'usr', 'icon' => 'person', 'label' => 'U<', 'unit' => ''], ['key' => 'gen', 'icon' => 'stopwatch', 'label' => 'G', 'unit' => 'ms']],
             'state_html' => '<span id="state"></span>',
             'lamp_html' => '<div id="lamp"></div>',
-            'nav_html' => '<div id="nav"></div>',
+            'tools_html' => '<div id="nav"></div>',
         ]).'</body></html>', LIBXML_NOERROR);
         $this->assertNull($view->querySelector('[data-sl-cockpit]'), 'A page with its own poll carries no address of the home poll');
-        $this->assertSame('C<', $view->querySelector('#sl-cockpit-cap')->textContent);
-        $this->assertNotNull($view->querySelector('#sl-cockpit-cap > i.bi-graph-up'));
-        $this->assertNotNull($view->querySelector('.sl-cockpit-top > #state'));
-        $this->assertNotNull($view->querySelector('.sl-cockpit-top > #nav'));
-        $this->assertNotNull($view->querySelector('.sl-cockpit-gauges > #lamp'));
+        $head = 'section.sl-pane.sl-cockpit.sl-knob-ok[data-sl-live-box] > .sl-pane-cap';
+        $this->assertSame('C<', $view->querySelector($head.' > h2.sl-pane-title')->textContent);
+        $this->assertSame('C<', $view->querySelector('.sl-cockpit')->getAttribute('aria-label'));
+        $this->assertNotNull($view->querySelector($head.' > i.bi-graph-up:first-child'));
+        $this->assertNotNull($view->querySelector($head.' > .sl-pane-title + #state + #nav'), 'The state stands between the name and the tools of the head');
+        $this->assertNotNull($view->querySelector('.sl-cockpit > .sl-pane-body > .sl-cockpit-gauges > #lamp'));
+        $this->assertNull($view->querySelector('.sl-cockpit-top, .sl-pane .sl-pane'), 'The cockpit is one window and keeps no head of its own');
         $this->assertNull($view->querySelector('[data-sl-cockpit-pass]'), 'A lamp of its own replaces the lamp of the checks');
         $ring = $view->querySelector('[data-sl-gauge="human"]');
         $this->assertSame('L<', $ring->getAttribute('aria-label'));
@@ -114,6 +116,13 @@ final class SeriesPartsTest extends TestCase
         $this->assertSame('U<', $view->querySelector('[data-sl-strip="usr"] > span')->textContent);
         $this->assertStringContainsString(' ms ', $view->querySelector('[data-sl-strip="gen"]')->textContent);
         $this->assertStringNotContainsString('href', $view->querySelector('template[data-sl-cockpit-row]')->innerHTML);
+        $state = \Dom\HTMLDocument::createFromString('<!doctype html><html><body>'.self::$view->getHtmlPart('cockpit', [
+            'is_state' => true, 'is_warn' => true, 'loud' => 2,
+        ]).'</body></html>', LIBXML_NOERROR);
+        $this->assertNull($state->querySelector('section'), 'The part of the state is the line alone, which a page hands to the head of its cockpit');
+        $this->assertCount(1, $state->querySelectorAll('body > .sl-cockpit-state[role="status"] > [data-sl-tone]:not([hidden])'));
+        $this->assertNotNull($state->querySelector('[data-sl-tone="warn"]:not([hidden])'));
+        $this->assertSame('2', $state->querySelector('[data-sl-cockpit-loud]:not([hidden]) > [data-sl-cockpit-n]')->textContent);
     }
 
     #[Test]
