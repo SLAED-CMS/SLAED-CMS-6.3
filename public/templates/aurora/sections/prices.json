@@ -16,7 +16,7 @@
         "name": "name",
         "fields": [
             {"key": "name", "label": "_NAME", "type": "text"},
-            {"key": "price", "label": "_LAYOUT_PRICE", "type": "text"},
+            {"key": "price", "label": "_PRICE", "type": "text"},
             {"key": "unit", "label": "_LAYOUT_TERM", "type": "text"},
             {"key": "text", "label": "_LAYOUT_INCL", "type": "textarea"},
             {"key": "btn", "label": "_LAYOUT_BTN", "type": "text"},

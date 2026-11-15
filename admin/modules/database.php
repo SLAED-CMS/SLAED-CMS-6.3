@@ -66,13 +66,13 @@ function getSqlsum(array $items, string $mode, string $name): string {
             if (!$stop) $stop = (int)$row['num'];
         }
     }
-    $mval = ($mode === 'dump') ? _DB_RUNMODE : _DB_PARSEMODE;
+    $mval = ($mode === 'dump') ? _EXECUTION : _DB_PARSEMODE;
     $lines = [
         _INQUIRY.': '.$name,
         _DB_MODE.': '.$mval,
-        _DB_BLOCKS.': '.$all,
+        _BLOCKLIST.': '.$all,
         'OK: '.$good,
-        _DB_ERRORS.': '.$bad,
+        _ERRORS.': '.$bad,
         _STATUS.': '.($bad === 0 ? _OK : _ERROR),
     ];
     if ($stop) {

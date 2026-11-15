@@ -138,11 +138,11 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
     $head = [
         ['content' => _MODUL, 'is_truncate' => true],
         ['content' => 'ID', 'is_truncate' => true],
-        ['content' => _SEARCHTYPE],
+        ['content' => _TYPE],
         ['content' => _TABLE, 'is_truncate' => true],
         ['content' => _SEARCHFIELDS, 'is_truncate' => true],
         ['content' => _SEARCHEDIT, 'is_truncate' => true],
-        ['content' => _SEARCHREASON, 'is_truncate' => true],
+        ['content' => _REASON, 'is_truncate' => true],
     ];
     if ($view === 'ready') $head[] = ['content' => _ADD, 'is_col_check' => true, 'nosort' => true];
     $rows = '';
@@ -370,7 +370,7 @@ function config(): void {
         'action_url' => $afile.'.php?name=search&op=save',
         'hidden' => $hidden,
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $cfgrows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHENABLED, 'content_html' => getSearchauditTable($elist, 'enabled')]);
     $readyform = $tpl->getHtmlPart('form', [
@@ -505,7 +505,7 @@ function edit(): void {
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'search', 'title' => _SWORD, 'facts' => [['text' => (string)$word]],
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();

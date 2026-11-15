@@ -73,7 +73,7 @@ function ratings(): void {
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
         'content_html' => $blocks,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();

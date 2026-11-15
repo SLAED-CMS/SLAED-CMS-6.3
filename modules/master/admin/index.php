@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('master')) die('Illegal file acces
 require_once BASE_DIR.'/modules/master/common.php';
 
 # The tabs of the master in their order; the journal link is added by getTplAdminTabs()
-const MASTER_TABS = ['_MASTER_RELEASES', '_MASTER_SITES', '_STATISTIC', '_MASTER_NOTES', '_MASTER_KEYS', '_PREFERENCES'];
+const MASTER_TABS = ['_MASTER_RELEASES', '_SITES', '_STATISTIC', '_MASTER_NOTES', '_MASTER_KEYS', '_PREFERENCES'];
 
 # Days without a check after which a site counts as silent on the tab of the sites
 const MASTER_QUIET = 7;
@@ -119,7 +119,7 @@ function getMasterReleases(string $head, string $note): string {
         'note_html' => $note,
         'is_fixed' => true,
         'head' => [['content' => _VERSION], ['content' => _MASTER_SHARE, 'is_col_count' => true],
-            ['content' => _MASTER_ACCEPTED, 'is_col_date' => true], ['content' => _MASTER_CHANGED, 'is_col_date' => true], ['content' => _MASTER_EXPIRES, 'is_col_date' => true],
+            ['content' => _MASTER_ACCEPTED, 'is_col_date' => true], ['content' => _CHANGED, 'is_col_date' => true], ['content' => _MASTER_EXPIRES, 'is_col_date' => true],
             ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
         'rows' => $rows,
         'count' => count($rows),
@@ -181,9 +181,9 @@ function getMasterSites(string $note): string {
         'key' => 'master-sites',
         'note_html' => $note,
         'is_fixed' => true,
-        'head' => [['content' => _MASTER_DOMAIN, 'is_truncate' => true], ['content' => _VERSION], ['content' => _MASTER_CHAN], ['content' => 'PHP'],
+        'head' => [['content' => _MASTER_DOMAIN, 'is_truncate' => true], ['content' => _VERSION], ['content' => _CHANNEL], ['content' => 'PHP'],
             ['content' => _DATABASE], ['content' => _MASTER_EXT], ['content' => _MASTER_ERRS, 'is_col_count' => true], ['content' => _MASTER_FIRST, 'is_col_date' => true],
-            ['content' => _MASTER_LAST, 'is_col_date' => true]],
+            ['content' => _LASTCHECK, 'is_col_date' => true]],
         'rows' => $rows,
         'href' => $afile.'.php?name=master&tab=1&'.http_build_query(['q' => $find, 'quiet' => $quiet ? 1 : 0]).'&',
         'page' => $num,
@@ -217,7 +217,7 @@ function getMasterStats(): string {
             ['is_col_count' => true, 'content_text' => $row['nozip']], ['is_col_count' => true, 'content_text' => $row['errs']],
             ['is_col_count' => true, 'content_text' => $row['fails']]];
     }
-    $cont .= $rows ? getMasterTable([['content' => _MASTER_CHAN], ['content' => _VERSION], ['content' => 'PHP'], ['content' => _DATABASE],
+    $cont .= $rows ? getMasterTable([['content' => _CHANNEL], ['content' => _VERSION], ['content' => 'PHP'], ['content' => _DATABASE],
         ['content' => _MASTER_COUNT, 'is_col_count' => true], ['content' => _MASTER_NOSOD, 'is_col_count' => true], ['content' => _MASTER_NOZIP, 'is_col_count' => true],
         ['content' => _MASTER_ERRS, 'is_col_count' => true], ['content' => _MASTER_FAILS, 'is_col_count' => true]], $rows)
         : $tpl->getHtmlFrag('empty', []);
@@ -228,7 +228,7 @@ function getMasterStats(): string {
         $rows[] = [['content_text' => $row['failver']], ['content_text' => mb_ucfirst(sprintf(_MASTER_STEP, $row['failstep']))],
             ['is_col_count' => true, 'content_text' => $row['num']]];
     }
-    if ($rows) $cont .= getMasterTable([['content' => _MASTER_FAILS], ['content' => _MASTER_STEPS], ['content' => _MASTER_COUNT, 'is_col_count' => true]], $rows);
+    if ($rows) $cont .= getMasterTable([['content' => _MASTER_FAILS], ['content' => _STEP], ['content' => _MASTER_COUNT, 'is_col_count' => true]], $rows);
     return $cont;
 }
 
@@ -269,7 +269,7 @@ function getMasterNoteList(string $head, string $note): string {
         'head_html' => $head,
         'note_html' => $note,
         'is_fixed' => true,
-        'head' => [['content' => _ID, 'is_col_id' => true], ['content' => _MASTER_LEVEL], ['content' => _MASTER_TO, 'is_truncate' => true],
+        'head' => [['content' => _ID, 'is_col_id' => true], ['content' => _LEVEL], ['content' => _MASTER_TO, 'is_truncate' => true],
             ['content' => _MASTER_RANGE], ['content' => _MASTER_UNTIL, 'is_col_date' => true], ['content' => _TEXT, 'is_truncate' => true],
             ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
         'rows' => $rows,
@@ -313,7 +313,7 @@ function getMasterSettings(): string {
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('master')]],
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MASTER_JOBS])
             .$tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     return checkPerms(CONFIG_DIR.'/master.php').$tpl->getHtmlPart('box', ['content_html' => $form]);
 }
@@ -392,7 +392,7 @@ function share(): void {
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_MASTER_SHAREDESC, htmlspecialchars($ver, ENT_QUOTES))])
             .$tpl->getHtmlFrag('pane', ['icon' => 'percent', 'title' => _MASTER_RELEASE, 'facts' => [['text' => $ver]],
                 'content_html' => $tpl->getHtmlPart('div', ['rows' => [['label_for' => 'f-share', 'label_html' => _MASTER_SHARE, 'field_html' => $field]]])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo getMasterHead(0).$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();

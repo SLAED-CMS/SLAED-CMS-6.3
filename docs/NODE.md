@@ -2176,11 +2176,11 @@ show the one view of their mode. The list of `events` takes its order from the e
 (`_URL`, url, sort 20). `media` has twelve optional single fields, sort 10 to 120 in this order: `subtitle`
 (`_NODE_SUBTITLE`, text 100), `year` (`_NODE_YEAR`, int 1-9999), `director` (`_NODE_DIRECTOR`, text 100), `cast`
 (`_NODE_CAST`, text 255), `creator` (`_NODE_CREATOR`, text 100), `runtime` (`_NODE_RUNTIME`, text 100), `language`
-(`_LANGUAGE`, text 100), `notes` (`_NOTE`, textarea 262144), `format` (`_NODE_MFORMAT`, text 100), `quality`
+(`_LANGUAGE`, text 100), `notes` (`_NOTE`, textarea 262144), `format` (`_FORMAT`, text 100), `quality`
 (`_NODE_QUALITY`, text 100), `filesize` (`_SIZE`, text 100), `release` (`_NODE_RELEASE`, text 100). `portfolio` has
-four optional fields: `client` (`_NODE_CLIENT`, text 255), `year` (`_NODE_YEAR`, int 1-9999), `site` (`_URL`, url) and
-`services` (`_NODE_SERVICES`, text 255). `board` has four optional fields: `price` (`_NODE_PRICE`, decimal, scale 2,
-min 0.00), `city` (`_NODE_CITY`, text 100), `phone` (`_NODE_PHONE`, text 50) and `email` (`_EMAIL`, email); the phone
+four optional fields: `client` (`_CLIENT`, text 255), `year` (`_NODE_YEAR`, int 1-9999), `site` (`_URL`, url) and
+`services` (`_SERVICES`, text 255). `board` has four optional fields: `price` (`_PRICE`, decimal, scale 2,
+min 0.00), `city` (`_NODE_CITY`, text 100), `phone` (`_PHONE`, text 50) and `email` (`_EMAIL`, email); the phone
 and the address are public, as a classified ad needs them. `jobs` has five optional fields: `salary` (`_NODE_SALARY`,
 text 100), `city` (`_NODE_CITY`, text 100), `employment` (`_NODE_EMPLOY`, a single select of `full` `_NODE_FULLTIME`,
 `part` `_NODE_PARTTIME` and `remote` `_NODE_REMOTE`, sort 10 to 30), `email` (`_EMAIL`, email) and `site` (`_URL`,
@@ -2359,9 +2359,7 @@ Reader refusals map through `getNodeStatus()` (`NOTFOUND` 404, `DENIED` 403, `IN
 ### List header
 
 `getNodeHead()` in `modules/node/index.php` renders `partials/node/head.html` and hands it to the list as `head_html`.
-`partials/navi.html` and `getModuleNavi()` serve only the three operations of `modules/users/`. The face is the stand
-page `public/demo/nh-13-calm.html`; the stand pages `nh-01` to `nh-13` stay in `public/demo/` as the record of how it
-was chosen. Every control is a link or a form the server answers; the script only opens the windows, sticks the bar,
+`partials/navi.html` and `getModuleNavi()` serve only the three operations of `modules/users/`. Every control is a link or a form the server answers; the script only opens the windows, sticks the bar,
 opens the lens and swaps the list.
 
 | Place | Control | Drawn when |
@@ -2403,7 +2401,7 @@ opens the lens and swaps the list.
   Inside a category the letters are counted live by `getNodeLetters()`, so a letter never promises an empty list.
 - **Month heads.** A list by `published` in the views `cards` and `compact` is headed month by month by
   `fragments/date-head.html` with the number of its cards on the page; a pinned material opens a run of its own month.
-  A page appended by "Показать ещё" brings its own heads, so a month cut by the seam of two pages has a head on each
+  A page appended by "Ещё" brings its own heads, so a month cut by the seam of two pages has a head on each
   side. The order "Обновлённые" has none, since its month would contradict the date on the card.
 
 Rejected by the owner, with the reason, so it is not proposed again: Atom or JSON Feed in place of RSS 2.0 (every
@@ -2446,9 +2444,9 @@ materials raises its `list.limit`.
   `getHeadTitle()` a reload shows; any other request the whole page at the same address. Every answer of the list
   sends `Vary: HX-Request`.
 - `hx-boost="true"` stands on the filter toolbar, the three windows and the foot `#sl-node-foot` (the pager and
-  "Показать ещё"); a boosted link is a GET of its own `href` with the address pushed, and a Ctrl or ⌘ click still
+  "Ещё"); a boosted link is a GET of its own `href` with the address pushed, and a Ctrl or ⌘ click still
   opens a tab. "Добавить" carries `hx-boost="false"`; the view switch posts by its own `hx-post`.
-- "Показать ещё" `#sl-node-more` is the link to the next page, drawn under every view but the rail: its answer's cards
+- "Ещё" `#sl-node-more` is the link to the next page, drawn under every view but the rail: its answer's cards
   are appended to `#sl-node-items` by `hx-select`, the foot is redrawn by `hx-select-oob`, and the address takes the
   `page` of that page, so a reload and a shared link open the page the visitor stopped at.
 - `data-sl-swap-reveal` brings the part back into view when its head went above the screen. The open windows close

@@ -187,7 +187,7 @@ function fields(array $sent = [], string $fail = ''): void {
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
         'content_html' => $tpl->getHtmlPart('tabs', ['content_html' => implode('', $panels)]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $fieldv]);
     setFoot();

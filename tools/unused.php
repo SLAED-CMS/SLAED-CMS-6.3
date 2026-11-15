@@ -126,12 +126,13 @@ function getFuncUsage(): array {
     return $defs;
 }
 
-# The language constants with their uses, counting a string of config/, a {{ _NAME }} of a template and a name of a Node profile in modules/*/profiles/*.json
+# The language constants with their uses: a quoted name in PHP, a {{ _NAME }} of a template, a name in theme, profile or section JSON, and the run-time _POINTS_<ACTION>
 function getConstUsage(): array {
     $defs = [];
+    $lang = '#^(lang|admin/lang|modules/[^/]+/lang|modules/[^/]+/admin/lang)/[^/]+\.php$#';
     $files = getRepoFiles('php', ['vendor', 'tests', '.git', '.reports']);
     foreach ($files as $rel => $path) {
-        if (!preg_match('#^(lang|admin/lang|modules/[^/]+/lang|modules/[^/]+/admin/lang)/[^/]+\.php$#', $rel)) continue;
+        if (!preg_match($lang, $rel)) continue;
         $toks = token_get_all((string)file_get_contents($path));
         foreach ($toks as $i => $tok) {
             if (!is_array($tok) || $tok[0] !== T_STRING || strcasecmp($tok[1], 'define') !== 0 || getNextToken($toks, $i, 1) !== '(') continue;
@@ -142,22 +143,25 @@ function getConstUsage(): array {
         }
     }
     foreach ($files as $rel => $path) {
-        $isconf = str_starts_with($rel, 'config/');
+        $quoted = !preg_match($lang, $rel) && $rel !== 'config/local.php';
         foreach (token_get_all((string)file_get_contents($path)) as $tok) {
             if (!is_array($tok)) continue;
             if ($tok[0] === T_STRING && isset($defs[$tok[1]])) $defs[$tok[1]]['uses']++;
-            if ($isconf && $tok[0] === T_CONSTANT_ENCAPSED_STRING && isset($defs[$name = getPlainText($tok[1])])) $defs[$name]['uses']++;
+            if ($quoted && $tok[0] === T_CONSTANT_ENCAPSED_STRING && isset($defs[$name = getPlainText($tok[1])])) $defs[$name]['uses']++;
         }
     }
     $texts = [];
     foreach (getRepoFiles('html', ['vendor', 'tests', '.git', '.reports']) as $rel => $path) {
         if (str_starts_with($rel, 'public/templates/')) $texts[] = [$path, '/\{\{\{?\s*(_[A-Z0-9_]+)\s*\}\}\}?/'];
     }
-    foreach (getRepoFiles('json', []) as $rel => $path) if (preg_match('#^modules/[^/]+/profiles/[^/]+\.json$#', $rel)) $texts[] = [$path, '/"(_[A-Z][A-Z0-9_]*)"/'];
+    $json = '#^(modules/[^/]+/(profiles|sections)|public/templates/[^/]+(/sections)?)/[^/]+\.json$#';
+    foreach (getRepoFiles('json', []) as $rel => $path) if (preg_match($json, $rel)) $texts[] = [$path, '/"(_[A-Z][A-Z0-9_]*)"/'];
     foreach ($texts as [$path, $rule]) {
         preg_match_all($rule, (string)file_get_contents($path), $hit);
         foreach ($hit[1] as $name) if (isset($defs[$name])) $defs[$name]['uses']++;
     }
+    $acts = (require ROOT_DIR.'/config/points.php')['points']['actions'] ?? [];
+    foreach (array_keys($acts) as $act) if (isset($defs[$name = '_POINTS_'.strtoupper($act)])) $defs[$name]['uses']++;
     return $defs;
 }
 

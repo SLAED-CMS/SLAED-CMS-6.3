@@ -37,8 +37,8 @@ function getBlockWhereItems(array $where): array {
 function blocks(): void {
     global $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL]]);
-    $cont .= $tpl->getHtmlFrag('alert', ['text' => _DRAGSORT, 'acts_html' => getTplPostButton(['name' => 'blocks', 'op' => 'fix'], 'arrow-repeat', _FIX, '', 'act')]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL]]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _DRAGSORT, 'acts_html' => getTplPostButton(['name' => 'blocks', 'op' => 'fix'], 'arrow-repeat', _SORT, '', 'act')]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repajax_block',
         'content_html' => getAdminBlockList(),
@@ -52,7 +52,7 @@ function add(array $sent = [], array $stop = []): void {
     $sent += ['title' => '', 'url' => '', 'refresh' => '3600', 'content' => '', 'bpos' => 'l', 'where' => [], 'lang' => '', 'status' => '1', 'expire' => '0',
         'action' => 'd', 'view' => '0'];
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $stop]);
     $rows = [
         [
@@ -86,7 +86,7 @@ function add(array $sent = [], array $stop = []): void {
             'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
                 'name_attr' => 'headline',
                 'selectid' => 'f-headline',
-                'options' => [['value_attr' => '', 'label_text' => _CUSTOM, 'is_selected' => true], ...rss_select()],
+                'options' => [['value_attr' => '', 'label_text' => _STANDARD, 'is_selected' => true], ...rss_select()],
             ]),
         ],
         [
@@ -215,7 +215,7 @@ function add(array $sent = [], array $stop = []): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'grid-3x3-gap', 'title' => _BLOCK, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _CREATEBLOCK,
+        'submit_label' => _CREATE,
         'icon_name' => 'plus-lg',
     ])]);
     setFoot();
@@ -224,7 +224,7 @@ function add(array $sent = [], array $stop = []): void {
 function fileadd(): void {
     global $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL], 'tab' => 2]);
     $cont .= checkPerms(BASE_DIR.'/blocks');
     $rows = [
         [
@@ -259,7 +259,7 @@ function fileadd(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'file-earmark-plus', 'title' => _BLOCKFILE, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _CREATEBLOCK,
+        'submit_label' => _CREATE,
         'icon_name' => 'plus-lg',
     ])]);
     setFoot();
@@ -268,7 +268,7 @@ function fileadd(): void {
 function fileedit(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL], 'tab' => 3]);
     $opts = [];
     $files = scandir(BASE_DIR.'/blocks');
     foreach ($files as $file) {
@@ -298,7 +298,7 @@ function fileedit(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'code-slash', 'title' => _CODE, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _EDITBLOCK,
+        'submit_label' => _SAVE,
     ])]);
     setFoot();
 }
@@ -337,7 +337,7 @@ function addsave(): void {
 
 function getBlockCodeForm(string $bf, string $flag, string $text, string $ver, string $note = ''): string {
     global $afile, $tpl;
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL], 'tab' => 3]);
     $dir = BASE_DIR.'/blocks';
     $path = BASE_DIR.'/blocks/'.$bf;
     $cont .= checkPerms($dir);
@@ -449,7 +449,7 @@ function edit(int $bid = 0, array $sent = [], array $stop = []): void {
     $sql = 'SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which, param FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
     $row = $db->getSqlRow($db->getSqlQuery($sql, ['bid' => $bid])) ?: setRedirect($afile.'.php?name=blocks', false, 302, _NONE_FOUND, true);
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL], 'tab' => 3]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $stop]);
     [
         'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'status' => $active, 'refresh' => $refresh,
@@ -705,7 +705,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => getBlockTabsOps(),
-        'tabs' => [_HOME, _ADD, _ADDNEWFILEBLOCK, _CODE, _MANUAL],
+        'tabs' => [_HOME, _ADD, _CREATE, _CODE, _MANUAL],
     ]);
 }
 

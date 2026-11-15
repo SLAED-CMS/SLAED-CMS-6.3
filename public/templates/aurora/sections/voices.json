@@ -20,7 +20,7 @@
             {"key": "text", "label": "_LAYOUT_WORDS", "type": "textarea"},
             {"key": "name", "label": "_LAYOUT_PERSON", "type": "text"},
             {"key": "site", "label": "_SITE", "type": "text"},
-            {"key": "role", "label": "_LAYOUT_ROLE", "type": "text"},
+            {"key": "role", "label": "_ROLE", "type": "text"},
             {"key": "since", "label": "_LAYOUT_SINCE", "type": "text"}
         ],
         "make": {"text": "_LAYOUT_VOICE_TEXT", "name": "_LAYOUT_PERSON", "site": "", "role": "", "since": ""}

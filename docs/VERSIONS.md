@@ -1,5 +1,58 @@
 # Versions
 
+## 2026-11-14
+
+### The gradient of a window runs down the whole window, and a window of the site takes an inset of 12
+
+- **Two values of the theme `admin` changed** — `--sl-pane-bg` is the gradient from `--sl-surface` down to `--sl-bg`,
+  and `--sl-pane-cap-bg` is a clear gradient, so the head stands on the ground of its window. No token is renamed or
+  removed, and no rule of `theme.css` changed. The gradient shows at full in a short window and hardly in a tall one.
+- **Four values of the theme `aurora` changed** — `--sl-pane-bg` and `--sl-pane-cap-bg` as in the panel, and the inset
+  `--sl-pane-pad-y` 8, `--sl-pane-pad-x` 12 where it was 12 by 16: the row of a head stands 4 px over its icon, so the
+  icon keeps 12 from the frame on every side. A block of the site wears the same, since it reads the same tokens.
+- **The presentation keeps its own inset of 12** — `presentation.css` writes it itself and reads no inset of a window.
+- **A theme made from `admin`** that kept the two old values keeps the gradient under the head alone.
+
+The reference is `docs/TEMPLATES.md`, "Panel Window" and "Site Window".
+
+## 2026-11-13
+
+### A block and a window of the site wear one frame and one head
+
+- **One rule draws the frame of `.sl-pane` and of `.sl-block`** — from the tokens `--sl-pane-*` of `aurora`, whose
+  values changed: the ground `--sl-surface`, the frame `--sl-border-subtle`, `--sl-shadow-xs`, the inset 12 by 16. No
+  token is renamed or removed. A window stands still under the pointer.
+- **`fragments/pane-cap.html` draws the head of a block too** — the bare icon of 18 px in the tone of its category,
+  the name at 18 px regular; the plate of the icon is gone. The fragment takes the rank of its heading (`level`), a
+  plain name (`is_plain`) and a linked name (`href`).
+- **Breaking for a theme that overrides `fragments/block-all.html`** — it takes `icon`, `level` and `is_plain` where it
+  took `icon_name` and `is_before_content`, and includes the head.
+- **A block names its icon** — every file of `blocks/` sets `$bicon`, which `setBlockView()` hands to the fragment; a
+  block without one takes `grid-3x3-gap`.
+- **The messages of a forum topic stand in a window** — named by the topic as its `h1`, with the count of the messages
+  as a chip and the star and the share in the head, a dashed rule between two messages, the buttons of the topic
+  beside the pager under it; the quick reply is a window of its own.
+- **Three frames come to radius 8** — the panel of the search, the two panes `.sl-duo` of the mailbox and of the rail
+  of a Node list, the block of the side column of the panel, which takes `--sl-shadow-xs`.
+
+The reference is `docs/TEMPLATES.md`, "Site Window" and "Panel Window".
+
+### The captcha wears one look in every form, hidden until the form is sent
+
+- **One setting, `security.captcha.display`** — `floating` (the default, and an installation without the key) draws
+  nothing in the form: the small widget of ALTCHA stands beside the submit button while it proves and leaves with it.
+  `standard` is the frame "Я не робот" with a checkbox. The login of the panel wears the same look as the forms of the
+  site.
+- **The row "Вид" of the window "Капча"** in "Безопасность" chooses the look (`_CAPTCHA_LOOK`, `_CAPTCHA_LOOK_HINT`,
+  `_CAPTCHA_HIDDEN`, `_CAPTCHA_VISIBLE`, the six locales).
+- **A request of htmx waits for its proof** — `plugins/altcha/altcha-init.js` holds a request a form or its submit
+  button raised while the widget is unsolved, so the comment form passes the hidden captcha.
+- **A theme that overrides `fragments/captcha-altcha.html`** prints `data-display="{{ display }}"` on `.sl-captcha`,
+  or the hidden look keeps its room in the form.
+
+The reference is `docs/ARCHITECTURE.md`, "Captcha Boundary". The proof, the honeypot, the time token and the limits
+did not change.
+
 ## 2026-11-12
 
 ### The presentation stands in the window
@@ -102,7 +155,7 @@
   material, the clone of a type and the working card with the text of a request in "Материалы". Each names an icon,
   and a form of its own stands in the window with its button. A title over a table stays a heading of
   `partials/box.html`: the lists of "Поиск", the comments of a request, the reports of a file, the remains of a type.
-- **The first block of "Обновления" is the window "Состояние"** (`_UPDATE_STATE`) — the facts, the notes and the row
+- **The first block of "Обновления" is the window "Состояние"** (`_STATE`) — the facts, the notes and the row
   of buttons; the page is windows 10 pixels apart.
 - **Every short form of settings stands in one window** — the tab "Конфигурации" of "Комментарии", "Фавориты",
   "Редактор языков", "Журналы", "Почта", "Личные сообщения", "Статистика", "Обновления", "Журнал изменений", "Обратная
@@ -1392,7 +1445,7 @@ reference is `docs/NODE.md`, "List header", "Views of a list", "Live list", "Sea
   cards, compact and tiles, `docs` list and rail, `faq` accordion and list. The visitor's choice is a cookie
   per type set by a POST with a token; a list by publication is headed month by month.
 - **A live list.** The links of the header and the pager swap the part through htmx and push the address, an
-  `HX-Request` gets the part alone with its title, back and forward ask the part again; "Показать ещё" appends the next
+  `HX-Request` gets the part alone with its title, back and forward ask the part again; "Ещё" appends the next
   page and the address takes its `num`.
 - **Search hints.** Up to five titles of the type under the field after 300 ms, each a link to the material, from the
   light route `go=1&op=getNodeHint` under the read rights of the visitor; the arrows, Enter and Esc work the list.

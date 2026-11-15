@@ -299,11 +299,11 @@
   /* The series of the panel: the grid of a ground drifting by one cell and the lamps of a window head fading in turn */
   --sl-ground-dur: calc(6s * var(--sl-time-scale));
   --sl-pane-dur: calc(2.8s * var(--sl-time-scale));
-  /* The window of the series: its frame, its ground, the gradient that ends with the head, its inset and its shade */
+  /* The window of the series: its frame, its ground, a gradient down the whole window under a head whose own ground is clear, its inset and its shade */
   --sl-pane-border: var(--sl-border);
   --sl-pane-radius: var(--sl-radius-2);
-  --sl-pane-bg: var(--sl-bg);
-  --sl-pane-cap-bg: linear-gradient(var(--sl-surface), var(--sl-bg));
+  --sl-pane-bg: linear-gradient(var(--sl-surface), var(--sl-bg));
+  --sl-pane-cap-bg: linear-gradient(transparent, transparent);
   --sl-pane-pad-x: var(--sl-space-4);
   --sl-pane-pad-y: var(--sl-space-3);
   --sl-pane-shadow: var(--sl-shadow-xs);

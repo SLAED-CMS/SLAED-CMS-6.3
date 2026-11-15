@@ -17,7 +17,7 @@
             "where": "_LAYOUT_AT_HEAD",
             "fields": [
                 {"key": "paneon", "label": "_LAYOUT_SHOWN", "type": "bool", "show": "switch"},
-                {"key": "panecap", "label": "_LAYOUT_CAPTION", "type": "text"},
+                {"key": "panecap", "label": "_CAPTION", "type": "text"},
                 {"key": "panever", "label": "_VERSION", "type": "text"},
                 {"key": "panebtn", "label": "_LAYOUT_BTN", "type": "text"},
                 {"key": "panehref", "label": "_LAYOUT_HREF", "type": "url"}
@@ -35,7 +35,7 @@
                 "name": "title",
                 "fields": [
                     {"key": "icon", "label": "_ICON", "type": "icon"},
-                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"},
+                    {"key": "title", "label": "_CAPTION", "type": "text"},
                     {"key": "url", "label": "_LAYOUT_HREF", "type": "url"}
                 ],
                 "make": {"icon": "globe", "title": "_LAYOUT_SOC_ITEM", "url": "https://"}
@@ -55,8 +55,8 @@
             "icon": "person-lines-fill",
             "where": "_LAYOUT_AT_FOOT",
             "fields": [
-                {"key": "address", "label": "_LAYOUT_ADDR", "type": "textarea"},
-                {"key": "phone", "label": "_LAYOUT_TEL", "type": "text", "tel": true},
+                {"key": "address", "label": "_ADDRESS", "type": "textarea"},
+                {"key": "phone", "label": "_PHONE", "type": "text", "tel": true},
                 {"key": "email", "label": "_EMAIL", "type": "email"},
                 {"key": "web", "label": "_SITE", "type": "url"}
             ]
@@ -79,8 +79,8 @@
                     {"key": "logo", "label": "_LAYOUT_MARKLOGO", "type": "select", "alt": "title",
                         "options": {"php": "PHP", "mysql": "MySQL / MariaDB", "html5": "HTML5", "css": "CSS3", "javascript": "JavaScript", "htmx": "htmx"}},
                     {"key": "img", "label": "_IMG", "type": "file", "alt": "title"},
-                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"},
-                    {"key": "url", "label": "_LAYOUT_URL", "type": "url"}
+                    {"key": "title", "label": "_CAPTION", "type": "text"},
+                    {"key": "url", "label": "_ADDRESS", "type": "url"}
                 ],
                 "make": {"logo": "", "img": "", "title": "", "url": ""}
             }
@@ -99,7 +99,7 @@
                 "max": 2,
                 "name": "title",
                 "fields": [
-                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"},
+                    {"key": "title", "label": "_CAPTION", "type": "text"},
                     {"key": "href", "label": "_LAYOUT_HREF", "type": "url"}
                 ],
                 "make": {"title": "_FEEDBACK", "href": "/contact"}

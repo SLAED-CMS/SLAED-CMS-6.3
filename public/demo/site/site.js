@@ -150,7 +150,7 @@
       + app('sl-dock-page sl-dock-here', '/admin.php?name=node&amp;type=news', 'Эта страница в панели · вы на ней', ICO('newspaper'),
       ' style="--sl-dock-c: var(--sl-primary)" aria-current="page" data-mark="С7"')
       // С15 The site builder: this page in the editor of sections, menus and theme parts, beside this page in the panel
-      + app('sl-dock-page', '../sb-01-builder.html?page=news', 'Изменить страницу', ICO('pencil-square'), ' style="--sl-dock-c: var(--sl-success)" data-mark="С15"')
+      + app('sl-dock-page', '/admin.php?name=layout', 'Изменить страницу', ICO('pencil-square'), ' style="--sl-dock-c: var(--sl-success)" data-mark="С15"')
       + (pins ? '<span class="sl-dock-sep sl-dock-pin"></span><span class="sl-dock-pins">' + pins + '</span>' : '')
       + '<span class="sl-dock-sep"></span>'
       + '<span class="sl-dock-queue" data-mark="С8">' + queue

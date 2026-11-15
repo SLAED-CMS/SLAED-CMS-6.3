@@ -13,7 +13,7 @@ require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/update.php';
 
 # The stops of the light mode: the login of a super-administrator, the database steps and the open site
-const UPDATE_STOPS = ['_LOGIN', '_UPDATE_STEPS', '_UPDATE_DONE'];
+const UPDATE_STOPS = ['_LOGIN', '_UPDATE_STEPS', '_DONE'];
 
 # The hidden fields of a form of the light mode: its operation and the token of its scope
 function getUpdateHidden(string $op): array {

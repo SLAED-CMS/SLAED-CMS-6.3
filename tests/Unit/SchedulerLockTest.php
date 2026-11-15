@@ -324,7 +324,7 @@ final class SchedulerLockTest extends TestCase
     {
         $code = $this->getSource('scheduler');
         $this->assertMatchesRegularExpression('#\$held && \$start > 0\) \? \(time\(\) - \$start\)#', $code, 'A running job still shows the duration of the previous run');
-        $this->assertStringContainsString('_SCHEDULER_RUNTIME', $code, 'The elapsed value lost its label');
+        $this->assertStringContainsString('_DURATION', $code, 'The elapsed value lost its label');
     }
 
     # The row actions are rendered through the existing dial POST contract rather than as links carrying a token

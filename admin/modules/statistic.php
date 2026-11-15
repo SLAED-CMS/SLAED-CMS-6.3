@@ -189,7 +189,7 @@ function getStatTable(array $data): array {
     return [
         'pick' => $data['is_pick'] ? $data['at'] : -1,
         'total' => [
-            'label' => _STATISTIC_TOTAL,
+            'label' => _OVERALL,
             'cells' => [
                 ...$whole([$sum['u'], $sum['h'], $sum['home'], $sum['ref'], $sum['bot'], $sum['aud'], $sum['usr']]),
                 ...$load($sum['avg_gen'], $sum['avg_sql'], $sum['avg_mem']),
@@ -232,7 +232,7 @@ function getStatState(array $data): array {
         'icon' => $icon,
         'text' => $word.(in_array($pace['pace'], ['lull', 'day'], true) ? '' : ' · ×'.filterDecimal($pace['share'], 1)),
         'rows' => [
-            ['icon' => 'activity', 'label' => _STATISTIC_NOW, 'value' => sprintf(_STATISTIC_PERHOUR, filterDecimal($pace['rate'], 0))],
+            ['icon' => 'activity', 'label' => _NOW, 'value' => sprintf(_STATISTIC_PERHOUR, filterDecimal($pace['rate'], 0))],
             ['icon' => 'calendar-week', 'label' => $norm, 'value' => sprintf(_STATISTIC_PERHOUR, filterDecimal($pace['norm'], 0))],
             ['icon' => $icon, 'label' => _STATISTIC_TEMPO, 'value' => '×'.filterDecimal($pace['share'], 1)],
         ],
@@ -253,14 +253,14 @@ function getStatGauges(array $sum): array {
             $row('eye', _STATISTIC_ALLHITS, array_sum($dev)),
         ]],
         'mobile' => ['value' => $share['mobile'], 'tone' => 'info', 'rows' => [
-            $row('phone', _STATISTIC_PHONE, $dev['mobile'] ?? 0), $row('laptop', _STATISTIC_DESK, $dev['desktop'] ?? 0), $row('tablet', _STATISTIC_TABLET, $dev['tablet'] ?? 0),
+            $row('phone', _PHONE, $dev['mobile'] ?? 0), $row('laptop', _DESKTOP, $dev['desktop'] ?? 0), $row('tablet', _TABLET, $dev['tablet'] ?? 0),
         ]],
         'ret' => ['value' => $share['ret'], 'tone' => 'warn', 'rows' => [
             $row('arrow-repeat', _STATISTIC_BACK, $old['returning'] ?? 0), $row('person-plus', _NEW, $old['new'] ?? 0), $row('layers', _STATISTIC_ALLSESS, array_sum($old)),
         ]],
         'search' => ['value' => $share['search'], 'tone' => 'info', 'rows' => [
             $row('search', _SEARCH, $ref['search'] ?? 0), $row('cursor', _STATISTIC_DIRECT, $ref['direct'] ?? 0),
-            $row('link-45deg', _STATISTIC_SITES, $ref['referrer'] ?? 0), $row('people', _STATISTIC_SOCIAL, $ref['social'] ?? 0), $row('stars', _STATISTIC_AI, $ref['ai'] ?? 0),
+            $row('link-45deg', _SITES, $ref['referrer'] ?? 0), $row('people', _STATISTIC_SOCIAL, $ref['social'] ?? 0), $row('stars', _STATISTIC_AI, $ref['ai'] ?? 0),
         ]],
     ];
 }
@@ -276,8 +276,8 @@ function getStatView(array $data): array {
     $tile = static fn(string $label, int $num, string $note, array $more = []): array => ['label' => $label, 'value' => filterDecimal($num, 0), 'num' => $num, 'note' => $note]
         + $more;
     $per = $hosts ? $sum['h'] / $hosts : 0;
-    $devs = ['desktop' => _STATISTIC_DESK, 'mobile' => _STATISTIC_PHONE, 'tablet' => _STATISTIC_TABLET, 'bot' => _STATISTIC_BOT];
-    $refs = ['direct' => _STATISTIC_DIRECT, 'search' => _SEARCH, 'social' => _STATISTIC_SOCIAL, 'ai' => _STATISTIC_AI, 'referrer' => _STATISTIC_SITES];
+    $devs = ['desktop' => _DESKTOP, 'mobile' => _PHONE, 'tablet' => _TABLET, 'bot' => _STATISTIC_BOT];
+    $refs = ['direct' => _STATISTIC_DIRECT, 'search' => _SEARCH, 'social' => _STATISTIC_SOCIAL, 'ai' => _STATISTIC_AI, 'referrer' => _SITES];
     $kinds = getStatBotTypes();
     $pages = ['1' => _STATISTIC_P1, '2-3' => _STATISTIC_P2, '4-7' => _STATISTIC_P4, '8+' => _STATISTIC_P8];
     $times = ['<30s' => _STATISTIC_T1, '30s-3m' => _STATISTIC_T2, '3m-15m' => _STATISTIC_T3, '15m+' => _STATISTIC_T4];
@@ -337,7 +337,7 @@ function getStatView(array $data): array {
             ],
             'sl-stat-newret' => getStatStack(_STATISTIC_NEWRET, $dim['newret'] ?? [], ['new', 'returning'], ['new' => _NEW, 'returning' => _STATISTIC_BACK]),
             'sl-stat-depth' => getStatStack(_STATISTIC_DEPTH, $dim['depth'] ?? [], array_keys($pages), $pages),
-            'sl-stat-duration' => getStatStack(_STATISTIC_TIME, $dim['duration'] ?? [], array_keys($times), $times),
+            'sl-stat-duration' => getStatStack(_DURATION, $dim['duration'] ?? [], array_keys($times), $times),
             'sl-stat-devices' => getStatBars($dim['devices'] ?? [], array_keys($devs), $devs),
             'sl-stat-hosts' => getStatBars($dim['hosts'] ?? [], [], [], 10),
             'sl-stat-pages' => getStatBars($dim['pages'] ?? [], [], [], 10),
@@ -366,7 +366,7 @@ function getStatStrip(array $data): array {
         $mark = ($year !== $seen && (int)substr($key, 5, 2) <= 6) ? $year : '';
         if ($mark !== '') $seen = $year;
         if (!isset($arc[$key])) {
-            $months[] = ['name' => $name, 'year' => $mark, 'value' => 0, 'href' => '', 'is_gap' => true, 'rows' => [['statistic_'.$key.'.log', _STATISTIC_NOFILE, '']]];
+            $months[] = ['name' => $name, 'year' => $mark, 'value' => 0, 'href' => '', 'is_gap' => true, 'rows' => [['statistic_'.$key.'.log', _NOFILE, '']]];
             continue;
         }
         $avg = $arc[$key]['days'] ? $arc[$key]['u'] / $arc[$key]['days'] : 0;
@@ -391,7 +391,7 @@ function getStatStrip(array $data): array {
             'keys' => [
                 ['mark' => 'pick', 'text' => _STATISTIC_PICKED],
                 ['mark' => 'run', 'text' => _STATISTIC_RUNS],
-                ['mark' => 'gap', 'text' => _STATISTIC_NOFILE],
+                ['mark' => 'gap', 'text' => _NOFILE],
                 ['text' => _STATISTIC_HINT, 'is_hint' => true],
             ],
         ],
@@ -424,10 +424,10 @@ function getStatCockpit(array $data, array $view, string $clock, int $every): st
             'is_nav' => true,
             'is_now' => $view['state']['is_now'],
             'set_text' => _STATISTIC_DIAL,
-            'now_text' => _STATISTIC_NOW,
+            'now_text' => _NOW,
             'past_text' => _YESTERDAY,
             'last_text' => _STATISTIC_LAST,
-            'clear_text' => _STATISTIC_UNPICK,
+            'clear_text' => _UNPICK,
             'prev_text' => _STATISTIC_EARLIER,
             'next_text' => _STATISTIC_LATER,
             'prev_url' => ($data['prev'] !== '') ? getStatUrl($data['prev']) : '',
@@ -478,7 +478,7 @@ function getStatGround(array $data): string {
     ]);
     $ground = getStatCockpit($data, $view, $part('sl-stat-clock', 'clock'), $every)
         .$pane(['title' => _STATISTIC_ARCHIVE, 'icon' => 'archive', 'meta' => $strip['meta'], 'content_html' => $series('sl-stat-archive', 'archive', $strip['part'])])
-        .$tpl->getHtmlFrag('pane-row', ['content_html' => $traffic, 'side_html' => $sources.$bars(_STATISTIC_LANDS, 'geo-alt', 'sl-stat-countries')])
+        .$tpl->getHtmlFrag('pane-row', ['content_html' => $traffic, 'side_html' => $sources.$bars(_COUNTRIES, 'geo-alt', 'sl-stat-countries')])
         .$tpl->getHtmlFrag('pane-row', [
             'content_html' => $rhythm,
             'side_html' => $bars(_STATISTIC_BROWSE, 'window', 'sl-stat-browsers').$bars(_STATISTIC_OSES, 'pc-display', 'sl-stat-os'),
@@ -589,7 +589,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('statistic')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();

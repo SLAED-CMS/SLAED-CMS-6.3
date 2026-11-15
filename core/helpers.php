@@ -440,7 +440,7 @@ function getTplAdminList(array $data): string {
     $density = $one ? 'standard' : getCookies('density');
     if (!in_array($density, ['full', 'compact', 'cards'], true)) $density = 'standard';
     $views = [];
-    $kinds = ['standard' => [_ADM_STD, 'table'], 'full' => [_ADM_FULL, 'text-wrap'], 'compact' => [_ADM_DENSE, 'list'], 'cards' => [_ADM_CARDS, 'grid-3x2-gap']];
+    $kinds = ['standard' => [_STANDARD, 'table'], 'full' => [_ADM_FULL, 'text-wrap'], 'compact' => [_ADM_DENSE, 'list'], 'cards' => [_CARDS, 'grid-3x2-gap']];
     if (!$one) foreach ($kinds as $key => [$title, $icon]) $views[] = ['key' => $key, 'title' => $title, 'icon_name' => $icon, 'is_now' => $key === $density];
     $reset = (string)($data['reset_url'] ?? '');
     $calm = !empty($data['is_calm']);
@@ -530,7 +530,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $mod = $data['mod'] ?? 'info';
     $action = $data['action_url'] ?? (HOME_PATH.$afile.'.php?name='.$name.'&op=info');
     $save = $data['save_flag'] ?? 'save_info';
-    $submit = $data['submit_label'] ?? _SAVECHANGES;
+    $submit = $data['submit_label'] ?? _SAVE;
     $edit = !empty($conf['adminfo']) && isAdmin(true);
     $fdoc = static function(string $path): string {
         foreach (['.html', '.md'] as $ext) {
@@ -847,11 +847,11 @@ function getFileManagerText(array $rule = []): array {
             'insert' => _INSERTIMG,
             'insobj' => _EINSOBJ,
             'download' => _DOWNLOAD,
-            'zip' => _EDITOR_ZIP,
+            'zip' => _TOZIP,
             'delete' => _DELETE,
             'acts' => _FUNCTIONS,
             'mark' => _EDITOR_MARK,
-            'marked' => _EDITOR_MARKED,
+            'marked' => _MARKED,
             'insimgs' => _EDITOR_INSIMGS,
             'insobjs' => _EDITOR_INSOBJS,
             'askdel' => _EDITOR_ASKDEL,
@@ -873,11 +873,11 @@ function getFileManagerText(array $rule = []): array {
             'name' => _NAME,
             'type' => _TYPE,
             'size' => _SIZE,
-            'dim' => _EDITOR_DIM,
+            'dim' => _RESOLUTION,
             'date' => _DATE,
-            'perms' => _EDITOR_PERMS,
-            'owner' => _EDITOR_OWNER,
-            'addr' => _EDITOR_ADDR,
+            'perms' => _PERMS,
+            'owner' => _OWNER,
+            'addr' => _ADDRESS,
         ],
         'panes' => [
             'up' => [_EMODEUPLOAD, _EMODEUPLOADINFO],
@@ -952,10 +952,10 @@ function getFileManagerWindow(array $opt): string {
         'title_label' => _EUPLOAD,
         'close_label' => _CLOSE,
         'move_label' => _EMOVEWIN,
-        'expand_label' => _EEXPAND,
-        'restore_label' => _ERESTORE,
+        'expand_label' => _EXPAND,
+        'restore_label' => _COLLAPSE,
         'add_label' => _ADD,
-        'store_label' => _EDITOR_STORE,
+        'store_label' => _STORAGE,
         'up_label' => _EMODEUPLOAD,
         'up_note' => _EMODEUPLOADINFO,
         'up_why' => _EDITOR_NOUP,
@@ -979,17 +979,17 @@ function getFileManagerWindow(array $opt): string {
         'nofile_label' => _ENOFILE,
         'drop_label' => _EDROPFILES,
         'limits_text' => $txt['limits'],
-        'stop_label' => _EDITOR_STOP,
+        'stop_label' => _STOPUPLOAD,
         'used_label' => _EDITOR_USED,
         'room_label' => _EDITOR_ROOM,
         'room_text' => (string)($opt['room_text'] ?? ''),
         'full_label' => _EDITOR_FULL,
         'filter_label' => _EDITOR_FILTER,
         'all_label' => _ALL,
-        'images_label' => _EDITOR_IMAGES,
-        'others_label' => _EDITOR_OTHERS,
+        'images_label' => _PICTURES,
+        'others_label' => _FILELIST,
         'list_label' => _EDITOR_ASLIST,
-        'tiles_label' => _EDITOR_ASGRID,
+        'tiles_label' => _ASTILES,
         'markall_label' => _EDITOR_MARKALL,
         'name_label' => _NAME,
         'type_label' => _TYPE,
@@ -997,9 +997,9 @@ function getFileManagerWindow(array $opt): string {
         'date_label' => _DATE,
         'props_label' => _EDITOR_PROPS,
         'props_note' => _EDITOR_NOTE,
-        'zip_label' => _EDITOR_ZIP,
+        'zip_label' => _TOZIP,
         'delete_label' => _DELETE,
-        'unmark_label' => _EDITOR_UNMARK,
+        'unmark_label' => _UNMARK,
         'wait_text' => _EDITOR_WAIT,
         'insert_label' => _EDITOR_INSERT,
         'refresh_label' => _UPDATE,
@@ -1072,7 +1072,7 @@ function getEditorFileKit(string $id, array $data): array {
         ['key' => 'attach', 'icon' => 'paperclip', 'name' => _EINSOBJ, 'tone' => 'neutral'],
         ['icon' => 'download', 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true],
     ];
-    if ($mdr) $acts[] = ['key' => 'zip', 'icon' => 'file-zip', 'name' => _EDITOR_ZIP, 'tone' => 'warn'];
+    if ($mdr) $acts[] = ['key' => 'zip', 'icon' => 'file-zip', 'name' => _TOZIP, 'tone' => 'warn'];
     if ($mdr) $acts[] = ['key' => 'delete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
     if ($upl) $html .= getWindowShot([
         'own' => 'editor',
@@ -1102,7 +1102,7 @@ function getEditorFileKit(string $id, array $data): array {
             'size_label' => _SIZE,
             'sizethumb_label' => _EDITOR_THUMB,
             'sizefull_label' => _EDITOR_FULLSIZE,
-            'caption_label' => _EDITOR_CAPTION,
+            'caption_label' => _CAPTION,
         ]),
         'foot_html' => $tpl->getHtmlFrag('window-foot-insert', [
             'editor_id' => $eid,
@@ -1240,8 +1240,8 @@ function getWindowSet(bool $admin = false): string {
             'has_sub' => true,
             'sub_text' => _ADM_LIVE,
             'move_text' => _EMOVEWIN,
-            'full_text' => _EEXPAND,
-            'restore_text' => _ERESTORE,
+            'full_text' => _EXPAND,
+            'restore_text' => _COLLAPSE,
             'close_text' => _CLOSE,
             'bar_html' => $tpl->getHtmlPart('session-stats', ['is_bar' => true, 'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => getLiveEvery('panel')])]),
             'body_html' => $tpl->getHtmlPart('session-stats', [
@@ -1279,13 +1279,6 @@ function getWindowSet(bool $admin = false): string {
         'foot_html' => $tpl->getHtmlFrag('window-foot-qr', ['done_text' => _COPIED, 'copy_text' => _COPYLINK]),
     ]);
     return $out.getWindowShot(['own' => 'view', 'can_walk' => true]);
-}
-
-# Build the htmx attributes of one in-place admin action: the values travel in a POST body, so the credential never becomes part of an address the browser may prefetch or store
-function getTplPostVals(array $hide, string $target): string {
-    $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
-    $vals = htmlspecialchars((string)json_encode($hide, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
-    return 'hx-post="admin.php" hx-vals="'.$vals.'" hx-target="'.$target.'" hx-swap="innerHTML" hx-push-url="false"';
 }
 
 # Build one standalone admin button that submits a POST form; $look 'act' or 'danger' is the action of an alert, 'main', 'check' or 'risk' the weight of a button
@@ -1569,19 +1562,6 @@ function getTplCategoryModule(string $name, string $clas = '', string $sel = '',
         ]);
     }
     return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => 'f-'.$name, 'select_class' => $clas, 'options' => $opts]);
-}
-
-# Build a query string fragment from key value pairs
-function getQueryString(array $data = [], bool $tail = false, string $hash = ''): string {
-    $sep = '&';
-    $qry = '';
-    foreach ($data as $name => $value) {
-        if ($value === '' || $value === null || $value === false) continue;
-        $qry .= ($qry === '' ? '' : $sep).rawurlencode((string)$name).'='.rawurlencode((string)$value);
-    }
-    if ($hash !== '') return $qry.'#'.ltrim($hash, '#');
-    if ($tail && $qry !== '') $qry .= $sep;
-    return $qry;
 }
 
 # Render a module navigation block; a Node type has no best, pop or liste operation and no module config, so its links come only from the overrides

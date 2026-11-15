@@ -5,13 +5,11 @@
 # Website: slaed.net
 
 define('_MASTER_RELEASES','Выпуски');
-define('_MASTER_SITES','Сайты');
 define('_MASTER_NOTES','Оповещения');
 define('_MASTER_KEYS','Ключи');
 define('_MASTER_INBOX','Ждёт в inbox/');
 define('_MASTER_ACCEPT','Принять');
 define('_MASTER_ACCEPTED','Принят');
-define('_MASTER_CHANGED','Изменён');
 define('_MASTER_EXPIRES','Манифест истекает');
 define('_MASTER_EXPWARN','Манифест %1$s истекает %2$s: переподпишите его (php tools/sign.php --refresh %1$s), опубликуйте и примите заново.');
 define('_MASTER_WAIT','Ждёт');
@@ -32,19 +30,15 @@ define('_MASTER_RFORM','манифест неполон или другого ф
 define('_MASTER_SID','Идентификатор');
 define('_MASTER_DOMAIN','Домен');
 define('_MASTER_NOHOST','Не сообщён');
-define('_MASTER_CHAN','Канал');
 define('_MASTER_EXT','Расширения');
 define('_MASTER_ERRS','Ошибки PHP / базы');
 define('_MASTER_FIRST','Первый визит');
-define('_MASTER_LAST','Последний визит');
 define('_MASTER_SILENT','Молчат больше %d дней');
 define('_MASTER_FAILS','Сорванные установки');
 define('_MASTER_STEP','шаг %d');
-define('_MASTER_STEPS','Шаг');
 define('_MASTER_COUNT','Сайтов');
 define('_MASTER_NOSOD','Без sodium');
 define('_MASTER_NOZIP','Без zip');
-define('_MASTER_LEVEL','Уровень');
 define('_MASTER_TO','Адресат');
 define('_MASTER_TOALL','Все сайты');
 define('_MASTER_RANGE','Версии');

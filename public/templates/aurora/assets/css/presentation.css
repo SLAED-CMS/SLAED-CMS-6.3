@@ -111,7 +111,7 @@
 
 .sl-pres .sl-pane-body {
   display: block;
-  padding: var(--sl-pane-pad-y) var(--sl-space-5);
+  padding: var(--sl-space-5);
 }
 
 .sl-pres .sl-pane > .sl-pane-body > :first-child {
@@ -2096,7 +2096,7 @@
   gap: var(--sl-space-2);
   align-content: start;
   min-height: calc(var(--sl-pres-height) / 2);
-  padding: var(--sl-pane-pad-y) var(--sl-space-5);
+  padding: var(--sl-space-5);
 }
 
 .sl-pres-bcard {

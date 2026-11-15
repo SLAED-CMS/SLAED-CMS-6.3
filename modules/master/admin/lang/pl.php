@@ -5,13 +5,11 @@
 # Website: slaed.net
 
 define('_MASTER_RELEASES','Wydania');
-define('_MASTER_SITES','Strony');
 define('_MASTER_NOTES','Powiadomienia');
 define('_MASTER_KEYS','Klucze');
 define('_MASTER_INBOX','Czeka w inbox/');
 define('_MASTER_ACCEPT','Przyjmij');
 define('_MASTER_ACCEPTED','Przyjęto');
-define('_MASTER_CHANGED','Zmieniono');
 define('_MASTER_EXPIRES','Manifest wygasa');
 define('_MASTER_EXPWARN','Manifest %1$s wygasa %2$s: podpisz go ponownie (php tools/sign.php --refresh %1$s), opublikuj i przyjmij jeszcze raz.');
 define('_MASTER_WAIT','Oczekuje');
@@ -32,19 +30,15 @@ define('_MASTER_RFORM','manifest jest niepełny albo ma inny format, wersję lub
 define('_MASTER_SID','Identyfikator');
 define('_MASTER_DOMAIN','Domena');
 define('_MASTER_NOHOST','Nie podano');
-define('_MASTER_CHAN','Kanał');
 define('_MASTER_EXT','Rozszerzenia');
 define('_MASTER_ERRS','Błędy PHP / bazy');
 define('_MASTER_FIRST','Pierwsze sprawdzenie');
-define('_MASTER_LAST','Ostatnie sprawdzenie');
 define('_MASTER_SILENT','Milczą ponad %d dni');
 define('_MASTER_FAILS','Nieudane instalacje');
 define('_MASTER_STEP','krok %d');
-define('_MASTER_STEPS','Krok');
 define('_MASTER_COUNT','Stron');
 define('_MASTER_NOSOD','Bez sodium');
 define('_MASTER_NOZIP','Bez zip');
-define('_MASTER_LEVEL','Poziom');
 define('_MASTER_TO','Adresat');
 define('_MASTER_TOALL','Wszystkie strony');
 define('_MASTER_RANGE','Wersje');

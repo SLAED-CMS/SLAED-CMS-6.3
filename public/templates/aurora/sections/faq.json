@@ -1,5 +1,5 @@
 {
-    "title": "_LAYOUT_FAQ",
+    "title": "_FAQ",
     "note": "_LAYOUT_FAQ_INFO",
     "icon": "patch-question",
     "group": "contact",
@@ -17,18 +17,18 @@
         "name": "q",
         "fields": [
             {"key": "q", "label": "_LAYOUT_QUEST", "type": "text"},
-            {"key": "a", "label": "_LAYOUT_ANSWER", "type": "markdown"}
+            {"key": "a", "label": "_PRREP", "type": "markdown"}
         ],
-        "make": {"q": "_LAYOUT_QUEST", "a": "_LAYOUT_ANSWER"}
+        "make": {"q": "_LAYOUT_QUEST", "a": "_PRREP"}
     },
     "make": {
-        "title": "_LAYOUT_FAQ",
+        "title": "_FAQ",
         "lead": "",
         "icon": "patch-question",
         "open": true,
         "items": [
-            {"q": "_LAYOUT_QUEST", "a": "_LAYOUT_ANSWER"},
-            {"q": "_LAYOUT_QUEST", "a": "_LAYOUT_ANSWER"}
+            {"q": "_LAYOUT_QUEST", "a": "_PRREP"},
+            {"q": "_LAYOUT_QUEST", "a": "_PRREP"}
         ]
     }
 }

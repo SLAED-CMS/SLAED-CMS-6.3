@@ -29,7 +29,7 @@ define('FUNC_FILE', true);
 define('HOME_PATH', '/');
 define('PREFIX_DB', 'probe');
 define('_TOKENMISS', 'token');
-define('_SAVECHANGES', 'save');
+define('_SAVE', 'save');
 define('_NO_INFO', 'none');
 define('_SUCCSAVE', 'saved');
 define('_HACK', 'hack');

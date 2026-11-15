@@ -248,7 +248,7 @@ function config(): void {
         ['label_html' => _MAP_DAT_P, 'label_id' => $labid = getFieldIds('', 'dat_p')['label'], 'field_html' => $yesno('dat_p', $conf['sitemap']['dat_p'] ?? 0, $labid)],
     ];
     $boxes = '';
-    foreach ([['diagram-3', _MAP_SCOPE, $scope], ['file-earmark-text', _MAP_FILE, $file], ['clock-history', _MAP_FREQ, $freq], ['sort-numeric-down', _PRIORITY, $prio],
+    foreach ([['diagram-3', _MAP_SCOPE, $scope], ['file-earmark-text', _MAP_FILE, $file], ['clock-history', _CHANGEFREQ, $freq], ['sort-numeric-down', _PRIORITY, $prio],
         ['calendar-check', _MAP_DATE, $date]] as [$icon, $title, $rows]) {
         $boxes .= $tpl->getHtmlFrag('pane', ['icon' => $icon, 'title' => $title, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]);
     }
@@ -256,7 +256,7 @@ function config(): void {
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
         'content_html' => $boxes,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();

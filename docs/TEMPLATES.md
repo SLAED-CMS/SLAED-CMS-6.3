@@ -501,6 +501,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
 - **The rows of one thing stand in a window.** `fragments/pane.html` (an additional field, a rule of "Замены", a scope of "Рейтинги", a feed of `rss`) puts its name in the head and its rows under it at the full width of the box, the caption left as in every form of the panel; the items of the side panel of the builder keep them stacked, as every nested grid. "Panel Window" holds the head, the fold and the chain.
 - **A caption stands at the top of its field.** `.sl-form-row` and `.sl-value-row` of the site and `.sl-div-item` of the panel align to `start`; the first line of a caption meets the line of a single field (on the site by a top padding of half the field height less one line, in the panel by a caption line as high as a control), so a text area, a list or a picture keeps its caption at its top. A baseline alignment was tried and refused: a text area and a picture have no baseline, and the caption fell to their foot
+- **A row of the panel is as tall as its field.** `.sl-div-item` carries no `min-height`: its inset is `--sl-space-3` (8 px) over the control and under it, in a window and outside one, so a field stands as far from the rule above it as from the one below
 - **Every chip that shows a value names it.** A size, a count, a date, a status or a module in a chip carries a `title` of an existing constant (`_SIZE`, `_NODE_DLOADS`, `_ALLMATERIALS`, `_COMMENTS`, `_VOTES`, `_DATE`, `_STATUS`, `_MODUL`, `_RATING`, `_CATEGORY`), so a hover says what the figure is; a chip that is a button with its own words needs none
 - **Every button bursts when pressed.** `setPressBurst()` of `slaed.js` gives each `.sl-but*` and `.sl-but-mini` the burst of the favourite star (`.sl-is-burst`: the ring, the pop of the icon, two spark sets), in both themes on the same tokens `--sl-fav-*` and `--sl-spark-shadow`; the star and the rating keep their own burst on the answer of the server, and `--sl-time-scale` 0 stills it
 - **Every button carries its icon.** `fragments/button.html` of both themes is a `<button>`, never an `<input>`, so a `bi` glyph stands before its words; without `icon_name` it takes the arrow of `is_back`, the turn of `reset_url` and the check of a confirming action otherwise. A caller names `icon_name` when the action means more than to confirm: send, add, delete, log in, upload. A pill a template writes itself, a link with a pill flag (`is_navi_button`, `is_navi_lower`, `is_account_button`, `is_button_blue`, `is_footer_button`) and the `acts` of `form-submit.html` carry their glyph the same way. A text a builder types in place stands in a `<span>` of its own beside the glyph, since typing replaces everything inside the element that carries `data-sl-text`
@@ -539,14 +540,15 @@ The window of the site is the window of the panel in the values of `aurora`: one
 | The head | `fragments/pane-cap.html`, `.sl-pane-cap` | `icon` (bare, in `--sl-cat-tone`), `title` or `title_html`, or `title` with `href` for a linked name; the name is an `h3` unless `level` gives the rank of its heading or `is_plain` asks a `div`; `title_id`, `hint`, `chips` (`tone`, `label`, `icon`, `title`, `id`, `is_live`), `meta` for a value at the right end (`.sl-pane-meta`, the name of the panel) with `meta_tone` for its `data-sl-tone` and `meta_icon`, `live_title` for the turning mark, `tools_html`, and `is_fold` with `id`, `is_open` and `plus_text` for the plus |
 | The body | `.sl-pane-body` | a grid of two tracks, caption and field; a direct child spans both, a direct `.sl-form-row` takes them by `subgrid` |
 
-- **The values are tokens.** `--sl-pane-border`, `--sl-pane-radius`, `--sl-pane-bg`, `--sl-pane-cap-bg`, `--sl-pane-pad-x`, `--sl-pane-pad-y` and `--sl-pane-shadow` of the API block hold what the two themes differ in: the panel has a gradient under the head and the inset 8 by 10, the site the ground `--sl-surface`, the frame `--sl-border-subtle` and the inset 12 by 16; both carry `--sl-shadow-xs`. One rule of `theme.css` draws the frame of `.sl-pane` and of `.sl-block` from them, and the inset of a block is the inset of a window. A window stands still under the pointer, and a window inside the frame of the cabinet deck (`.sl-cab-deck`) carries no shade.
+- **The values are tokens.** `--sl-pane-border`, `--sl-pane-radius`, `--sl-pane-bg`, `--sl-pane-cap-bg`, `--sl-pane-pad-x`, `--sl-pane-pad-y` and `--sl-pane-shadow` of the API block hold what the two themes differ in: the panel has the frame `--sl-border` and the inset 8 by 10, the site the frame `--sl-border-subtle` and the inset 8 by 12; both wear the gradient from `--sl-surface` down to `--sl-bg` over the whole window and `--sl-shadow-xs`. The row of a head stands 4 px over its icon on each side, so the inset of the site reads as 12 on every side of that icon. One rule of `theme.css` draws the frame of `.sl-pane` and of `.sl-block` from them, and the inset of a block is the inset of a window. A window stands still under the pointer, as a block of the side column does, and a window inside the frame of the cabinet deck (`.sl-cab-deck`) carries no shade; the plate of the preset gallery keeps its lift, and the light that runs round a frame under the hand ("Motion") is the one the blocks carry.
 - **The head is a chip and the inset twice high** and carries no rule, so the body has no upper inset. The icon is the bare glyph of `--sl-size-icon-sm`, the name is `--sl-font-h3` regular; the name takes the room the chips leave and wraps inside it, and the name of a page (`h1.sl-pane-title`) keeps one line and ends in an ellipsis, the `hint` of the head holding the whole of it.
 - **A block names its icon.** The file of a block sets `$bicon`, as it may set `$bhref` for a linked name; `setBlockView()` of `core/system.php` hands both to `fragments/block-all.html`, which includes the head, and a block without an icon takes `grid-3x3-gap`. A block before the content of a page prints a plain name (`is_plain`), every other one an `h2`. `partials/block-sidebar.html` writes the same head itself, since the head is its collapse control.
-- **The topic of a forum** is `fragments/pane.html` with the name of the topic as its `h1`, the count of the messages as a chip and the star and the share as `tools_html`. `theme.css` finds that window by the messages it holds (`.sl-pane:has(> .sl-pane-body > div > .sl-forum-post)`): no gap in the body, a dashed rule between two messages, 20 px to the row of the pager under it. The buttons of the topic stand in that row alone. The label of the editor of the quick reply is hidden for the eye (`is_label_hidden` of `fragments/label.html`) and still names the editor.
+- **The topic of a forum** is `fragments/pane.html` with the name of the topic as its `h1`, the count of the messages as a chip and the star and the share as `tools_html`. `theme.css` finds that window by the messages it holds (`.sl-pane:has(> .sl-pane-body > div > .sl-forum-post)`): no gap in the body, a dashed rule between two messages, 20 px to the row of the pager under it. The buttons of the topic stand in that row alone. The quick reply is a window named by `_QUICKREPLY`; the label of its editor is hidden for the eye (`is_label_hidden` of `fragments/label.html`) and still names the editor. The tables of the forum, the categories and the topics, stand without a window.
 - **One head.** The two heads that stand without a frame, over the tiles of the cabinet and over the facts of the profile, are the same fragment; `.sl-cab-main > .sl-pane-cap` and `.sl-profile-split-main > .sl-pane-cap` give them the height of a row (`--sl-hub-head-height`) and no inset.
-- **The presentation wears the head of the panel.** Under `.sl-pres` (`assets/css/presentation.css`) a window takes the frame and the ground of the page palette (`--sl-pres-border`, `--sl-pres-panel-bg`) and an inset of 12 of its own, whatever a block of the site takes; its head is mono capitals with a bare icon of `--sl-size-icon-xs`, a rule and the value `meta` at the right in the tone of a link or in its own, a chip and 8 twice and the rule high (43 px); its body is a plain box inset on all four sides, with no inset where rows run from frame to frame (the block layout, the cache tree), and a rule between rows inside it is dashed. The model of the hero `.sl-pres-core` is a drawing, not a window, and the heads over the groups that draw no frame (the block system, the commits, the board of the statistics, the voices) stand without one: all of them are the same fragment. `modules/presentation/index.php` builds every head by one closure (`icon`, `title`, `meta`, `meta_tone`, `meta_icon`); `plugins/presentation/presentation.js` writes the route, the focus, the mode of the cache and the poll into `.sl-pane-meta`. The head of the section `sections/voices.html` writes the same markup itself, since its name is a text the builder edits in place.
+- **The presentation wears the head of the panel.** Under `.sl-pres` (`assets/css/presentation.css`) a window takes the frame and the ground of the page palette (`--sl-pres-border`, `--sl-pres-panel-bg`) and an inset of 12 of its own, whatever a block of the site takes; its head is mono capitals with a bare icon of `--sl-size-icon-xs`, a rule and the value `meta` at the right in the tone of a link or in its own, a chip and 8 twice and the rule high (43 px); its body is a plain box inset on all four sides, with no inset where rows run from frame to frame (the block layout, the cache tree), and a rule between rows inside it is dashed. A frame that carries the head is a window; the sections, the hero, the illustrated scenes, the tiles (the gallery, the principles, the pulse, the voices), the cockpit, the ticker, the rail, the rings and the code console are not, and the cockpit and the tiles keep radius 12. The model of the hero `.sl-pres-core` is a drawing, not a window, and the heads over the groups that draw no frame (the block system, the commits, the board of the statistics, the voices) stand without one: all of them are the same fragment. `modules/presentation/index.php` builds every head by one closure (`icon`, `title`, `meta`, `meta_tone`, `meta_icon`); `plugins/presentation/presentation.js` writes the route, the focus, the mode of the cache and the poll into `.sl-pane-meta`. The head of the section `sections/voices.html` writes the same markup itself, since its name is a text the builder edits in place.
 - **A fold is the fold of the panel.** The plus is the one control, `[data-sl-toggle-head]` on the head sends a press anywhere on it to the plus (`setToggleHeads()` of `public/plugins/system/slaed.js`), the body stands in `#<id>-rows.sl-collapsible`, and the state lives under that id. A shelf of the favourites and the focus of the messages stand open by default, so their plus is born with `sl-is-open`.
 - **Nothing inside a window is rounded more than the window.** The inner list `.sl-profile-scroll` takes `--sl-radius-1`, a slot of the focus `--sl-radius-2`.
+- **The frames beside a window share its radius.** The panel of the search `.sl-search-panel` and the two panes `.sl-duo` of the mailbox and of the rail of a Node list are no windows — they carry no head — and stand at `--sl-radius-2` in the frame `--sl-border`.
 
 ## Settings Page Contract
 
@@ -800,11 +802,28 @@ under the text to the right — the width of the alert decides, not that of the 
 ## Panel Window
 
 The window `fragments/pane.html` — a thin frame with the shadow of a list and the cap of `pane-cap.html`: an icon,
-which every window names, the title in capitals, a value on the right, a gradient that ends with the cap and a rule
-under it — frames what a page sets or tells under a name: an instrument of a board ("Мониторинг", "Статистика"), a
+which every window names, the title in capitals, a value on the right and a rule under it, over a gradient that runs
+down the whole window — frames what a page sets or tells under a name: an instrument of a board ("Мониторинг", "Статистика"), a
 form of settings or a group of one, a form of one record or of one action, a section of a page. A list table never
 stands in a window, and a form that is one editor stands in its `partials/box.html` without one.
 
+`.sl-pane` is the one window of the system: the panel and the site draw it with the same class and the same
+mechanism and differ in the values of its tokens alone ("Site Window" holds the set of `aurora`). "Window" as the name
+of a dialog is `fragments/window.html` (`docs/WINDOW.md`), another component.
+
+- **The set of the panel.** The frame is `--sl-border` at `--sl-radius-2`, the ground a gradient from `--sl-surface`
+  down to `--sl-bg` over the whole window, under a head whose own ground is clear (`--sl-pane-cap-bg` is a gradient of
+  `transparent`, since one name holds one kind of value in both themes), the inset 8 by 10
+  (`--sl-space-3`, `--sl-space-4`), the shade `--sl-shadow-xs`. They are the tokens `--sl-pane-*` of the API block;
+  `theme.css` reads them and writes none of these values itself.
+- **One height of the head, one size of its icons.** The head is a chip, the inset twice and the rule high (43 px);
+  its icon and its plus are `--sl-size-icon-xs` (16 px), and the plus stands as far from the frame, and on the same
+  line, as the icon at the other end. The head decides the rule: a name in capitals takes the solid rule under it,
+  the plain name of a head of the site takes none.
+- **The bounds.** A window is a frame with a head. A list table, a tile of figures and a block of the side column are
+  no windows; the folding panels of the home page keep the bar they share with the blocks of the side menu, since the
+  bar is navigation and a window is content. The block of the side column `.sl-block-sidebar` shares the radius and
+  the shade of a window all the same. Nothing inside a window is rounded more than the window.
 - **A summary stands on its own.** The tiles of `metric-list` above a list go into `note_html` of the list
   ("Очередь" of "Почта", "Поиск", "База данных") and above a form or a file into the page ("Карта сайта") with no
   frame round them.
@@ -869,7 +888,8 @@ stands in a window, and a form that is one editor stands in its `partials/box.ht
   (`plus_text` names it), folded by default, the choice kept by the browser under `<id>-rows`. The head carries
   `data-sl-toggle-head`: `public/plugins/system/slaed.js` sends a press anywhere on it to the plus, which stays the one
   button of the head; a press on a control or one that ends a selection in the head folds nothing, and the name of a
-  folding head is not selectable. A folded window is its head alone, without the rule under it.
+  folding head is not selectable. A folded window is its head alone, without the rule under it. A window of settings
+  stands open: only a set of things of one kind, with its facts in the head, folds.
 - **The head tells what a folded window holds.** `facts` (rows of `text`) stand after the name in columns of a fixed
   share of the width, so one fact stands in one column down the screen, in small muted text and in their own case — a
   key, a path and an extension are read as they are typed; `chips` (rows of `tone` and `label`) close the head before
@@ -1019,8 +1039,7 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
 Each effect of the panel lives once: its moving rules in the block "Motion over the page" of `assets/css/theme.css`, its
 behaviour in `assets/js/admin-ui.js`, its tokens in the API block of `base.css` and in `tools/ui-contract.php`. The
 switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движение" writes `data-sl-still` through
-`setOptionView()`, and the help of the home, `admin/info/panel/ru.md`, names the motion. The demo series
-`public/demo/st-02-cockpit.html` and `public/demo/adm-07-effects.html` stay on the stand.
+`setOptionView()`, and the help of the home, `admin/info/panel/ru.md`, names the motion.
 
 | Effect | Where | How |
 |---|---|---|
@@ -1108,17 +1127,16 @@ A screen that shows a state rather than rows — "Статистика", "Мон
 parts. Each lives once in the theme `admin`: the markup in `fragments/`, the rules in `theme.css`, the behaviour in
 `admin-ui.js`, the tokens in `base.css` and `tools/ui-contract.php` (`--sl-ground-width`, `--sl-ground-dur`,
 `--sl-pane-dur`, `--sl-metric-min-width`). A page has something of its own only where the other has no like: the dial of
-the day in the lamp of "Статистика", the pulse in the lamp of "Мониторинг". The reference pages are
-`public/demo/st-02-cockpit.html` and `public/demo/mon-01-cockpit.html`, whose classes `st-*` and `mn-*` stay in
-`public/demo/assets/`; the frozen tokens `--sl-statx-*` stay with the dial, the bars of rows and the log of days. `SeriesPartsTest`
-holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter()`, `getTplLongCell()` and the key `pane`.
+the day in the lamp of "Статистика", the pulse in the lamp of "Мониторинг". The frozen tokens `--sl-statx-*` stay with the dial, the bars of rows
+and the log of days. `SeriesPartsTest`
+holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter()`, `getTplLongCell()` and that a list draws no window.
 `fragments/window.html` and `data-sl-window` are a dialog and not one of these parts.
 
 | Part | Fragment, class | Keys and notes |
 |---|---|---|
 | The ground | `pane-ground.html`, `.sl-ground` | `content_html`. Its grid drifts on a layer of its own, `.sl-ground-lines`, by `transform`: the drift measured 5.7% and 14.5% of a core (renderer, GPU) against 4.8% and 13.2% without it and 20.4% and 43.5% by `background-position` |
 | A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
-| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list enters a window by the key `pane` of `getTplAdminList()` and draws the same cap |
+| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon`, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list never enters a window: its summary stands above the table in `note_html` of `getTplAdminList()` |
 | A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir` (`up`, `down`, `flat`, `none`) and `delta_tip`, `icon`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text; a tile with `delta` colours its `icon` by `dir`: green up, red down, the primary blue flat |
 | Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good`; `chip` with `tone` after the text (section "Facts Of A Page") |
 | A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
@@ -1152,8 +1170,8 @@ The rules of the parts:
   whatever holds such a panel by a click has the hand cursor, and `cursor: help` stays on `.sl-tip` and `.sl-note`, where a
   click does nothing.
 
-The screens that take the parts: "Почта" (the queue and its tiles, a meter per campaign), "База данных" (the window round the
-list, the tiles of rows, size and free space), "Поиск" and "Карта сайта" (tiles of the summary), the tab of the cache of
+The screens that take the parts: "Почта" (the queue and its tiles, a meter per campaign), "База данных" (the tiles of
+rows, size and free space above its list), "Поиск" and "Карта сайта" (tiles of the summary), the tab of the cache of
 "Конфигурации", "Обновления" (the free space, the part downloaded), "Журналы" (the size to `log_size`), the file manager
 (the quota) and "Мастер" (the mark "i" at a key, a `sid` and the state of a release).
 
@@ -1193,7 +1211,7 @@ leaves as the event `sl-series-pick` on `document`, with `detail.index`, `-1` fo
 ## Node List Contract
 
 The list of a Node type is one part that swaps itself: `partials/node/list.html` of `aurora` is `#sl-node-list`, the
-header `partials/node/head.html` inside it, the cards in `#sl-node-items`, the pager and "Показать ещё" in
+header `partials/node/head.html` inside it, the cards in `#sl-node-items`, the pager and "Ещё" in
 `#sl-node-foot`. What the server reads and answers — the parameters, the counts, the views, the `HX-Request` answer —
 is in `docs/NODE.md`, "List header", "Views of a list" and "Live list"; the keys of the three templates are in its
 "Template keys". Every control is a link or a form the server answers, so the list works without a script.
@@ -1202,7 +1220,7 @@ is in `docs/NODE.md`, "List header", "Views of a list" and "Live list"; the keys
   `hx-history-elt` and `hx-history="false"`, and the regions inside inherit them. `hx-boost="true"` stands on the
   filter toolbar, the three windows and the foot, not on single links, so the shared `link.html` and `pager-link.html`
   stay as they are; "Добавить" opts out by `hx-boost="false"`.
-- **"Показать ещё" appends and redraws.** `#sl-node-more` overrides the target with `hx-target="#sl-node-items"`,
+- **"Ещё" appends and redraws.** `#sl-node-more` overrides the target with `hx-target="#sl-node-items"`,
   `hx-swap="beforeend show:none"`, `hx-select="#sl-node-items > *"` and `hx-select-oob="#sl-node-foot"`.
 - **Shared fragments.** `fragments/date-head.html` (`sl-date-head`, keys `label` and `count`) heads a month of the list
   and a day of the mailbox. `fragments/mode-switch.html` draws the colour mode and, with `is_view`, the view switch of
@@ -1287,7 +1305,7 @@ general `pager.aspan` (10 shipped); `getTplPager()` and `getPageNumbers()` take 
 of a site list come from `getPageRows($conf[<module>], $key = 'rows')`: the own number of the module, or the general
 `pager.rows` (15 shipped); a visitor has no number of their own. A Node type keeps its own `list.limit`. The panel form of a module draws its two
 own fields with `getTplPagerFields()` and reads them with `getPagerPost()` (`core/admin.php`): an empty field stores `''`
-and takes the general number, shown as its placeholder; the face is the stand `public/demo/pg-09-final.html`, in the panel `pg-14-admin.html`.
+and takes the general number, shown as its placeholder.
 
 | Fragment | Prints |
 |---|---|
@@ -1315,7 +1333,7 @@ Both fragments are byte-identical in `templates/admin` and `templates/aurora`; o
   so the line keeps to the row, and under 480px the row turns into a centred column with the whole line under the
   numbers. Beside the buttons of a foot (`sl-node-foot`, `sl-forum-foot`) the pager keeps its row and its whole line, and
   the foot decides: the Node foot drops the range under 720px of itself and turns into the centred column under 480px,
-  with "Показать ещё" under the pager. The panel pushes the line to the right, under the row in a narrow container; the
+  with "Ещё" under the pager. The panel pushes the line to the right, under the row in a narrow container; the
   panel list foot puts the bulk action under the pager below 560px.
 - **The arrow keys page the list.** `setPagerKeys()` in `slaed.js` listens to ← and → without a modifier and clicks the
   back or forward link (`a[rel]`) of the first pager on show outside a window, so an htmx link swaps as it does for the
@@ -1411,7 +1429,7 @@ Every reader passes the raw column and its title, and every template takes the r
 
 ## Group Ladder And Rank Composer
 
-`admin/modules/groups.php`, tabs «Главная» and «Добавить»; the face is the stand `public/demo/grp-10-unified.html`.
+`admin/modules/groups.php`, tabs «Главная» and «Добавить».
 
 | Template | Prints |
 |---|---|
@@ -1467,10 +1485,7 @@ Boundary"). Everything but the fragments is data; a label is a constant of `admi
 | `places.json` | the parts of the theme, its menus and its zones of blocks |
 | `presets.json` | the ready pages |
 
-A new theme copies all four. The demo series "Конструктор сайта" — `public/demo/sb-01-builder.html`, `sb-site.html`
-and their `assets/sb-*` — stays the reference of the layout and the behaviour of the screen and of the canvas; its
-sizes, spacing, fonts and styles are those of the canon of the panel, and where the two differ the demo is brought to
-the canon.
+A new theme copies all four.
 
 ### Roots and providers
 

@@ -320,7 +320,7 @@ function add(): void {
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'bar-chart', 'title' => _VOTING_POLL, 'facts' => $id ? [['text' => (string)$title]] : [],
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]).$answ,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();
@@ -471,7 +471,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('voting')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();

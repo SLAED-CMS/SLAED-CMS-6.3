@@ -222,7 +222,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('privat')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();

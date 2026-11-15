@@ -45,4 +45,3 @@ define('_TPOP','Gor&#261;cy temat');
 define('_TPOPN','Gor&#261;cy temat ma nowe wiadomo&#347;ci');
 define('_TVIEWS','Wyświetlenia');
 define('_WARNPF','Publikacja na forum jest wy&#322;&#261;czone!');
-define('_REPLY','Odpowiedz');

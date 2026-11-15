@@ -92,7 +92,7 @@ function rss(): void {
             ['nameattr' => 'tab', 'valueattr' => (string)$tab],
         ],
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]).$content,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $form]);
     echo $cont;

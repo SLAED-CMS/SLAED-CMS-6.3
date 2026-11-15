@@ -24,7 +24,7 @@ function getUpdateView(): string {
     $sets = $conf['update']['check'] ?? [];
     $cont = getUpdateAlert();
     if (intval($sets['upcheck'] ?? 1) !== 1) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_OFF]);
-    $check = ['label' => _UPDATE_LAST, 'text' => (intval($state['last']) > 0) ? date(_TIMESTRING, intval($state['last'])) : _NEVER];
+    $check = ['label' => _LASTCHECK, 'text' => (intval($state['last']) > 0) ? date(_TIMESTRING, intval($state['last'])) : _NEVER];
     $notes = '';
     if ($state['error'] !== '') {
         $check += ['chip' => _UPDATE_NOTDONE, 'tone' => 'warn'];
@@ -35,7 +35,7 @@ function getUpdateView(): string {
     if ($unzip === '') $notes .= getUpdateWarn(_UPDATE_NOZIP);
     $items = [
         ['label' => _VERSION, 'text' => SL_VERSION.' '.SL_CODENAME],
-        ['label' => _UPDATE_CHANNEL, 'text' => (($sets['channel'] ?? '') === 'beta') ? _UPDATE_BETA : _UPDATE_STABLE],
+        ['label' => _CHANNEL, 'text' => (($sets['channel'] ?? '') === 'beta') ? _UPDATE_BETA : _UPDATE_STABLE],
         $check,
         ['label' => _UPDATE_FOUND, 'text' => Update::isVersion($state['found']['version'] ?? null) ? $state['found']['version'] : _UPDATE_NONE],
         ['label' => _UPDATE_SIGN, 'text' => ($bits & 1) ? _UPDATE_SODIUM : _UPDATE_OWN],
@@ -53,7 +53,7 @@ function getUpdateView(): string {
         .getTplPostButton(['name' => 'update', 'op' => 'check'], 'arrow-repeat', _UPDATE_CHECK, '', $look).$pack['acts'];
     $rows = array_merge($rows, $last['rows'], [['label_html' => _FUNCTIONS, 'field_html' => $acts]]);
     $list = $tpl->getHtmlFrag('kv-list', ['items' => array_merge($items, $last['items'], $pack['items'])]).$notes.$last['notes'].$pack['notes'];
-    $pane = $tpl->getHtmlFrag('pane', ['icon' => 'activity', 'title' => _UPDATE_STATE, 'content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]);
+    $pane = $tpl->getHtmlFrag('pane', ['icon' => 'activity', 'title' => _STATE, 'content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]);
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $pane.$pack['html']]);
 }
 
@@ -150,13 +150,13 @@ function getUpdateInstall(array $state, array $man): string {
         $rows[] = ['label_html' => _CONFIRM, 'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $key, 'value_attr' => '1', 'label_text' => $label,
             'is_required' => true])];
     }
-    return $tpl->getHtmlFrag('pane', ['icon' => 'download', 'title' => _UPDATE_INSTALL, 'content_html' => getUpdateRoom($room, $text, $room['old'])
+    return $tpl->getHtmlFrag('pane', ['icon' => 'download', 'title' => _INSTALL, 'content_html' => getUpdateRoom($room, $text, $room['old'])
         .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_INSTHINT])
         .$tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=update&op=install',
             'hidden' => [['name_attr' => 'token', 'value_attr' => getSiteToken('update')]],
             'rows' => $rows,
-            'submit_label' => _UPDATE_INSTALL,
+            'submit_label' => _INSTALL,
             'icon_name' => 'download',
             'is_disabled' => $short,
         ])]);
@@ -251,7 +251,7 @@ function getUpdateSettings(): string {
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $sent = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_SENT]);
     $rows = [
-        $radio('channel', _UPDATE_CHANNEL, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable', [['value' => 'stable', 'label' => _UPDATE_STABLE],
+        $radio('channel', _CHANNEL, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable', [['value' => 'stable', 'label' => _UPDATE_STABLE],
             ['value' => 'beta', 'label' => _UPDATE_BETA]], _UPDATE_CHANHINT),
         $radio('upcheck', _UPDATE_UPCHECK, (string)intval($sets['upcheck'] ?? 1), $yesno),
         $radio('upsite', _UPDATE_UPSITE, (string)intval($sets['upsite'] ?? 1), $yesno, _UPDATE_SITEHINT),
@@ -262,7 +262,7 @@ function getUpdateSettings(): string {
         'action_url' => $afile.'.php?name=update&op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('update')]],
         'content_html' => $sent.$tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     return checkPerms(CONFIG_DIR.'/update.php').$tpl->getHtmlPart('box', ['content_html' => $form]);
 }
@@ -418,7 +418,7 @@ function install(): void {
     $codes = Update::getApplyCode();
     $pend = ['kind' => 'install', 'ver' => $res['man']['version'], 'token' => hash('sha256', $codes['token']), 'code' => hash('sha256', $codes['code']), 'time' => time()] + $opts;
     if (!Update::setState(array_replace(Update::getState(), ['apply' => $pend]))) setRedirect($afile.'.php?name=update', false, 302, _ERROR, true);
-    setUpdateCode(_UPDATE_INSTALL.' '.$res['man']['version'], _UPDATE_STARTHINT, 'start', _UPDATE_START, $codes);
+    setUpdateCode(_INSTALL.' '.$res['man']['version'], _UPDATE_STARTHINT, 'start', _UPDATE_START, $codes);
 }
 
 function start(): void {

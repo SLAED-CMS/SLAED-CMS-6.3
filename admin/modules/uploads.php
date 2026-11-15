@@ -383,7 +383,7 @@ function tplconfig(): void {
     $typm = [...explode(',', $conf['uploads']['typ']), 'full'];
     $blocks = '';
     require_once BASE_DIR.'/core/classes/filemanager.php';
-    $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _UPLOADS_VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
+    $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
     $icons = ['image' => 'file-earmark-image', 'audio' => 'file-earmark-music', 'video' => 'file-earmark-play', 'document' => 'file-earmark-text', 'archive' => 'file-earmark-zip'];
     foreach ($typm as $i => $type) {
         $form = ($type === 'full') ? _EDITOR_FULLSIZE.' (size=full)' : $type;
@@ -424,7 +424,7 @@ function tplconfig(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
         ],
         'content_html' => $blocks,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tplv]);
     setFoot();
@@ -451,7 +451,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(getUploadsTabs() + ['tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
-    $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _UPLOADS_VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
+    $names = ['image' => _UPLOADS_IMAGES, 'audio' => _UPLOADS_AUDIO, 'video' => _VIDEO, 'document' => _UPLOADS_PAPERS, 'archive' => _UPLOADS_PACKS];
     $kinds = array_fill_keys(array_keys($names), []);
     $exts = getUploadService()::getSupportedTypes();
     sort($exts);
@@ -548,7 +548,7 @@ function config(): void {
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
         'content_html' => $blocks,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();

@@ -192,7 +192,7 @@ function fileedit(): void {
             ]
         ),
         'content_html' => implode('', $groups).$pager,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
@@ -282,7 +282,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('lang')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();

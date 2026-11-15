@@ -5,6 +5,5 @@
 # Website: slaed.net
 
 define('_TU_RULES','Правила');
-define('_TU_STATS','Статистика');
 define('_TU_USERSCOUNT','Члени');
 define('_USERS_FROM','Звідки');

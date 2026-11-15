@@ -45,4 +45,3 @@ define('_TPOP','Beliebtes Thema');
 define('_TPOPN','Beliebtes Thema hat neue Nachrichten');
 define('_TVIEWS','Aufrufe');
 define('_WARNPF','Ver&#246;ffentlichung auf dem Forum ist deaktiviert!');
-define('_REPLY','Antworten');

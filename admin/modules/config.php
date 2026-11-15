@@ -101,10 +101,10 @@ function getGeoipPanel(): string {
         ],
     ];
     $head = [
-        ['content' => _GEOIP_BASE],
+        ['content' => _BASE],
         ['content' => _SIZE],
         ['content' => _DATE],
-        ['content' => _GEOIP_PATH],
+        ['content' => _PATH],
         ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
     ];
     $body = getGeoipFileRow(_GEOIP_COUNTRYDB, (string)($conf['geoip_country'] ?? 'storage/geoip/country.mmdb'));
@@ -481,7 +481,7 @@ function config(): void {
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'dev_mode', 'value' => $conf['dev_mode'] ?? 0, 'options' => $yesno]),
     ];
     $taba = $pane('globe2', _SITE, $site).$pane('palette', _CONFIG_LOOK, $look).$pane('cookie', _CONFIG_SESS, $sess).$pane('list-ul', _CONFIG_LISTS, $pager)
-        .$pane('layout-sidebar', _CONFIG_PANEL, $panel).$pane('bug', _CONFIG_DEBUG, $debug);
+        .$pane('layout-sidebar', _PANEL, $panel).$pane('bug', _CONFIG_DEBUG, $debug);
     $meta[] =['label_for' => 'f-defis', 'label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'defis',
@@ -704,7 +704,7 @@ function config(): void {
         ['label' => _FILE_M, 'value' => filterDecimal($cnt, 0), 'icon' => 'files'],
         ['label' => _FILE_S, 'value' => filterSize($size), 'icon' => 'hdd'],
     ]]).$tpl->getHtmlFrag('kv-list', ['items' => $items]);
-    $tabf = $pane('lightning-charge', _CONFIG_CACHE, $rows, $html).$pane('file-earmark-code', _CONFIG_ASSETS, $files);
+    $tabf = $pane('lightning-charge', _CACHETITLE, $rows, $html).$pane('file-earmark-code', _CONFIG_ASSETS, $files);
     $content = '';
     foreach ([$taba, $tabb, $tabc, $tabd, $tabf] as $idx => $panel) {
         $content .= $tpl->getHtmlFrag('tabs-panel', [
@@ -724,12 +724,12 @@ function config(): void {
         'is_valid' => true,
         'actions_html' => $tpl->getHtmlFrag('button', [
             'button_type' => 'submit',
-            'submit_label' => _CACHECLEAR,
+            'submit_label' => _CLEAN,
             'icon_name' => 'trash',
             'is_plain' => true,
             'button_attr' => 'form="config-clear" data-sl-tab-show="4" data-sl-tab-group="config-main" hidden',
         ]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     $clear = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -975,7 +975,7 @@ function replace(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('config')],
         ],
         'content_html' => $blok,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();

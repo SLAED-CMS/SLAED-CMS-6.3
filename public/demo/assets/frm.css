@@ -1,8 +1,6 @@
-/* Forum topic series (frm-NN): the page of one topic in the column of the site. Every face shows the same topic, the
-   same pager and the same quick reply (assets/frm.js) and differs only in the set of values on .fr-root: where the
-   window of the site (.sl-pane of the theme) stands, the rule between two messages, the window of the form and the
-   place of the topic buttons. The window itself is the theme's; this file holds the desk and what a window of
-   messages needs that a window of form rows does not */
+/* The window of the site on the page of one forum topic (assets/frm.js). The window itself is .sl-pane of the theme:
+   an axis of the window writes a value of a token --sl-pane-* on <html>, which a block of the side column reads too.
+   Besides the axes this file holds the desk and what a window of messages needs that a window of form rows does not */
 .fr-desk {
   display: grid;
   gap: var(--sl-space-4);
@@ -62,7 +60,76 @@
   border-top: 0;
 }
 
+/* Axis: the frame, the radius, the inset and the shadow are values of the tokens of the window; every value writes its
+   own, so the desk shows the same whatever the theme holds at the moment */
+:root[data-fr-frame="soft"] {
+  --sl-pane-border: var(--sl-border-subtle);
+}
+
+:root[data-fr-frame="strong"] {
+  --sl-pane-border: var(--sl-border-strong);
+}
+
+:root[data-fr-radius="2"] {
+  --sl-pane-radius: var(--sl-radius-2);
+}
+
+:root[data-fr-radius="3"] {
+  --sl-pane-radius: var(--sl-radius-3);
+}
+
+:root[data-fr-inset="tight"] {
+  --sl-pane-pad-x: var(--sl-space-5);
+  --sl-pane-pad-y: var(--sl-space-3);
+}
+
+:root[data-fr-inset="mid"] {
+  --sl-pane-pad-x: var(--sl-space-6);
+  --sl-pane-pad-y: var(--sl-space-5);
+}
+
+:root[data-fr-inset="wide"] {
+  --sl-pane-pad-x: var(--sl-space-7);
+  --sl-pane-pad-y: var(--sl-space-6);
+}
+
+:root[data-fr-shade="none"] {
+  --sl-pane-shadow: none;
+}
+
+:root[data-fr-shade="xs"] {
+  --sl-pane-shadow: var(--sl-shadow-xs);
+}
+
+/* Axis: the surface. Both gradients are the one of the panel, from --sl-surface down to --sl-bg */
+:root[data-fr-ground="flat"] {
+  --sl-pane-bg: var(--sl-surface);
+  --sl-pane-cap-bg: none;
+}
+
+:root[data-fr-ground="grad"] {
+  --sl-pane-bg: linear-gradient(var(--sl-surface), var(--sl-bg));
+  --sl-pane-cap-bg: none;
+}
+
+:root[data-fr-ground="cap"] {
+  --sl-pane-bg: var(--sl-bg);
+  --sl-pane-cap-bg: linear-gradient(var(--sl-surface), var(--sl-bg));
+}
+
+/* A block keeps its head inside its own inset, so under a gradient of the head the head is drawn out to the frame */
+:root[data-fr-ground="cap"] .sl-block > .sl-pane-cap {
+  min-height: calc(var(--sl-size-chip) + var(--sl-pane-pad-y) * 2);
+  margin: calc(var(--sl-pane-pad-y) * -1) calc(var(--sl-pane-pad-x) * -1) 0;
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
+}
+
 /* Axis: the size of the name of a head, for a window and for a block; 18 regular is what the theme draws, the small ones are semibold */
+:root[data-fr-type="micro"] .sl-pane-title {
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+}
+
 :root[data-fr-type="small"] .sl-pane-title {
   font-size: var(--sl-font-small);
   font-weight: var(--sl-weight-semibold);
@@ -75,6 +142,15 @@
 
 :root[data-fr-type="h2"] .sl-pane-title {
   font-size: var(--sl-font-h2);
+}
+
+/* Axis: the head in mono capitals, as the window of the panel sets its name; the size stays with the axis above */
+:root[data-fr-head="caps"] .sl-pane-title {
+  color: var(--sl-text-muted);
+  font-family: var(--sl-face-mono);
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
 }
 
 /* Axis: the size of the bare icon of a head; 18 is what the theme draws, the other three are the steps beside it */

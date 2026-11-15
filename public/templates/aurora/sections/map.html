@@ -8,7 +8,7 @@
       {% else %}
       <i class="bi bi-geo-alt" aria-hidden="true"></i>
       {% endif %}
-      <button type="button" class="sl-but"><i class="bi bi-map" aria-hidden="true"></i>{{ _LAYOUT_MAP }}</button>
+      <button type="button" class="sl-but"><i class="bi bi-map" aria-hidden="true"></i>{{ _SHOW }}</button>
       <template><iframe src="{{ point_frame }}" title="{{ title }}"></iframe></template>
     </div>
   </div>
@@ -18,13 +18,13 @@
     {% if parts.address %}
     <div class="sl-pres-tech-card" data-sl-tone="primary">
       <i class="bi bi-geo-alt" aria-hidden="true"></i>
-      <div><b>{{ _LAYOUT_ADDR }}</b><span class="sl-sec-lines">{{ parts.address }}</span></div>
+      <div><b>{{ _ADDRESS }}</b><span class="sl-sec-lines">{{ parts.address }}</span></div>
     </div>
     {% endif %}
     {% if parts.phone %}
     <div class="sl-pres-tech-card" data-sl-tone="primary">
       <i class="bi bi-telephone" aria-hidden="true"></i>
-      <div><b>{{ _LAYOUT_TEL }}</b><span><a href="tel:{{ parts.phone }}">{{ parts.phone }}</a></span></div>
+      <div><b>{{ _PHONE }}</b><span><a href="tel:{{ parts.phone }}">{{ parts.phone }}</a></span></div>
     </div>
     {% endif %}
     {% if parts.email %}

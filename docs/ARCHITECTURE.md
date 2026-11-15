@@ -803,6 +803,99 @@ Security can exit early for blocked or invalid requests before the normal
 Security behavior is part of the runtime contract. Do not optimize or bypass it
 without focused regression tests.
 
+## Captcha Boundary
+
+The captcha is `core/classes/captcha.php`: the class `Captcha`, its provider
+`AltchaCaptchaProvider` and the file store `CaptchaStore`. ALTCHA is a proof of
+work and scores nobody; the build is `plugins/altcha/altcha.min.js` (3.5.0) with
+`altcha-init.js` beside it. A captcha never replaces the token of a form.
+
+**Where it stands.** `getCaptcha()` of `core/system.php` is called for five
+actions, and one look serves all of them:
+
+| Action | Forms | Switch of `security.captcha` |
+|---|---|---|
+| `register` | `newuser()` of `modules/account` | `register` |
+| `contact` | `modules/contact`, `modules/recommend` | `contact` |
+| `comment` | `core/user.php`, `modules/node/index.php` | `comments` |
+| `login` | `modules/account/index.php`, `blocks/login.php`, `blocks/user_info.php`, the header form of `core/system.php` | `login_user` |
+| `adminlogin` | `admin/index.php` | `login_admin` |
+
+`Captcha::isActive()` shows the captcha of a registration, a contact form or a
+comment to a guest alone. A login takes a mode instead of a switch: `always`,
+`never`, or `after-fail`, which shows the captcha after three misses from the
+address within fifteen minutes. The shipped
+`config/security.php` holds `active` `0`, `login_user` `after-fail` and
+`login_admin` `always`; `public/setup.php` writes `active` `1` and `login_admin`
+`after-fail` into a fresh installation.
+
+**What a form prints.** `AltchaCaptchaProvider::html()` prints
+`fragments/captcha-altcha.html`, the same file in `admin` and `aurora`:
+`<altcha-widget auto="onsubmit">` with the `configuration`
+`{"hideFooter":true,"hideLogo":true,"display":<look>,"floatingPersist":true}`
+inside `<div class="sl-captcha" data-display="<look>">`, the honeypot `sl_url`
+and the time token `sl_ct`. The challenge comes from `index.php?go=captcha`.
+
+**The look** is `security.captcha.display`, one for every form of the site and
+for the login of the panel. `standard` is the frame "Я не робот" with a
+checkbox; any other value and a missing key are `floating`: the form draws
+nothing, and the small widget stands beside the submit button for the time of
+the proof and leaves with it. The row "Вид" (`_CAPTCHA_LOOK`,
+`_CAPTCHA_HIDDEN`, `_CAPTCHA_VISIBLE`, the select `cap_display`) of the window
+"Капча" in `config()` of `admin/modules/security.php` chooses it, and
+`configsave()` writes it with the other keys: `active`, `provider`, `register`,
+`contact`, `comments`, `login_user`, `login_admin`, `ttl`, `difficulty`,
+`storage`.
+
+**How the hidden widget behaves.**
+
+- The build anchors the floating widget to the first submit button of the form,
+  shows it on the submit event, proves, then sends the form by itself with the
+  button that was pressed. The anchor is resolved once, at the first scroll,
+  resize or show: `configure({floatingAnchor})` on the submit moves it only on a
+  page nobody scrolled, so no anchor of our own is laid over the build. In a
+  form of several submit buttons (the add form of Node, "Предпросмотр" before
+  "Отправить") the widget stands at the first one, whichever was pressed.
+- `floatingPersist` keeps the widget on the screen while it proves. Without it
+  the build hides the widget on any click outside it, and a click beside the
+  form, a second press or Enter during a long proof left a button that looked
+  dead. The form itself is not at risk: while it proves the build makes its
+  checkbox required, a second press sends nothing, and the one send carries the
+  proof.
+- A proof that cannot start (the challenge request cut) leaves the widget
+  beside the button with "Я не робот" and the red popover of the build; nothing
+  is sent, and the next press proves and sends. That popover wears the colours
+  of the build with either look, no token.
+- A request of htmx waits for the proof. htmx sends on the click of a submit
+  button and the submit event never fires, so the listener of `htmx:confirm` in
+  `altcha-init.js` stops a request raised by a form or by its submit button
+  while the widget is unsolved, shows and proves the widget and issues the
+  request on `verified`; the listener of `htmx:afterRequest` resets the widget,
+  since a proof is accepted once and the form stays on the page. The comment
+  form (`#formcsave`, a button with `hx-post`) is such a form. No test holds
+  the wait: a new htmx form with a captcha is checked in a browser.
+
+**The styles** are `.sl-captcha` in `assets/css/theme.css` of both themes.
+Hidden, `.sl-captcha[data-display="floating"]` leaves the flow, and so does
+what only wraps it: the row of the login list in `admin`, `.sl-user-captcha`
+and `.sl-oauth-captcha` in `aurora`. The place of the submit button and the
+size of a form are then the same as with the captcha off. The floating widget
+wears the popover of its theme through the rules of
+`.sl-captcha .altcha[data-display="floating"]`: ground, border, radius, shadow
+and layer from the tokens, the arrow in the colour of the ground.
+
+**The guards beside the proof.** `Captcha::check()` refuses a filled honeypot,
+a time token younger than 2 s (`minSeconds()`) or older than `ttl` (600 s by
+default), and an address past 30 failed proofs within `ttl`; a refusal comes
+back as `_SECCODEINCOR` on the form shown again, which says to send it once
+more. A script that presses at once is refused with either look: `setSession()`
+of `tools/ui-probe.mjs` cannot sign in while the captcha of the stand is on.
+
+**Measured** on slaed.net, 2026-11-12: the proof takes about 0.5 s in Chromium,
+1 s in Firefox and 11–13 s in the WebKit build of Playwright for Windows; a
+real Safari was not measured. `CaptchaLookTest` holds what `html()` prints per
+look in both themes and that the two fragments are one file.
+
 ## Cache And Scheduler Boundary
 
 Cache runtime:
@@ -1005,9 +1098,7 @@ and no bounds (`docs/WINDOW.md`), and the limit sentence of the window
 (`getFileManagerText()`) names the formats and the weight alone. `getImageThumb()` (`core/system.php`) builds
 a thumbnail by width, in the format of the source, with no orientation. An
 image already stored is not scaled, and nothing is scaled in the browser before
-the transfer. The demo (`DEMO_FAIL.dimensions` of `public/demo/assets/demo.js`)
-keeps its refusal on the bounds at the pick; the difference from the product is
-known and stays.
+the transfer.
 
 ### Measured
 
@@ -1792,7 +1883,8 @@ Use these documents as the primary sources for their topics:
 |---|---|
 | Engineering principles | `docs/PRINCIPLES.md` |
 | Template runtime, theme contract and gates | `docs/TEMPLATES.md` |
-| Window canon | `docs/WINDOW.md` |
+| The window `.sl-pane` of the panel and of the site | `docs/TEMPLATES.md`, "Panel Window" and "Site Window" |
+| Window canon, the dialog | `docs/WINDOW.md` |
 | Parser behavior | `docs/PARSER.md` |
 | Editor system | `docs/EDITORS.md` |
 | Plugin architecture notes | `docs/PLUGINS.md` |

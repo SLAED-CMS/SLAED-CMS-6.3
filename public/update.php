@@ -1174,13 +1174,13 @@ function setMigratePage(string $fail): void {
         $done = ($state['data'][$mod]['state'] ?? '') === 'done';
         $open = $open || (!$done && $one['block'] === '');
         $one = ($state['data'][$mod]['count'] ?? []) + $one;
-        $cells = [$mod.' → '.$one['type'], $one['rows'], $one['comments'], $one['favorites'], $one['categories'], $one['block'] ?: ($done ? _NODE_MIGDONE : _NODE_MIGWAIT)];
+        $cells = [$mod.' → '.$one['type'], $one['rows'], $one['comments'], $one['favorites'], $one['categories'], $one['block'] ?: ($done ? _DONE : _WAITING)];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells' => array_map(fn(mixed $v): array => ['text' => (string)$v], $cells)]);
     }
     $head = array_map(fn(string $v): array => ['text' => $v], [_TYPE, _NODE_MIGROWS, _COMMENTS, _FAVORITES, _CATEGORIES, _STATUS]);
     $cont = $tpl->getHtmlFrag('alert', ['text' => _NODE_MIGINFO]);
     if ($fail !== '') $cont .= $tpl->getHtmlFrag('alert', ['type' => 'error', 'messages' => [_NODE_MIGSTOP, $fail]]);
-    elseif (!$open && $state['routes']) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'success', 'text' => _NODE_MIGDONE]);
+    elseif (!$open && $state['routes']) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'success', 'text' => _DONE]);
     $cont .= $tpl->getHtmlFrag('table', ['headers' => $head, 'rows_html' => $rows]);
     foreach ($state['notes'] as $mod => $list) {
         if ($list) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_map(fn(string $v): string => $mod.': '.$v, $list)]);
@@ -1190,7 +1190,7 @@ function setMigratePage(string $fail): void {
         foreach (['op' => 'run', 'token' => getSiteToken('update')] as $key => $val) {
             $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
         }
-        $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'play-circle', 'title' => _NODE_MIGRUN, 'label' => _NODE_MIGRUN]);
+        $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'play-circle', 'title' => _LAUNCH, 'label' => _LAUNCH]);
     }
     setHead(['title' => _NODE_MIGRATE]);
     echo $tpl->getHtmlFrag('title', ['title' => _NODE_MIGRATE, 'is_level_one' => true, 'content' => $cont]);

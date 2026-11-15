@@ -11,7 +11,7 @@ function getCommentBody(array $val, bool $oob = false): array {
     global $conf, $tpl, $prs;
     $own = isset($conf['node']['types'][$val['modul']]) ? ['node', intval($val['cid'] ?? 0)] : ['comment', intval($val['id'])];
     $sent = (string)($val['edited'] ?? '');
-    $badge = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_COMMENTS_EDITED, 'label' => format_time($sent, _TIMESTRING),
+    $badge = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_CHANGED, 'label' => format_time($sent, _TIMESTRING),
         'is_comment_edit' => true]) : '';
     return [
         'text' => $prs->filterContent($val['body'], true, getCommentPlace($val['modul']), 2, 'breaks', $own),
@@ -69,7 +69,7 @@ function getCommentView(array $val, int $numb, string $token): string {
     $aweb = (string)($usr['website'] ?? '');
     $uitems = [];
     if (($mods || is_user() || $conf['comments']['anonpost'] != 0) && $deep + 2 <= 20) {
-        $uitems[] = ['href' => '#formcsave', 'title' => _COMMENTS_REPLY, 'icon_name' => 'reply', 'link_attr' => 'data-sl-reply="'.$cmid.'"'];
+        $uitems[] = ['href' => '#formcsave', 'title' => _REPLY, 'icon_name' => 'reply', 'link_attr' => 'data-sl-reply="'.$cmid.'"'];
     }
     if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($anam)) {
         $uitems[] = ['href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'uname' => rawurlencode($anam)]), 'title' => _SENDMES, 'icon_name' => 'envelope'];
@@ -169,8 +169,8 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, array
         'href' => getSeoUrl($pag + ['com' => $next]).'#comm',
         'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentPage&id='.$cid.'&mod='.$mod.'&com='.$next,
         'hx_headers' => $token,
-        'title' => (string)_COMMENTS_MORE,
-        'label' => (string)_COMMENTS_MORE,
+        'title' => (string)_MORE,
+        'label' => (string)_MORE,
         'is_htmx' => true,
         'hx_target' => 'this',
         'hx_swap' => 'outerHTML',
@@ -438,7 +438,7 @@ function getUserBlock(): string {
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
         $userblock = $prs->filterContent($userblock, true, 'profile', 2, '', ['profile', $uid], true);
-        return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock, 'icon' => 'list-ul', 'level' => 2]);
+        return $tpl->getHtmlFrag('block-all', ['title' => _OWNMENU, 'content' => $userblock, 'icon' => 'list-ul', 'level' => 2]);
     }
     return '';
 }
@@ -989,7 +989,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             if ($val !== '') $keys .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
         }
         $found = $seek ? sprintf(_PRFOUND, $data['total'], $prv->getMessageCount($uid, $box)) : '';
-        getPrivatShown(($found !== '') ? $found : ($data['total'] ? sprintf(_PRSHOWN, $data['offset'] + 1, min($data['offset'] + $data['limit'], $data['total'])) : ''));
+        getPrivatShown(($found !== '') ? $found : ($data['total'] ? sprintf(_PAGERANGE, $data['offset'] + 1, min($data['offset'] + $data['limit'], $data['total'])) : ''));
         return $tpl->getHtmlPart('privat-list', [
             'groups' => array_values($days),
             'empty' => $seek ? ['is_found' => true, 'act_url' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'typ' => $typ])] : [],
@@ -1026,7 +1026,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
                 'title' => (string)_PRNEW,
                 'chips_html' => $chips,
                 'is_wipe' => true,
-                'wipe_label' => (string)_PRWIPE,
+                'wipe_label' => (string)_CLEAN,
                 'is_carry' => $post !== '' || $head !== '' || $info !== '',
                 'carry_name' => $post,
                 'carry_title' => $head,

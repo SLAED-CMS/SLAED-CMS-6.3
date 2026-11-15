@@ -8,8 +8,8 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 # Resolve one campaign state to the word an operator reads for it, in the vocabulary the queue uses everywhere else
 function getCampState(int $stat): string {
-    $map = [0 => _NLSTDRAFT, 1 => _NLSTPREP, 2 => _NLSTQUEUE, 3 => _NLSTCANAR, 4 => _NLSTHELD, 5 => _NLSTRUN, 6 => _NLSTDONE, 7 => _NLSTSTOP];
-    return $map[$stat] ?? _NLSTDRAFT;
+    $map = [0 => _DRAFT, 1 => _PREPARING, 2 => _QUEUED, 3 => _NLSTCANAR, 4 => _NLSTHELD, 5 => _NLSTRUN, 6 => _NLSTDONE, 7 => _NLSTSTOP];
+    return $map[$stat] ?? _DRAFT;
 }
 
 # Describe the stored audience criterion of one mailing, because the addresses it expanded to are no longer kept anywhere
@@ -82,7 +82,7 @@ function getCampActions(array $camp, int $left): array {
     if ($open && (string)$camp['audit'] !== '') {
         $nums[$camp['audit'].'-'.$camp['apar']] ??= getMailAudienceNum((string)$camp['audit'], (string)$camp['apar']);
         $whom = getCampAudit((string)$camp['audit'], (string)$camp['apar']).' - '.$nums[$camp['audit'].'-'.$camp['apar']];
-        $name = ($stat === 0) ? _NLLAUNCH : _NLRERUN;
+        $name = ($stat === 0) ? _LAUNCH : _NLRERUN;
         $acts[] = getTplPostAction(['op' => 'launch'] + $keys, ($stat === 0) ? 'send' : 'arrow-repeat', $name, $name.' "'.$camp['title'].'"? '.$whom);
     }
     if (in_array($stat, [4, 7], true)) $acts[] = getTplPostAction(['op' => 'release'] + $keys, 'play', _NLFREE, _NLFREE.' "'.$camp['title'].'"?');
@@ -278,8 +278,8 @@ function add(): void {
             ],
         ],
         ])]),
-        'actions_html' => $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'launch', 'value_attr' => '1', 'label' => _NLLAUNCH, 'icon_name' => 'send',
-            'is_green' => true, 'button_attr' => 'data-sl-confirm="'.htmlspecialchars(_NLLAUNCH.'?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"']),
+        'actions_html' => $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'launch', 'value_attr' => '1', 'label' => _LAUNCH, 'icon_name' => 'send',
+            'is_green' => true, 'button_attr' => 'data-sl-confirm="'.htmlspecialchars(_LAUNCH.'?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"']),
         'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
@@ -402,7 +402,7 @@ function getQueueSearch(string $kind, string $stat): string {
     $kinds = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $kind === '']];
     foreach (getQueueKinds() as $name) $kinds[] = ['value_attr' => $name, 'label_text' => $name, 'is_selected' => $name === $kind];
     $stats = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $stat === '']];
-    foreach ([_MAIL_PEND, _MAIL_ACCEPT, _MAIL_FAILED] as $num => $label) {
+    foreach ([_QUEUED, _MAIL_ACCEPT, _MAIL_FAILED] as $num => $label) {
         $stats[] = ['value_attr' => (string)$num, 'label_text' => $label, 'is_selected' => $stat === (string)$num];
     }
     return $tpl->getHtmlFrag('list-filter', [
@@ -444,7 +444,7 @@ function queue(): void {
     $back = 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.$data['page'];
     $tally = $mailer->getStats();
     $items = [];
-    $parts = [[_MAIL_PEND, 'pend', 'hourglass-split'], [_MAIL_HELD, 'hold', 'pause-circle'], [_MAIL_ACCEPT, 'sent', 'check2-circle'], [_MAIL_FAILED, 'fail', 'x-circle']];
+    $parts = [[_QUEUED, 'pend', 'hourglass-split'], [_MAIL_HELD, 'hold', 'pause-circle'], [_MAIL_ACCEPT, 'sent', 'check2-circle'], [_MAIL_FAILED, 'fail', 'x-circle']];
     foreach ($parts as [$label, $key, $icon]) $items[] = ['label' => $label, 'value' => filterDecimal($tally[$key], 0), 'icon' => $icon];
     $rows = [];
     foreach ($data['rows'] as $row) {
@@ -497,7 +497,7 @@ function getQueueState(array $row): string {
     $stat = intval($row['status']);
     if ($stat === 1) return _MAIL_ACCEPT;
     if ($stat === 2) return _MAIL_FAILED;
-    return (intval($row['hold']) === 1) ? _MAIL_HELD : _MAIL_PEND;
+    return (intval($row['hold']) === 1) ? _MAIL_HELD : _QUEUED;
 }
 
 # Make one failed row due again after whatever refused it has been fixed
@@ -583,8 +583,8 @@ function dead(): void {
         $why = getDeadReason((string)$row['code']);
         $drop = getTplPostAction(['op' => 'revive', 'id[]' => $row['id']] + $keep, 'arrow-counterclockwise', _MAIL_REVIVE);
         $mail = filterTextHighlight(htmlspecialchars((string)$row['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng']);
-        $tips = [['label' => _MAIL_WHY, 'value' => $why], ['label' => _ERROR, 'value' => $note], ['label' => _DATE, 'value' => format_time((string)$row['time'], _TIMESTRING)],
-            ['label' => _MAIL_FAILS, 'value' => (string)$row['fails']]];
+        $tips = [['label' => _REASON, 'value' => $why], ['label' => _ERROR, 'value' => $note], ['label' => _DATE, 'value' => format_time((string)$row['time'], _TIMESTRING)],
+            ['label' => _NLFAILS, 'value' => (string)$row['fails']]];
         if ((string)$row['note'] !== '') $tips[] = ['label' => _MAIL_WHYSAID, 'has_value_text' => true, 'value_text' => (string)$row['note']];
         $rows[] = ['name' => (string)$row['email'], 'details' => $tips, 'drop' => $drop + ['later' => 'gone move'], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
@@ -604,8 +604,8 @@ function dead(): void {
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _EMAIL, 'is_truncate' => true],
-            ['content' => _MAIL_WHY, 'is_truncate' => true],
-            ['content' => _MAIL_FAILS, 'is_col_count' => true],
+            ['content' => _REASON, 'is_truncate' => true],
+            ['content' => _NLFAILS, 'is_col_count' => true],
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _ERROR, 'is_col_status' => true, 'is_head_error' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
@@ -668,7 +668,7 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), '', '', $fids);
     $fids = getFieldIds('', 'mailfname');
-    $mess[] = getMailRow(_MAIL_FROMNAME, $tpl->getHtmlFrag('input', [
+    $mess[] = getMailRow(_SENDERNAME, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailfname',
         'input_id' => $fids['input'],
@@ -897,7 +897,7 @@ function mailconf(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('newsletter')],
         ],
         'is_valid' => true,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
@@ -1028,7 +1028,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('newsletter')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();

@@ -331,7 +331,7 @@ function passwd(): void {
         'action_url' => $afile.'.php?name=security',
         'hidden' => $hidden,
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'key', 'title' => _ACCESS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();
@@ -453,7 +453,7 @@ function oauthkeys(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'person-badge', 'title' => _SEC_OAUTH, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();
@@ -530,7 +530,7 @@ function config(): void {
     ];
     $guard = [
         [
-            'label_html' => _SEC_URL_GET,
+            'label_html' => sprintf(_SEC_URL, 'GET'),
             'label_id' => $labid = getFieldIds('', 'url_get')['label'],
             'field_html' => getTplRadioGroup([
                 'labelledby' => $labid,
@@ -540,7 +540,7 @@ function config(): void {
             ]),
         ],
         [
-            'label_html' => _SEC_URL_POST,
+            'label_html' => sprintf(_SEC_URL, 'POST'),
             'label_id' => $labid = getFieldIds('', 'url_post')['label'],
             'field_html' => getTplRadioGroup([
                 'labelledby' => $labid,
@@ -642,7 +642,7 @@ function config(): void {
         'label_id' => $labid = getFieldIds('', 'cap_comments')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cap_comments', 'value' => (string)(int)!empty($cap['comments']), 'options' => $yesno]),
     ];
-    $capmode = [['value' => 'never', 'label' => _CAPTCHA_NEVER], ['value' => 'after-fail', 'label' => _CAPTCHA_AFTERFAIL], ['value' => 'always', 'label' => _CAPTCHA_ALWAYS]];
+    $capmode = [['value' => 'never', 'label' => _NEVER], ['value' => 'after-fail', 'label' => _CAPTCHA_AFTERFAIL], ['value' => 'always', 'label' => _ALWAYS]];
     $opts = [];
     foreach ($capmode as $item) {
         $opts[] = [
@@ -739,7 +739,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
         'content_html' => $boxes,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();

@@ -45,4 +45,3 @@ define('_TPOP','Un th&#232;me populaire');
 define('_TPOPN','Un th&#232;me populaire a de nouveaux messages');
 define('_TVIEWS','Vues');
 define('_WARNPF','Publication sur le forum d&#233;sactiv&#233;e!');
-define('_REPLY','R&#233;pondre');

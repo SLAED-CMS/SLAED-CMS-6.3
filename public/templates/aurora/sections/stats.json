@@ -18,9 +18,9 @@
         "fields": [
             {"key": "value", "label": "_LAYOUT_NUM", "type": "text"},
             {"key": "unit", "label": "_LAYOUT_UNIT", "type": "text"},
-            {"key": "label", "label": "_LAYOUT_CAPTION", "type": "text"}
+            {"key": "label", "label": "_CAPTION", "type": "text"}
         ],
-        "make": {"value": "100", "unit": "", "label": "_LAYOUT_CAPTION"}
+        "make": {"value": "100", "unit": "", "label": "_CAPTION"}
     },
     "make": {
         "title": "_LAYOUT_STATS_TTL",
@@ -28,9 +28,9 @@
         "icon": "bar-chart",
         "tone": "",
         "items": [
-            {"value": "10", "unit": "", "label": "_LAYOUT_CAPTION"},
-            {"value": "500", "unit": "", "label": "_LAYOUT_CAPTION"},
-            {"value": "24/7", "unit": "", "label": "_LAYOUT_CAPTION"}
+            {"value": "10", "unit": "", "label": "_CAPTION"},
+            {"value": "500", "unit": "", "label": "_CAPTION"},
+            {"value": "24/7", "unit": "", "label": "_CAPTION"}
         ]
     }
 }

@@ -33,7 +33,7 @@ namespace Tests\Unit {
             if (!function_exists('getTplAdminList')) require_once dirname(__DIR__, 2).'/core/helpers.php';
             $text = [
                 '_BACK' => 'Back', '_NEXT' => 'Next', '_OVERALL' => 'In total', '_PAGE' => 'Page', '_NUMOF' => '%1$s of %2$s', '_PAGERANGE' => 'Showing %1$s–%2$s',
-                '_NO_INFO' => 'No info', '_ADM_STD' => 'Standard', '_ADM_FULL' => 'Full', '_ADM_DENSE' => 'Dense', '_ADM_CARDS' => 'Cards', '_ADM_PICKED' => 'Picked: %s',
+                '_NO_INFO' => 'No info', '_STANDARD' => 'Standard', '_ADM_FULL' => 'Full', '_ADM_DENSE' => 'Dense', '_CARDS' => 'Cards', '_ADM_PICKED' => 'Picked: %s',
                 '_ADM_ALLN' => 'Pick all %s', '_CHECKALL' => 'Check all', '_DETAILS' => 'Details', '_TIMESTRING' => 'd.m.Y H:i', '_ACTIVATE' => 'Activate',
                 '_DEACTIVATE' => 'Deactivate', '_DELETE' => 'Delete', '_ACT' => 'Active', '_DEACT' => 'Inactive', '_ALL' => 'All', '_ADM_ROWWORD' => 'rows',
                 '_ADM_ROWSPG' => '%s pages', '_ADM_ROWSONE' => 'on one page', '_ADM_ROWSCAP' => 'only up to %s', '_ADM_ROWSTIP' => 'From %1$s to %2$s',

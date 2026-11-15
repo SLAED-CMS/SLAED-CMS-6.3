@@ -4,12 +4,6 @@
 # License: MIT
 # Website: slaed.net
 
-define('_CHLOG_SEARCH','Пошук');
-define('_CHLOG_AUTHOR','Автор');
-define('_CHLOG_FILE','Файл');
-define('_CHLOG_DATE','Дата');
-define('_CHLOG_DATE_FROM','Дата від');
-define('_CHLOG_DATE_TO','Дата до');
 define('_CHLOG_CHANGES','Зміни');
 define('_CHLOG_COMMIT','Коміт');
 define('_CHLOG_FILES','Файл(и)');
@@ -18,7 +12,6 @@ define('_CHLOG_CACHE_TTL','Cache TTL (секунди)');
 define('_CHLOG_EXPORT','Експорт');
 define('_CHLOG_EXPORT_TXT','Експорт TXT');
 define('_CHLOG_EXPORT_MD','Експорт Markdown');
-define('_CHLOG_SOURCE','Джерело');
 define('_CHLOG_SOURCE_TITLE','Джерело changelog');
 define('_CHLOG_GH_OWNER','GitHub owner');
 define('_CHLOG_GH_REPO','GitHub repository');
@@ -26,10 +19,7 @@ define('_CHLOG_GH_TOKEN','GitHub token');
 define('_CHLOG_LIMIT','Кількість комітів');
 define('_CHLOG_GROUP_DATE','Групувати за датою');
 define('_CHLOG_SHOW_FILES','Показувати файли');
-define('_CHLOG_SHOW_STATS','Статистика');
 define('_CHLOG_STATS_TITLE','Параметри відображення');
-define('_CHLOG_TODAY','Сьогодні');
-define('_CHLOG_YESTERDAY','Вчора');
 define('_CHLOG_THIS_WEEK','Цього тижня');
 define('_CHLOG_ERR_GH_CONF','GitHub власник/репозиторій не налаштовано.');
 define('_CHLOG_ERR_GH_CONNECT','GitHub API: помилка з’єднання.');

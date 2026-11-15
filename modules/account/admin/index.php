@@ -428,10 +428,10 @@ function add(bool $fresh = false): void {
         ]),
     ];
     $sets[] = [
-        'label_html' => _MENUCONF, 'hint_html' => _MENUINFO,
+        'label_html' => _OWNMENU, 'hint_html' => _MENUINFO,
         'label_id' => ($fids = getFieldIds('', 'block'))['label'], 'hint_id' => $fids['hint'],
-        'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MENUCONF,
-            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'profile', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
+        'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _OWNMENU,
+            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'profile', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _OWNMENU, 'required' => '',
         ]),
     ];
     $marks[] = [
@@ -756,7 +756,7 @@ function pointreset(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('account')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'arrow-counterclockwise', 'title' => _NULLPOINTS, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();
@@ -1022,7 +1022,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('account')],
         ],
         'content_html' => $boxes,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();

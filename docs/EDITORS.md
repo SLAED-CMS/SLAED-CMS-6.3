@@ -136,8 +136,8 @@ either: its `getAssets()` prints `cm6.css` once and its widget names the core an
 
 ## The Shell
 
-One component in canon, byte-identical in `templates/admin` and `templates/aurora`, as the window canon is. The look is the
-stand's final face `public/demo/ed-code-09-final.html`: at rest the text, the format tab and the rail; under the hand the
+One component in canon, byte-identical in `templates/admin` and `templates/aurora`, as the window canon is. The look:
+at rest the text, the format tab and the rail; under the hand the
 command capsule beside the tab; the status line under the text.
 
 ```

@@ -14,14 +14,14 @@
         "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "media"}, {"type": "team"}, {"type": "stats"}, {"type": "faq"}]
     },
     "services": {
-        "title": "_LAYOUT_RS_SERV",
+        "title": "_SERVICES",
         "note": "_LAYOUT_RS_SERV_I",
         "icon": "briefcase",
         "band": false,
         "sections": [{"type": "hero"}, {"type": "features", "make": {"look": "line"}}, {"type": "steps"}, {"type": "prices"}, {"type": "cta"}]
     },
     "portfolio": {
-        "title": "_LAYOUT_RS_FOLIO",
+        "title": "_PORTFOLIO",
         "note": "_LAYOUT_RS_FOLIO_I",
         "icon": "images",
         "band": false,
@@ -35,7 +35,7 @@
         "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "map"}, {"type": "module", "make": {"module": "contact"}}]
     },
     "faq": {
-        "title": "_LAYOUT_FAQ",
+        "title": "_FAQ",
         "note": "_LAYOUT_RS_FAQ_I",
         "icon": "patch-question",
         "band": false,
@@ -56,7 +56,7 @@
         "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "item"}]
     },
     "jobs": {
-        "title": "_LAYOUT_RS_JOBS",
+        "title": "_JOBS",
         "note": "_LAYOUT_RS_JOBS_I",
         "icon": "person-workspace",
         "band": false,

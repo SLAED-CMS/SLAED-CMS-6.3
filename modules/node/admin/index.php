@@ -56,7 +56,7 @@ function checkNodeMethod(array $allow): void {
 # The label of a state of a material
 function getNodeStateLabel(NodeStatus $one): string {
     return match ($one) {
-        NodeStatus::Draft => _NODE_SDRAFT,
+        NodeStatus::Draft => _DRAFT,
         NodeStatus::Pending => _NODE_SPEND,
         NodeStatus::Published => _NODE_SPUB,
         NodeStatus::Disabled => _NODE_SOFF,
@@ -108,7 +108,7 @@ function getNodeDiff(NodeType $type, Node $now, array $vals, array $ext = []): a
     if ($type->ext === 'sync' && [trim((string)($vals['ext']['url'] ?? '')), (string)($vals['ext']['refresh'] ?? '')] !== [(string)($ext['url'] ?? ''),
         (string)($ext['refresh'] ?? '')]) $out[] = _NODE_SOURCE;
     $cut = fn(string $key, mixed $v): string => ($key === 'place') ? trim((string)$v) : substr(str_replace('T', ' ', trim((string)$v)), 0, 16);
-    foreach (($type->ext === 'event') ? ['starts' => _NODE_STARTS, 'ends' => _NODE_ENDS, 'place' => _NODE_PLACE] : [] as $key => $label) {
+    foreach (($type->ext === 'event') ? ['starts' => _NODE_STARTS, 'ends' => _ENDS, 'place' => _NODE_PLACE] : [] as $key => $label) {
         if ($cut($key, $vals['ext'][$key] ?? '') !== $cut($key, $ext[$key] ?? '')) $out[] = $label;
     }
     $fields = $vals['fields'];
@@ -170,7 +170,7 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
         $hidden[] = ['name_attr' => 'id', 'value_attr' => $id];
         $hidden[] = ['name_attr' => 'version', 'value_attr' => $ver];
         $opts = [['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true],
-            ['value_attr' => 'save', 'label_text' => _SAVECHANGES]];
+            ['value_attr' => 'save', 'label_text' => _SAVE]];
         $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options' => $opts, 'is_inline_gap' => true])
             : $tpl->getHtmlFrag('hidden', ['name_attr' => 'action', 'value_attr' => 'save', 'input_attr' => '']);
     } else {
@@ -186,7 +186,7 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
         'hidden' => $hidden,
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'file-text', 'title' => _NODE_ITEM, 'facts' => ($head !== '') ? [['text' => $head]] : [],
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'actions_html' => $act.$tpl->getHtmlFrag('button', ['submit_label' => $clash ? _OK : _SAVECHANGES, 'button_type' => 'submit']),
+        'actions_html' => $act.$tpl->getHtmlFrag('button', ['submit_label' => $clash ? _OK : _SAVE, 'button_type' => 'submit']),
     ])]);
 }
 
@@ -497,7 +497,7 @@ function edit(): void {
             ['label_html' => _URL, 'field_html' => htmlspecialchars($card['url'], ENT_QUOTES, 'UTF-8')],
             ['label_html' => _NODE_PERIOD, 'field_html' => $card['refresh'] ? $card['refresh'].' '._SEC : _NODE_MANUAL],
             ['label_html' => _NODE_DUE, 'field_html' => htmlspecialchars($when($card['due']), ENT_QUOTES, 'UTF-8')],
-            ['label_html' => _NODE_CHECKED, 'field_html' => htmlspecialchars($when($card['checked']), ENT_QUOTES, 'UTF-8')],
+            ['label_html' => _LASTCHECK, 'field_html' => htmlspecialchars($when($card['checked']), ENT_QUOTES, 'UTF-8')],
             ['label_html' => _NODE_SYNCED, 'field_html' => htmlspecialchars($when($card['synced']), ENT_QUOTES, 'UTF-8')],
             ['label_html' => _NODE_FAILS, 'has_field_text' => true, 'field_text' => $card['fails']],
             ['label_html' => _ERROR, 'field_html' => ($card['error'] !== '') ? htmlspecialchars($card['error'], ENT_QUOTES, 'UTF-8') : _NO],
@@ -646,7 +646,7 @@ function types(): void {
         $dial = [['href' => $afile.'.php?name=node&op=type&type='.$name, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true]];
         if ($type->active) $dial[] = ['href' => getSeoUrl(['name' => $name]), 'icon_name' => 'arrow-up-right-circle', 'title' => _VIEWSITE];
         if ($type->settings['features']['categories']) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'icon_name' => 'folder2', 'title' => _CATEGORIES];
-        $dial[] = ['href' => $afile.'.php?name=fields', 'icon_name' => 'plus-square-dotted', 'title' => _NODE_FIELDS];
+        $dial[] = ['href' => $afile.'.php?name=fields', 'icon_name' => 'plus-square-dotted', 'title' => _FIELDS];
         $dial[] = ['href' => $afile.'.php?name=node&op=clone&type='.$name, 'icon_name' => 'files', 'title' => _NODE_CLONE];
         $dial[] = ['href' => $afile.'.php?name=node&op=export&type='.$name, 'icon_name' => 'download', 'title' => _NODE_EXPORT];
         $turn = getTplPostAction($base + ['op' => 'typestatus', 'active' => $type->active ? 0 : 1], 'power', $type->active ? _DEACTIVATE : _ACTIVATE)
@@ -876,7 +876,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
     $rows[] = ['label_for' => 'f-side', 'label_html' => _BLOCKS_SIDE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'side', 'selectid' => 'f-side',
         'options' => $opts([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3], $set['view']['side'])])];
     $rows[] = ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'top', 'selectid' => 'f-top',
-        'options' => $opts([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3], $set['view']['top'])])];
+        'options' => $opts([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MOD3], $set['view']['top'])])];
     $tabs[] = [_LIST, $rows, 'list-ul'];
     $rows = [];
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
@@ -890,7 +890,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
     $rows[] = ['label_html' => _NODE_ACCESS, 'label_id' => 'f-access-label', 'field_html' => getTplAccessChecks('access', $cur, 0, 'f-access-label')];
     $rows[] = ['label_html' => _NODE_PUBLISH, 'label_id' => 'f-publish-label', 'field_html' => getTplAccessChecks('publish', '2|'.implode(',', $flow['publish']), 2,
         'f-publish-label')];
-    $rows[] = ['label_html' => _NODE_NOTIFY, 'label_id' => 'f-notify-label', 'field_html' => $checks('f-notify-label', [$item('notify_pending', $flow['notify']['pending'],
+    $rows[] = ['label_html' => _NOTICES, 'label_id' => 'f-notify-label', 'field_html' => $checks('f-notify-label', [$item('notify_pending', $flow['notify']['pending'],
         _NODE_NOTIFYP), $item('notify_result', $flow['notify']['result'], _NODE_NOTIFYR)])];
     $rows[] = ['label_for' => 'f-lifetime', 'label_html' => _NODE_LIFETIME, 'hint_html' => $esc(_NODE_LIFEHINT), 'hint_id' => 'f-lifetime-hint',
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'lifetime', 'input_id' => 'f-lifetime', 'value_attr' => $flow['lifetime'],
@@ -910,7 +910,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
             NodeQuery::KINDS));
         $modes = array_combine(array_keys(NodeQuery::RMODES), array_keys(NodeQuery::RMODES));
         $cell = $tpl->getHtmlPart('div', ['rows' => [
-            ['label_for' => $rid.'name', 'label_html' => _NODE_ROLE,
+            ['label_for' => $rid.'name', 'label_html' => _ROLE,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'input_id' => $rid.'name', 'name_attr' => $pre.'[name]', 'value_attr' => $name,
                 'maxlength_num' => 50])],
             ['label_for' => $rid.'title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'input_id' => $rid.'title',
@@ -934,7 +934,7 @@ function getNodeTypeTabs(array $vals, bool $new): string {
             $flag($pre.'[canlink]', (bool)$def['canlink'], _NODE_CANLINK, $rid.'canlink-label'),
             $flag($pre.'[active]', (bool)$def['active'], _NODE_ACTIVE, $rid.'active-label'),
         ]]);
-        $head = ($name !== '') ? (getConst((string)($def['title'] ?? '')) ?: $name) : _NODE_ROLE.' '.($idx + 1);
+        $head = ($name !== '') ? (getConst((string)($def['title'] ?? '')) ?: $name) : _ROLE.' '.($idx + 1);
         $facts = ($name !== '') ? [['text' => $name], ['text' => (string)($def['mode'] ?? '')]] : [];
         if ($name !== '' && (int)$def['maxbytes'] > 0) $facts[] = ['text' => filterSize((int)$def['maxbytes'])];
         $chips = ($name !== '') ? [] : [['tone' => 'neutral', 'label' => _ADD]];
@@ -1033,7 +1033,7 @@ function type(): void {
     }
     if ($prof !== null) $hidden[] = ['name_attr' => 'profile', 'value_attr' => $pname];
     $opts = [['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true],
-        ['value_attr' => 'save', 'label_text' => _SAVECHANGES]];
+        ['value_attr' => 'save', 'label_text' => _SAVE]];
     $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options' => $opts, 'is_inline_gap' => true]) : '';
     $head = '';
     if ($old === null) {
@@ -1060,7 +1060,7 @@ function type(): void {
             'hidden' => $hidden,
             'content_html' => getNodeTypeTabs($vals, $old === null),
             'is_valid' => true,
-            'actions_html' => $act.$tpl->getHtmlFrag('button', ['submit_label' => $clash ? _OK : _SAVECHANGES, 'button_type' => 'submit']),
+            'actions_html' => $act.$tpl->getHtmlFrag('button', ['submit_label' => $clash ? _OK : _SAVE, 'button_type' => 'submit']),
         ])]);
     setFoot();
 }
@@ -1264,7 +1264,7 @@ function config(): void {
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'config'], ['name_attr' => 'token',
                 'value_attr' => getSiteToken('node')]],
             'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVECHANGES, 'button_type' => 'submit']),
+            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVE, 'button_type' => 'submit']),
         ])]);
     setFoot();
 }
@@ -1316,7 +1316,7 @@ function support(): void {
     echo getNodeAdminTabs('')
         .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'kanban', 'title' => _NODE_CARD, 'content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php', 'hidden' => $hidden, 'rows' => $rows,
-            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVECHANGES, 'button_type' => 'submit'])])])
+            'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVE, 'button_type' => 'submit'])])])
             .$tpl->getHtmlFrag('pane', ['icon' => 'file-text', 'title' => getModuleName($type->name), 'content_html' => $text])])
         .$tpl->getHtmlPart('box', ['title' => _COMMENTS, 'content_html' => ($talk === '') ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NOCOMMENTS])
             : $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => [['content' => _POSTEDBY, 'is_col_author' => true], ['content' => _DATE, 'is_col_date' => true],

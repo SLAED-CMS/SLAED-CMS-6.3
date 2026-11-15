@@ -161,7 +161,7 @@ function edit(): void {
         ['label_html' => _ID, 'field_html' => (string)($row['cid'] ?? '')],
         ['label_html' => _POSTEDBY, 'field_html' => $post],
         ['label_html' => _DATE, 'field_html' => format_time((string)($row['time'] ?? ''), _TIMESTRING)],
-        ['label_html' => _COMMENTS_EDITED, 'field_html' => ((string)($row['edited'] ?? '') !== '') ? format_time((string)$row['edited'], _TIMESTRING) : (string)_NO],
+        ['label_html' => _CHANGED, 'field_html' => ((string)($row['edited'] ?? '') !== '') ? format_time((string)$row['edited'], _TIMESTRING) : (string)_NO],
         ['label_html' => _IP, 'field_html' => $iptext],
         ['label_html' => _STATUS, 'field_html' => ad_status('', $row['status'] ?? null)],
         [
@@ -185,7 +185,7 @@ function edit(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
         ], array_map(static fn($k, $v): array => ['nameattr' => $k, 'valueattr' => (string)$v], array_keys($keep), $keep)),
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'chat-text', 'title' => _COMMENT, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();
@@ -358,7 +358,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     setFoot();
 }

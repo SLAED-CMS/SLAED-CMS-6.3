@@ -2362,8 +2362,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         return false;
     }
     if (!$avail[$algo]) {
-        $errmsg = match($algo) { 'zip' => _ERR_ZIPNA, 'gz' => _ERR_GZNA, 'bz2' => _ERR_BZ2NA };
-        addErrorFile($errmsg);
+        addErrorFile(sprintf(_ERR_NA, ['zip' => 'ZIP', 'gz' => 'GZIP', 'bz2' => 'BZIP2'][$algo]));
         return false;
     }
     $exts = match($algo) {'zip' => '.zip', 'gz' => '.gz', 'bz2' => '.bz2' };
@@ -2431,7 +2430,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         $zipf = gzopen($file, 'wb');
         if (!$zipf) {
             fclose($srcf);
-            addErrorFile(_ERR_GZIP.': '.$file);
+            addErrorFile(sprintf(_ERR_PACK, 'gzip').': '.$file);
             return false;
         }
         while (!feof($srcf)) {
@@ -2445,7 +2444,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             if (gzwrite($zipf, $chunk) === false) {
                 gzclose($zipf);
                 fclose($srcf);
-                addErrorFile(_ERR_GZIP.': Write failed');
+                addErrorFile(sprintf(_ERR_PACK, 'gzip').': Write failed');
                 return false;
             }
         }
@@ -2455,7 +2454,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         $zipf = bzopen($file, 'w');
         if (!$zipf) {
             fclose($srcf);
-            addErrorFile(_ERR_BZIP.': '.$file);
+            addErrorFile(sprintf(_ERR_PACK, 'bzip2').': '.$file);
             return false;
         }
         while (!feof($srcf)) {
@@ -2469,7 +2468,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             if (bzwrite($zipf, $chunk) === false) {
                 bzclose($zipf);
                 fclose($srcf);
-                addErrorFile(_ERR_BZIP.': Write failed');
+                addErrorFile(sprintf(_ERR_PACK, 'bzip2').': Write failed');
                 return false;
             }
         }
@@ -3514,25 +3513,6 @@ function getRandomString(int $m): string {
     return $pass;
 }
 
-# Defining the server connection protocol
-function getProtocol(): string {
-    if ($_SERVER['SERVER_PORT'] == 443) {
-        $proto = 'https';
-    } elseif (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1'))) {
-        $proto = 'https';
-    } elseif (
-        !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
-        || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on'
-    ) {
-        $proto = 'https';
-    } elseif (strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, 5)) == 'https') {
-        $proto = 'https';
-    } else {
-        $proto = 'http';
-    }
-    return $proto;
-}
-
 # The meta image of a text, [attach] before a Markdown image, never a data URI; a caller rendering another module names it, or the request module decides the path
 function getImgText(string $text, string $type = '', bool $check = true, string $mod = '', array $own = []): string|false {
  global $conf;
@@ -4337,7 +4317,7 @@ function getSessionStats(): void {
             ['label' => _ADM_NOW, 'value' => $nums['all'], 'icon' => 'people', 'note' => implode(' · ', array_map(static fn(string $key): string => $text[$key].' '.$nums[$key],
                 array_filter(array_values($map), static fn(string $key): bool => $nums[$key] > 0)))],
             ['label' => _ADM_PAGES, 'value' => count($pages), 'icon' => 'file-earmark-text', 'note' => $pages ? _FAVOR_TOP.': '.$top : ''],
-            ['label' => _ADM_LANDS, 'value' => $lands ? count($lands) : '—', 'icon' => 'globe2', 'note' => $lands ? $lands[0]['name'].' · '.$lands[0]['num'] : ''],
+            ['label' => _COUNTRIES, 'value' => $lands ? count($lands) : '—', 'icon' => 'globe2', 'note' => $lands ? $lands[0]['name'].' · '.$lands[0]['num'] : ''],
         ]],
         'shares' => array_map(static fn(string $key): array => ['key' => $key, 'pct' => intval(round($nums[$key] / $all * 100))], array_values($map)),
         'rows' => $rows,
@@ -4458,7 +4438,7 @@ function getAdminBlockLinks(): array {
         $title = $ismd ? (string)$hit[6] : (preg_match('#\btitle\s*=\s*(["\'])(.*?)\1#is', $hit[1], $one) ? $one[2] : '');
         $title = trim(html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $rows[] = ['href' => $href, 'label' => ($label !== '') ? $label : $href, 'title' => ($title !== '') ? $title : $label,
-            'icon' => $local ? 'link-45deg' : 'box-arrow-up-right', 'dead_title' => $dead ? _ADM_NOFILE.': '.$rel : ''];
+            'icon' => $local ? 'link-45deg' : 'box-arrow-up-right', 'dead_title' => $dead ? _NOFILE.': '.$rel : ''];
     }
     $out = ['title' => (string)$head, 'links' => $rows];
     return $out;
@@ -5434,14 +5414,6 @@ function is_user(string $usr = ''): int {
     }
 }
 
-# Get user id
-function is_user_id(string $name): int {
- global $db;
-    $name = filterText(substr($name, 0, 25));
-    [$uid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
-    return intval($uid);
-}
-
 # Return the mail address of one existing account, or an empty string; a notice goes to the address the account stores, never one the request names
 function getUserMail(int $uid): string {
     global $db;
@@ -5859,9 +5831,9 @@ function getBlockMenu(int $bid, string $bkey, string $title): array {
     $base = HOME_PATH.$afile.'.php?name=blocks&op=';
     $menu = [
         ['href' => $base.'edit&id='.$bid, 'icon_name' => 'sliders', 'title' => _BLOCKS_SET],
-        getTplPostItem($base.'change&id='.$bid.'&act=1', 'blocks', 'eye-slash', _BLOCKS_HIDE),
+        getTplPostItem($base.'change&id='.$bid.'&act=1', 'blocks', 'eye-slash', _TURNOFF),
     ];
-    if ($bkey === '') $menu[] = getTplPostItem($base.'delete&id='.$bid, 'blocks', 'x-square', _BLOCKS_DROP, _DELETE.' "'.$title.'"?');
+    if ($bkey === '') $menu[] = getTplPostItem($base.'delete&id='.$bid, 'blocks', 'x-square', _DELETE, _DELETE.' "'.$title.'"?');
     return $menu;
 }
 
@@ -6027,7 +5999,7 @@ function getNodeMoveLabel(NodeStatus $to): array {
     return match ($to) {
         NodeStatus::Draft => [_NODE_TODRAFT, 'file-earmark'],
         NodeStatus::Pending => [_NODE_TOPEND, 'hourglass-split'],
-        NodeStatus::Published => [_NODE_TOPUB, 'check2-circle'],
+        NodeStatus::Published => [_PUBLISH, 'check2-circle'],
         NodeStatus::Disabled => [_NODE_TOOFF, 'eye-slash'],
         NodeStatus::Deleted => [_NODE_TODEL, 'trash'],
     };

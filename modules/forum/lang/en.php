@@ -45,4 +45,3 @@ define('_TPOP','A popular topic');
 define('_TPOPN','A popular theme has new messages');
 define('_TVIEWS','Views');
 define('_WARNPF','The publication on the forum is disabled!');
-define('_REPLY','Reply');

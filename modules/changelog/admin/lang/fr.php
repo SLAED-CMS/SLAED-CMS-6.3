@@ -4,12 +4,6 @@
 # License: MIT
 # Website: slaed.net
 
-define('_CHLOG_SEARCH','Terme de recherche');
-define('_CHLOG_AUTHOR','Auteur');
-define('_CHLOG_FILE','Fichier');
-define('_CHLOG_DATE','Date');
-define('_CHLOG_DATE_FROM','Date de début');
-define('_CHLOG_DATE_TO','Date de fin');
 define('_CHLOG_CHANGES','Modifications');
 define('_CHLOG_COMMIT','Commit');
 define('_CHLOG_FILES','Fichier(s)');
@@ -18,7 +12,6 @@ define('_CHLOG_CACHE_TTL','Cache TTL (secondes)');
 define('_CHLOG_EXPORT','Export');
 define('_CHLOG_EXPORT_TXT','Export TXT');
 define('_CHLOG_EXPORT_MD','Export Markdown');
-define('_CHLOG_SOURCE','Source');
 define('_CHLOG_SOURCE_TITLE','Source du changelog');
 define('_CHLOG_GH_OWNER','Propriétaire GitHub');
 define('_CHLOG_GH_REPO','Dépôt GitHub');
@@ -26,10 +19,7 @@ define('_CHLOG_GH_TOKEN','Jeton GitHub');
 define('_CHLOG_LIMIT','Nombre de commits');
 define('_CHLOG_GROUP_DATE','Grouper par date');
 define('_CHLOG_SHOW_FILES','Afficher les fichiers');
-define('_CHLOG_SHOW_STATS','Statistiques');
 define('_CHLOG_STATS_TITLE','Options d\'affichage');
-define('_CHLOG_TODAY','Aujourd\'hui');
-define('_CHLOG_YESTERDAY','Hier');
 define('_CHLOG_THIS_WEEK','Cette semaine');
 define('_CHLOG_ERR_GH_CONF','Propriétaire/dépôt GitHub non configuré.');
 define('_CHLOG_ERR_GH_CONNECT','API GitHub : connexion échouée.');

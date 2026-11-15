@@ -19,10 +19,10 @@
             {"key": "photo", "label": "_LAYOUT_PHOTO", "type": "file"},
             {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus"},
             {"key": "name", "label": "_LAYOUT_PERSON", "type": "text"},
-            {"key": "role", "label": "_LAYOUT_ROLE", "type": "text"},
+            {"key": "role", "label": "_ROLE", "type": "text"},
             {"key": "text", "label": "_LAYOUT_ABOUT", "type": "textarea"}
         ],
-        "make": {"photo": "presentation/brand/background-1.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"}
+        "make": {"photo": "presentation/brand/background-1.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_ROLE", "text": "_LAYOUT_TEAM_TEXT"}
     },
     "make": {
         "title": "_LAYOUT_TEAM",
@@ -30,9 +30,9 @@
         "icon": "people",
         "cols": "three",
         "items": [
-            {"photo": "presentation/brand/background-1.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"},
-            {"photo": "presentation/brand/background-2.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"},
-            {"photo": "presentation/brand/background-3.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"}
+            {"photo": "presentation/brand/background-1.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_ROLE", "text": "_LAYOUT_TEAM_TEXT"},
+            {"photo": "presentation/brand/background-2.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_ROLE", "text": "_LAYOUT_TEAM_TEXT"},
+            {"photo": "presentation/brand/background-3.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_ROLE", "text": "_LAYOUT_TEAM_TEXT"}
         ]
     }
 }

@@ -106,7 +106,7 @@
         },
         "fields": {
             "client": {
-                "title": "_NODE_CLIENT",
+                "title": "_CLIENT",
                 "intro": "",
                 "type": "text",
                 "default": "",
@@ -144,7 +144,7 @@
                 "sort": 30
             },
             "services": {
-                "title": "_NODE_SERVICES",
+                "title": "_SERVICES",
                 "intro": "",
                 "type": "text",
                 "default": "",

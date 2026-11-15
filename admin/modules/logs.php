@@ -44,7 +44,7 @@ function logs(): void {
             ['is_col_date' => true, 'moment' => filemtime($path)],
             ['is_col_actions' => true, 'dial' => [
                 ['href' => $afile.'.php?name=logs&op=logview&file='.urlencode($name), 'icon_name' => 'file-text', 'title' => _SHOW],
-                ['href' => $afile.'.php?name=logs&op=download&file='.urlencode($name), 'icon_name' => 'download', 'title' => _DOWN],
+                ['href' => $afile.'.php?name=logs&op=download&file='.urlencode($name), 'icon_name' => 'download', 'title' => _DOWNLOAD],
             ]],
         ]];
     }
@@ -71,7 +71,7 @@ function logview(): void {
     $file = getVar('get', 'file', 'var');
     if ($file && isset($chans[$file])) {
         $levs = array_slice(['debug', 'info', 'notice', 'warning', 'error', 'critical'], $file === 'error_file' ? 4 : 0);
-        $events = ['' => _SEC_ACTS, 'login' => _SEC_LOGINS, 'all' => _ALL];
+        $events = ['' => _ACTIONS, 'login' => _SEC_LOGINS, 'all' => _ALL];
         $results = ['done' => _SEC_DONE, 'refused' => _SEC_REFUSED, 'open' => _SEC_OPEN, 'ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
         $tones = ['done' => 'is_on', 'ok' => 'is_on', 'open' => 'is_wait', 'refused' => 'is_fail', 'password' => 'is_fail', 'blocked' => 'is_fail'];
         $words = ['add' => _ADD, 'save' => _SAVE, 'delete' => _DELETE, 'status' => _STATUS, 'updateAdminBlockOrder' => _SORTORDER, 'updateAdminCategoryOrder' => _SORTORDER];
@@ -104,7 +104,7 @@ function logview(): void {
             return ['field_id' => 'sl-log-'.$name, 'label' => $label, 'name_attr' => $name, 'options' => $opts];
         };
         $fields = $isadm ? [$pick('event', _TYPE, $events, $event, ''), $pick('modul', _MODUL, $mods, $modul, _ALL), $pick('res', _STATUS, $results, $res, _ALL)] : [];
-        $fields[] = $pick('level', _SEC_LEVEL, array_combine($levs, array_map(static fn($v) => "\u{2265} ".$v, $levs)), $levl, _ALL);
+        $fields[] = $pick('level', _LEVEL, array_combine($levs, array_map(static fn($v) => "\u{2265} ".$v, $levs)), $levl, _ALL);
         $fields[] = ['field_id' => 'sl-log-ip', 'label' => _IP, 'name_attr' => 'ip', 'itype' => 'text', 'value' => $ip];
         $fields[] = ['field_id' => 'sl-log-from', 'label' => _DATEFROM, 'name_attr' => 'from', 'itype' => 'date', 'value' => $from];
         $fields[] = ['field_id' => 'sl-log-to', 'label' => _DATETO, 'name_attr' => 'to', 'itype' => 'date', 'value' => $to];
@@ -140,7 +140,7 @@ function logview(): void {
         }
         $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true]]
             : [['content' => _MESSAGE, 'is_truncate' => true]];
-        $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head, [['content' => _IP, 'is_col_date' => true]],
+        $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _LEVEL, 'is_col_status' => true]], $head, [['content' => _IP, 'is_col_date' => true]],
             $isadm ? [['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true]] : []);
         $link = 'name=logs&op=logview&file='.$file.($event !== '' ? '&event='.$event : '').($modul !== '' ? '&modul='.$modul : '').($res !== '' ? '&res='.$res : '')
             .($levl !== '' ? '&level='.$levl : '').($ip !== '' ? '&ip='.urlencode($ip) : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
@@ -228,7 +228,7 @@ function logins(): void {
         'hidden' => [['nameattr' => 'name', 'valueattr' => 'logs'], ['nameattr' => 'op', 'valueattr' => 'logins']],
         'fields' => [
             ['field_id' => 'sl-login-uid', 'label' => _ACCOUNT.' '._ID, 'name_attr' => 'uid', 'itype' => 'number', 'value' => $uid ? (string)$uid : '', 'is_count' => true],
-            $pick('side', _SEC_ROLE, $sides, $side), $pick('res', _STATUS, $results, $res), $pick('way', _TYPE, $ways, $way),
+            $pick('side', _ROLE, $sides, $side), $pick('res', _STATUS, $results, $res), $pick('way', _TYPE, $ways, $way),
             ['field_id' => 'sl-login-from', 'label' => _DATEFROM, 'name_attr' => 'from', 'itype' => 'date', 'value' => $from],
             ['field_id' => 'sl-login-to', 'label' => _DATETO, 'name_attr' => 'to', 'itype' => 'date', 'value' => $to],
         ],
@@ -254,7 +254,7 @@ function logins(): void {
     echo getTplAdminList([
         'head_html' => getTplAdminTabs($tabset + ['tab' => 1, 'part' => [0, 1], 'subtitle_html' => $form]),
         'key' => 'logs-logins',
-        'head' => [['content' => _DATE, 'is_col_date' => true], ['content' => _ACCOUNT, 'is_truncate' => true], ['content' => _SEC_ROLE],
+        'head' => [['content' => _DATE, 'is_col_date' => true], ['content' => _ACCOUNT, 'is_truncate' => true], ['content' => _ROLE],
             ['content' => _TYPE], ['content' => _IP], ['content' => _BROWSER, 'is_truncate' => true], ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true]],
         'rows' => $rows,
         'href' => $afile.'.php?'.$link,
@@ -294,7 +294,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('logs')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();

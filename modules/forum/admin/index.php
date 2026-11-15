@@ -219,7 +219,7 @@ function config(): void {
         'action_url' => $afile.'.php?name=forum&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('forum')]],
         'content_html' => $boxes,
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ])]);
     echo $cont;
     setFoot();

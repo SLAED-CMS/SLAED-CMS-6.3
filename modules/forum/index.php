@@ -1028,7 +1028,7 @@ function getForumModerBar(int $cat, int $topic = 0): string {
         .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$cat, 'input_attr' => ''])
         .($topic ? $tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']) : '');
     return $tpl->getHtmlFrag('forum-moder', [
-        'picked_label' => $topic ? '' : _EDITOR_MARKED,
+        'picked_label' => $topic ? '' : _MARKED,
         'select_html' => tmoder(1),
         'hidden_html' => $hidden,
         'submit_html' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),

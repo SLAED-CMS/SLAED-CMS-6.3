@@ -41,7 +41,7 @@ function contact(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('contact')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     echo $cont;

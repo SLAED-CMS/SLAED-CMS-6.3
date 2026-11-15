@@ -202,7 +202,7 @@ function checkSetupDone(array $state): bool {
 function getSetupChecks(): array {
     $list = [['PHP '.PHP_VERSION, sprintf(_SETUP_NEED, '8.4'), version_compare(PHP_VERSION, '8.4.0', '>=')]];
     $exts = ['mbstring' => ['mbstring', _SETUP_MBSTRING, true], 'pdo_mysql' => ['PDO MySQL', _SETUP_PDO, true], 'json' => ['JSON', _SETUP_JSON, true],
-        'zip' => ['Zip', _SETUP_ZIP, false], 'zlib' => ['Zlib', _SETUP_ZLIB, false]];
+        'zip' => ['Zip', sprintf(_SETUP_PACK, 'ZIP'), false], 'zlib' => ['Zlib', sprintf(_SETUP_PACK, 'GZ'), false]];
     foreach ($exts as $ext => [$name, $note, $must]) {
         $has = extension_loaded($ext);
         $list[] = [$name, $has ? $note : ($must ? _SETUP_NOEXT : _SETUP_NOOPT), $has || !$must, !$has && !$must];
@@ -216,7 +216,7 @@ function getSetupChecks(): array {
     $url = getSetupUrl();
     $list[] = [strtoupper((string)parse_url($url, PHP_URL_SCHEME)), sprintf(_SETUP_ANSWERS, $url), true];
     $pub = getSetupRoot() === 'public';
-    $list[] = [_SETUP_WEBROOT, $pub ? _SETUP_ROOT_PUB : _SETUP_ROOT_PRJ, true, !$pub];
+    $list[] = [_WEBROOT, $pub ? _SETUP_ROOT_PUB : _SETUP_ROOT_PRJ, true, !$pub];
     $rows = [];
     foreach ($list as $i => $row) $rows[] = ['turn' => $i, 'text' => $row[0], 'note' => $row[1], 'is_fail' => !$row[2], 'is_warn' => $row[3] ?? false];
     return $rows;
@@ -493,7 +493,7 @@ function setSetupDone(array &$state): array {
     $alert = getSetupAlert(sprintf(_SETUP_PANEL_URL, $panel), 'info').getSetupAlert($gone ? _SETUP_GONE : _DELSETUP, $gone ? 'success' : 'warn');
     if ($state['note'] !== '') $alert .= getSetupAlert($state['note'], 'warn');
     $state = [];
-    return ['lead' => $lead, 'alert_html' => $alert, 'is_done' => true, 'site_url' => $site['url'].'/', 'site_text' => _SETUP_OPENSITE, 'panel_url' => $panel,
+    return ['lead' => $lead, 'alert_html' => $alert, 'is_done' => true, 'site_url' => $site['url'].'/', 'site_text' => _OPENSITE, 'panel_url' => $panel,
         'panel_text' => _SETUP_OPENPANEL];
 }
 
@@ -517,7 +517,7 @@ function getSetupRows(int $stop, array $state): array {
     $adm = $state['admin'];
     $list = [
         2 => [
-            ['xhost', _SETUP_SERVER, $base['host'] ?? '', ['is_required' => true]],
+            ['xhost', _SERVER, $base['host'] ?? '', ['is_required' => true]],
             ['xuname', _USER, $base['uname'] ?? '', ['is_required' => true, 'autocomplete_attr' => 'off']],
             ['xpass', _PASSWORD, '', ['itype' => 'password', 'autocomplete_attr' => 'new-password']],
             ['xname', _SETUP_DBNAME, $base['name'] ?? '', ['is_required' => true]],
@@ -572,10 +572,10 @@ function getSetupView(int $stop, array $state): array {
     } elseif ($stop >= 2 && $stop <= 4) {
         $view['rows'] = getSetupRows($stop, $state);
     } elseif ($stop === 5) {
-        $view += ['is_run' => true, 'percent' => intval(round(max(0, $state['part']) * 100 / max(1, $state['count']))), 'task' => _SETUP_PREPARE];
+        $view += ['is_run' => true, 'percent' => intval(round(max(0, $state['part']) * 100 / max(1, $state['count']))), 'task' => _PREPARING];
     }
     if ($stop === 2) $view['probe_text'] = _SETUP_PROBE;
-    if ($stop === 4) $view += ['next_text' => _SETUP_RUN, 'is_install' => true];
+    if ($stop === 4) $view += ['next_text' => _INSTALL, 'is_install' => true];
     if ($stop >= 1 && $stop <= 4) $view += ['back_text' => _BACK, 'next_text' => _NEXT];
     return $view;
 }
@@ -625,7 +625,7 @@ function setSetupStep(array $state): void {
 
 # Render one of the seven stops on the card of the admin theme; the refusal of an installed site is a stop outside them
 function setSetupPage(int $stop, array $view): void {
-    $names = [_LANGUAGE, _SETUP_SERVER, _DATABASE, _SITE, _ADMIN, _SETUP_INSTALL, _SETUP_DONE];
+    $names = [_LANGUAGE, _SERVER, _DATABASE, _SITE, _ADMIN, _SETUP_INSTALL, _DONE];
     $hide = [['name_attr' => 'token', 'value_attr' => getSetupState()['token']], ['name_attr' => 'stop', 'value_attr' => (string)$stop]];
     setCardPage(_SETUP_TITLE, $names, $stop, $view + ['action' => 'setup.php', 'hidden' => $hide, 'road_text' => _SETUP_PATH]);
 }

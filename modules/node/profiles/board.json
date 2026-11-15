@@ -107,7 +107,7 @@
         },
         "fields": {
             "price": {
-                "title": "_NODE_PRICE",
+                "title": "_PRICE",
                 "intro": "",
                 "type": "decimal",
                 "default": "",
@@ -134,7 +134,7 @@
                 "sort": 20
             },
             "phone": {
-                "title": "_NODE_PHONE",
+                "title": "_PHONE",
                 "intro": "",
                 "type": "text",
                 "default": "",

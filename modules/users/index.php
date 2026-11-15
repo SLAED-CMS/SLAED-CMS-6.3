@@ -13,7 +13,7 @@ function users(): void {
     global $db, $conf, $tpl, $pnt;
     setHead(['title' => _TOPUSERS, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
-        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _STATISTIC, 'liste_href' => '', 'add_href' => '']);
     $lim = getPageRows();
     $num = getVar('get', 'page', 'num', 1);
     $offset = (int)(($num - 1) * $lim);
@@ -87,7 +87,7 @@ function rules(): void {
     if (!$pnt->active) setRedirect(getSeoUrl(['name' => $conf['name']]));
     setHead(['title' => _TU_RULES, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
-        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _STATISTIC, 'liste_href' => '', 'add_href' => '']);
     $rows = [];
     foreach ($conf['points']['actions'] as $name => $rule) {
         if ($name === 'adjust') continue;
@@ -126,9 +126,9 @@ function rules(): void {
 
 function stats(): void {
     global $db, $conf, $tpl, $pnt;
-    setHead(['title' => _TU_STATS, 'kind' => 'collection']);
+    setHead(['title' => _STATISTIC, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
-        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _STATISTIC, 'liste_href' => '', 'add_href' => '']);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
         $rows = [];

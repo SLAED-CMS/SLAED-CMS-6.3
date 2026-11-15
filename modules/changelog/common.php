@@ -204,9 +204,9 @@ function chlogGroupCommitsByDate(array $commits): array {
             $labelDate = chlogFormatDay($comdate);
             $label = $labelDate;
             if ($comdate === $today) {
-                $label = _CHLOG_TODAY.' ('.$labelDate.')';
+                $label = _TODAY.' ('.$labelDate.')';
             } elseif ($comdate === $yester) {
-                $label = _CHLOG_YESTERDAY.' ('.$labelDate.')';
+                $label = _YESTERDAY.' ('.$labelDate.')';
             } elseif (strtotime($comdate) > strtotime('-7 days')) {
                 $label = _CHLOG_THIS_WEEK.' ('.$labelDate.')';
             }
@@ -282,8 +282,8 @@ function chlogRenderCommits(array $commits, array $options = []): string {
             'author' => chlogEsc((string)($commit['author'] ?? '')),
             'email' => chlogEsc((string)($commit['email'] ?? '')),
             'date' => chlogFormatDate((string)($commit['date'] ?? '')),
-            'label_author' => _CHLOG_AUTHOR,
-            'label_date' => _CHLOG_DATE,
+            'label_author' => _POSTER,
+            'label_date' => _DATE,
             'body_html' => $bodyHtml,
             'stats_html' => chlogRenderCommitStats($commit, $showStats, $showFiles)
         ]);
@@ -302,8 +302,8 @@ function chlogBuildExport(array $commits, string $format): string {
         foreach ($commits as $commit) {
             $out .= '## '.((string)($commit['subject'] ?? ''))."\n\n";
             $out .= '**'._CHLOG_COMMIT.':** `'.((string)($commit['hash'] ?? ''))."`  \n";
-            $out .= '**'._CHLOG_AUTHOR.':** '.((string)($commit['author'] ?? ''))."  \n";
-            $out .= '**'._CHLOG_DATE.':** '.((string)($commit['date'] ?? ''))."  \n\n";
+            $out .= '**'._POSTER.':** '.((string)($commit['author'] ?? ''))."  \n";
+            $out .= '**'._DATE.':** '.((string)($commit['date'] ?? ''))."  \n\n";
             if (!empty($commit['body']) && $commit['body'] !== CHLOG_COMMIT_END) {
                 $out .= ((string)$commit['body'])."\n\n";
             }
@@ -317,8 +317,8 @@ function chlogBuildExport(array $commits, string $format): string {
     foreach ($commits as $commit) {
         $out .= ((string)($commit['subject'] ?? ''))."\n";
         $out .= _CHLOG_COMMIT.': '.((string)($commit['hash'] ?? '')).' | '
-            ._CHLOG_AUTHOR.': '.((string)($commit['author'] ?? '')).' | '
-            ._CHLOG_DATE.': '.((string)($commit['date'] ?? ''))."\n";
+            ._POSTER.': '.((string)($commit['author'] ?? '')).' | '
+            ._DATE.': '.((string)($commit['date'] ?? ''))."\n";
         if (!empty($commit['body']) && $commit['body'] !== CHLOG_COMMIT_END) {
             $out .= ((string)$commit['body'])."\n";
         }

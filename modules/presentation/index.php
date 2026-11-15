@@ -115,7 +115,7 @@ function getPresentationData(): array {
     $build = static fn(string $label, array $set): array => ['label' => $label, 'mods' => implode(',', array_values(array_intersect($set, $shown)))];
     $presets = [
         $build(_PRES_MD_ALL, $shown) + ['is_on' => !in_array(false, array_column($mods, 'is_on'), true)],
-        $build(_PRES_MD_PORTAL, ['account', 'search', 'forum']), $build(_PRES_MD_MEDIA, ['account', 'search', 'node']),
+        $build(_PRES_CAT_PORTAL, ['account', 'search', 'forum']), $build(_PRES_MD_MEDIA, ['account', 'search', 'node']),
         $build(_PRES_MD_KNOW, ['search', 'node']),
     ];
     $commits = [];
@@ -267,10 +267,10 @@ function getPresentationData(): array {
     }
     $rail = [];
     $names = [
-        'workbench' => [_PRES_NAV_RHYTHM, _PRES_SUB_RHYTHM], 'system' => [_PRES_NAV_MODULES, _PRES_SUB_MODULES], 'security' => [_PRES_NAV_GUARD, _PRES_SUB_GUARD],
-        'runtime' => [_PRES_NAV_SPEED, _PRES_SUB_SPEED], 'development' => [_PRES_NAV_DEV, _PRES_SUB_DEV], 'live-project' => [_PRES_NAV_STATS, _PRES_SUB_STATS],
-        'pipeline' => [_PRES_NAV_ARCH, _PRES_SUB_ARCH], 'dna' => [_PRES_NAV_DNA, _PRES_SUB_DNA], 'archive' => [_PRES_NAV_HISTORY, _PRES_SUB_HISTORY],
-        'showcase' => [_PRES_NAV_SITES, _PRES_SUB_SITES], 'voices' => [_PRES_NAV_VOICES, _PRES_SUB_VOICES], 'pulse' => [_PRES_NAV_PULSE, _PRES_SUB_PULSE],
+        'workbench' => [_PRES_NAV_RHYTHM, _PRES_SUB_RHYTHM], 'system' => [_PRES_NAV_MODULES, _PRES_SUB_MODULES], 'security' => [_PRES_NAV_GUARD, _PRES_H_GUARD],
+        'runtime' => [_PRES_NAV_SPEED, _PRES_SUB_SPEED], 'development' => [_PRES_NAV_DEV, _PRES_SUB_DEV], 'live-project' => [_STATISTIC, _PRES_SUB_STATS],
+        'pipeline' => [_PRES_NAV_ARCH, _PRES_SUB_ARCH], 'dna' => [_PRES_NAV_DNA, _PRES_H_DNA], 'archive' => [_PRES_NAV_HISTORY, _PRES_H_HISTORY],
+        'showcase' => [_PRES_NAV_SITES, _PRES_SUB_SITES], 'voices' => [_PRES_NAV_VOICES, _PRES_SUB_VOICES], 'pulse' => [_PRES_NAV_PULSE, _PRES_H_PULSE],
     ];
     $i = 0;
     foreach ($names as $id => $pair) $rail[] = ['id' => $id, 'label' => $pair[0], 'sub' => $pair[1], 'num' => sprintf('%02d', ++$i), 'is_current' => $i === 1];
@@ -286,7 +286,7 @@ function getPresentationData(): array {
     if (count($motto) !== 3) $motto = [str_replace('*', '', _PRES_HEAD), '', ''];
     $hero = [
         'cockpit' => _PRES_COCKPIT, 'nominal' => _ADM_CALM, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
-        'gen_ring' => $ring($gen, 'ms', _PRES_GEN, $gpart, '', false, '', 'info'),
+        'gen_ring' => $ring($gen, 'ms', _GENERATION, $gpart, '', false, '', 'info'),
         'cache_ring' => $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'ok'),
         'qnum_ring' => $ring($qnum, 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),
         'online_ring' => $onring,
@@ -301,17 +301,17 @@ function getPresentationData(): array {
         'core' => [
             'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,
             'metrics' => [
-                ['value' => $gen.' ms', 'label' => _PRES_GEN], ['value' => $qnum.' sql', 'label' => _PRES_QUERY],
+                ['value' => $gen.' ms', 'label' => _GENERATION], ['value' => $qnum.' sql', 'label' => _PRES_QUERY],
                 ['value' => (string)$live, 'label' => _ONLINE],
             ],
             'chart' => _PRES_RH_CHART,
             'stack' => [
                 ['icon' => 'filetype-php', 'name' => 'PHP '.PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION, 'note' => _PRES_STK_RUNTIME, 'is_ok' => false],
-                ['icon' => 'database', 'name' => $driver, 'note' => _PRES_STK_STORAGE, 'is_ok' => false],
+                ['icon' => 'database', 'name' => $driver, 'note' => _STORAGE, 'is_ok' => false],
                 ['icon' => 'lightning-charge', 'name' => 'HTMX', 'note' => _PRES_STK_INTERACT, 'is_ok' => false],
                 ['icon' => 'device-ssd', 'name' => _PRES_CACHE, 'note' => mb_ucfirst($state), 'is_ok' => $cache > 0],
             ],
-            'flow' => [_PRES_FLOW_REQ, _PRES_FLOW_GUARD, _PRES_FLOW_MODULE, _PRES_FLOW_TPL],
+            'flow' => [_PRES_FLOW_REQ, _PRES_FLOW_GUARD, _MODUL, _PRES_FLOW_TPL],
             'trace' => $menu[0]['rows'],
         ],
         'facts' => [
@@ -329,7 +329,7 @@ function getPresentationData(): array {
         'tech_label' => _PRES_TECH,
         'tech' => [
             ['icon' => 'filetype-php', 'name' => 'PHP', 'note' => _PRES_TECH_PHP, 'tone' => 'primary'],
-            ['icon' => 'database', 'name' => 'MySQL / MariaDB', 'note' => _PRES_TECH_DB, 'tone' => 'info'],
+            ['icon' => 'database', 'name' => 'MySQL / MariaDB', 'note' => _PRES_DB, 'tone' => 'info'],
             ['icon' => 'filetype-html', 'name' => 'HTML', 'note' => _PRES_TECH_HTML, 'tone' => 'warning'],
             ['icon' => 'filetype-css', 'name' => 'CSS', 'note' => _PRES_TECH_CSS, 'tone' => 'primary'],
             ['icon' => 'filetype-js', 'name' => 'JavaScript', 'note' => _PRES_TECH_JS, 'tone' => 'accent'],
@@ -347,7 +347,7 @@ function getPresentationData(): array {
         'views' => [
             ['key' => 'area', 'label' => _PRES_RH_AREA, 'icon' => 'graph-up', 'is_on' => true], ['key' => 'bar', 'label' => _PRES_RH_BARS, 'icon' => 'bar-chart', 'is_on' => false],
         ],
-        'legend' => [_PRES_RH_HITS, _PRES_CACHE, _PRES_DB],
+        'legend' => [_PRES_ST_VISITS, _PRES_CACHE, _PRES_DB],
         'vring' => ['is_round' => true, 'inner' => $gpart, 'deep' => $qpart] + $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'info'),
         'vitals_cap' => $cap('activity', _PRES_RH_VITALS, '', '', 'heart-pulse'),
         'vitals' => [
@@ -355,7 +355,7 @@ function getPresentationData(): array {
             'rows' => [
                 ['label' => _PRES_RH_RESP, 'value' => $gen.' ms', 'icon' => '', 'tone' => ''],
                 ['label' => _PRES_QUERIES, 'value' => $qnum, 'icon' => '', 'tone' => ''],
-                ['label' => _PRES_RH_GUARD, 'value' => _PRES_GD_STATE, 'icon' => 'shield-check', 'tone' => 'success'],
+                ['label' => _PRES_FLOW_GUARD, 'value' => _PRES_GD_STATE, 'icon' => 'shield-check', 'tone' => 'success'],
             ],
             'note' => _PRES_RH_NOTE,
         ],
@@ -387,7 +387,7 @@ function getPresentationData(): array {
                 'right' => isset($filled['r']), 'footer' => isset($filled['f']),
             ],
             'slots' => [
-                'banner' => _PRES_BL_BANNER, 'left' => _PRES_BL_LEFT, 'top' => _PRES_BL_TOP, 'content' => _PRES_BL_CONTENT, 'output' => _PRES_BL_OUTPUT,
+                'banner' => _PRES_BL_BANNER, 'left' => _PRES_BL_LEFT, 'top' => _PRES_BL_TOP, 'content' => _PRES_MD_CONTENT, 'output' => _PRES_BL_OUTPUT,
                 'bottom' => _PRES_BL_BOTTOM, 'right' => _PRES_BL_RIGHT, 'footer' => _PRES_BL_FOOTER,
             ],
             'nodes' => $nodes, 'router' => _PRES_BL_POS, 'router_note' => _PRES_BL_ROUTER,
@@ -413,7 +413,7 @@ function getPresentationData(): array {
         ['danger', 'bug-fill', 'PROBE', 'GET /.env /backup /config', '1', true, ''],
     ]);
     $guard = [
-        'head' => $head(3, getIconName('security'), _PRES_H_GUARD, _PRES_L_GUARD) + $toggle('guard', _PRES_AR_N_GUARD, true),
+        'head' => $head(3, getIconName('security'), _PRES_H_GUARD, _PRES_L_GUARD) + $toggle('guard', _PRES_FLOW_GUARD, true),
         'zones' => [['num' => '01', 'label' => _PRES_GD_INGRESS], ['num' => '02', 'label' => _PRES_GD_FILTER], ['num' => '03', 'label' => _PRES_GD_TRUST]],
         'rate' => (string)$rate, 'rate_label' => _PRES_GD_RATE, 'policy' => _PRES_GD_POLICY, 'policy_text' => _PRES_GD_POLICY_T,
         'trusted' => _PRES_GD_TRUSTED, 'trusted_text' => _PRES_GD_RUNTIME,
@@ -493,7 +493,7 @@ function getPresentationData(): array {
         'pdo' => [
             'title' => _PRES_SP_PDO, 'state' => _PRES_SP_READY, 'driver' => $driver,
             'nodes' => [
-                ['icon' => 'boxes', 'num' => '01', 'title' => _PRES_SP_N_MODULE, 'note' => _PRES_SP_N_CALL],
+                ['icon' => 'boxes', 'num' => '01', 'title' => _MODUL, 'note' => _PRES_SP_N_CALL],
                 ['icon' => 'braces', 'num' => '02', 'title' => _PRES_DB, 'note' => _PRES_SP_N_DB],
                 ['icon' => 'plug', 'num' => '03', 'title' => 'PDO', 'note' => _PRES_SP_N_PDO],
                 ['icon' => 'server', 'num' => '04', 'title' => $driver, 'note' => _PRES_SP_N_SQL],
@@ -511,7 +511,7 @@ function getPresentationData(): array {
             'over' => _PRES_DT_OVER,
             'tabs' => [
                 ['label' => _PRES_DT_PERF, 'is_on' => true], ['label' => _PRES_DT_ERRORS, 'is_on' => false],
-                ['label' => _PRES_DT_REQUEST, 'is_on' => false], ['label' => _PRES_DT_SQL, 'is_on' => false],
+                ['label' => _PRES_FLOW_REQ, 'is_on' => false], ['label' => _PRES_DT_SQL, 'is_on' => false],
             ],
             'perf' => [
                 $stat(_PRES_DT_MEMORY, $memmb, 'MB', $memmax, $mpart), $stat(_PRES_FACT_GEN, $gen, 'ms', _PRES_STK_RUNTIME, $gpart),
@@ -533,7 +533,7 @@ function getPresentationData(): array {
         'commits' => $commits, 'has_commits' => $commits !== [], 'none' => _PRES_DV_NONE,
         'focus_recent' => _PRES_DV_RECENT, 'first' => $commits[0] ?? [],
         'steps' => [
-            ['icon' => 'code-slash', 'label' => _PRES_DV_CODE], ['icon' => 'check2-square', 'label' => _PRES_DV_TEST], ['icon' => 'git', 'label' => _PRES_DV_COMMIT],
+            ['icon' => 'code-slash', 'label' => _CODE], ['icon' => 'check2-square', 'label' => _PRES_DV_TEST], ['icon' => 'git', 'label' => _PRES_DV_COMMIT],
             ['icon' => 'journal-code', 'label' => _PRES_DV_LOG], ['icon' => 'box-seam', 'label' => _PRES_DV_RELEASE],
         ],
         'foot' => [
@@ -547,16 +547,16 @@ function getPresentationData(): array {
         'hours_cap' => $cap('bar-chart', _PRES_ST_HOURS, _PRES_ST_MODULE), 'claim_cap' => $cap('broadcast', _PRES_ST_CLAIM),
         'has_today' => $today['date'] !== '',
         'board' => [
-            $stat(_PRES_ST_VISITS, $num($today['visits']), '', $today['hosts'].' '._PRES_ST_HOSTS), $stat(_PRES_ST_HOME, $num($today['home']), '', _PRES_ST_ENTRIES),
+            $stat(_PRES_ST_VISITS, $num($today['visits']), '', $today['hosts'].' '._PRES_ST_HOSTS), $stat(_HOME, $num($today['home']), '', _PRES_ST_ENTRIES),
             $stat(_PRES_ST_RETURN, (string)$rpart, '%', _PRES_ST_RETURN_T, -1, 'success'), $stat(_PRES_ST_HUMAN, (string)$human, '%', _ONLINE_NOW, -1, 'success'),
             $stat(_PRES_ST_TOTAL, $num($today['total']), '', _PRES_ST_TOTAL_T),
         ],
         'hours' => $hours,
         'note' => _PRES_ST_NOTE,
-        'claim_title' => _PRES_ST_CLAIM_T, 'claim_text' => _PRES_ST_CLAIM_P, 'claim_tags' => [_PRES_NAV_STATS, _PRES_STK_RUNTIME, _BOTS, 'HTMX'],
+        'claim_title' => _PRES_ST_CLAIM_T, 'claim_text' => _PRES_ST_CLAIM_P, 'claim_tags' => [_STATISTIC, _PRES_STK_RUNTIME, _BOTS, 'HTMX'],
         'rings' => [
             $ring((string)$rpart, '%', _PRES_ST_RETURN, $rpart, '', false, '', 'ok'), $ring((string)$npart, '%', _PRES_ST_NEW, $npart, '', false, '', 'info'),
-            $ring((string)$human, '%', _PRES_ST_HUMAN, $human, '', false, '', 'ok'), $ring((string)$hpart, '%', _PRES_ST_HOME, $hpart, '', false, '', 'info'),
+            $ring((string)$human, '%', _PRES_ST_HUMAN, $human, '', false, '', 'ok'), $ring((string)$hpart, '%', _HOME, $hpart, '', false, '', 'info'),
             $ring((string)$dpart, '%', _PRES_ST_DEPTH, $dpart, '', false, '', 'ok'), $ring((string)$bpart, '%', _PRES_ST_BOUNCE, $bpart, '', false, '', 'warn'),
         ],
     ];
@@ -575,15 +575,15 @@ function getPresentationData(): array {
         'mode' => $mode, 'badge' => $badge, 'btone' => $btone, 'route' => $route, 'sub' => $sub, 'state' => $state, 'gatea' => $gatea, 'gateb' => $gateb,
         'modb' => $modb, 'seq' => $seq,
     ];
-    $view = 'GET /news/… · '._PRES_AR_S_GUEST;
-    $warm = $flow('hit', 'HIT', 'success', $view, _PRES_AR_DYNAMIC, _PRES_AR_WARM, 'cache/data', 'HIT', 'HTML',
+    $view = 'GET /news/… · '._ANONYM;
+    $warm = $flow('hit', 'HIT', 'success', $view, _PRES_AR_DYNAMIC, _PRES_GD_STATE, 'cache/data', 'HIT', 'HTML',
         '1,2,3,4,5,6,7');
     $flows = [
         ...array_map(static fn(array $row): array => $row + ['on' => '1'], [
             $flow('miss', 'MISS', 'warning', $view, _PRES_AR_REBUILD, 'MISS', 'cache/data', 'MISS', 'HTML',
                 '1,2,3,4,5,6,7'),
             $warm, $warm,
-            $flow('bypass', 'BYPASS', 'info', 'GET /forum · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, 'BYPASS', '< 2048 B', 'BYPASS', 'HTML',
+            $flow('bypass', 'BYPASS', 'info', 'GET /forum · '._ANONYM, _PRES_AR_NOSTORE, 'BYPASS', '< 2048 B', 'BYPASS', 'HTML',
                 '1,2,3,4,6,7'),
             $warm, $warm,
         ]),
@@ -594,19 +594,19 @@ function getPresentationData(): array {
     $ctpl = getPresentationCacheDir(CACHE_DIR.'/templates');
     $gclast = (int)(getSchedulerState('cachegc')['last_run'] ?? 0);
     $pipeline = [
-        'head' => $head(7, getIconName('system'), _PRES_H_ARCH, _PRES_L_ARCH) + $toggle('cache', _PRES_AR_N_GATE, $cache > 0),
+        'head' => $head(7, getIconName('system'), _PRES_H_ARCH, _PRES_L_ARCH) + $toggle('cache', _PRES_AR_CACHE, $cache > 0),
         'flows' => $flows, 'store' => 'STORE', 'stored' => 'storage/cache/data · '.$cdata['num'], 'parsing' => _PRES_AR_PARSING,
         'mode' => $cache ? 'hit' : 'off', 'route' => $view,
         'decision' => $cache ? 'HIT' : _PRES_AR_MODE_OFF, 'is_on' => $cache > 0, 'theme' => $theme, 'logo' => $logo, 'cache' => _PRES_AR_CACHE,
-        'cache_note' => $cache ? _PRES_AR_DYNAMIC : _PRES_AR_NOSTORE, 'cache_state' => $cache ? _PRES_AR_WARM : _PRES_AR_MODE_OFF,
+        'cache_note' => $cache ? _PRES_AR_DYNAMIC : _PRES_AR_NOSTORE, 'cache_state' => $cache ? _PRES_GD_STATE : _PRES_AR_MODE_OFF,
         'nodes' => [
-            ['icon' => 'box-arrow-in-down', 'num' => '01', 'title' => _PRES_AR_N_REQ, 'a' => 'HTTP GET', 'b' => _PRES_AR_S_GUEST],
-            ['icon' => 'shield-check', 'num' => '02', 'title' => _PRES_AR_N_GUARD, 'a' => _PRES_AR_S_SEC, 'b' => _PRES_AR_S_ALLOW],
+            ['icon' => 'box-arrow-in-down', 'num' => '01', 'title' => _PRES_FLOW_REQ, 'a' => 'HTTP GET', 'b' => _ANONYM],
+            ['icon' => 'shield-check', 'num' => '02', 'title' => _PRES_FLOW_GUARD, 'a' => _PRFILTER, 'b' => _PRES_GD_ALLOW],
             ['icon' => 'cpu', 'num' => '03', 'title' => _PRES_AR_N_KERNEL, 'a' => _PRES_AR_S_ROUTE, 'b' => _PRES_AR_S_LIVE],
-            ['icon' => 'boxes', 'num' => '04', 'title' => _PRES_AR_N_MODULE, 'a' => _PRES_AR_S_CONTENT, 'b' => _PRES_AR_DATA_V],
-            ['icon' => 'device-ssd', 'num' => '05', 'title' => _PRES_AR_N_GATE, 'a' => $cache ? 'cache/data' : 'cache = 0', 'b' => $cache ? 'HIT' : 'OFF', 'is_gate' => true],
-            ['icon' => 'layout-text-window-reverse', 'num' => '06', 'title' => _PRES_AR_N_TPL, 'a' => _PRES_AR_COMPILED, 'b' => 'HTML'],
-            ['icon' => 'box-arrow-up-right', 'num' => '07', 'title' => _PRES_AR_N_RESP, 'a' => _PRES_AR_S_DYNAMIC, 'b' => _PRES_AR_S_SERVE],
+            ['icon' => 'boxes', 'num' => '04', 'title' => _MODUL, 'a' => _PRES_MD_CONTENT, 'b' => _CATEGORIES],
+            ['icon' => 'device-ssd', 'num' => '05', 'title' => _PRES_AR_CACHE, 'a' => $cache ? 'cache/data' : 'cache = 0', 'b' => $cache ? 'HIT' : 'OFF', 'is_gate' => true],
+            ['icon' => 'layout-text-window-reverse', 'num' => '06', 'title' => _PRES_FLOW_TPL, 'a' => _PRES_AR_COMPILED, 'b' => 'HTML'],
+            ['icon' => 'box-arrow-up-right', 'num' => '07', 'title' => _PRES_RH_RESP, 'a' => _PRES_AR_S_DYNAMIC, 'b' => _PRES_AR_S_SERVE],
         ],
         'tree_cap' => $cap('diagram-2', _PRES_AR_TREE, 'cache = '.$cache),
         'cases' => [
@@ -615,9 +615,9 @@ function getPresentationData(): array {
             ['name' => 'BYPASS', 'text' => _PRES_AR_BYPASS_T, 'is_on' => $cache === 0, 'tone' => 'info'],
         ],
         'states' => [
-            $stat(_PRES_AR_PARSER, (string)$cdata['num'], '', filterSize($cdata['size']), -1, $cache ? 'success' : 'warning'),
-            $stat(_PRES_AR_TPLS, (string)$ctpl['num'], '', filterSize($ctpl['size']), -1, 'success'), $stat(_PRES_AR_DATA, _PRES_AR_DATA_V, '', '', -1, 'success'),
-            $stat(_PRES_AR_PAGE, _PRES_AR_PAGE_V, '', '', -1, 'success'),
+            $stat(_PRES_AR_CACHE, (string)$cdata['num'], '', filterSize($cdata['size']), -1, $cache ? 'success' : 'warning'),
+            $stat(_PRES_AR_TPLS, (string)$ctpl['num'], '', filterSize($ctpl['size']), -1, 'success'), $stat(_PRES_AR_DATA, _CATEGORIES, '', '', -1, 'success'),
+            $stat(_PAGE, _PRES_AR_PAGE_V, '', '', -1, 'success'),
             $stat(_PRES_AR_GC, sprintf(_PRES_AR_GC_V, intdiv(Cache::KEEP, 3600)), '', 'cachegc · '.($gclast > 0 ? date('d.m H:i', $gclast) : '—'), -1, 'success'),
         ],
         'note' => _PRES_AR_NOTE,
@@ -633,12 +633,12 @@ function getPresentationData(): array {
                 'href' => getSeoUrl(['name' => $news['type']->name] + ($news['last'] ? ['op' => 'view', 'id' => $news['last']->id, 'route' => $news['last']->path] : [])),
             ]] : []),
             [
-                'icon' => getIconName('forum'), 'title' => _PRES_PU_FORUM, 'over' => _PRES_PU_FORUM_S, 'when' => $ttime ? format_time($ttime, _DATESTRING) : '',
+                'icon' => getIconName('forum'), 'title' => _PRES_NAV_PULSE, 'over' => _PRES_PU_FORUM_S, 'when' => $ttime ? format_time($ttime, _DATESTRING) : '',
                 'heading' => $ttitle ?: _PRES_PU_NONE, 'text' => _PRES_PU_FORUM_P, 'link' => _PRES_PU_FORUM_A, 'tone' => 'accent', 'has_date' => (bool)$ttime,
                 'href' => $tid ? getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'route' => $tpath]) : getSeoUrl(['name' => 'forum']),
             ],
             ...($docs['type'] ? [[
-                'icon' => getIconName('pages'), 'title' => _PRES_PU_PAGES, 'over' => _PRES_PU_PAGES_S, 'when' => _PRES_PU_PAGES_T,
+                'icon' => getIconName('pages'), 'title' => _DOCS, 'over' => _PRES_PU_PAGES_S, 'when' => _PRES_PU_PAGES_T,
                 'heading' => sprintf(_PRES_PU_PAGES_N, $docs['num'], $docs['cats']), 'text' => _PRES_PU_PAGES_P, 'link' => _PRES_PU_PAGES_A,
                 'tone' => 'success', 'href' => getSeoUrl(['name' => $docs['type']->name]), 'has_date' => false,
             ]] : []),

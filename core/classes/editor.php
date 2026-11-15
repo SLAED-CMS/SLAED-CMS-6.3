@@ -287,7 +287,7 @@ class Editor {
             'cmds_text' => _EDITOR_CMDS,
             'find_text' => _EDITOR_CMDFIND,
             'edit_text' => _EDITOR_GRPEDIT,
-            'format_text' => _EDITOR_GRPFORMAT,
+            'format_text' => _FORMAT,
             'insert_text' => _EDITOR_GRPINSERT,
             'view_text' => _EDITOR_GRPVIEW,
             'none_text' => _NONE_FOUND,
@@ -309,8 +309,8 @@ class Editor {
             'any_text' => _EDITOR_PALANY,
             'close_text' => _CLOSE,
             'move_text' => _EMOVEWIN,
-            'expand_text' => _EEXPAND,
-            'restore_text' => _ERESTORE,
+            'expand_text' => _EXPAND,
+            'restore_text' => _COLLAPSE,
             'draft_text' => _EDITOR_DRAFT,
             'back_text' => _EDITOR_DRAFTBACK,
             'drop_text' => _EDITOR_DRAFTDROP,
@@ -352,8 +352,8 @@ class Editor {
             'emoji_label' => _EEMOJI,
             'close_label' => _CLOSE,
             'move_label' => _EMOVEWIN,
-            'expand_label' => _EEXPAND,
-            'restore_label' => _ERESTORE,
+            'expand_label' => _EXPAND,
+            'restore_label' => _COLLAPSE,
         ]);
     }
 

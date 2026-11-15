@@ -5,13 +5,11 @@
 # Website: slaed.net
 
 define('_MASTER_RELEASES','Releases');
-define('_MASTER_SITES','Sites');
 define('_MASTER_NOTES','Notes');
 define('_MASTER_KEYS','Keys');
 define('_MASTER_INBOX','Waiting in inbox/');
 define('_MASTER_ACCEPT','Accept');
 define('_MASTER_ACCEPTED','Accepted');
-define('_MASTER_CHANGED','Changed');
 define('_MASTER_EXPIRES','Manifest expires');
 define('_MASTER_EXPWARN','The manifest of %1$s expires on %2$s: re-sign it with php tools/sign.php --refresh %1$s, publish it and accept it again.');
 define('_MASTER_WAIT','Waiting');
@@ -32,19 +30,15 @@ define('_MASTER_RFORM','a manifest is incomplete or of another format, version o
 define('_MASTER_SID','Identifier');
 define('_MASTER_DOMAIN','Domain');
 define('_MASTER_NOHOST','Not reported');
-define('_MASTER_CHAN','Channel');
 define('_MASTER_EXT','Extensions');
 define('_MASTER_ERRS','PHP / DB errors');
 define('_MASTER_FIRST','First check');
-define('_MASTER_LAST','Last check');
 define('_MASTER_SILENT','Silent for over %d days');
 define('_MASTER_FAILS','Failed installs');
 define('_MASTER_STEP','step %d');
-define('_MASTER_STEPS','Step');
 define('_MASTER_COUNT','Sites');
 define('_MASTER_NOSOD','Without sodium');
 define('_MASTER_NOZIP','Without zip');
-define('_MASTER_LEVEL','Level');
 define('_MASTER_TO','Addressee');
 define('_MASTER_TOALL','All sites');
 define('_MASTER_RANGE','Versions');

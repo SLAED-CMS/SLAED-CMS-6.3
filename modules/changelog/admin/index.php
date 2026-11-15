@@ -50,11 +50,11 @@ function changelog(): void {
         ]];
     }
     $fields = [
-        ['field_id' => 'sl-chlog-word', 'label' => _CHLOG_SEARCH, 'itype' => 'search', 'name_attr' => 'word', 'value' => $word],
-        ['field_id' => 'sl-chlog-author', 'label' => _CHLOG_AUTHOR, 'itype' => 'text', 'name_attr' => 'author', 'value' => $flt['author']],
-        ...(($config['source'] !== 'github') ? [['field_id' => 'sl-chlog-file', 'label' => _CHLOG_FILE, 'itype' => 'text', 'name_attr' => 'file', 'value' => $flt['file']]] : []),
-        ['field_id' => 'sl-chlog-from', 'label' => _CHLOG_DATE_FROM, 'itype' => 'date', 'name_attr' => 'datefrom', 'value' => $flt['since']],
-        ['field_id' => 'sl-chlog-to', 'label' => _CHLOG_DATE_TO, 'itype' => 'date', 'name_attr' => 'dateto', 'value' => $flt['until']],
+        ['field_id' => 'sl-chlog-word', 'label' => _SEARCH, 'itype' => 'search', 'name_attr' => 'word', 'value' => $word],
+        ['field_id' => 'sl-chlog-author', 'label' => _POSTER, 'itype' => 'text', 'name_attr' => 'author', 'value' => $flt['author']],
+        ...(($config['source'] !== 'github') ? [['field_id' => 'sl-chlog-file', 'label' => _FILE, 'itype' => 'text', 'name_attr' => 'file', 'value' => $flt['file']]] : []),
+        ['field_id' => 'sl-chlog-from', 'label' => _DATEFROM, 'itype' => 'date', 'name_attr' => 'datefrom', 'value' => $flt['since']],
+        ['field_id' => 'sl-chlog-to', 'label' => _DATETO, 'itype' => 'date', 'name_attr' => 'dateto', 'value' => $flt['until']],
     ];
     $search = $tpl->getHtmlFrag('list-filter', ['action_url' => $afile.'.php', 'label' => _SEARCH, 'is_part' => true,
         'hidden' => [['nameattr' => 'name', 'valueattr' => 'changelog']], 'fields' => $fields]);
@@ -71,9 +71,9 @@ function changelog(): void {
         'head' => [
             ['content' => _CHLOG_COMMIT, 'is_col_count' => true],
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
-            ['content' => _CHLOG_AUTHOR, 'is_col_author' => true],
+            ['content' => _POSTER, 'is_col_author' => true],
             ...($stat ? [['content' => _CHLOG_CHANGES], ['content' => _CHLOG_FILES, 'is_col_count' => true]] : []),
-            ['content' => _CHLOG_DATE, 'is_col_date' => true],
+            ['content' => _DATE, 'is_col_date' => true],
         ],
         'rows' => $rows,
         'href' => $afile.'.php?'.http_build_query(['name' => 'changelog'] + $keys, '', '&', PHP_QUERY_RFC3986).'&',
@@ -109,7 +109,7 @@ function config(): void {
         ...(isAdmin(true) ? [
             [
                 'label_for' => 'f-source',
-                'label_html' => _CHLOG_SOURCE, 'hint_html' => _CHLOG_SOURCE_TITLE, 'hint_id' => $hntid = getFieldIds('f-source')['hint'],
+                'label_html' => _SOURCE, 'hint_html' => _CHLOG_SOURCE_TITLE, 'hint_id' => $hntid = getFieldIds('f-source')['hint'],
                 'field_html' => $tpl->getHtmlFrag('select', [
                     'describedby' => $hntid, 'name_attr' => 'source', 'selectid' => 'f-source', 'options' => $sourceopts, 'is_config' => true,
                 ]),
@@ -164,7 +164,7 @@ function config(): void {
             'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'showfile', 'value' => (string)($conf['changelog']['showfile'] ?? 0), 'options' => $yesno]),
         ],
         [
-            'label_html' => _CHLOG_SHOW_STATS, 'label_id' => $labid = getFieldIds('', 'showstat')['label'],
+            'label_html' => _STATISTIC, 'label_id' => $labid = getFieldIds('', 'showstat')['label'],
             'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'showstat', 'value' => (string)($conf['changelog']['showstat'] ?? 0), 'options' => $yesno]),
         ],
         [
@@ -179,7 +179,7 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('changelog')],
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     echo $cont;

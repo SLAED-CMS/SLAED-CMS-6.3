@@ -278,7 +278,7 @@ function edit(): void {
                 [['value_attr' => '0', 'label_text' => _BLOCKS_MODC0, 'is_selected' => (int)$top === 0],
                 ['value_attr' => '1', 'label_text' => _BLOCKS_MODC1, 'is_selected' => (int)$top === 1],
                 ['value_attr' => '2', 'label_text' => _BLOCKS_MODC2, 'is_selected' => (int)$top === 2],
-                ['value_attr' => '3', 'label_text' => _BLOCKS_MODC3, 'is_selected' => (int)$top === 3]],
+                ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$top === 3]],
         ])],
         [
             'label_html' => _SHOWINMENU,
@@ -302,7 +302,7 @@ function edit(): void {
         ],
         'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'puzzle', 'title' => _MODUL, 'facts' => [['text' => $mod]],
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]),
-        'submit_label' => _SAVECHANGES,
+        'submit_label' => _SAVE,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]).getAdminIconWindow();
     setFoot();

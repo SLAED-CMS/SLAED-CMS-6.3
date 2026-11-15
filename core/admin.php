@@ -471,9 +471,9 @@ function getAdminBlockList(): string {
         $tips[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
         if ($bkey == '') {
             $type = ($url) ? 'RSS/RDF' : 'HTML';
-            if ($bfile != '') $type = _BLOCKFILE2;
+            if ($bfile != '') $type = _FILE;
         } else {
-            $type = _BLOCKSYSTEM;
+            $type = _SYSTEMIC;
         }
         $stray = getBlockStray($marks, $places);
         if ($bfile != '' && !is_file(BASE_DIR.'/blocks/'.$bfile)) {
@@ -731,27 +731,6 @@ function filterSiteBrand(array $sets, array &$bad): array {
         else $out['site_logo'] = $logo;
     }
     return $out;
-}
-
-# Add voting
-function add_voting(string $modul, string $selectName, int $selectedId): string {
- global $db, $locale, $conf, $tpl;
-    $modul  = filterVar($modul);
-    $params = ['modul' => $modul];
-    if ($conf['multilingual'] == 1) {
-        $where  = "(lang = :locale OR lang = '') AND modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-        $params['locale'] = $locale;
-    } else {
-        $where  = "modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-    }
-    $opts   = [['value_attr' => '0', 'label_text' => _NO, 'is_selected' => false]];
-    $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
-    if ($db->getSqlRowCount($result) > 0) {
-        while ([$id, $title] = $db->getSqlRow($result)) {
-            $opts[] = ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id];
-        }
-    }
-    return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options' => $opts]);
 }
 
 # Split one SQL script into statements, honouring quotes, comments and DELIMITER; a statement stays as written, an escape in a literal is never unwrapped
@@ -1012,7 +991,7 @@ function getAdminFileHome(): string {
     return match (getAdminFileMode()) {
         'uploads' => basename(UPLOADS_DIR),
         'theme' => getAdminFileTheme(),
-        default => _UPLOADS_ROOT,
+        default => _SITE,
     };
 }
 
@@ -1168,7 +1147,7 @@ function getAdminFileNodes(string $dir): string {
 function getAdminFileGrants(): string {
     global $tpl;
     $names = [
-        'browse' => _UPLOADS_BROWSE, 'preview' => _UPLOADS_PREVIEW, 'upload' => _UPLOADS_UPLOAD, 'download' => _UPLOADS_DOWNLOAD,
+        'browse' => _UPLOADS_BROWSE, 'preview' => _PREVIEW, 'upload' => _UPLOADS_UPLOAD, 'download' => _UPLOADS_DOWNLOAD,
         'edit' => _UPLOADS_EDIT, 'create' => _UPLOADS_CREATE, 'mkdir' => _UPLOADS_MKDIR, 'rename' => _UPLOADS_RENAME,
         'copy' => _UPLOADS_COPY, 'move' => _UPLOADS_MOVE, 'delete' => _UPLOADS_DELETE, 'compress' => _UPLOADS_COMPRESS,
     ];
@@ -1196,13 +1175,13 @@ function getAdminFileActs(array $one): string {
         'icon_name' => 'pencil-square',
         'title' => _EDIT,
     ];
-    if (!empty($able['preview']) && $one['kind'] === 'image') $dial[] = ['href' => '#', 'run' => 'preview', 'icon_name' => 'zoom-in', 'title' => _UPLOADS_PREVIEW];
+    if (!empty($able['preview']) && $one['kind'] === 'image') $dial[] = ['href' => '#', 'run' => 'preview', 'icon_name' => 'zoom-in', 'title' => _PREVIEW];
     if (!empty($able['download'])) $dial[] = ['href' => getAdminFileLink('getAdminFileDownload', ['file' => $path]), 'icon_name' => 'download', 'title' => _DOWNLOAD];
     if (!empty($able['rename'])) $dial[] = ['href' => '#', 'act' => 'fmrename', 'file' => $path, 'arg' => $name, 'icon_name' => 'input-cursor-text', 'title' => _UPLOADS_TORENAME];
-    if (!empty($able['copy'])) $dial[] = ['href' => '#', 'act' => 'fmcopy', 'file' => $path, 'arg' => $path, 'icon_name' => 'files', 'title' => _UPLOADS_TOCOPY];
+    if (!empty($able['copy'])) $dial[] = ['href' => '#', 'act' => 'fmcopy', 'file' => $path, 'arg' => $path, 'icon_name' => 'files', 'title' => _COPY];
     if (!empty($able['move'])) $dial[] = ['href' => '#', 'act' => 'fmmove', 'file' => $path, 'arg' => $path, 'icon_name' => 'folder-symlink', 'title' => _UPLOADS_TOMOVE];
     $post = ['name' => 'uploads', 'op' => '', 'ctx' => $ctx, 'file' => $path, 'back' => $dir];
-    if (!empty($able['compress'])) $dial[] = getTplPostAction(['op' => 'fmcompress'] + $post, 'file-zip', _UPLOADS_TOZIP) + ['run' => 'fmcompress'];
+    if (!empty($able['compress'])) $dial[] = getTplPostAction(['op' => 'fmcompress'] + $post, 'file-zip', _TOZIP) + ['run' => 'fmcompress'];
     if (!empty($able['delete'])) $dial[] = getTplPostAction(['op' => 'fmdelete'] + $post, 'trash3', _DELETE, $ask) + ['run' => 'fmdelete'];
     return ($dial === []) ? '' : $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial]);
 }
@@ -1221,15 +1200,15 @@ function getAdminFileProps(string $path): string {
         ['label' => _TYPE, 'value' => ($one['extension'] === '') ? $one['kind'] : $one['kind'].' · '.$one['extension']],
     ];
     if ($one['kind'] !== 'dir') $rows[] = ['label' => _SIZE, 'value' => filterSize($one['size'])];
-    if ($one['width']) $rows[] = ['label' => _UPLOADS_DIMS, 'value' => $one['width'].' × '.$one['height']];
-    if ($body !== []) $rows[] = ['label' => _UPLOADS_LINES, 'value' => number_format($body['lines'], 0, '', ' ')];
+    if ($one['width']) $rows[] = ['label' => _RESOLUTION, 'value' => $one['width'].' × '.$one['height']];
+    if ($body !== []) $rows[] = ['label' => _ROWS, 'value' => number_format($body['lines'], 0, '', ' ')];
     $rows[] = ['label' => _DATE, 'value' => date(_TIMESTRING, $one['mtime'])];
-    $rows[] = ['label' => ($one['url'] === '') ? _UPLOADS_PATH : _UPLOADS_ADDR, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path']), 'can_cut' => true];
+    $rows[] = ['label' => ($one['url'] === '') ? _PATH : _ADDRESS, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path']), 'can_cut' => true];
     $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? '', 'can_cut' => true];
-    if ($one['perms'] !== '') $rows[] = ['label' => _UPLOADS_PERMS, 'value' => $one['perms']];
+    if ($one['perms'] !== '') $rows[] = ['label' => _PERMS, 'value' => $one['perms']];
     if ($one['owner'] !== '') $rows[] = ['label' => _UPLOADS_USER, 'value' => $one['owner']];
-    if ($body !== []) $rows[] = ['label' => _UPLOADS_VERSION, 'value' => substr($body['version'], 0, 6)];
-    if ($one['managed']) $rows[] = ['label' => _UPLOADS_OWNER, 'value' => FileManager::getFileOwner($one['name']) ?? _UPLOADS_OWNSITE];
+    if ($body !== []) $rows[] = ['label' => _VERSION, 'value' => substr($body['version'], 0, 6)];
+    if ($one['managed']) $rows[] = ['label' => _OWNER, 'value' => FileManager::getFileOwner($one['name']) ?? _ADMINS];
     $rows = array_map(static fn(array $row): array => ['label' => $row['label'], 'text' => $row['value'],
         'is_long' => !empty($row['can_cut']) && mb_strlen((string)$row['value']) >= CELL_LONG, 'tip_label' => _DETAILS.': '.$row['label']], $rows);
     $warn = empty($one['critical']) ? '' : _UPLOADS_CRIT;
@@ -1244,7 +1223,7 @@ function getAdminFileProps(string $path): string {
         'pick_value' => $one['path'],
         'info_url' => getAdminFileLink('getAdminFileData', ['file' => $one['path']]),
         'down_url' => empty($one['capabilities']['download']) ? '' : getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]),
-        'shot_text' => _UPLOADS_PREVIEW,
+        'shot_text' => _PREVIEW,
         'rows' => $rows,
         'note_html' => ($warn === '') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]),
     ]);
@@ -1284,12 +1263,12 @@ function getAdminFileEditor(array $edit): string {
     $foot = $tpl->getHtmlFrag('window-foot-edit', [
         'extra_html' => (string)($edit['extra_html'] ?? ''),
         'ver_hint' => _UPLOADS_VERHINT,
-        'ver_label' => _UPLOADS_VERSION,
+        'ver_label' => _VERSION,
         'ver_text' => substr($ver, 0, 6),
         'back_url' => $back,
         'back_text' => _BACK,
         'form_id' => 'slfmeditform',
-        'save_text' => _SAVECHANGES,
+        'save_text' => _SAVE,
         'confirm_text' => empty($one['critical']) ? '' : _UPLOADS_CRITASK,
     ]);
     return $tpl->getHtmlFrag('window', [
@@ -1382,7 +1361,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'is_move' => !empty($row['capabilities']['move']),
             'pick_value' => $row['path'],
             'mark_text' => _UPLOADS_MARK.': '.$row['name'],
-            'shot_text' => _UPLOADS_PREVIEW,
+            'shot_text' => _PREVIEW,
             'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
             'size_text' => $isdir ? '—' : filterSize($row['size']),
             'size_num' => (string)($isdir ? -1 : (int)$row['size']),
@@ -1405,9 +1384,9 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $acts = [['icon' => getIconName('download'), 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true]];
     if (!empty($able['edit'])) $acts[] = ['key' => 'fmedit', 'icon' => getIconName('fmedit'), 'name' => _EDIT, 'tone' => 'info'];
     if (!empty($able['rename'])) $acts[] = ['key' => 'fmrename', 'icon' => getIconName('fmrename'), 'name' => _UPLOADS_TORENAME, 'tone' => 'neutral'];
-    if (!empty($able['copy'])) $acts[] = ['key' => 'fmcopy', 'icon' => getIconName('fmcopy'), 'name' => _UPLOADS_TOCOPY, 'tone' => 'neutral'];
+    if (!empty($able['copy'])) $acts[] = ['key' => 'fmcopy', 'icon' => getIconName('fmcopy'), 'name' => _COPY, 'tone' => 'neutral'];
     if (!empty($able['move'])) $acts[] = ['key' => 'fmmove', 'icon' => getIconName('fmmove'), 'name' => _UPLOADS_TOMOVE, 'tone' => 'neutral'];
-    if (!empty($able['compress'])) $acts[] = ['key' => 'fmcompress', 'icon' => getIconName('fmcompress'), 'name' => _UPLOADS_TOZIP, 'tone' => 'neutral'];
+    if (!empty($able['compress'])) $acts[] = ['key' => 'fmcompress', 'icon' => getIconName('fmcompress'), 'name' => _TOZIP, 'tone' => 'neutral'];
     if (!empty($able['delete'])) $acts[] = ['key' => 'fmdelete', 'icon' => getIconName('fmdelete'), 'name' => _DELETE, 'tone' => 'danger'];
     $shot = !$full ? '' : getWindowShot([
         'own' => 'files',
@@ -1434,13 +1413,13 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'types_text' => $rule['ok'] ? _FTYPE.': '.$rule['extensions'].' · '._FSIZE.': '.filterSize($rule['maxbytes']) : '',
         'link_text' => _FILE_SITE,
         'queue_text' => _UPLOADS_QUEUE,
-        'stop_text' => _UPLOADS_STOP,
-        'marks_text' => _UPLOADS_MARKED,
-        'zip_text' => _UPLOADS_TOZIP,
+        'stop_text' => _STOPUPLOAD,
+        'marks_text' => _MARKED,
+        'zip_text' => _TOZIP,
         'pack_text' => _UPLOADS_TOPACK,
         'move_text' => _UPLOADS_TOMOVE,
         'delete_text' => _DELETE,
-        'clear_text' => _UPLOADS_UNMARK,
+        'clear_text' => _UNMARK,
         'ask_text' => _UPLOADS_MANYDEL,
         'pack_name' => 'archive.zip',
         'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'unused' => $lone ? 1 : '']),
@@ -1456,7 +1435,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'reload_text' => _UPDATE,
         'filter_text' => _UPLOADS_FILTER,
         'list_text' => _LIST,
-        'tiles_text' => _UPLOADS_TILES,
+        'tiles_text' => _ASTILES,
         'props_text' => _UPLOADS_PROPS,
         'keys' => getFileKeysView(_UPLOADS_OPEN, false),
         'post_url' => $afile.'.php',
@@ -1469,7 +1448,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'can_mkdir' => !empty($able['mkdir']),
         'file_links' => getAdminFileLinks(),
         'links_label' => _UPLOADS_QUICK,
-        'caps_label' => _UPLOADS_GRANTS,
+        'caps_label' => _AVAILABLE,
         'caps_html' => getAdminFileGrants(),
         'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
         'quota_html' => $quota,

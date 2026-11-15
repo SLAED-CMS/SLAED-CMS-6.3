@@ -1,29 +1,46 @@
-/* Forum topic series: the page of one topic of the forum (modules/forum, op=view) in the column of the site, drawn by
-   the markup the theme prints on the live page (fragments/forum-topic-view.html, forum-post.html, pane-cap.html).
-   A face is one empty .fr-root carrying its set of values:
+/* The window of the site on the page of one forum topic (modules/forum, op=view), drawn by the markup the theme prints
+   on the live page (fragments/forum-topic-view.html, forum-post.html, pane-cap.html). The one empty .fr-root carries
+   the set of values. The window, which a block of the side column wears too:
+   - data-fr-frame="soft|strong" — the tone of the frame
+   - data-fr-radius="2|3" — the step of the radius ladder: 8 or 12
+   - data-fr-ground="flat|grad|cap" — the surface: even, the gradient down the whole window, the gradient under the head alone
+   - data-fr-head="name|caps" — the name of a head as the theme sets it, or mono capitals as the panel sets them
+   - data-fr-type="micro|small|h4|h3|h2" — the size of that name: 12, 13, 16, 18 or 20; 18 is the theme's
+   - data-fr-isize="xs|sm|md|lg" — the size of the bare icon of a head, a step of --sl-size-icon-*: 16, 18, 24 or 32
+   - data-fr-inset="tight|mid|wide" — the inset the eye sees round the icon of a head: 12 of the theme, 16, 20; the row of a
+     head stands 4 px over its icon on each side, so the upright token is 4 px under the sideways one: 8 by 12, 12 by 16, 16 by 20
+   - data-fr-shade="none|xs" — the shadow
+   The page of the topic:
    - data-fr-wrap="none|posts|all" — the window: none, round the messages alone, round the messages, the pager and the form
    - data-fr-rule="off|dash" — the rule between two messages
    - data-fr-form="bare|pane" — the quick reply as it is, or in a window of its own (inside the one window it stays bare)
    - data-fr-acts="head|foot" — the buttons of the topic at the top and under the messages, or under the messages alone
-   - data-fr-count="5|15" — the messages on the page, the one axis of the content: a short page and a long one
-   - data-fr-type="small|h4|h3|h2" — the size of the name of a head: 13 or 16 semibold, 18 or 20 regular; 18 is the theme's
-   - data-fr-isize="xs|sm|md|lg" — the size of the bare icon of a head, a step of --sl-size-icon-*: 16, 18, 24 or 32; the side
-     column stands outside the root, so both values are mirrored onto <html>
-   The frame and the head are the theme's
+   - data-fr-count="5|15" — the messages on the page: a short page and a long one
+   The side column stands outside the root, so the axes of the window are mirrored onto <html>, where assets/frm.css
+   writes them as values of the tokens --sl-pane-* of the theme.
    This file fills the root from the attributes and puts the desk over it: a button data-fr-set="<axis>:<value>" writes
-   the attribute and the page is drawn again, data-fr-reset returns the set of the face, data-fr-say names the set.
+   the attribute and the page is drawn again, data-fr-reset returns the set of the page, data-fr-say names the set.
    The people, the texts and the figures are invented; nothing is sent anywhere */
 
 const FR_AXES = [
-  ['wrap', 'Окно', [['none', 'Нет'], ['posts', 'Сообщения'], ['all', 'Всё вместе']]],
-  ['rule', 'Черта', [['off', 'Нет'], ['dash', 'Пунктир']]],
+  ['frame', 'Рамка', [['soft', 'Тонкая'], ['strong', 'Сильная']]],
+  ['radius', 'Радиус', [['2', '8'], ['3', '12']]],
+  ['ground', 'Поверхность', [['flat', 'Ровная'], ['grad', 'Градиент'], ['cap', 'Градиент шапки']]],
+  ['head', 'Шапка', [['name', 'Название'], ['caps', 'Капс']]],
+  ['type', 'Размер названия', [['micro', '12'], ['small', '13'], ['h4', '16'], ['h3', '18'], ['h2', '20']]],
+  ['isize', 'Размер иконки', [['xs', '16'], ['sm', '18'], ['md', '24'], ['lg', '32']]],
+  ['inset', 'Поля', [['tight', '12'], ['mid', '16'], ['wide', '20']]],
+  ['shade', 'Тень', [['none', 'Нет'], ['xs', 'Есть']]],
+  ['wrap', 'Окно темы', [['none', 'Нет'], ['posts', 'Сообщения'], ['all', 'Всё вместе']]],
+  ['rule', 'Между сообщениями', [['off', 'Ничего'], ['dash', 'Пунктир']]],
   ['form', 'Форма ответа', [['bare', 'Как есть'], ['pane', 'В окне']]],
   ['acts', 'Кнопки темы', [['head', 'Сверху и снизу'], ['foot', 'Только снизу']]],
   ['count', 'Сообщений', [['5', '5'], ['15', '15']]],
-  ['type', 'Заголовок шапки', [['small', '13'], ['h4', '16'], ['h3', '18'], ['h2', '20']]],
-  ['isize', 'Размер иконки', [['xs', '16'], ['sm', '18'], ['md', '24'], ['lg', '32']]],
 ];
 
+const FR_ROWS = [['frame', 'radius', 'ground'], ['head', 'type', 'isize'], ['inset', 'shade'], ['wrap', 'rule', 'form'], ['acts', 'count']];
+
+const FR_MIRROR = ['frame', 'radius', 'ground', 'head', 'type', 'isize', 'inset', 'shade'];
 
 const FR_TOPIC = { title: 'Дубли страниц в поиске и канонический адрес', total: 49 };
 
@@ -232,11 +249,11 @@ function getFrPage(set) {
 function getFrDesk() {
   const axis = ([key, name, values]) => `<span class="fr-axis"><span class="fr-axis-cap">${name}</span><span class="sl-seg sl-seg-view" role="group" aria-label="${name}">${
     values.map(([val, text]) => `<button type="button" class="sl-seg-cell" data-fr-set="${key}:${val}" aria-pressed="false">${text}</button>`).join('')}</span></span>`;
-  return `<div class="fr-desk" role="group" aria-label="Пульт стенда"><div class="fr-desk-row"><span class="fr-desk-cap">Пульт стенда</span>` +
-    `${FR_AXES.slice(0, 2).map(axis).join('')}</div>` +
-    `<div class="fr-desk-row">${FR_AXES.slice(2, 5).map(axis).join('')}</div><div class="fr-desk-row">${FR_AXES.slice(5).map(axis).join('')}</div>` +
+  const rows = FR_ROWS.map((keys, n) => `<div class="fr-desk-row">${n ? '' : '<span class="fr-desk-cap">Пульт стенда</span>'}` +
+    `${keys.map((key) => axis(FR_AXES.find((one) => one[0] === key))).join('')}</div>`).join('');
+  return `<div class="fr-desk" role="group" aria-label="Пульт стенда">${rows}` +
     `<div class="fr-desk-row"><p class="fr-desk-set" data-fr-say></p>` +
-    `<button type="button" class="sl-but fr-desk-reset" data-fr-reset>${getFrIcon('arrow-counterclockwise')} Набор варианта</button></div></div>`;
+    `<button type="button" class="sl-but fr-desk-reset" data-fr-reset>${getFrIcon('arrow-counterclockwise')} Как на сайте</button></div></div>`;
 }
 
 /* The page follows the attributes of the root, so a set written by hand and a set pressed on the desk read the same */
@@ -256,8 +273,7 @@ function setFrView(root) {
   }
   document.querySelector('[data-fr-say]').textContent = 'Набор: ' + said.join(' · ');
   root.innerHTML = getFrPage(set);
-  document.documentElement.setAttribute('data-fr-type', set.type);
-  document.documentElement.setAttribute('data-fr-isize', set.isize);
+  FR_MIRROR.forEach((key) => document.documentElement.setAttribute('data-fr-' + key, set[key]));
   root.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} }));
 }
 

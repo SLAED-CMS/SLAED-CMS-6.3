@@ -226,7 +226,7 @@ function finnewuser(): void {
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]);
                 $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]);
                 $fields = $tpl->getHtmlFrag('field-value', ['label' => _UNICKNAME, 'value_text' => $nick])
-                    .$tpl->getHtmlFrag('field-value', ['label' => _UPASSWORD, 'value_text' => $pass]);
+                    .$tpl->getHtmlFrag('field-value', ['label' => _PASSWORD, 'value_text' => $pass]);
                 $hidden = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => $conf['name']])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'activate'])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'user', 'value_attr' => urlencode($nick)])
@@ -1366,21 +1366,21 @@ function edithome(): void {
         $lins[] = getSetupSwitch(_ACTIVATEPERSONAL, 'blockon', (string)$info['blockon'], _ACCOUNT_BLOCKNOTE);
         $mids = getFieldIds('', 'block');
         $lins[] = [
-            'label' => _MENUCONF,
+            'label' => _OWNMENU,
             'label_id' => $mids['label'],
             'hint' => _MENUINFO,
             'hint_id' => $mids['hint'],
             'control_html' => getTplTextarea([
                 'labelledby' => $mids['label'],
                 'describedby' => $mids['hint'],
-                'label' => _MENUCONF,
+                'label' => _OWNMENU,
                 'id' => '2',
                 'name' => 'block',
                 'value' => $info['block'],
                 'mod' => 'profile',
                 'store' => 'users.block',
                 'rows' => '10',
-                'placeholder' => _MENUCONF,
+                'placeholder' => _OWNMENU,
                 'required' => '0',
             ]),
         ];
@@ -1469,7 +1469,7 @@ function edithome(): void {
             $keys = $tpl->getHtmlPart('form-add', [
                 'action' => getSeoUrl(['name' => $conf['name']]),
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$pass,
-                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVE]),
             ]);
         }
         $secs[] = ['id' => 'keys', 'icon' => getIconName('keys'), 'title' => _PASSSETUP, 'tiles' => [
@@ -1526,7 +1526,7 @@ function edithome(): void {
             'alert_html' => ($tops) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $tops]) : '',
             'form_action' => getSeoUrl(['name' => $conf['name']]),
             'form_hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]),
-            'form_submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $extra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
+            'form_submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $extra, 'op' => 'savehome', 'label' => _SAVE]),
             'lamps' => getAccountLamps($info, $lnks, $fill),
             'rail' => $rail,
             'rail_label' => _ACCOUNT_SECTIONS,

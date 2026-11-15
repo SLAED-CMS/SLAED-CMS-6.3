@@ -28,7 +28,7 @@ function getNodeFault(NodeException $err): string {
         NodeException::LIMITED => sprintf(_CERROR5, $conf['node']['limits']['send']),
         default => _NODE_FAILED,
     };
-    $labs = ['url' => _NODE_SOURCE, 'refresh' => _NODE_PERIOD, 'starts' => _NODE_STARTS, 'ends' => _NODE_ENDS, 'place' => _NODE_PLACE];
+    $labs = ['url' => _NODE_SOURCE, 'refresh' => _NODE_PERIOD, 'starts' => _NODE_STARTS, 'ends' => _ENDS, 'place' => _NODE_PLACE];
     if ($err->getCode() === NodeException::INVALID && preg_match('/: (?:ext\.(url|refresh|starts|ends|place)|assets\.([0-9]+)\.src)$/D', $err->getMessage(), $hit)) {
         $text .= ' ('.(($hit[1] === '') ? _NODE_ASSETS.' '.(intval($hit[2]) + 1) : $labs[$hit[1]]).')';
     }
@@ -280,7 +280,7 @@ function getNodeAssetFields(NodeType $type, array $list, bool $link): array {
             $idx++;
         }
         $gid = 'f-role-'.count($out);
-        $label = ($def['mode'] === 'download') ? _NODE_ATTACH : getConst($def['title']);
+        $label = ($def['mode'] === 'download') ? _FILELIST : getConst($def['title']);
         $out[] = ['label' => $label, 'hint' => getConst($def['intro']), 'hint_id' => $gid.'-hint',
             'label_html' => $tpl->getHtmlFrag('repeat', ['add_for' => $gid, 'add_label' => _ADD]).htmlspecialchars($label, ENT_QUOTES, 'UTF-8'),
             'field' => $tpl->getHtmlFrag('repeat', ['group_id' => $gid, 'rows' => $group])];
@@ -307,7 +307,7 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
     }
     if ($type->ext === 'event') {
         $date = fn(string $key): string => str_replace(' ', 'T', substr((string)($vals['ext'][$key] ?? ''), 0, 16));
-        foreach (['starts' => _NODE_STARTS, 'ends' => _NODE_ENDS] as $key => $label) {
+        foreach (['starts' => _NODE_STARTS, 'ends' => _ENDS] as $key => $label) {
             $rows[] = ['label' => $label, 'for' => 'f-'.$key, 'field' => $tpl->getHtmlFrag('input', ['itype' => 'datetime-local', 'name_attr' => $key, 'input_id' => 'f-'.$key,
                 'value_attr' => $date($key), 'is_required' => $key === 'starts'])];
         }
@@ -354,7 +354,7 @@ function getNodeViewData(NodeType $type, Node|NodeTarget $node, string $mode): a
 # The panel reads a state as one word, the author on the site the whole phrase
 function getNodeSupportLabels(bool $short = false): array {
     global $conf;
-    $slab = $short ? ['staff' => _NODE_WOPEN, 'author' => _NODE_WDONE, 'closed' => _NODE_WCLOSE]
+    $slab = $short ? ['staff' => _WAITING, 'author' => _NODE_WDONE, 'closed' => _NODE_WCLOSE]
         : ['staff' => _NODE_WSTAFF, 'author' => _NODE_WUSER, 'closed' => _NODE_WCLOSE];
     $plab = ['low' => _NODE_PLOW, 'normal' => _NODE_PNORM, 'high' => _NODE_PHIGH, 'urgent' => _NODE_PURGE];
     $out = ['state' => [], 'prio' => []];
@@ -400,7 +400,7 @@ function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): arr
         'action' => $owner ? getSeoUrl(['name' => $type->name, 'op' => 'support', 'id' => $node->id]) : '',
         'token' => $owner ? getSiteToken('node') : '',
         'next' => $shut ? $maps['state']['staff'] : $maps['state']['closed'],
-        'switch_label' => $shut ? _NODE_REOPEN : _NODE_CLOSE,
+        'switch_label' => $shut ? _NODE_REOPEN : _CLOSE,
         'card_href' => checkNodeModer($type) ? HOME_PATH.$afile.'.php?name=node&op=support&id='.$node->id : '',
     ];
 }
@@ -655,7 +655,7 @@ function setNodeList(): void {
             'read_label' => _READMORE,
             'pager_html' => getTplPagerView($num, $pages, getPageSpan(), $link, ['count' => $count, 'limit' => $set['limit']]),
             'more_href' => ($look !== 'rail' && $num < $pages) ? $link($num + 1)['href'] : '',
-            'more_label' => _NODE_MORE,
+            'more_label' => _MORE,
             'empty' => ($let !== '' || $mine)
                 ? ['is_found' => true, 'act_url' => getSeoUrl(['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + (($arch !== '') ? ['archive' => 1] : []))]
                 : ['act_url' => ($arch === '' && checkNodeFlow($type)) ? getSeoUrl(['name' => $type->name, 'op' => 'add']) : ''],

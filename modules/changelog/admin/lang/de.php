@@ -4,12 +4,6 @@
 # License: MIT
 # Website: slaed.net
 
-define('_CHLOG_SEARCH','Suchbegriff');
-define('_CHLOG_AUTHOR','Autor');
-define('_CHLOG_FILE','Datei');
-define('_CHLOG_DATE','Datum');
-define('_CHLOG_DATE_FROM','Datum von');
-define('_CHLOG_DATE_TO','Datum bis');
 define('_CHLOG_CHANGES','Änderungen');
 define('_CHLOG_COMMIT','Commit');
 define('_CHLOG_FILES','Datei(en)');
@@ -18,7 +12,6 @@ define('_CHLOG_CACHE_TTL','Cache TTL (Sekunden)');
 define('_CHLOG_EXPORT','Export');
 define('_CHLOG_EXPORT_TXT','Export TXT');
 define('_CHLOG_EXPORT_MD','Export Markdown');
-define('_CHLOG_SOURCE','Quelle');
 define('_CHLOG_SOURCE_TITLE','Changelog-Quelle');
 define('_CHLOG_GH_OWNER','GitHub Owner');
 define('_CHLOG_GH_REPO','GitHub Repository');
@@ -26,10 +19,7 @@ define('_CHLOG_GH_TOKEN','GitHub Token');
 define('_CHLOG_LIMIT','Anzahl Commits');
 define('_CHLOG_GROUP_DATE','Datum gruppieren');
 define('_CHLOG_SHOW_FILES','Dateien anzeigen');
-define('_CHLOG_SHOW_STATS','Statistiken');
 define('_CHLOG_STATS_TITLE','Anzeige-Optionen');
-define('_CHLOG_TODAY','Heute');
-define('_CHLOG_YESTERDAY','Gestern');
 define('_CHLOG_THIS_WEEK','Diese Woche');
 define('_CHLOG_ERR_GH_CONF','GitHub Owner/Repo nicht konfiguriert.');
 define('_CHLOG_ERR_GH_CONNECT','GitHub API: Verbindung fehlgeschlagen.');

@@ -12693,7 +12693,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   box-shadow: var(--sl-pane-shadow);
 }
 
-/* The gradient ends with the head, so a window reads the same at any height; the head is a chip, its inset twice and its rule high, and rounds its upper corners */
+/* The ground of the head is a token, clear in this theme, where the gradient of the window runs under it; the head is a chip, its inset twice and its rule high, and rounds its upper corners */
 .sl-pane-cap {
   position: relative;
   display: flex;

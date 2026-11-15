@@ -23,8 +23,8 @@ function scheduler(): void {
     $head = [
         ['content' => _TITLE],
         ['content' => _SCHEDULER_NEXT, 'is_col_date' => true],
-        ['content' => _SCHEDULER_PRIO, 'is_col_count' => true],
-        ['content' => _SCHEDULER_RESULT, 'is_col_status' => true, 'is_head_run' => true],
+        ['content' => _PRIORITY, 'is_col_count' => true],
+        ['content' => _EXECUTION, 'is_col_status' => true, 'is_head_run' => true],
         ['content' => _STATUS, 'is_col_status' => true, 'is_head_status' => true],
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
     ];
@@ -33,7 +33,7 @@ function scheduler(): void {
         $name = $job['name'];
         $state = getSchedulerState($name);
         $next = getSchedulerPlannedTime($job, $state);
-        $type = (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM;
+        $type = (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SYSTEMIC;
         $held = checkSchedulerLock($name);
         $stat = match (true) {
             $held => _SCHEDULER_RUNNING,
@@ -43,7 +43,7 @@ function scheduler(): void {
                 'failed' => _NO,
                 'crashed' => _SCHEDULER_CRASH,
                 'disabled' => _SCHEDULER_OFF,
-                default => _SCHEDULER_IDLE,
+                default => _WAITING,
             },
         };
         $tone = match (true) {
@@ -78,8 +78,8 @@ function scheduler(): void {
         $tips[] = ['label' => _SCHEDULER_LAST_OK, 'value' => $lastok];
         $tips[] = ['label' => _SCHEDULER_NEXTRUN, 'value' => $nextr];
         $tips[] = ['label' => _SCHEDULER_TRIGGER, 'value' => ($trig !== '' ? $trig : _NO)];
-        $tips[] = ['label' => _SCHEDULER_RUNTIME, 'value' => (string)$time];
-        $tips[] = ['label' => _SCHEDULER_FAILS, 'value' => (string)$fail];
+        $tips[] = ['label' => _DURATION, 'value' => (string)$time];
+        $tips[] = ['label' => _ERRORS, 'value' => (string)$fail];
         if ($note !== '') $tips[] = ['label' => _DESCRIPTION, 'value' => $note];
         $title = $job['title'];
         $acts = [[
@@ -89,14 +89,14 @@ function scheduler(): void {
             'is_edit' => true,
         ]];
         $keys = ['name' => 'scheduler', 'job' => $name];
-        if ((int)($job['manual'] ?? 0) === 1) $acts[] = getTplPostAction(['op' => 'run'] + $keys, 'play-fill', _SCHEDULER_RUN);
+        if ((int)($job['manual'] ?? 0) === 1) $acts[] = getTplPostAction(['op' => 'run'] + $keys, 'play-fill', _LAUNCH);
         $acts[] = getTplPostAction(['op' => 'unlock'] + $keys, 'unlock', _SCHEDULER_UNLOCK);
         $drop = (($job['type'] ?? '') === 'custom') ? getTplPostAction(['name' => 'scheduler', 'op' => 'delete', 'id[]' => $name], 'trash', _DELETE) : [];
         $rows[] = ['name' => (string)$title, 'details' => $tips, 'drop' => $drop, 'cells' => [
             ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
             ['is_col_date' => true, 'moment' => $next, 'has_content_text' => true, 'content_text' => _NO],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
-            ['is_col_status' => true, 'stat' => ['text' => _SCHEDULER_RESULT.': '.$stat, $tone => true]],
+            ['is_col_status' => true, 'stat' => ['text' => _EXECUTION.': '.$stat, $tone => true]],
             ['is_col_status' => true, 'stat' => ['is_on' => (int)$isactive === 1]],
             ['is_col_actions' => true, 'dial' => $acts],
         ]];
@@ -170,7 +170,7 @@ function add(string $name = '', array $sent = [], string $note = ''): void {
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'input_id' => 'f-type',
-            'value_attr' => (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM,
+            'value_attr' => (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SYSTEMIC,
             'is_config' => true,
             'input_attr' => 'disabled',
         ]),
@@ -193,7 +193,7 @@ function add(string $name = '', array $sent = [], string $note = ''): void {
     } else {
         $rows[] = [
             'label_for' => 'f-system',
-            'label_html' => _SCHEDULER_SYSTEM,
+            'label_html' => _SYSTEMIC,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'input_id' => 'f-system',
@@ -271,7 +271,7 @@ function add(string $name = '', array $sent = [], string $note = ''): void {
     }
     $rows[] = [
         'label_for' => 'f-priority',
-        'label_html' => _SCHEDULER_PRIO, 'hint_html' => _SCHEDULER_PRIOTIP, 'hint_id' => $hntid = getFieldIds('f-priority')['hint'],
+        'label_html' => _PRIORITY, 'hint_html' => _SCHEDULER_PRIOTIP, 'hint_id' => $hntid = getFieldIds('f-priority')['hint'],
         'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
             'itype' => 'number',
             'name_attr' => 'priority',

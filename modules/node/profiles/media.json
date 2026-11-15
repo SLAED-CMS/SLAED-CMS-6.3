@@ -245,7 +245,7 @@
                 "sort": 80
             },
             "format": {
-                "title": "_NODE_MFORMAT",
+                "title": "_FORMAT",
                 "intro": "",
                 "type": "text",
                 "default": "",

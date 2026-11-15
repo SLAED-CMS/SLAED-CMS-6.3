@@ -238,7 +238,7 @@ function getLayoutPageFields(array $lay, int $key): array {
     $own = !$slot && $key !== $lay['notfound'] && $key !== $lay['home'];
     $out = [['key' => 'title', 'label' => '_TITLE', 'type' => 'text', 'max' => 255]];
     if ($own) {
-        $out[] = ['key' => 'addr', 'label' => '_LAYOUT_URL', 'type' => 'slug'];
+        $out[] = ['key' => 'addr', 'label' => '_ADDRESS', 'type' => 'slug'];
         $out[] = ['key' => 'desc', 'label' => '_LAYOUT_DESC', 'type' => 'textarea', 'max' => 500];
         $out[] = ['key' => 'og', 'label' => '_LAYOUT_OGIMG', 'type' => 'file'];
         $out[] = ['key' => 'noindex', 'label' => '_LAYOUT_INDEX', 'type' => 'choice', 'show' => 'seg', 'options' => ['0' => '_LAYOUT_SHOWN', '1' => '_LAYOUT_HIDDEN']];
@@ -249,7 +249,7 @@ function getLayoutPageFields(array $lay, int $key): array {
     $out[] = ['key' => 'side', 'label' => '_BLOCKS_SIDE', 'type' => 'choice',
         'options' => ['0' => '_BLOCKS_MOD0', '1' => '_BLOCKS_MOD1', '2' => '_BLOCKS_MOD2', '3' => '_BLOCKS_MOD3']];
     $out[] = ['key' => 'top', 'label' => '_BLOCKS_TOP', 'type' => 'choice',
-        'options' => ['0' => '_BLOCKS_MODC0', '1' => '_BLOCKS_MODC1', '2' => '_BLOCKS_MODC2', '3' => '_BLOCKS_MODC3']];
+        'options' => ['0' => '_BLOCKS_MODC0', '1' => '_BLOCKS_MODC1', '2' => '_BLOCKS_MODC2', '3' => '_BLOCKS_MOD3']];
     return $out;
 }
 
@@ -442,7 +442,7 @@ function getLayoutAddrs(array $lay): array {
     $mods = [];
     foreach (getLayoutModules() as $mod => $word) if ($mod !== '') $mods['/'.$mod] = getConst((string)$word);
     asort($mods, SORT_NATURAL | SORT_FLAG_CASE);
-    return [_LAYOUT_PAGES => $pages, _MODULES => $mods];
+    return [_PAGENAV => $pages, _MODULES => $mods];
 }
 
 # The Node types a feed offers, active and given to blocks in their settings, as the engine of node.php reads them; each by its name and its title
@@ -751,14 +751,14 @@ function getLayoutItems(array $desc, mixed $list, string $owner, mixed $live = n
     foreach ($list as $i => $item) {
         $item = is_array($item) ? $item : [];
         $label = trim((string)($item[$name] ?? '')) ?: getConst((string)($desc['label'] ?? '')).' '.($i + 1);
-        $acts = $tpl->getHtmlPart('layout-item', ['num' => $i, 'up_text' => _LAYOUT_UP, 'down_text' => _LAYOUT_DOWN, 'del_text' => _LAYOUT_DELITEM,
+        $acts = $tpl->getHtmlPart('layout-item', ['num' => $i, 'up_text' => _LAYOUT_UP, 'down_text' => _LAYOUT_DOWN, 'del_text' => _DELETE,
             'is_first' => $i === 0, 'is_last' => $i === count($list) - 1]);
         $icon = ($mark !== '' && preg_match('/^[a-z0-9-]+$/', (string)($item[$mark] ?? '')) === 1) ? $item[$mark] : 'card-text';
         $out .= $tpl->getHtmlFrag('pane', ['id' => 'sl-lay-item-'.$owner.'-'.$i, 'icon' => $icon, 'title' => $label, 'tools_html' => $acts,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => getLayoutRows($fields, $item, 'item['.$i.']', '', is_array($live[$i] ?? null) ? $live[$i] : null, $addrs)])]);
     }
     return $tpl->getHtmlPart('layout-items', ['title' => getConst((string)($desc['label'] ?? '')), 'num' => count($list).($max ? ' / '.$max : ''), 'items_html' => $out,
-        'add_text' => _LAYOUT_ADDITEM, 'is_full' => $max > 0 && count($list) >= $max]);
+        'add_text' => _ADD, 'is_full' => $max > 0 && count($list) >= $max]);
 }
 
 # The tree of the screen for its tab: the page with its parts, sections and blocks, the menus, or the parts of the theme
@@ -773,7 +773,7 @@ function getLayoutTree(array $dft, int $key, string $tab, string $sel, bool $oob
         $hint = $more['hint'] ?? $sub;
         unset($more['hint']);
         return $more + ['sub_title' => $hint, 'link' => ['href' => $link($one, $to), 'title' => $label, 'icon_name' => $icon, 'label' => $label, 'is_current' => $one === $sel],
-            'sub_text' => $sub, 'link_attr' => 'data-sl-lay-pick="'.htmlspecialchars($one, ENT_QUOTES, 'UTF-8').'"', 'dial_title' => _ADM_ACTS];
+            'sub_text' => $sub, 'link_attr' => 'data-sl-lay-pick="'.htmlspecialchars($one, ENT_QUOTES, 'UTF-8').'"', 'dial_title' => _ACTIONS];
     };
     $dial = static fn(array $acts): array => array_map(static fn(array $a): array => ['href' => '#', 'title' => $a[2], 'icon_name' => $a[1],
         'link_attr' => 'data-sl-lay-act="'.$a[0].'" data-sl-lay-id="'.htmlspecialchars((string)$a[3], ENT_QUOTES, 'UTF-8').'"'], $acts);
@@ -822,7 +822,7 @@ function getLayoutTree(array $dft, int $key, string $tab, string $sel, bool $oob
         $open = ['l' => in_array($side, ['0', '1'], true), 'r' => in_array($side, ['0', '2'], true)];
         $open += ['c' => in_array($top, ['0', '1'], true), 'd' => in_array($top, ['0', '2'], true)];
         $free = [];
-        $lead = ['title' => _LAYOUT_BLOCKS, 'icon' => 'layout-sidebar', 'chip' => _LAYOUT_AT_ALL];
+        $lead = ['title' => _BLOCKLIST, 'icon' => 'layout-sidebar', 'chip' => _LAYOUT_AT_ALL];
         foreach ($places['zones'] as $zone => $info) {
             $rows = [];
             foreach ($blks as $bid => $blk) {
@@ -900,7 +900,7 @@ function getLayoutBlockRow(array $blk, string $pname, bool $phome, int $num, Clo
     $sub = match ($blk['kind']) {
         'file' => $blk['bfile'],
         'rss' => 'RSS',
-        'sys' => _LAYOUT_SYSBLK,
+        'sys' => _SYSTEMIC,
         default => 'HTML',
     };
     $here = $free || isBlockShown($blk['which'] ?: ['all']);
@@ -911,7 +911,7 @@ function getLayoutBlockRow(array $blk, string $pname, bool $phome, int $num, Clo
     $on = $blk['status'];
     return $row('blk:'.$blk['id'], $icon, getConst($blk['title']) ?: $blk['bfile'], $sub, 'page', ['key' => $blk['id'], 'is_drag' => !$free, 'is_off' => !$on || !$here,
         'order_num' => $num ?: '', 'order_title' => _SORTORDER,
-        'dial' => $dial(array_merge([['blk-toggle', $on ? 'eye-slash' : 'eye', $on ? _LAYOUT_BLKOFF : _LAYOUT_BLKON, $blk['id']]],
+        'dial' => $dial(array_merge([['blk-toggle', $on ? 'eye-slash' : 'eye', $on ? _TURNOFF : _TURNON, $blk['id']]],
             ($blk['kind'] !== 'sys') ? [['blk-del', 'trash3', _DELETE, $blk['id']]] : []))]);
 }
 
@@ -922,7 +922,7 @@ function getLayoutMenuRow(string $mkey, array $item, int $up, int $depth, bool $
     $acts = [];
     if ($depth > 1 && $up) $acts[] = ['menu-out', 'arrow-bar-left', _LAYOUT_OUT, $iid];
     if ($depth > 1 && !$up && !$first && empty($item['kids'])) $acts[] = ['menu-in', 'arrow-bar-right', _LAYOUT_IN, $iid];
-    $acts[] = ['menu-del', 'trash3', _LAYOUT_DELITEM, $iid];
+    $acts[] = ['menu-del', 'trash3', _DELETE, $iid];
     $icon = (string)($item['icon'] ?? '') ?: ($up ? 'arrow-return-right' : 'link-45deg');
     $grp = (string)$up;
     $attr = 'data-sl-drag-group="'.$grp.'" data-sl-drag-scope="'.$grp.'"'.($up ? ' data-sl-drag-parent="'.$up.'"' : '');
@@ -940,7 +940,7 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
     $part = explode(':', $sel);
     [$prev, $next] = getLayoutSteps($dft, $places, $sel);
     $data = ['is_oob' => $oob, 'save_url' => getLayoutUrl(['op' => 'save']), 'token' => getSiteToken('layout'), 'sel' => $sel, 'page' => $key, 'aria_text' => _LAYOUT_PICKED,
-        'unpick_text' => _LAYOUT_UNPICK, 'tabs' => [], 'body_html' => '', 'groups' => [], 'main' => [], 'danger' => [], 'prev' => $prev, 'next' => $next,
+        'unpick_text' => _UNPICK, 'tabs' => [], 'body_html' => '', 'groups' => [], 'main' => [], 'danger' => [], 'prev' => $prev, 'next' => $next,
         'is_step' => $prev !== '' || $next !== '', 'prev_text' => _BACK, 'next_text' => _NEXT];
     $note = static fn(string $text): string => $tpl->getHtmlFrag('alert', ['text' => $text, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     $grid = static fn(array $rows): string => $rows ? $tpl->getHtmlPart('div', ['rows' => $rows]) : '';
@@ -1004,7 +1004,7 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         $where = getConst((string)($one['where'] ?? ''));
         return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => (string)($one['icon'] ?? 'square'),
             'title_text' => getConst((string)($one['title'] ?? $part[1])),
-            'sub_text' => ($where === _LAYOUT_AT_ALL) ? $where : $where.' · '._LAYOUT_ALLSITE, 'body_html' => $body]));
+            'sub_text' => ($where === _LAYOUT_AT_ALL) ? $where : $where.' · '._LAYOUT_AT_ALL, 'body_html' => $body]));
     }
     if ($part[0] === 'menu' && is_array($places['menus'][$part[1]] ?? null)) {
         $menu = $places['menus'][$part[1]];
@@ -1013,7 +1013,7 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         $where = getConst((string)($menu['where'] ?? ''));
         if (!isset($part[2]) || ($at = getLayoutItemPlace($list, intval($part[2]))) === null) {
             $data['main'] = ['act' => 'menu-add', 'arg' => $part[1], 'icon' => 'plus-lg', 'label' => _LAYOUT_ADDITEM];
-            return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => 'menu-button-wide', 'title_text' => $title, 'sub_text' => $where.' · '._LAYOUT_ALLSITE,
+            return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => 'menu-button-wide', 'title_text' => $title, 'sub_text' => $where.' · '._LAYOUT_AT_ALL,
                 'body_html' => $note(_LAYOUT_MENUNOTE)]));
         }
         $item = isset($at[1]) ? $list[$at[0]]['kids'][$at[1]] : $list[$at[0]];
@@ -1023,7 +1023,7 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         $body = $grid(getLayoutRows(getLayoutItemFields($menu), $item, 'field', '', $was, $addrs));
         $kids = count(is_array($item['kids'] ?? null) ? $item['kids'] : []);
         if ($kids) $body .= $note(sprintf(_LAYOUT_KIDSNOTE, $kids));
-        $data['danger'] = ['act' => 'menu-del', 'label' => _LAYOUT_DELITEM, 'id' => intval($item['id'])];
+        $data['danger'] = ['act' => 'menu-del', 'label' => _DELETE, 'id' => intval($item['id'])];
         return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => 'link-45deg', 'title_text' => _LAYOUT_MITEM, 'sub_text' => $title, 'body_html' => $body]));
     }
     if ($part[0] === 'blk' && ($blk = getLayoutBlocks($dft)[$part[1]] ?? null) !== null) {
@@ -1031,13 +1031,13 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         $body = $grid(getLayoutRows(getLayoutBlockFields($blk, $places['zones']), $blk, 'field', '', $was));
         $body .= $note($blk['kind'] === 'sys' ? _LAYOUT_SYSNOTE : _LAYOUT_BLKNOTE);
         $on = $blk['status'];
-        $acts = [['act' => 'blk-toggle', 'icon' => $on ? 'eye-slash' : 'eye', 'title' => $on ? _LAYOUT_BLKOFF : _LAYOUT_BLKON, 'id' => $blk['id']]];
+        $acts = [['act' => 'blk-toggle', 'icon' => $on ? 'eye-slash' : 'eye', 'title' => $on ? _TURNOFF : _TURNON, 'id' => $blk['id']]];
         if (!$blk['new']) $acts[] = ['href' => getLayoutBlockUrl($blk['id']), 'icon' => 'box-arrow-up-right', 'title' => _LAYOUT_INBLOCKS];
         $data['groups'] = [$acts];
-        if ($blk['kind'] !== 'sys') $data['danger'] = ['act' => 'blk-del', 'label' => _LAYOUT_DELBLK, 'id' => $blk['id']];
+        if ($blk['kind'] !== 'sys') $data['danger'] = ['act' => 'blk-del', 'label' => _DELETE, 'id' => $blk['id']];
         $free = in_array('infly', $blk['which'], true);
         return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => 'bricks', 'title_text' => _LAYOUT_BLOCK,
-            'sub_text' => $free ? sprintf(_LAYOUT_FREENUM, $blk['id']) : _LAYOUT_BLOCKS.' · '._LAYOUT_ALLSITE, 'body_html' => $body]));
+            'sub_text' => $free ? sprintf(_LAYOUT_FREENUM, $blk['id']) : _BLOCKLIST.' · '._LAYOUT_AT_ALL, 'body_html' => $body]));
     }
     if ($part[0] === 'page' && isset($lay['pages'][intval($part[1])])) {
         $pkey = intval($part[1]);
@@ -1053,19 +1053,19 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         if ($lost) $say = _LAYOUT_LOSTNOTE;
         $cols = ($view->getPageColumns($pkey) === null) ? getLayoutModuleCols((string)$slot) : null;
         $sides = [_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3];
-        $tops = [_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3];
-        $body .= $note($say).$note($cols ? sprintf(_LAYOUT_COLSOWN, $sides[intval($cols[0])], $tops[intval($cols[1])]) : _LAYOUT_COLSNOTE);
-        if (!$lost) $data['groups'] = [[['act' => 'page-copy', 'icon' => 'files', 'title' => _LAYOUT_PAGECOPY, 'id' => $pkey]]];
+        $tops = [_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MOD3];
+        $body .= $note($say).$note($cols ? sprintf(_LAYOUT_COLSOWN, _BLOCKS_SIDE.' · '.$sides[intval($cols[0])], _BLOCKS_TOP.' · '.$tops[intval($cols[1])]) : _LAYOUT_COLSNOTE);
+        if (!$lost) $data['groups'] = [[['act' => 'page-copy', 'icon' => 'files', 'title' => _COPY, 'id' => $pkey]]];
         if ($cols) $data['groups'][0][] = ['href' => $cols[2], 'icon' => 'box-arrow-up-right', 'title' => _LAYOUT_COLSEDIT];
-        if (!$lost && $pkey !== $lay['home']) $data['danger'] = ['act' => 'page-del', 'label' => _LAYOUT_DELPAGE, 'id' => $pkey];
+        if (!$lost && $pkey !== $lay['home']) $data['danger'] = ['act' => 'page-del', 'label' => _DELETE, 'id' => $pkey];
         $title = $lost ? _LAYOUT_PAGE404 : (($pkey === $lay['home']) ? _HOME : _PAGE);
         return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => $lost ? 'sign-stop' : 'file-earmark-richtext', 'title_text' => $title,
             'sub_text' => sprintf(_LAYOUT_SECNUM, count($page['sections'])), 'body_html' => $body]));
     }
     $data['sel'] = '';
     $data['main'] = ['open' => 'ready', 'icon' => 'file-earmark-plus', 'label' => $lay['shipped'] ? _LAYOUT_READYPICK : _LAYOUT_NEWPAGE];
-    $keys = [[['Ctrl', 'Z'], _LAYOUT_KEYUNDO], [['Ctrl', 'Shift', 'Z'], _LAYOUT_KEYREDO], [['Ctrl', 'D'], _LAYOUT_DUP], [['Alt', '↑'], _LAYOUT_UP],
-        [['Alt', '↓'], _LAYOUT_DOWN], [['Delete'], _DELETE], [['Ctrl', 'K'], _LAYOUT_CMDS], [['Ctrl', 'Alt', 'P'], _LAYOUT_KEYVIEW], [['Esc'], _LAYOUT_UNPICK]];
+    $keys = [[['Ctrl', 'Z'], _LAYOUT_UNDO], [['Ctrl', 'Shift', 'Z'], _LAYOUT_REDO], [['Ctrl', 'D'], _LAYOUT_DUP], [['Alt', '↑'], _LAYOUT_UP],
+        [['Alt', '↓'], _LAYOUT_DOWN], [['Delete'], _DELETE], [['Ctrl', 'K'], _LAYOUT_CMDS], [['Ctrl', 'Alt', 'P'], _LAYOUT_PREVIEW], [['Esc'], _UNPICK]];
     $keys = $tpl->getHtmlPart('layout-keys', ['keys' => array_map(static fn(array $v): array => ['keys' => $v[0], 'text' => $v[1]], $keys)]);
     return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => 'cursor', 'title_text' => _LAYOUT_NOPICK, 'sub_text' => _LAYOUT_NOPICK2,
         'body_html' => ($lay['shipped'] ? $note(_LAYOUT_SHIPNOTE) : '').$note(_LAYOUT_PICKHINT).$keys]));
@@ -1134,7 +1134,7 @@ function getLayoutChanges(array $dft, array $live, array $types, array $places):
         $title = getLayoutPageTitle($now, $key);
         $was = $live['pages'][$key] ?? null;
         if (!is_array($was)) {
-            $add('file-earmark-plus', sprintf(_LAYOUT_CH_PAGE, $title), _LAYOUT_PAGES, 'page:'.$key, $key);
+            $add('file-earmark-plus', sprintf(_LAYOUT_CH_PAGE, $title), _PAGENAV, 'page:'.$key, $key);
             continue;
         }
         $keys = array_flip(array_column(getLayoutPageFields($now, $key), 'key'));
@@ -1153,7 +1153,7 @@ function getLayoutChanges(array $dft, array $live, array $types, array $places):
         if (!$order(array_keys($olds), $ids)) $add('arrow-down-up', _LAYOUT_CH_SECORD, $title, 'page:'.$key, $key);
     }
     foreach (array_keys(array_diff_key($live['pages'], $now['pages'])) as $key) {
-        $add('file-earmark-minus', sprintf(_LAYOUT_CH_PAGEDEL, getLayoutPageTitle($live, $key)), _LAYOUT_PAGES);
+        $add('file-earmark-minus', sprintf(_LAYOUT_CH_PAGEDEL, getLayoutPageTitle($live, $key)), _PAGENAV);
     }
     $touched = array_filter(array_keys($now['theme'] + $live['theme']), static fn($v): bool => !isLayoutSame($now['theme'][$v] ?? null, $live['theme'][$v] ?? null));
     $site = $dft['conf'] !== [];
@@ -1184,9 +1184,9 @@ function getLayoutChanges(array $dft, array $live, array $types, array $places):
         if (!is_array($set)) continue;
         $was = is_array($dft['bwas'][$bid] ?? null) ? $dft['bwas'][$bid] : [];
         $word = getConst((string)(($set['title'] ?? '') ?: ($was['title'] ?? $bid)));
-        if (!empty($set['new'])) $add('plus-square', sprintf(_LAYOUT_CH_BLKNEW, $word), _LAYOUT_BLOCKS, 'blk:'.$bid);
-        elseif (!empty($set['del'])) $add('dash-square', sprintf(_LAYOUT_CH_BLKDEL, $word), _LAYOUT_BLOCKS);
-        else $add('pencil-square', sprintf(_LAYOUT_CH_BLKSET, $word), _LAYOUT_BLOCKS, 'blk:'.$bid);
+        if (!empty($set['new'])) $add('plus-square', sprintf(_LAYOUT_CH_BLKNEW, $word), _BLOCKLIST, 'blk:'.$bid);
+        elseif (!empty($set['del'])) $add('dash-square', sprintf(_LAYOUT_CH_BLKDEL, $word), _BLOCKLIST);
+        else $add('pencil-square', sprintf(_LAYOUT_CH_BLKSET, $word), _BLOCKLIST, 'blk:'.$bid);
     }
     return $out;
 }
@@ -1306,10 +1306,10 @@ function getLayoutIssues(array $dft, array $types, array $places, Closure $answe
         $blk = array_replace(is_array($dft['bwas'][$bid] ?? null) ? $dft['bwas'][$bid] : [], $set);
         $word = getConst((string)($blk['title'] ?? $bid));
         $kind = (string)($blk['kind'] ?? '');
-        if ($kind === 'html' && trim((string)($blk['content'] ?? '')) === '') $add('code-square', sprintf(_LAYOUT_IS_BLKNONE, $word), _LAYOUT_BLOCKS, 'blk:'.$bid, 0);
+        if ($kind === 'html' && trim((string)($blk['content'] ?? '')) === '') $add('code-square', sprintf(_LAYOUT_IS_BLKNONE, $word), _BLOCKLIST, 'blk:'.$bid, 0);
         $room = ($kind === 'html') ? checkEditorTextRoom((string)($blk['content'] ?? ''), 'blocks.content') : '';
-        if ($room !== '') $add('code-square', $word.': '.$room, _LAYOUT_BLOCKS, 'blk:'.$bid, 0);
-        if ($kind === 'rss' && preg_match('#^https?://.#i', (string)($blk['url'] ?? '')) !== 1) $add('rss', sprintf(_LAYOUT_IS_NORSS, $word), _LAYOUT_BLOCKS, 'blk:'.$bid, 0);
+        if ($room !== '') $add('code-square', $word.': '.$room, _BLOCKLIST, 'blk:'.$bid, 0);
+        if ($kind === 'rss' && preg_match('#^https?://.#i', (string)($blk['url'] ?? '')) !== 1) $add('rss', sprintf(_LAYOUT_IS_NORSS, $word), _BLOCKLIST, 'blk:'.$bid, 0);
     }
     return $out;
 }
@@ -1457,7 +1457,7 @@ function getLayoutMineHtml(array $types, array $taken, bool $oob = false): strin
         $name = (string)($one['name'] ?? $type);
         $sub = sprintf(_LAYOUT_MINEWHEN, date(_DATESTRING, intval($one['time'] ?? 0)));
         $cards[] = ['url' => '#', 'title' => $name, 'subtitle' => $sub, 'title_attr' => $name, 'thumb' => $type, 'icon_name' => $kind['icon'] ?? 'square',
-            'is_off' => $off, 'words' => mb_strtolower($name), 'link_attr' => 'data-sl-lay-mine="'.$i.'"'.($off ? ' aria-disabled="true"' : ''), 'dial_title' => _ADM_ACTS,
+            'is_off' => $off, 'words' => mb_strtolower($name), 'link_attr' => 'data-sl-lay-mine="'.$i.'"'.($off ? ' aria-disabled="true"' : ''), 'dial_title' => _ACTIONS,
             'dial' => [['href' => '#', 'title' => _LAYOUT_MINEDEL, 'icon_name' => 'x-lg', 'link_attr' => 'data-sl-lay-mine-del="'.$i.'"']]];
     }
     return $tpl->getHtmlPart('layout-mine', ['is_oob' => $oob, 'cards' => $cards, 'title' => _LAYOUT_MINE, 'num' => count($cards)]);
@@ -1498,10 +1498,10 @@ function getLayoutChip(array $dft, bool $oob = false, string $part = ''): string
     $view = getLayoutView($dft['layout']);
     $num = ($dirty && $part !== 'steps') ? count(getLayoutChanges($dft, Layout::getLayoutData($conf['layout'] ?? []), getLayoutTypes($view), $view->getThemePlaces())) : 0;
     return $tpl->getHtmlPart('layout-state', ['is_oob' => $oob, 'is_steps' => $part !== 'state', 'is_state' => $part !== 'steps', 'is_dirty' => $dirty,
-        'state_text' => $dirty ? _LAYOUT_ISDRAFT.($num ? ' · '.$num : '') : _LAYOUT_ISLIVE,
+        'state_text' => $dirty ? _DRAFT.($num ? ' · '.$num : '') : _LAYOUT_ISLIVE,
         'state_title' => $num ? sprintf(_LAYOUT_DRAFTNUM, $num) : ($dirty ? _LAYOUT_DRAFTWAIT : ''), 'undo_text' => _LAYOUT_UNDO, 'redo_text' => _LAYOUT_REDO,
         'is_undo' => $dft['undo'] !== [], 'is_redo' => $dft['redo'] !== [],
-        'rev' => $dft['rev'], 'live' => Layout::getLayoutHash($conf['layout'] ?? []), 'publish_text' => _LAYOUT_PUBLISH,
+        'rev' => $dft['rev'], 'live' => Layout::getLayoutHash($conf['layout'] ?? []), 'publish_text' => _PUBLISH,
         'names' => (string)json_encode($names, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
 }
 
@@ -1630,20 +1630,20 @@ function layout(): void {
     if (!$made) echo $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_NOWRITE, 'meta' => '', 'type' => 'error', 'is_warn' => true]);
     echo $tpl->getHtmlPart('layout-screen', [
         'act_url' => getLayoutUrl(['op' => 'act']), 'pick_url' => getLayoutUrl(['op' => 'pick']), 'tree_url' => getLayoutUrl(['op' => 'tree']), 'token' => getSiteToken('layout'),
-        'page' => $key, 'sel' => $sel, 'tab' => $tab, 'panel_url' => HOME_PATH.$afile.'.php', 'panel_text' => _LAYOUT_PANEL, 'panel_title' => _ADMINMENU,
-        'title_text' => _LAYOUT_BUILDER, 'page_label' => _PAGE, 'pages' => $pages, 'pages_group' => _LAYOUT_PAGES, 'mods' => $mods, 'mods_group' => _MODULES,
+        'page' => $key, 'sel' => $sel, 'tab' => $tab, 'panel_url' => HOME_PATH.$afile.'.php', 'panel_text' => _PANEL, 'panel_title' => _ADMINMENU,
+        'title_text' => _LAYOUT_BUILDER, 'page_label' => _PAGE, 'pages' => $pages, 'pages_group' => _PAGENAV, 'mods' => $mods, 'mods_group' => _MODULES,
         'new_text' => $lay['shipped'] ? _LAYOUT_READYPICK : _LAYOUT_NEWPAGE, 'width_label' => _LAYOUT_WIDTH,
-        'devices' => [['key' => 'desk', 'icon' => 'display', 'label' => _LAYOUT_DESK, 'is_on' => true], ['key' => 'tablet', 'icon' => 'tablet', 'label' => _LAYOUT_TABLET],
-            ['key' => 'phone', 'icon' => 'phone', 'label' => _LAYOUT_PHONE]],
-        'tools_label' => _LAYOUT_TOOLS, 'site_url' => HOME_PATH, 'site_text' => _LAYOUT_OPENSITE, 'cmds_text' => _LAYOUT_CMDS, 'help_url' => getLayoutUrl(['op' => 'info']),
-        'help_text' => _MANUAL, 'expand_text' => _EEXPAND, 'restore_text' => _ERESTORE, 'sets_text' => _LAYOUT_SETS, 'help_label' => _LAYOUT_HELPSETS,
+        'devices' => [['key' => 'desk', 'icon' => 'display', 'label' => _DESKTOP, 'is_on' => true], ['key' => 'tablet', 'icon' => 'tablet', 'label' => _TABLET],
+            ['key' => 'phone', 'icon' => 'phone', 'label' => _PHONE]],
+        'tools_label' => _LAYOUT_TOOLS, 'site_url' => HOME_PATH, 'site_text' => _OPENSITE, 'cmds_text' => _LAYOUT_CMDS, 'help_url' => getLayoutUrl(['op' => 'info']),
+        'help_text' => _MANUAL, 'expand_text' => _EXPAND, 'restore_text' => _COLLAPSE, 'sets_text' => _CHANGE, 'help_label' => _LAYOUT_HELPSETS,
         'steps_html' => getLayoutChip($dft, false, 'steps'), 'state_html' => getLayoutChip($dft, false, 'state'),
         'tree_label' => _LAYOUT_TREE, 'tree_html' => getLayoutTree($dft, $key, $tab, $sel), 'stage_label' => _LAYOUT_STAGE, 'frame_url' => $frame, 'frame_title' => _LAYOUT_FRAME,
         'insp_html' => getLayoutInsp($dft, $key, $sel), 'lib_title' => _LAYOUT_ADDSEC, 'lib_groups' => $groups, 'lib_groups_label' => _LAYOUT_GROUPS, 'lib_find' => _LAYOUT_FINDSEC,
         'lib_after' => _LAYOUT_AFTER, 'lib_start' => _LAYOUT_ATSTART, 'lib_note' => _LAYOUT_LIBNOTE, 'lib_sects' => array_values($sects),
         'none_text' => _NONE_FOUND, 'close_text' => _CLOSE,
-        'sets_title' => _LAYOUT_SETS, 'where_title' => _URLS, 'links' => getLayoutLinks(), 'pal_title' => _LAYOUT_CMDS, 'pal_find' => _LAYOUT_PALFIND,
-        'pal_acts' => getLayoutCommands(), 'pal_acts_title' => _ADM_ACTS, 'pal_pages_title' => _LAYOUT_PAGES, 'pal_secs_title' => _LAYOUT_SECS,
+        'sets_title' => _CHANGE, 'where_title' => _URLS, 'links' => getLayoutLinks(), 'pal_title' => _LAYOUT_CMDS, 'pal_find' => _LAYOUT_PALFIND,
+        'pal_acts' => getLayoutCommands(), 'pal_acts_title' => _ACTIONS, 'pal_pages_title' => _PAGENAV, 'pal_secs_title' => _LAYOUT_SECS,
         'pal_add_title' => _LAYOUT_ADDSEC, 'pal_add' => _ADD, 'pal_parts_title' => _LAYOUT_AT_ALL, 'pal_parts' => $parts, 'pal_pages' => $pages, 'undo_text' => _UNDO,
         'ed' => bin2hex(random_bytes(6)), 'story_url' => getLayoutUrl(['op' => 'story']), 'story_title' => _LAYOUT_STORY,
         'story_sub' => _LAYOUT_STORYSUB, 'mine_html' => getLayoutMineHtml($types, $taken), 'mine_label' => _LAYOUT_MINE, 'recent_label' => _LAYOUT_RECENT,
@@ -1651,7 +1651,7 @@ function layout(): void {
         'checks_url' => getLayoutUrl(['op' => 'checks']), 'checks_text' => _LAYOUT_CHECKS, 'dest_url' => getLayoutUrl(['op' => 'dest']), 'dest_title' => _LAYOUT_TOPAGE,
         'guest_text' => _LAYOUT_GUEST, 'guest_title' => _LAYOUT_GUESTTIP, 'preview_note' => _LAYOUT_PREVNOTE, 'edit_text' => _LAYOUT_BACKEDIT,
         'edit_url' => getLayoutUrl(['op' => 'edit']), 'edit_title' => _EDIT, 'source_url' => getLayoutUrl(['op' => 'source']), 'file_title' => _FILE,
-        'link_tip' => _LAYOUT_LINKTIP, 'link_title' => _LAYOUT_LINK, 'link_sub' => _LAYOUT_LINKSUB, 'term_label' => _LAYOUT_LINKTERM, 'link_make' => _LAYOUT_LINKMAKE,
+        'link_tip' => _LAYOUT_LINKTIP, 'link_title' => _LAYOUT_LINK, 'link_sub' => _LAYOUT_LINKSUB, 'term_label' => _LAYOUT_LINKTERM, 'link_make' => _CREATE,
         'terms' => array_map(static fn(int $v): array => ['value' => $v, 'label' => sprintf(getPluralForm($v, _LAYOUT_DAYS), $v), 'is_on' => $v === LAYOUT_TERMS[1]], LAYOUT_TERMS),
         'copy_text' => _COPY, 'copied_text' => _COPIED, 'cancel_text' => _CANCEL, 'save_url' => getLayoutUrl(['op' => 'save']), 'mod' => $mod,
         'export_url' => getLayoutUrl(['op' => 'export']), 'export_text' => _LAYOUT_EXPORT, 'export_tip' => _LAYOUT_EXPTIP, 'import_text' => _LAYOUT_IMPORT,
@@ -1667,7 +1667,7 @@ function getLayoutCommands(): array {
     $out = [
         ['undo', 'arrow-counterclockwise', _LAYOUT_UNDO, ['Ctrl', 'Z']],
         ['redo', 'arrow-clockwise', _LAYOUT_REDO, ['Ctrl', 'Shift', 'Z']],
-        ['publish', 'cloud-arrow-up', _LAYOUT_PUBLISH, []],
+        ['publish', 'cloud-arrow-up', _PUBLISH, []],
         ['checks', 'clipboard-check', _LAYOUT_CHECKS, []],
         ['story', 'clock-history', _LAYOUT_STORY, []],
         ['guest', 'person', _LAYOUT_GUEST, []],
@@ -1679,11 +1679,11 @@ function getLayoutCommands(): array {
         ['tab-page', 'file-earmark-richtext', _PAGE, []],
         ['tab-menu', 'menu-button-wide', _LAYOUT_MENUS, []],
         ['tab-theme', 'palette', _THEME_TAB, []],
-        ['dev-desk', 'display', _LAYOUT_WIDTH.': '._LAYOUT_DESK, []],
-        ['dev-tablet', 'tablet', _LAYOUT_WIDTH.': '._LAYOUT_TABLET, []],
-        ['dev-phone', 'phone', _LAYOUT_WIDTH.': '._LAYOUT_PHONE, []],
-        ['sets', 'gear', _LAYOUT_SETS, []],
-        ['site', 'box-arrow-up-right', _LAYOUT_OPENSITE, []],
+        ['dev-desk', 'display', _LAYOUT_WIDTH.': '._DESKTOP, []],
+        ['dev-tablet', 'tablet', _LAYOUT_WIDTH.': '._TABLET, []],
+        ['dev-phone', 'phone', _LAYOUT_WIDTH.': '._PHONE, []],
+        ['sets', 'gear', _CHANGE, []],
+        ['site', 'box-arrow-up-right', _OPENSITE, []],
         ['help', 'question-circle', _MANUAL, []],
     ];
     return array_map(static fn(array $v): array => ['cmd' => $v[0], 'icon' => $v[1], 'label' => $v[2], 'keys' => $v[3]], $out);
@@ -2143,7 +2143,7 @@ function checks(): void {
         'changes_num' => count($list), 'issues_num' => count($bad),
         'is_pub' => $dirty && getVar('get', 'pub', 'num', 0) === 1, 'note_label' => _NOTE, 'note_hint' => _LAYOUT_NOTEHINT, 'note_place' => _LAYOUT_NOTEPLACE,
         'is_discard' => $dirty, 'discard_text' => _LAYOUT_DISCARD, 'discard_title' => _LAYOUT_DISCARDTIP, 'back_text' => _LAYOUT_BACKEDIT,
-        'publish_text' => $bad ? _LAYOUT_PUBANYWAY : _LAYOUT_PUBLISH]);
+        'publish_text' => $bad ? _LAYOUT_PUBANYWAY : _PUBLISH]);
     exit;
 }
 
@@ -2475,7 +2475,7 @@ function edit(): void {
     echo $tpl->getHtmlPart('layout-edit', ['icon_name' => $from ? 'file-earmark-text' : ($code ? 'code-slash' : 'markdown'), 'title_text' => $label,
         'sub_text' => $from ? _LAYOUT_FROMSUB : ($code ? _LAYOUT_HTMLSUB : _LAYOUT_MDSUB), 'close_text' => _CLOSE, 'post_url' => getLayoutUrl(['op' => $from ? 'act' : 'save']),
         'token' => getSiteToken('layout'), 'sel' => $sel, 'page' => $key, 'is_from' => $from, 'editor_html' => $html, 'cancel_text' => _CANCEL,
-        'save_text' => $from ? _LAYOUT_MAKEPAGE : _SAVE, 'save_icon' => $from ? 'file-earmark-plus' : 'check-lg']);
+        'save_text' => $from ? _CREATE : _SAVE, 'save_icon' => $from ? 'file-earmark-plus' : 'check-lg']);
     exit;
 }
 

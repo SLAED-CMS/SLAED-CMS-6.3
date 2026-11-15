@@ -69,7 +69,7 @@ function getMonitorView(array $snap, array $facts): array {
             'at' => $at,
             'now' => time(),
             'grid' => ['100%', '75%', '50%', '25%', '0%'],
-            'words' => ['now' => _MONITOR_TIME_NOW, 'sec' => _MONITOR_TIME_AGO, 'min' => _MONITOR_TIME_MIN],
+            'words' => ['now' => _NOW, 'sec' => _MONITOR_TIME_AGO, 'min' => _MONITOR_TIME_MIN],
             'series' => [
                 ['key' => 'up', 'name' => _MONITOR_UP, 'unit' => 'KB/s', 'digits' => 1, 'tone' => 'up', 'values' => $up],
                 ['key' => 'down', 'name' => _MONITOR_DOWN, 'unit' => 'KB/s', 'digits' => 1, 'tone' => 'down', 'values' => $down],
@@ -100,7 +100,7 @@ function getMonitorSize(string $label, int|float|null $bytes): array {
 function getMonitorEvent(?array $evt): array {
     if ($evt === null) return getMonitorRow(_MONITOR_LASTEV, '');
     if ($evt === []) return ['label' => _MONITOR_LASTEV, 'text' => _NO, 'is_good' => true];
-    $word = ['critical' => _MONITOR_LVCRIT, 'error' => _MONITOR_LVERROR, 'warning' => _MONITOR_LVWARN][$evt['level']] ?? _MONITOR_LVINFO;
+    $word = ['critical' => _MONITOR_LVCRIT, 'error' => _ERROR, 'warning' => _UWARN][$evt['level']] ?? _MONITOR_LVINFO;
     return getMonitorRow(_MONITOR_LASTEV, implode(' · ', array_filter([getShortDate($evt['time']), $word, $evt['text'] ?: $evt['file']])), true);
 }
 
@@ -137,7 +137,7 @@ function getMonitorExts(): string {
             'is_short' => $lost !== [],
             'chips' => array_map(static fn(string $one): array => in_array($one, $lost, true)
                 ? ['name' => $one, 'is_lost' => true, 'state_text' => _NO] : ['name' => $one, 'is_ok' => true, 'state_text' => _MONITOR_HAS], $list),
-            'notes' => array_map(static fn(string $one): array => ['name' => sprintf(_MONITOR_EXTNO, $one), 'text' => $cost[$one] ?? _MONITOR_NOEXT], $lost),
+            'notes' => array_map(static fn(string $one): array => ['name' => sprintf(_MONITOR_NONE, $one), 'text' => $cost[$one] ?? _MONITOR_NOEXT], $lost),
         ];
     };
     $off = getMonitorExtOff($exts['seen']);
@@ -177,7 +177,7 @@ function getMonitorGround(array $snap): string {
     $rate = static fn(?float $num): string => ($num === null) ? '' : filterSize($num).'/s';
     $mins = getUptimeMinutes((string)$snap['uptime']);
     $backup = strtotime((string)$extra['lastbackup']);
-    $opbar = $opon ? getTplMeter(_MONITOR_OPMEM, (int)$opmem['used_memory'], $optot, sprintf(_MONITOR_OF, filterSize($opmem['used_memory']), filterSize($optot))) : '';
+    $opbar = $opon ? getTplMeter(_MONITOR_OPMEM, (int)$opmem['used_memory'], $optot, sprintf(_NUMOF, filterSize($opmem['used_memory']), filterSize($optot))) : '';
     $list = static fn(array $items): string => $tpl->getHtmlFrag('kv-list', ['items' => $items]);
     $pane = static fn(array $keys): string => $tpl->getHtmlFrag('pane', $keys);
     $tiles = $tpl->getHtmlFrag('metric-list', ['items' => $view['tiles']]);
@@ -220,7 +220,7 @@ function getMonitorGround(array $snap): string {
             getMonitorRow(_MONITOR_HOST, getServerValue('SERVER_NAME', '')),
             getMonitorRow(_MONITOR_IP, getServerValue('SERVER_ADDR', '')),
             getMonitorRow(_MONITOR_PORT, getServerValue('SERVER_PORT', '')),
-            getMonitorRow(_MONITOR_ROOT, getServerValue('DOCUMENT_ROOT', ''), true),
+            getMonitorRow(_WEBROOT, getServerValue('DOCUMENT_ROOT', ''), true),
         ]),
         'right_html' => $opbar.$list([
             getMonitorRow('SAPI', php_sapi_name()),
@@ -250,14 +250,14 @@ function getMonitorGround(array $snap): string {
         'meta' => $dbase['name'].' '.$dbase['version'].' · '.filterSize($stats['dbsize']),
         'content_html' => (($health['buffer_pool'] !== null) ? getTplMeter(_MONITOR_POOL, $stats['dbsize'], $health['buffer_pool'],
             sprintf(_MONITOR_POOLFOR, filterSize($stats['dbsize']), filterSize($health['buffer_pool'])), ($stats['dbsize'] > $health['buffer_pool']) ? 'warn' : 'ok') : '').$list([
-            getMonitorRow(_MONITOR_SERVER, $dbase['name'].' '.$dbase['version']),
+            getMonitorRow(_SERVER, $dbase['name'].' '.$dbase['version']),
             getMonitorRow(_MONITOR_CHARSET, $health['charset']),
             getMonitorRow(_MONITOR_ZONE, $health['timezone']),
             getMonitorRow(_MONITOR_PACKET, ($health['max_packet'] !== null) ? filterSize($health['max_packet']) : ''),
-            getMonitorRow(_MONITOR_CONNS, ($health['connections'] !== null) ? sprintf(_MONITOR_OF, $health['connections'], (int)$health['max_conn']) : ''),
+            getMonitorRow(_MONITOR_CONNS, ($health['connections'] !== null) ? sprintf(_NUMOF, $health['connections'], (int)$health['max_conn']) : ''),
             getMonitorRow(_MONITOR_DBSIZE, filterSize($stats['dbsize'])),
             getMonitorRow(_MONITOR_TABLES, (string)$stats['dbtabs']),
-            getMonitorRow(_MONITOR_DBNAME, (string)($conf['db']['name'] ?? '')),
+            getMonitorRow(_BASE, (string)($conf['db']['name'] ?? '')),
             getMonitorRow(_USER, $health['user']),
             getMonitorRow('SQL mode', str_replace(',', ', ', $health['sql_mode']), true),
         ]),
@@ -274,36 +274,36 @@ function getMonitorGround(array $snap): string {
         ]),
     ]);
     $guard = $pane(['title' => _SECURITY, 'icon' => 'shield-check', 'meta' => _MONITOR_DAY, 'content_html' => $list([
-        getMonitorRow(_MONITOR_FAILED, filterDecimal((int)$extra['failed24'], 0)),
+        getMonitorRow(_FAILLOGINS, filterDecimal((int)$extra['failed24'], 0)),
         getMonitorEvent($extra['seclast24']),
         is_int($extra['sql24']) && $extra['sql24'] > 0 ? getMonitorRow(_MONITOR_DBERR, filterDecimal($extra['sql24'], 0))
             : (is_int($extra['sql24']) ? ['label' => _MONITOR_DBERR, 'text' => _NO, 'is_good' => true] : getMonitorRow(_MONITOR_DBERR, '')),
         getMonitorRow(_MONITOR_ERRLOG, is_int($extra['error24']) ? filterDecimal($extra['error24'], 0) : ''),
     ])]);
     $folders = $pane([
-        'title' => _MONITOR_STORE,
+        'title' => _STORAGE,
         'icon' => 'folder2-open',
         'meta' => ($backup > 0) ? sprintf(_MONITOR_BACKUP, getShortDate($backup)) : '',
         'content_html' => $list([
             getMonitorSize(_UPLOADS, $snap['uploads']),
             getMonitorSize(_MONITOR_BACKUPS, $store['backup']),
             getMonitorSize(_LOGS, $store['logs']),
-            getMonitorSize(_MONITOR_CACHE, $store['cache']),
+            getMonitorSize(_CACHETITLE, $store['cache']),
         ]),
     ]);
     $drive = $pane(['title' => _ADM_DISK, 'icon' => 'hdd', 'content_html' => getTplMeter(_ADM_DISKUSED, $snap['disk_used'], $snap['disk_total'],
-        sprintf(_MONITOR_OF, filterSize($snap['disk_used']), filterSize($snap['disk_total']))).$list([
+        sprintf(_NUMOF, filterSize($snap['disk_used']), filterSize($snap['disk_total']))).$list([
         getMonitorSize(_ADM_FREE, $snap['disk_free']),
         getMonitorRow(_MONITOR_READ, $rate($disk['read_rate'])),
         getMonitorRow(_MONITOR_WRITE, $rate($disk['write_rate'])),
-        ($free < 10) ? ['label' => _MONITOR_HEALTH, 'text' => _MONITOR_LOWDISK] : ['label' => _MONITOR_HEALTH, 'text' => _MONITOR_NORM, 'is_good' => true],
+        ($free < 10) ? ['label' => _STATE, 'text' => _MONITOR_LOWDISK] : ['label' => _STATE, 'text' => _MONITOR_NORM, 'is_good' => true],
     ])]);
     $limits = $pane(['title' => _MONITOR_LIMITS, 'icon' => 'sliders', 'content_html' => $list([
         getMonitorRow(_MONITOR_MEMLIM, (string)ini_get('memory_limit')),
         getMonitorRow(_MONITOR_SCRIPT, filterSize(memory_get_usage(true))),
         getMonitorRow(_MONITOR_MAXTIME, ini_get('max_execution_time').' '._SEC),
         getMonitorRow('POST', (string)ini_get('post_max_size')),
-        getMonitorRow(_MONITOR_FILE, (string)ini_get('upload_max_filesize')),
+        getMonitorRow(_FILE, (string)ini_get('upload_max_filesize')),
         getMonitorFlag(_MONITOR_UPLOADS, (bool)ini_get('file_uploads')),
         getMonitorRow(_MONITOR_MAXFILES, (string)ini_get('max_file_uploads')),
         getMonitorRow(_MONITOR_MAXVARS, (string)ini_get('max_input_vars')),
@@ -313,7 +313,7 @@ function getMonitorGround(array $snap): string {
         getMonitorFlag(_SITE, !($conf['close'] ?? 0)),
         getMonitorFlag(_STATISTIC, (bool)($conf['statistic']['stat'] ?? 0)),
         getMonitorFlag(_NEWSLETTER_JOB, intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) === 1),
-        getMonitorFlag(_MONITOR_CACHE, (bool)($conf['cache'] ?? 0)),
+        getMonitorFlag(_CACHETITLE, (bool)($conf['cache'] ?? 0)),
     ], ($stats['cntnews'] !== null) ? [getMonitorRow(_NEWS, filterDecimal($stats['cntnews'], 0))] : [],
         ($stats['cntfile'] !== null) ? [getMonitorRow(_FILES, filterDecimal($stats['cntfile'], 0))] : []))]);
     $ground = $cockpit.$traffic
