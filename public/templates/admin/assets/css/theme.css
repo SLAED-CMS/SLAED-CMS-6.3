@@ -865,8 +865,6 @@ button[type="submit"].sl-but-back {
 /* Preview blocks: content, title and meta */
 .sl-preview {
   background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
   margin-bottom: 0;
   overflow: hidden;
 }
@@ -1249,47 +1247,32 @@ tr.sl-row-collapsed {
   margin-left: min(calc(var(--sl-d-depth, 0) * var(--sl-space-8)), 50%);
 }
 
-/* Debug output: code and diagnostics */
-.sl-debug-section {
-  border: 1px solid var(--sl-border);
+/* Debug output: a debug window holds running text, so its body is a block, and one unbreakable token scrolls inside it instead of stretching the page */
+.sl-pane-debug {
   margin: var(--sl-space-4);
-  padding: var(--sl-space-4);
-  max-width: 100%;
-  /* Fieldsets default to min-inline-size: min-content, so one unbreakable token (session base64, long SQL) would stretch the whole page */
-  min-inline-size: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  box-sizing: border-box;
 }
 
-/* Tone palette: shared classes for the section legend and metric values */
-.sl-debug-section-info,
+.sl-pane-debug > .sl-pane-body {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Tone palette: the metric values of the debug panel */
 .sl-debug-info {
   --sl-debug-tone: var(--sl-primary-strong);
 }
 
-.sl-debug-section-success,
 .sl-debug-success {
   --sl-debug-tone: var(--sl-success-strong);
 }
 
-.sl-debug-section-warn,
 .sl-debug-warn {
   --sl-debug-tone: var(--sl-warning-strong);
 }
 
-.sl-debug-section-danger,
 .sl-debug-danger {
   --sl-debug-tone: var(--sl-danger-strong);
-}
-
-.sl-debug-section-accent {
-  --sl-debug-tone: var(--sl-accent);
-}
-
-.sl-debug-section legend {
-  font-weight: var(--sl-weight-bold);
-  color: var(--sl-debug-tone);
 }
 
 .sl-debug-stats {
@@ -1321,18 +1304,19 @@ tr.sl-row-collapsed {
   color: var(--sl-debug-tone);
 }
 
-.sl-debug-section-danger ul {
+/* The error log of the debug panel: a bare list, every line behind a bug in the danger tone */
+.sl-pane-debug ul {
   margin: 0;
   padding-left: 0;
 }
 
-.sl-debug-section-danger li {
+.sl-pane-debug li {
   display: flex;
   align-items: center;
   list-style: none;
 }
 
-.sl-debug-section-danger li::before {
+.sl-pane-debug li::before {
   content: "\f1db";
   font-family: "bootstrap-icons";
   font-weight: var(--sl-weight-normal);
@@ -1340,11 +1324,7 @@ tr.sl-row-collapsed {
   min-width: 0;
   padding: 0;
   margin-right: var(--sl-space-2);
-  color: var(--sl-debug-tone);
-}
-
-.sl-debug-section-danger li .sl-debug-value {
-  padding-bottom: 0;
+  color: var(--sl-danger-strong);
 }
 
 .sl-code-row-num,
@@ -4004,14 +3984,7 @@ dialog.sl-editor-emoji-panel {
 /* Sidebar blocks: collapsible panels, count rows and shared row hovers */
 .sl-block-sidebar {
   margin-bottom: var(--sl-space-5);
-  background-color: var(--sl-bg-muted);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg) 0%,
-    var(--sl-bg-muted) 100%
-  );
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
+  background: var(--sl-pane-bg);
   overflow: hidden;
 }
 
@@ -4137,15 +4110,7 @@ dialog.sl-editor-emoji-panel {
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar {
   padding: var(--sl-admin-tight-shell-pad);
-  border: 1px solid var(--sl-border);
-  background-color: var(--sl-bg-muted);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg) 0%,
-    var(--sl-bg-muted) 100%
-  );
-  border-radius: var(--sl-radius-2);
-  box-shadow: var(--sl-shadow-xs);
+  box-shadow: var(--sl-pane-shadow);
   overflow: hidden;
 }
 
@@ -4393,14 +4358,8 @@ dialog.sl-editor-emoji-panel {
 .sl-mcard {
   --tone: var(--sl-primary);
   position: relative;
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg) 0%,
-    var(--sl-bg-muted) 100%
-  );
-  box-shadow: var(--sl-shadow-xs);
+  background: var(--sl-pane-bg);
+  box-shadow: var(--sl-pane-shadow);
   box-sizing: border-box;
   transition:
     border-color var(--sl-time-base) var(--sl-ease-out),
@@ -7731,7 +7690,7 @@ button.sl-but-mini {
   margin-bottom: var(--sl-space-4);
 }
 
-/* The width keeps the name it was distributed under: this API block is frozen, and a copied theme reads a name this tree cannot reach to rename */
+/* The width keeps the name it was distributed under, though the caption of a value row is its one reader in this theme */
 .sl-value-label {
   width: var(--sl-form-label-width);
   flex-shrink: 0;
@@ -9592,9 +9551,9 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
     align-self: start;
     margin: var(--sl-space-3);
     padding: var(--sl-space-2);
-    border: 1px solid var(--sl-border);
-    border-radius: var(--sl-radius-2);
-    background: linear-gradient(to bottom, var(--sl-bg) 0%, var(--sl-bg-muted) 100%);
+    border: 1px solid var(--sl-pane-border);
+    border-radius: var(--sl-pane-radius);
+    background: var(--sl-pane-bg);
     box-shadow: var(--sl-bar-shadow);
   }
 
@@ -9859,14 +9818,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   margin: 0 0 0 var(--sl-space-5);
   min-height: var(--sl-toolbar-height);
   overflow: hidden;
-  background: var(--sl-bg-muted);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg) 0%,
-    var(--sl-bg-muted) 100%
-  );
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
+  background: var(--sl-pane-bg);
   box-shadow: var(--sl-bar-shadow);
   box-sizing: border-box;
 }
@@ -10592,9 +10544,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   padding: var(--sl-space-8) var(--sl-space-8) var(--sl-space-7);
   text-align: center;
   background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
-  box-shadow: var(--sl-msg-shadow);
+  box-shadow: var(--sl-pane-shadow);
 }
 
 .sl-msg-brand {
@@ -10633,8 +10583,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 /* File browser: the shell of the system file tab - toolbar, three columns, capability row and status line */
 /* The card clips to its own rounded corners with clip and never with hidden: hidden makes a scroll container of it, and a scroll container swallows the sticky columns inside */
 .sl-fm-shell {
-  border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
   overflow: clip;
   font-size: var(--sl-font-body);
@@ -12676,13 +12624,24 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 /* Pane: the one window of the panel, not the dialog of fragments/window.html; a thin frame with the shadow of a list, a head of mono capitals with its icon, and a body */
+/* The frames beside a window wear its line and its corner from the same tokens, so one edit of the API block moves them all */
+.sl-pane,
+.sl-metric,
+.sl-block-sidebar,
+.sl-mcard,
+.sl-toolbar,
+.sl-preview,
+.sl-msg-card,
+.sl-fm-shell {
+  border: 1px solid var(--sl-pane-border);
+  border-radius: var(--sl-pane-radius);
+}
+
 .sl-pane {
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--sl-pane-border);
-  border-radius: var(--sl-pane-radius);
   background: var(--sl-pane-bg);
   box-shadow: var(--sl-pane-shadow);
 }
@@ -12892,8 +12851,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   display: grid;
   gap: var(--sl-space-2);
   padding: var(--sl-space-5);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
 }
 

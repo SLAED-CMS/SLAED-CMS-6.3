@@ -25,7 +25,6 @@ namespace Tests\Unit {
         # The contract asks every audit count at zero, every etalon contrast held, the runtime file list met and every template compiling with no undefined token
         # This is the static half; the rendering half is node tools/ui-shots.mjs --newtheme, which walks tools/ui-shots.json against a scratch theme of its own
         # Both halves build and remove that theme through one lifecycle, tests/Support/theme_scratch.php, because a lifecycle spelled twice drifts into two
-        # A manual look proves nothing about the day after the freeze, and after the freeze the names can no longer be corrected
         public static function setUpBeforeClass(): void
         {
             self::$root = dirname(__DIR__, 2);

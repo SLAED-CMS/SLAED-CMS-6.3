@@ -1,4 +1,4 @@
-<section{% if id %} id="{{ id }}"{% endif %} class="sl-pane{% if is_fill %} sl-pane-fill{% endif %}{% if is_hidden %} sl-hidden{% endif %}"{% if live_html %} data-sl-live-box{% endif %}{% if next_id %} data-sl-toggle="{{ id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}" data-sl-toggle-display="flex"{% endif %}>
+<section{% if id %} id="{{ id }}"{% endif %} class="sl-pane{% if is_fill %} sl-pane-fill{% endif %}{% if is_debug %} sl-pane-debug{% endif %}{% if is_hidden %} sl-hidden{% endif %}"{% if live_html %} data-sl-live-box{% endif %}{% if next_id %} data-sl-toggle="{{ id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}" data-sl-toggle-display="flex"{% endif %}>
   {% include 'fragments/pane-cap.html' %}
   {% if is_fold %}
   <div id="{{ id }}-rows" class="sl-collapsible" data-sl-toggle="{{ id }}-rows" data-sl-toggle-default="closed" hidden>
@@ -16,7 +16,7 @@
     </div>
   </div>
   {% else %}
-  <div class="sl-pane-body">
+  <div class="sl-pane-body"{% if is_debug %} tabindex="0" role="group" aria-label="{{ title }}"{% endif %}>
     {{{ content_html }}}
   </div>
   {% endif %}

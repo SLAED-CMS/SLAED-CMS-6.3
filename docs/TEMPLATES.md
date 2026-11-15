@@ -1130,7 +1130,7 @@ A screen that shows a state rather than rows — "Статистика", "Мон
 parts. Each lives once in the theme `admin`: the markup in `fragments/`, the rules in `theme.css`, the behaviour in
 `admin-ui.js`, the tokens in `base.css` and `tools/ui-contract.php` (`--sl-ground-width`, `--sl-ground-dur`,
 `--sl-pane-dur`, `--sl-metric-min-width`). A page has something of its own only where the other has no like: the dial of
-the day in the lamp of "Статистика", the pulse in the lamp of "Мониторинг". The frozen tokens `--sl-statx-*` stay with the dial, the bars of rows
+the day in the lamp of "Статистика", the pulse in the lamp of "Мониторинг". The tokens `--sl-statx-*` stay with the dial, the bars of rows
 and the log of days. `SeriesPartsTest`
 holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter()`, `getTplLongCell()` and that a list draws no window.
 `fragments/window.html` and `data-sl-window` are a dialog and not one of these parts.
@@ -1637,7 +1637,7 @@ A new theme is made by copying an etalon and editing one file: `templates/<theme
 
 - **Two CSS files per theme.** `base.css` holds `@font-face`, the `:root` API block, the marker, then reset and element styles. `theme.css` holds components and no literal visual value.
 - **Themes are independent.** The engine has no inheritance. Rules two themes share stay duplicated on purpose.
-- **The API is frozen.** A theme package may gain a role and may never lose or rename one. The roster under `api` in `tools/ui-audit-baseline.json` holds it on every run and against `--store`.
+- **A token lives as long as it is read.** A token of `base.css` that lost its last reader is removed with that reader, and the count `dead` of the audit stays at zero. A rename crosses every file `places` of `tools/ui-contract.php` lists, in one commit.
 - **Canon is CSS, `fragments/` and `partials/`.** `layouts/` and `pages/` are outside it: the page shells of a panel and a site differ by nature.
 - **Breakpoints are canon, not API.** `@media` cannot read a custom property, so a theme decides how things look at a breakpoint, never where it sits.
 - **`assets/editors/*/skin.css`** consumes tokens, declares no API, and is byte-identical in both themes — `EditorWindowTest` enforces that, so it is edited in both in one commit.
@@ -1694,7 +1694,7 @@ byte-identical between the themes.
 | `php tools/ui-audit.php --theme=<theme> --raw` | the raw outputs whose key does not end in `_html`: every key with its number, then every place as file and line |
 | `php tools/ui-audit.php --file=<css> --migrating` | one file, naming the token that replaces each violation |
 | `php tools/ui-audit.php --store` | rewrites `tools/ui-audit-baseline.json` from the current tree |
-| `vendor/bin/phpunit` | `ThemeContractTest` (ratchet with the global counts + frozen API + contrast registry; the gates run it in place of the full audit), `UiAuditTest` (the tool against fixtures), `ThemeCreationTest` (a scratch copy audits clean and renders) |
+| `vendor/bin/phpunit` | `ThemeContractTest` (ratchet with the global counts + contrast registry; the gates run it in place of the full audit), `UiAuditTest` (the tool against fixtures), `ThemeCreationTest` (a scratch copy audits clean and renders) |
 | `npm run ui:before` | captures the tree you are about to change into a temp directory |
 | `npm run ui:after` | empties the caches, compares against that capture, regenerates the contrast registry when a `base.css` moved, then reads the counts |
 | `npm run ui:gates` | the fast gates by hand — the same set the pre-commit hook runs |

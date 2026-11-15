@@ -2878,46 +2878,32 @@ ol.sl-sublist-two li::before {
   transition: var(--sl-time-slow) linear;
 }
 
-.sl-debug-section {
-  border: 1px solid var(--sl-border);
+/* Debug output: a debug window holds running text, so its body is a block, and one unbreakable token scrolls inside it instead of stretching the page */
+.sl-pane-debug {
   margin: var(--sl-space-3) 0 0;
-  padding: var(--sl-space-3);
-  max-width: 100%;
-  /* Fieldsets default to min-inline-size: min-content, so one unbreakable token (session base64, long SQL) would stretch the whole page */
-  min-inline-size: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  box-sizing: border-box;
 }
 
-/* Tone palette: shared classes for the section legend and metric values */
-.sl-debug-section-info,
+.sl-pane-debug > .sl-pane-body {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Tone palette: the metric values of the debug panel */
 .sl-debug-info {
   --sl-debug-tone: var(--sl-info);
 }
 
-.sl-debug-section-success,
 .sl-debug-success {
   --sl-debug-tone: var(--sl-success);
 }
 
-.sl-debug-section-warn,
 .sl-debug-warn {
   --sl-debug-tone: var(--sl-warning);
 }
 
-.sl-debug-section-danger,
 .sl-debug-danger {
   --sl-debug-tone: var(--sl-danger);
-}
-
-.sl-debug-section-accent {
-  --sl-debug-tone: var(--sl-accent);
-}
-
-.sl-debug-section legend {
-  font-weight: var(--sl-weight-bold);
-  color: var(--sl-debug-tone);
 }
 
 .sl-debug-stats {
@@ -2949,18 +2935,19 @@ ol.sl-sublist-two li::before {
   color: var(--sl-debug-tone);
 }
 
-.sl-debug-section-danger ul {
+/* The error log of the debug panel: a bare list, every line behind a bug in the danger tone */
+.sl-pane-debug ul {
   margin: 0;
   padding-left: 0;
 }
 
-.sl-debug-section-danger li {
+.sl-pane-debug li {
   display: flex;
   align-items: center;
   list-style: none;
 }
 
-.sl-debug-section-danger li::before {
+.sl-pane-debug li::before {
   content: "\f1db";
   font-family: "bootstrap-icons";
   font-weight: var(--sl-weight-normal);
@@ -2968,11 +2955,7 @@ ol.sl-sublist-two li::before {
   min-width: 0;
   padding: 0;
   margin-right: var(--sl-space-2);
-  color: var(--sl-debug-tone);
-}
-
-.sl-debug-section-danger li .sl-debug-value {
-  padding-bottom: 0;
+  color: var(--sl-danger);
 }
 
 .sl-code-row-odd,
@@ -9352,9 +9335,9 @@ a.sl-chip-neutral {
   padding: var(--sl-space-9) var(--sl-space-9) var(--sl-space-8);
   text-align: center;
   background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
-  box-shadow: var(--sl-panel-shadow);
+  border: 1px solid var(--sl-pane-border);
+  border-radius: var(--sl-pane-radius);
+  box-shadow: var(--sl-pane-shadow);
 }
 
 .sl-msg-brand {

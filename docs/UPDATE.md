@@ -233,7 +233,7 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   the result must return the same array without those keys, or the build stops); the stand keeps its rows. The names
   of such a module live in its own language files, read by `getModuleLabel()`; its jobs in its `scheduler.php`. The
   module `presentation` shows the commits of the changelog only while `modules/changelog/` is there. The CSS of the
-  changelog stays in `aurora`, whose tokens of `base.css` are a frozen API; the panel draws the changelog as a list of the canon.
+  changelog stays in `aurora`; the panel draws the changelog as a list of the canon.
 - A site installed from git, without `files.json`, updates from the panel with a warning: old files are not deleted,
   changed files are not recognized.
 

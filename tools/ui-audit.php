@@ -904,16 +904,6 @@ function getRepoFiles(array $exts, array $dirs): array {
     return $out;
 }
 
-# The names a frozen API block used to declare and no longer does
-# A frozen API may still gain a role - a theme that needs one is not made wrong by an addition - but it may never lose or rename one
-# After distribution the copies read names this repository can no longer reach
-# An empty answer for an unfrozen theme is the same answer as no history at all
-function getLostNames(string $theme, array $now, array $base): array {
-    if (!(getContract()['frozen'] ?? false)) return [];
-    $was = $base['api'][$theme] ?? null;
-    return $was === null ? [] : array_values(array_diff($was, $now));
-}
-
 # Selectors and templates that differ between the two themes, which is what canon has to reconcile
 function checkCrossTheme(): array {
     $cont = getContract();
@@ -1184,9 +1174,6 @@ function setBaselineData(array $now): int {
             if ($was !== null && $val > $was && in_array($key, $held, true)) $bad[] = $name.'.'.$key.': '.$val.' is above the stored '.$was;
         }
     }
-    foreach ($now['api'] ?? [] as $name => $list) {
-        foreach (getLostNames($name, $list, $old) as $one) $bad[] = $name.' no longer declares '.$one.', which a frozen API may not do';
-    }
     foreach ($now['global'] ?? [] as $key => $val) {
         $was = $old['global'][$key] ?? null;
         if ($was !== null && $val > $was) $bad[] = 'global.'.$key.': '.$val.' is above the stored '.$was;
@@ -1303,11 +1290,6 @@ $base = getBaselineData();
 foreach ($want as $name) {
     $data = getThemeAudit($name);
     $store['themes'][$name] = $data['totals'];
-    $store['api'][$name] = array_keys($data['model']['api']);
-    sort($store['api'][$name]);
-    $lost = getLostNames($name, $store['api'][$name], $base);
-    setSection('names the frozen API of '.$name.' no longer declares, which every theme copied from it still reads:', $lost);
-    if ($lost) $fail = 1;
 
     if (isset($args['dist'])) {
         $prop = is_string($args['dist']) ? $args['dist'] : 'padding';

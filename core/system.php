@@ -3474,30 +3474,30 @@ function getVariables(): string {
     $cvar = explode(',', $conf['variables']);
     $rows = [];
     if ($cvar[1]) {
-        $rows[] = ['legend' => _SYSTEM_INFO, 'tone' => 'info', 'content' => DBG_MARK];
+        $rows[] = ['icon' => 'speedometer2', 'title' => _SYSTEM_INFO, 'content_html' => DBG_MARK];
         if (isAdmin()) {
             $errors = getDebugErrors();
-            if ($errors !== '') $rows[] = ['legend' => _ERRLOG, 'tone' => 'danger', 'content' => $errors];
+            if ($errors !== '') $rows[] = ['icon' => 'bug', 'title' => _ERRLOG, 'content_html' => $errors];
         }
     }
     $vars = [
-        2 => ['POST', 'success', $_POST],
-        3 => ['GET', 'info', $_GET],
-        4 => ['COOKIE', 'warn', $_COOKIE],
-        5 => ['FILES', 'accent', $_FILES],
-        6 => ['SESSION', 'accent', $_SESSION],
-        7 => ['SERVER', 'danger', $_SERVER],
+        2 => ['POST', 'box-arrow-in-down', $_POST],
+        3 => ['GET', 'link-45deg', $_GET],
+        4 => ['COOKIE', 'cookie', $_COOKIE],
+        5 => ['FILES', 'paperclip', $_FILES],
+        6 => ['SESSION', 'key', $_SESSION],
+        7 => ['SERVER', 'hdd-rack', $_SERVER],
     ];
     foreach ($vars as $key => $var) {
         if (!$cvar[$key] || !$var[2]) continue;
         $rows[] = [
-            'legend' => _AVARIABLES.': '.$var[0],
-            'tone' => $var[1],
-            'content' => htmlspecialchars(print_r($var[2], true)),
+            'icon' => $var[1],
+            'title' => _AVARIABLES.': '.$var[0],
+            'content_html' => htmlspecialchars(print_r($var[2], true)),
         ];
     }
-    if ($cvar[8]) $rows[] = ['legend' => _AQUERY_DB, 'tone' => 'success', 'content' => $db->getSqlTraceHtml()];
-    foreach ($rows as $row) $cont .= $tpl->getHtmlFrag('debug-section', $row);
+    if ($cvar[8]) $rows[] = ['icon' => 'database', 'title' => _AQUERY_DB, 'content_html' => $db->getSqlTraceHtml()];
+    foreach ($rows as $row) $cont .= $tpl->getHtmlFrag('pane', ['is_debug' => true] + $row);
     return $cont;
 }
 

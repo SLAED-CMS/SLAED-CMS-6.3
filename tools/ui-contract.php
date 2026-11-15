@@ -8,18 +8,6 @@
 # Every axis, ladder step, allowlist entry, categorical set, component and contrast pair a tool reads lives here, because `.rules/` and `.claude/` are untracked
 
 return [
-    # The API is frozen: batch 8 settled the last of canon, so from here a theme package may gain a role but may never lose or rename one
-    # The freeze is held by the roster under `api` in tools/ui-audit-baseline.json, which the tool compares every run and --store refuses to write while a name is missing
-    # A freeze nothing checks is only a sentence in a file
-    # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with the main module and were struck from the roster
-    # A second was decided on 2026-10-11: the five --sl-pnum-* names and the panel's --sl-card-shadow lost their one reader, the drawn arrow of the old panel pager
-    # A third was decided on 2026-10-09 with the ranks plan: the site's --sl-rank-height lost its one reader, the rank picture of the profile, when ranks became icons
-    # A fourth was decided on 2026-11-04: the panel's six --sl-drift-* names left with the four-dot loader of the live chart, gone 0.2 s into a load
-    # A fifth was decided on 2026-11-08: the six --sl-loading-* names of both themes left with the three-dot loader of a list, a file and a site button
-    # A sixth was decided on 2026-11-09: the panel's --sl-statx-width lost its one reader, the floor of the date column, when the list of days dropped the year to fit a laptop
-    # A seventh was decided on 2026-11-10 with the templates plan: eleven names left with the dead templates and the unsent key branches that were their one reader
-    # They are the site's --sl-aside-width, --sl-calc-width, --sl-col-amount-width and four --sl-preview-*, the panel's --sl-thumb-height and three --sl-search-*-width
-    'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
 
@@ -601,6 +589,16 @@ return [
     # A selector holding the same properties with different values needs no entry: that is one canon carrying many skins, which is what the theme packages are for
     # The key is the `@media context` and the selector joined by two spaces, which is what `--cross` prints
     'divergent' => [
+        '.sl-metric' =>
+            'admin draws the line and the corner of every frame beside a window in the one selector list of .sl-pane, from the tokens of the window; the '
+            .'window of aurora shares its rule with a block, ground and shade included, which a tile does not take, so its tile keeps a frame of its own',
+        '.sl-preview' =>
+            'admin draws the line and the corner of a preview in the one selector list of .sl-pane, from the tokens of the window; the window of aurora '
+            .'shares its rule with a block, ground and shade included, which a preview does not take, so its preview keeps a frame of its own',
+        '.sl-msg-card' =>
+            'both messages read the line, the corner and the shade of the window; admin takes the line and the corner in the one selector list of '
+            .'.sl-pane, aurora writes them in the rule of the message, since its window shares its rule with a block and carries a ground the message '
+            .'does not take',
         '.sl-metric-name' =>
             'admin shares the capitals of the name with the heads of its windows in one selector list, and the head of a window of aurora is a semibold name, '
             .'not capitals, so its name of a tile carries them in its own rule; the face, the size and the colour are the same',

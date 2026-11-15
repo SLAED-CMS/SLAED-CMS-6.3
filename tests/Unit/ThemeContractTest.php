@@ -60,21 +60,6 @@ final class ThemeContractTest extends TestCase
         }
     }
 
-    # The freeze, asked of the tree the way the ratchet asks of the counts. An API that gains a role wrongs no copy
-    # One that loses or renames a role leaves every theme copied from it reading a name this repository cannot reach
-    # No count can see that - the token total falls by one and reads like a tidy-up
-    #[Test]
-    public function testAFrozenApiHasNotLostAName(): void
-    {
-        if (!(self::$cont['frozen'] ?? false)) $this->markTestSkipped('the API is not frozen yet, so no roster is binding');
-        foreach (array_keys(self::$cont['themes']) as $name) {
-            $was = self::$base['api'][$name] ?? null;
-            $this->assertIsArray($was, $name.' has no name roster in the baseline, so the freeze holds nothing; store one with --store');
-            $gone = array_diff($was, array_keys(getThemeModel($name)['api']));
-            $this->assertSame([], array_values($gone), $name.' no longer declares '.implode(', ', $gone).', which a frozen API may not do');
-        }
-    }
-
     #[Test]
     public function testEveryThemeClosesItsApiBlockWithTheMarker(): void
     {

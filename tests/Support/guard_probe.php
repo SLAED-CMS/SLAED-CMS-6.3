@@ -207,9 +207,9 @@ final class Route {
 }
 
 final class ProbeTpl {
-    # Render a debug section as its bare content, which is what the fragment prints unescaped
+    # Render a debug window as its bare content, which is what the fragment prints unescaped
     public function getHtmlFrag(string $name, array $row): string {
-        return $row['content'];
+        return $row['content_html'];
     }
 }
 
