@@ -557,7 +557,8 @@
   --sl-seg-pad-x: 0;
   --sl-seg-pad-y: 0;
   --sl-seg-bg: var(--sl-bg-muted);
-  --sl-seg-shadow: var(--sl-shadow-inset), inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
+  --sl-seg-border: light-dark(var(--sl-border-strong), var(--sl-border));
+  --sl-seg-shadow: var(--sl-shadow-inset), inset 0 0 0 1px var(--sl-seg-border);
   --sl-seg-text: var(--sl-text-muted);
   --sl-seg-knob-bg: var(--sl-bg);
   --sl-seg-knob-text: var(--sl-text-strong);

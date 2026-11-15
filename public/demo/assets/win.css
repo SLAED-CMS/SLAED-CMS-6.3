@@ -608,7 +608,6 @@ body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-link.sl-is-active::after {
   display: none;
   margin: 0 0 var(--sl-space-5);
   padding: var(--sl-space-3) 0;
-  border-bottom: 1px solid var(--sl-border);
   background: var(--sl-bg);
 }
 
@@ -866,6 +865,27 @@ body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-link.sl-is-active::after {
    track, so a track cut by the view still ends in a pill */
 [data-wn-rail="line"] > .wn-rail-view {
   border-radius: var(--sl-radius-pill);
+}
+
+/* A cut track loses its line with its end, so a sliding strip gets the line on a layer that stays with the view, as the rail of the theme does */
+[data-wn-rail="line"] > .wn-rail-view {
+  display: flex;
+}
+
+body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) [data-wn-rail="line"]:not(.wn-is-fit) > .wn-rail-view::before {
+  position: sticky;
+  left: 0;
+  z-index: var(--sl-z-sticky);
+  flex: none;
+  width: 100%;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px light-dark(var(--sl-border-strong), var(--sl-border));
+  pointer-events: none;
+  content: "";
+}
+
+body:has(.wn-root:is([data-wn-seg="edge"], [data-wn-seg="ring"])) [data-wn-rail="line"]:not(.wn-is-fit) > .wn-rail-view > .sl-seg {
+  margin-left: calc(100% * -1);
 }
 
 

@@ -1304,12 +1304,13 @@ pager — is one component, `sl-seg`, in the `theme.css` of both themes; the fac
   help and hands them to `fragments/toc.html` as `rows` (`href`, `title`, `is_now`), with `label`, `prev_text` and
   `next_text`; a help of fewer than two sections prints no rail. The rail `.sl-toc` stands over the window of the help
   and stays in view (`position: sticky`); its strip slides inside `.sl-toc-view` between two `sl-but-mini` arrows, which
-  go when the strip fits. `setTocRail()` of `assets/js/admin-ui.js` marks the section under the rail while the text
+  go when the strip fits. A strip that slides is cut by the view and loses the line of its track with its end, so
+  the view draws that line on a layer of its own, `.sl-toc-view::before`, which sticks over the track. `setTocRail()` of `assets/js/admin-ui.js` marks the section under the rail while the text
   scrolls, keeps the section a press named until the reader scrolls himself, slides the strip to it, and writes the
   height of the rail into `--sl-d-toc`, which the `scroll-margin-top` of a section heading reads. Without the script
   the cells are plain links to the sections.
-- **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-shadow`,
-  `--sl-seg-text`, `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
+- **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-border`,
+  `--sl-seg-shadow`, `--sl-seg-text`, `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
   of the plain `sl-seg`; a modifier reads semantic tokens straight instead of redeclaring them, because a custom property
   declared in `theme.css` counts as scoped. `--sl-mode-width`, `--sl-mode-height` and `--sl-mode-bg` stay the cell, the
   plate and the track of `sl-seg-mode`.

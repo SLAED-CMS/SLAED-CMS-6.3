@@ -30,7 +30,8 @@
   the section being read and slides between two arrows. A help of fewer than two sections has no rail. The new classes
   are `sl-toc` and `sl-toc-view`, the script is `setTocRail()` of `admin-ui.js`.
 - **The segmented switch of both themes** draws a line round its plate and round its track in both schemes. The
-  new token is `--sl-seg-shadow`; `--sl-seg-knob-shadow` changed its value. The plate of the pager is as it was.
+  new tokens are `--sl-seg-border` and `--sl-seg-shadow`; `--sl-seg-knob-shadow` changed its value. The plate of the
+  pager is as it was.
 - **A theme made from `admin` or `aurora`** takes the two values, or keeps a plate that is lost on a dark track.
 
 The reference is `docs/TEMPLATES.md`, "Panel Window" and "Segmented Switch".

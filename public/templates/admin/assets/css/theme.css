@@ -6493,17 +6493,34 @@ button.sl-seg-cell:hover {
   min-width: 0;
   margin: 0 0 var(--sl-space-4);
   padding: var(--sl-space-3) 0;
-  border-bottom: 1px solid var(--sl-border);
   background: var(--sl-bg);
 }
 
 /* A strip longer than the rail slides inside its view between the two arrows of the pager; the view keeps the round ends of the track */
 .sl-toc-view {
+  display: flex;
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
   border-radius: var(--sl-radius-pill);
   scrollbar-width: none;
+}
+
+/* A cut track loses its line with its end, so a sliding strip gets the line on a layer that stays with the view: it sticks over the track, which is drawn back under it */
+.sl-toc[data-sl-toc-ready]:not(.sl-is-fit) > .sl-toc-view::before {
+  position: sticky;
+  left: 0;
+  z-index: var(--sl-z-sticky);
+  flex: none;
+  width: 100%;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--sl-seg-border);
+  pointer-events: none;
+  content: "";
+}
+
+.sl-toc[data-sl-toc-ready]:not(.sl-is-fit) > .sl-toc-view > .sl-seg {
+  margin-left: calc(100% * -1);
 }
 
 .sl-toc.sl-is-fit > .sl-but-mini {
