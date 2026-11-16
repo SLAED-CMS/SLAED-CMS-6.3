@@ -285,7 +285,10 @@ function getPresentationData(): array {
     $motto = explode('*', _PRES_HEAD);
     if (count($motto) !== 3) $motto = [str_replace('*', '', _PRES_HEAD), '', ''];
     $hero = [
-        'cockpit' => _PRES_COCKPIT, 'nominal' => _ADM_CALM, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
+        'nominal' => _ADM_CALM,
+        'cockpit_cap' => $cap('hexagon-half', 'SLAED CMS · '._PRES_COCKPIT, $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : '')) + [
+            'is_plain' => true, 'chips' => [['tone' => 'success', 'icon' => 'check-circle-fill', 'label' => _ADM_CALM]],
+        ],
         'gen_ring' => $ring($gen, 'ms', _GENERATION, $gpart, '', false, '', 'info'),
         'cache_ring' => $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'ok'),
         'qnum_ring' => $ring($qnum, 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),

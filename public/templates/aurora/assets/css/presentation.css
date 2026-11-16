@@ -9,7 +9,8 @@
   font: var(--sl-font-body)/var(--sl-line-normal) Arial, system-ui, sans-serif;
 }
 
-.sl-pres :is(h1, h2, h3) {
+/* The name of a window is not a heading of this page: it keeps the weight the window of the site gives it */
+.sl-pres :is(h1, h2, h3):where(:not(.sl-pane-title)) {
   font-family: inherit;
   font-weight: var(--sl-weight-bold);
 }
@@ -45,7 +46,6 @@
 .sl-pres [data-sl-tone="muted"] { color: var(--sl-pres-muted-text); }
 
 /* The glyph standing before a caption, in the brand tone, and the two sizes it comes in */
-.sl-pres-cockpit-top .bi,
 .sl-pres-presets > span > .bi,
 .sl-pres-note > .bi,
 .sl-pres-vars header > .bi {
@@ -101,46 +101,13 @@
   color: var(--sl-pres-muted-text);
 }
 
-/* The window on this page, fragments/pane-cap.html in a .sl-pane: the frame and the ground of the page palette, a plain body inset of its own on all four sides */
-.sl-pres .sl-pane {
-  position: relative;
-  border-color: var(--sl-pres-border);
-  background: var(--sl-pres-panel-bg);
-  box-shadow: none;
-}
-
+/* The window on this page is the window of the site in every value of its set; its body alone is a plain box, where a body of the site lays the two tracks of a form */
 .sl-pres .sl-pane-body {
   display: block;
-  padding: var(--sl-space-5);
 }
 
 .sl-pres .sl-pane > .sl-pane-body > :first-child {
   margin-top: 0;
-}
-
-/* Its head is the head of the panel, over a group that draws no frame too: mono capitals, a bare icon, a rule, the value at the right in the tone of a link or in its own */
-.sl-pres .sl-pane-cap {
-  min-height: calc(var(--sl-size-chip) + var(--sl-space-3) * 2 + 1px);
-  border-bottom: 1px solid var(--sl-pres-border);
-  background: none;
-  padding: var(--sl-space-3) var(--sl-space-5);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  color: var(--sl-pres-muted-text);
-}
-
-.sl-pres .sl-pane-cap > .bi {
-  line-height: inherit;
-  font-size: var(--sl-size-icon-xs);
-  color: var(--sl-pres-link-text);
-}
-
-.sl-pres .sl-pane-title {
-  font-size: inherit;
-  font-weight: var(--sl-weight-normal);
-  line-height: var(--sl-line-normal);
-  color: inherit;
 }
 
 /* An illustrated scene: a framed ground with the faint grid every drawing of the page stands on */
@@ -316,7 +283,6 @@
 .sl-pres-net > span,
 .sl-pres-node > span,
 .sl-pres-note-row > b,
-.sl-pres .sl-pane-title,
 .sl-pres-pdo-head > b,
 .sl-pres-pdo-head > em,
 .sl-pres-pipe > div > span,
@@ -705,15 +671,11 @@
   min-width: 0;
 }
 
-/* The cockpit: the gauges of this very request above the headline, swept by one scanning line */
+/* The cockpit: a window of the site with the gauges of this very request above the headline, swept by one scanning line, which its box cuts */
 .sl-pres-cockpit {
   position: relative;
   margin-bottom: var(--sl-space-6);
   overflow: hidden;
-  border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-3);
-  background: linear-gradient(180deg, var(--sl-pres-inset-bg), var(--sl-pres-panel-bg));
-  padding: var(--sl-space-6);
 }
 
 /* The scan of the cockpit, the panel's own: a line of light goes down it now and then; a thin line keeps its offset */
@@ -721,8 +683,8 @@
   content: "";
   position: absolute;
   top: 0;
-  right: var(--sl-space-6);
-  left: var(--sl-space-6);
+  right: var(--sl-pane-pad-x);
+  left: var(--sl-pane-pad-x);
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
   box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
@@ -781,40 +743,24 @@
   to { left: 101%; }
 }
 
-.sl-pres-cockpit-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-4);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  text-transform: uppercase;
-  color: var(--sl-pres-muted-text);
-}
-
-.sl-pres-cockpit-top .sl-pres-dot {
-  margin-right: var(--sl-space-2);
-}
-
-/* The row of the cockpit, as the panel lays it: the lamp has a column of its own diameter, the four rings share what is left */
+/* The row of the cockpit, as the panel lays it: the lamp has a column of its own diameter, the four rings share what is left; an inset keeps the lamp off the head */
 .sl-pres-gauges {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr)) calc(var(--sl-gauge-width) * 1.15) repeat(2, minmax(0, 1fr));
   gap: var(--sl-space-8);
   align-items: center;
-  margin: var(--sl-space-7) 0 var(--sl-space-3);
+  margin: 0 0 var(--sl-space-3);
+  padding-top: var(--sl-space-3);
 }
 
-/* The strip under the rings, the twin of the panel's: the figures of this request the rings do not show, each a plain number */
+/* The strip under the rings, the twin of the panel's: the figures of this request the rings do not show, each a plain number, under the dashed rule of a window */
 .sl-pres-strip {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--sl-space-3) var(--sl-space-8);
   margin: var(--sl-space-6) 0 0;
-  border-top: 1px solid var(--sl-pres-border);
+  border-top: 1px dashed var(--sl-pane-border);
   padding: var(--sl-space-5) 0 0;
   list-style: none;
   font-family: var(--sl-face-mono);
@@ -1670,10 +1616,6 @@
 }
 
 /* The vitals window: its ring carries two thinner inner arcs in the tones of the chart's bands */
-.sl-pres .sl-pres-vitals {
-  background: linear-gradient(145deg, var(--sl-tint), var(--sl-pres-panel-bg));
-}
-
 .sl-pres-vitals > .sl-pane-body {
   text-align: center;
 }

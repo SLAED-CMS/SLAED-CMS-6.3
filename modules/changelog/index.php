@@ -77,14 +77,16 @@ function changelog(): void {
         'dateto' => chlogEsc($filters['until']),
         'reset_url' => getSeoUrl(['name' => $conf['name']]),
         'show_file' => $config['source'] !== 'github',
-        'totcount' => $totcount,
-        'totcom' => $totcom,
+        'filter_cap' => ['icon' => 'funnel', 'title' => _CHLOG_FILTER, 'level' => 2],
+        'commits_cap' => ['icon' => 'git', 'title' => _CHLOG_COMMITS, 'level' => 2, 'chips' => [
+            ['tone' => 'neutral', 'icon' => 'collection', 'label' => $totcount, 'title' => _CHLOG_COMMITS_REPO],
+            ['tone' => 'neutral', 'icon' => 'filter', 'label' => $totcom, 'title' => _CHLOG_FILTERED],
+            ['tone' => 'neutral', 'icon' => 'file-earmark', 'label' => sprintf(_NUMOF, $page, $totpage), 'title' => _PAGE],
+        ]],
         'page' => $page,
         'totpage' => $totpage,
-        'page_text' => sprintf(_NUMOF, $page, $totpage),
         'commits' => chlogRenderCommits($compg, $config + ['highlight' => $filters['search']]),
         'paging' => chlogRenderPaging($conf['name'], $totcom, $totpage, $config['perpage'], $page, $filters),
-        'txt_filter_heading' => _CHLOG_FILTER,
         'txt_search_label' => _SEARCH,
         'txt_search_placeholder' => _CHLOG_SEARCH_PH,
         'txt_author_label' => _POSTER,
@@ -95,11 +97,6 @@ function changelog(): void {
         'txt_dateto_label' => _DATETO,
         'txt_filter_btn' => _CHLOG_FILTER_BTN,
         'txt_reset_btn' => _CHLOG_RESET_BTN,
-        'txt_total' => _OVERALL,
-        'txt_filtered' => _CHLOG_FILTERED,
-        'txt_page' => _PAGE,
-        'txt_commits' => _CHLOG_COMMITS,
-        'txt_commits_repo' => _CHLOG_COMMITS_REPO,
     ]);
 
     echo $cont;

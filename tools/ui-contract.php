@@ -202,7 +202,7 @@ return [
         'adm', 'alert', 'alert-act', 'archive', 'arrow', 'aurora', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini',
         'builder', 'builder-pick', 'builder-thumb', 'bullet',
         'cab-act', 'cab-msg', 'cab-ring',
-        'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
+        'capsule', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
         'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut',
@@ -527,10 +527,9 @@ return [
         '#content blockquote, .sl-session-name, .sl-session-module',
         # The body of a preview panel beside the info block of a profile: two grids that close their gaps
         '.sl-preview-body, .sl-profile-info',
-        # The subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component
-        # The total of the visitor summary joined them when it took its own mark (2026-10-19): a sum in the text tone at the semibold step
-        # It is a third component in a third place, and a selector list would file it under the changelog
-        '.sl-changelog-commit-header strong, .sl-changelog-results-info strong, .sl-session-summary .sl-session-total',
+        # The subject of a commit beside the total of the visitor summary: a title and a sum in the text tone at the semibold step
+        # They are two components in two places, and a selector list would file the summary under the changelog
+        '.sl-changelog-commit-header strong, .sl-session-summary .sl-session-total',
         # The name under a user avatar beside the points beside it: a name and a number, which read at one size today and need not tomorrow
         '.sl-block-user-ava p > a, .sl-block-user-ava p > b, .sl-user-points b',
         # The timestamp of a message slot, the note in a profile hub row and the unit beside a points figure: three smallest-step labels in three components

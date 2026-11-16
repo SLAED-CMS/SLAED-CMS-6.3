@@ -4934,27 +4934,11 @@ dialog.sl-editor-emoji-panel {
   margin: 0 auto;
 }
 
-.sl-changelog-filter {
-  background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-7);
-  margin-bottom: var(--sl-space-7);
-  box-shadow: var(--sl-card-shadow);
-}
-
-.sl-changelog-filter h2 {
-  margin: 0 0 var(--sl-space-6) 0;
-  font-size: var(--sl-font-h4);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-}
-
+/* The filter is a form in a window of its own: the search with the buttons, then the narrower fields in one row */
 .sl-changelog-filter-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--sl-space-6);
-  margin-bottom: var(--sl-space-6);
 }
 
 .sl-changelog-filter-field {
@@ -4991,53 +4975,31 @@ dialog.sl-editor-emoji-panel {
   margin-left: auto;
 }
 
-.sl-changelog-results {
-  background: var(--sl-bg-subtle);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-6) var(--sl-space-7);
-  margin-bottom: var(--sl-space-7);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sl-changelog-results-info {
-  font-size: var(--sl-font-body);
-  color: var(--sl-text-muted);
-}
-
-.sl-changelog-results-info strong {
-  color: var(--sl-text);
-  font-weight: var(--sl-weight-semibold);
-}
-
-.sl-changelog-commits {
-  background: var(--sl-bg);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  overflow: hidden;
-  margin-bottom: var(--sl-space-7);
-  box-shadow: var(--sl-shadow-xs);
+/* The commits run from frame to frame of their window, each row on a ground of its own: the body has neither inset nor gap, a row keeps the inset of a window */
+.sl-pane-body:has(> .sl-changelog-commit) {
+  gap: 0;
+  padding: 0;
 }
 
 .sl-changelog-date-header {
   background: var(--sl-changelog-date-bg);
   color: var(--sl-text-strong);
-  padding: var(--sl-space-5) var(--sl-space-7);
+  padding: var(--sl-space-5) var(--sl-pane-pad-x);
   font-weight: var(--sl-weight-semibold);
   font-size: var(--sl-font-h4);
   border-bottom: 1px solid var(--sl-border);
 }
 
 .sl-changelog-commit {
-  padding: var(--sl-space-7);
-  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-7) var(--sl-pane-pad-x);
+  border-bottom: 1px dashed var(--sl-border);
   transition: background-color var(--sl-time-base);
 }
 
+/* The ground of the last commit ends in the lower corners of its window */
 .sl-changelog-commit:last-child {
   border-bottom: none;
+  border-radius: 0 0 calc(var(--sl-pane-radius) - 1px) calc(var(--sl-pane-radius) - 1px);
 }
 
 .sl-changelog-commit:hover {
@@ -5157,12 +5119,6 @@ dialog.sl-editor-emoji-panel {
   .sl-changelog-filter-grid
     .sl-changelog-filter-field:last-child:nth-child(odd) {
     grid-column: span 2;
-  }
-
-  .sl-changelog-results {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--sl-space-4);
   }
 
   .sl-changelog-commit-header {
@@ -6368,9 +6324,6 @@ dialog.sl-editor-emoji-panel {
 /* The light that runs round the frame of every block under the hand, as in the panel: a turning cone cut to the line of the frame, drawn by the --sl-aurora-* tokens; the layer exists only under the hand */
 @media (prefers-reduced-motion: no-preference) {
   .sl-cab-deck,
-  .sl-changelog-commits,
-  .sl-changelog-filter,
-  .sl-changelog-results,
   .sl-opt-lamp,
   :not(.sl-opt-grid) > .sl-pane,
   .sl-search-panel,
@@ -6392,9 +6345,6 @@ dialog.sl-editor-emoji-panel {
   .sl-block::before,
   .sl-cab-act::before,
   .sl-cab-deck::before,
-  .sl-changelog-commits::before,
-  .sl-changelog-filter::before,
-  .sl-changelog-results::before,
   .sl-opt-lamp::before,
   :not(.sl-opt-grid) > .sl-pane::before,
   .sl-search-panel::before,
@@ -6411,7 +6361,6 @@ dialog.sl-editor-emoji-panel {
   .sl-profile-proof::before,
   .sl-preview::before,
   .sl-msg-card::before,
-  .sl-pres-cockpit::before,
   .sl-pres-stat::before,
   .sl-pres-metric::before,
   .sl-pres-chart::before,
@@ -6448,9 +6397,6 @@ dialog.sl-editor-emoji-panel {
   .sl-block:hover::before,
   .sl-cab-act:hover::before,
   .sl-cab-deck:hover::before,
-  .sl-changelog-commits:hover::before,
-  .sl-changelog-filter:hover::before,
-  .sl-changelog-results:hover::before,
   .sl-opt-lamp:hover::before,
   :not(.sl-opt-grid) > .sl-pane:hover::before,
   .sl-search-panel:hover::before,
@@ -6467,7 +6413,6 @@ dialog.sl-editor-emoji-panel {
   .sl-profile-proof:hover::before,
   .sl-preview:hover::before,
   .sl-msg-card:hover::before,
-  .sl-pres-cockpit:hover::before,
   .sl-pres-stat:hover::before,
   .sl-pres-metric:hover::before,
   .sl-pres-chart:hover::before,
@@ -8032,9 +7977,10 @@ h1.sl-pane-title {
   float: none;
 }
 
-/* Forum: the messages of a topic stand in a window named by the topic, as far from the row of the pager as that row keeps off what follows; the comments keep that step */
+/* Forum: the window of a topic stands as far from the row of the pager as that row keeps off what follows; the comments and the windows of the changelog keep that step */
 .sl-pane:has(> .sl-pane-body > div > .sl-forum-post),
-#repcsave > .sl-pane {
+#repcsave > .sl-pane,
+.sl-changelog > .sl-pane {
   margin-bottom: var(--sl-space-7);
 }
 
