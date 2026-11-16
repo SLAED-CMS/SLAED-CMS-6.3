@@ -118,6 +118,7 @@ function getCommentView(array $val, int $numb, string $token): string {
             'title' => $avname,
             'is_avatar' => true,
         ]),
+        'ring' => getRingColor($usr['gcolor'] ?? ''),
         'rank' => (string)($usr['rank'] ?? ''),
         'rank_html' => getRankView((string)($usr['grank'] ?? ''), $trank),
         'user_rate' => $rate,
@@ -241,7 +242,7 @@ function getCommentBranch(): void {
 
 # Render the comments of an item as two windows, the list and the form with the status zone in its body; the editor field is named, as a numeric id collides with comment ids
 function setComShow(int $id, int $acomm, ?string $route): string {
-    global $conf, $user, $tpl, $com;
+    global $conf, $tpl, $com;
     $full = getVar('get', 'all', 'num', 0);
     $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage($full ?: getVar('get', 'at', 'num', 0));
     $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
@@ -254,31 +255,31 @@ function setComShow(int $id, int $acomm, ?string $route): string {
         $userinfo = getUserInfo();
         $note = !is_moder($conf['name']) && ($mode === CommentMode::Moderated || !empty($userinfo['access']) || (!is_user() && $conf['comments']['anonpost'] == 1));
         if ($note) $stat = $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-        if (is_user()) {
-            $name_field = filterText(substr($user[1], 0, 25)).$tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => '', 'input_attr' => '']);
-        } else {
-            $name_field = $tpl->getHtmlFrag('input', [
+        $fields = is_user() ? '' : $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-name',
+            'label' => _YOURNAME,
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'input_attr' => 'maxlength="25"',
                 'itype' => 'text',
                 'name_attr' => 'name',
                 'input_id' => 'f-name',
                 'value_attr' => _ANONYM,
-            ]);
-        }
-        $fields = $tpl->getHtmlFrag('form-field-row', ['label_for' => is_user() ? '' : 'f-name', 'label' => _YOURNAME, 'field_html' => $name_field])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label' => _COMMENT,
-                'label_id' => $labid = getFieldIds('', 'text')['label'],
-                'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _COMMENT,
-                    'id' => 'ctext',
-                    'name' => 'text',
-                    'value' => '',
-                    'mod' => getCommentPlace($conf['name']),
-                    'store' => 'comment.body',
-                    'rows' => '5',
-                    'placeholder' => _COMMENT,
-                ]),
-            ])
+            ]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _COMMENT,
+            'is_label_hidden' => true,
+            'label_id' => $labid = getFieldIds('', 'text')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _COMMENT,
+                'id' => 'ctext',
+                'name' => 'text',
+                'value' => '',
+                'mod' => getCommentPlace($conf['name']),
+                'store' => 'comment.body',
+                'rows' => '5',
+                'placeholder' => _COMMENT,
+            ]),
+        ])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'reqkey', 'value_attr' => '', 'input_attr' => 'data-sl-reqkey'])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => '', 'input_attr' => 'data-sl-reply-to'])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]);
@@ -399,6 +400,11 @@ function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     return ($href !== '') ? $href : $base.'system/user.svg';
 }
 
+# Answer the colour of a group for the ring of an avatar, #rrggbb or empty: a template writes it into a style attribute, so any other value is dropped
+function getRingColor(?string $color): string {
+    return preg_match('/^#[0-9a-f]{6}$/i', $color ?? '') ? $color : '';
+}
+
 # Resolve point-level data for a user: reached point groups, ring color, progress percent and next-group hint; group color/rank override the point-group ones
 function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): array {
     global $db, $pnt;
@@ -428,11 +434,10 @@ function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): 
             $level = 100;
         }
     }
-    $ring = $gcolor ?: $ucolor;
     return [
         'groups' => $rgroup,
         'rank' => $grank ?: $uranks,
-        'ring' => ($ring && preg_match('/^#[0-9a-f]{6}$/i', $ring)) ? $ring : '',
+        'ring' => getRingColor($gcolor ?: $ucolor),
         'level' => $level,
         'nextlab' => $nextlab,
     ];
@@ -1043,7 +1048,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
                 'carry_body' => $back,
             ]);
         }
-        $sql = 'SELECT u.id, u.name, u.avatar, u.website, u.sig, g.name AS gname, r.path FROM '.PREFIX_DB.'_users AS u'
+        $sql = 'SELECT u.id, u.name, u.avatar, u.website, u.sig, g.name AS gname, g.color AS gcolor, r.path FROM '.PREFIX_DB.'_users AS u'
             .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1'
             .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
             .' WHERE u.id = :pid ORDER BY g.extra DESC, g.points DESC';
@@ -1098,6 +1103,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             'token' => $tok,
             'title' => $view['title'],
             'avatar' => ($pname !== '') ? getUserAvatarUrl(['avatar' => (string)($mate['avatar'] ?? '')]) : getUserAvatarUrl([], true),
+            'ring' => getRingColor($mate['gcolor'] ?? ''),
             'author' => $show,
             'author_html' => ($pname !== '') ? user_info($pname, $mate['path'] ?? null, false) : '',
             'note' => ($gname !== '') ? _GROUP.': '.$gname : (string)_RANK,

@@ -329,7 +329,7 @@ final class UiAuditTest extends TestCase
         $this->assertArrayNotHasKey('--sl-space-4', $why, 'a registered axis role passes');
         $this->assertArrayNotHasKey('--sl-btn-pad-x', $why, 'a declared component with a closed prop passes');
         $this->assertArrayNotHasKey('--sl-chart-cpu', $why, 'a categorical member passes');
-        $this->assertArrayNotHasKey('--sl-d-level', $why, 'a data token is not API and is not judged as one');
+        $this->assertArrayNotHasKey('--sl-d-ring', $why, 'a data token is not API and is not judged as one');
         $this->assertArrayNotHasKey('--sl-shadow-focus', $why, 'focus is a declared shadow role, so the state law does not fire on it');
         $this->assertStringContainsString('inversion', implode(' ', $why['--sl-color-on-dark']));
         $this->assertStringContainsString('state', implode(' ', $why['--sl-color-primary-hover']));

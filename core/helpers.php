@@ -137,7 +137,10 @@ function getTplPreviewContent(array $data = []): string {
     $bodyb = $textb ? $prs->filterContent($textb, true, $mod, 0, $fmt, $own, true) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
     return $tpl->getHtmlPart('preview', [
+        'icon' => 'eye',
         'title' => _PREVIEW,
+        'level' => 2,
+        'head' => ($title !== '') ? ['icon' => $data['icon'] ?? '', 'title' => $title, 'hint' => $title, 'level' => 3] : [],
         'title_text' => (string)$title,
         'body_a' => $bodya,
         'body_b' => $bodyb,

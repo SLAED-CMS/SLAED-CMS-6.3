@@ -448,14 +448,18 @@ function getNodeDownload(NodeType $type, array $view): array {
 
 # The facts the view and card show around a stored material; every piece comes from the row or the request caches, so a list adds no statement per material
 function getNodeMetaVars(NodeType $type, Node $node): array {
+    global $tpl;
     $feat = $type->settings['features'];
     $live = $node->id > 0;
+    $comm = $live && $feat['comments'] && $node->comon !== CommentMode::Disabled;
     $cat = ($node->cid > 0) ? (getCategoryMap($type->name)[$node->cid] ?? []) : [];
     $past = $node->pubdate !== null && strtotime($node->pubdate) <= time();
     return [
         'is_live' => $live,
-        'is_comm' => $live && $feat['comments'] && $node->comon !== CommentMode::Disabled,
+        'is_comm' => $comm,
         'comm_label' => _COMMENTS,
+        'chips' => $comm ? [['tone' => 'neutral', 'icon' => 'chat-text', 'label' => $node->comnum, 'title' => _COMMENTS]] : [],
+        'mark_html' => $live ? $tpl->getHtmlFrag('link', ['href' => '#node-'.$node->id, 'title' => $node->id, 'label' => $node->id, 'is_num_anchor' => true]) : '',
         'fresh_html' => ($past && $node->status === NodeStatus::Published) ? getTplNewGraphic($node->pubdate) : '',
         'cicon_html' => getCategoryIcon((string)($cat['img'] ?? '')),
         'ctone' => intval($cat['ordern'] ?? 0) % 6,
@@ -507,17 +511,26 @@ function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, 
     if ($moder) $meta['moder_html'] = getActionMenu(getNodeModerDial($type, $node, true, true));
     elseif ($own) $meta['moder_html'] = getActionMenu(getNodeQuickItems($type, $node));
     [$assets, $files] = getNodeAssetView($type, $view);
+    $tools = $meta['fresh_html'].$meta['fav_html'];
+    if ($open) $tools .= $tpl->getHtmlFrag('share', ['share_url' => getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]),
+        'share_title' => $node->title]);
+    $tools .= getActionMenu($who, true).$meta['moder_html'].$meta['mark_html'];
     return $tpl->getHtmlPart(getNodeTplName('partials', 'view', $type), $view + getNodeViewVars($type) + $meta + [
+        'head' => [
+            'icon' => getIconName($type->name),
+            'title' => $node->title,
+            'hint' => $node->title,
+            'level' => empty($view['is_preview']) ? 1 : 3,
+            'chips' => $meta['chips'],
+            'tools_html' => $tools,
+        ],
+        'rels_head' => ['icon' => 'collection', 'title' => _NODE_RELATED, 'level' => 2],
         'fields_html' => $rows,
         'assets_html' => $assets,
         'files_html' => $files,
         'rels_html' => $rels,
-        'rels_label' => _NODE_RELATED,
         'poll_html' => $live['poll'] ?? '',
         'tree_html' => $live['tree'] ?? '',
-        'share_url' => $open ? getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]) : '',
-        'share_title' => $node->title,
-        'user_html' => getActionMenu($who, true),
         'ext' => $ext,
     ]);
 }
@@ -630,7 +643,10 @@ function setNodeList(): void {
             $slot = $month;
             $last = array_key_last($groups);
             $groups[$last]['count']++;
-            $groups[$last]['items_html'] .= $tpl->getHtmlFrag($card, $view + getNodeViewVars($type) + getNodeMetaVars($type, $node)
+            $meta = getNodeMetaVars($type, $node);
+            $head = ($look === 'cards') ? ['head' => ['icon' => getIconName($type->name), 'title' => $view['title'], 'href' => $view['href'], 'hint' => $view['title'],
+                'level' => 2, 'chips' => $meta['chips'], 'tools_html' => $meta['fresh_html'].$meta['fav_html'].$meta['moder_html'].$meta['mark_html']]] : [];
+            $groups[$last]['items_html'] .= $tpl->getHtmlFrag($card, $view + getNodeViewVars($type) + $meta + $head
                 + ['cover' => getNodeCover($type, $view), 'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? []),
                 'is_play' => $mode === 'media']);
         }
@@ -875,6 +891,7 @@ function setNodeView(): void {
         foreach (array_chunk($refs, $query->getTargetSize(), true) as $part) $tgts += $query->getNodeTargetList($part);
         foreach ($tgts as $tgt) {
             $card = ['is_views' => false, 'cover' => '', 'is_play' => $type->settings['view']['mode'] === 'media'] + getNodeViewData($type, $tgt, 'card') + getNodeViewVars($type);
+            $card['head'] = ['icon' => getIconName($type->name), 'title' => $card['title'], 'href' => $card['href'], 'hint' => $card['title'], 'level' => 3];
             $rels .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $card);
         }
         $own = ['node', $node->id];
@@ -949,7 +966,7 @@ function setNodeForm(): void {
                     $node = getNodeWriter($type)->getNodePreview($type, $input, $state);
                     $one = ($type->ext === 'event') ? ['starts' => $input->ext['starts'], 'ends' => ($input->ext['ends'] === '') ? null : $input->ext['ends'],
                         'place' => trim($input->ext['place'])] : [];
-                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, $node,
+                    $prev = $tpl->getHtmlPart('preview', ['icon' => 'eye', 'title' => _PREVIEW, 'level' => 2, 'content_html' => getNodeViewHtml($type, $node,
                         ['is_preview' => true] + getNodeViewData($type, $node, 'view'), '', getNodeExtVars($type, $node, $one))]);
                 } else {
                     $node = getNodeWriter($type)->addNode($type, $input, $state);

@@ -739,6 +739,7 @@ function view(): void {
                     'ip' => $ip,
                     'post_count' => $amess,
                     'avatar' => $avatar,
+                    'ring' => getRingColor($gcolor ?? ''),
                     'rank' => $rank,
                     'rank_html' => getRankView((string)($grank ?? ''), $trank),
                     'user_rate' => $rate,
@@ -947,7 +948,8 @@ function add(): void {
         setHead(['title' => $info, 'ctitle' => ($fid || $ftext) ? $ctitle : '', 'kind' => 'utility', 'robots' => 'noindex, follow']);
         $note = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $psubject = (!$subh) ? $subject : '';
-        $view = ['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)], 'fmt' => getStoreFormat('forum.body')];
+        $view = ['icon' => 'chat-left-text', 'title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)],
+            'fmt' => getStoreFormat('forum.body')];
         $cont = $hometext ? getTplPreviewContent($view) : '';
         $userinfo = getUserInfo();
         if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $note .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
@@ -975,6 +977,7 @@ function add(): void {
         ]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
+            'is_label_hidden' => true,
             'label_id' => $labid = getFieldIds('', 'hometext')['label'],
             'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                 'id' => '1',

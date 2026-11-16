@@ -101,7 +101,11 @@
   color: var(--sl-pres-muted-text);
 }
 
-/* The window on this page is the window of the site in every value of its set; its body alone is a plain box, where a body of the site lays the two tracks of a form */
+/* The window on this page is the window of the site in its frame, cap and shadow; it stands on the one flat ground every block of the page stands on, and its body is a plain box, where a body of the site lays the two tracks of a form */
+.sl-pres .sl-pane {
+  background: var(--sl-pres-panel-bg);
+}
+
 .sl-pres .sl-pane-body {
   display: block;
 }
@@ -998,7 +1002,7 @@
   overflow: hidden;
   border: 1px solid var(--sl-pres-frame-border);
   border-radius: var(--sl-radius-3);
-  background: var(--sl-pres-ground-bg);
+  background: var(--sl-pres-panel-bg);
   box-shadow: var(--sl-shadow-float);
 }
 
@@ -1036,7 +1040,6 @@
 .sl-pres-core-menu > button > .bi {
   width: var(--sl-size-icon-sm);
   margin-right: var(--sl-space-2);
-  color: var(--sl-primary-subtle);
   font-size: var(--sl-font-small);
 }
 
@@ -1957,7 +1960,7 @@
   min-height: calc(var(--sl-pres-width) * 1.75);
   border: 1px solid var(--sl-pres-frame-border);
   border-radius: var(--sl-radius-1);
-  background: var(--sl-pres-ground-bg);
+  background: var(--sl-pres-panel-bg);
   color: var(--sl-pres-link-text);
 }
 
@@ -2047,7 +2050,7 @@
   gap: var(--sl-space-2);
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-1);
-  background: var(--sl-pres-ground-bg);
+  background: var(--sl-pres-panel-bg);
   padding: var(--sl-space-3);
 }
 
@@ -3782,7 +3785,7 @@
   margin-top: var(--sl-space-3);
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-2);
-  background: var(--sl-pres-ground-bg);
+  background: var(--sl-pres-panel-bg);
   padding: var(--sl-space-3);
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
@@ -3850,7 +3853,7 @@
   overflow: hidden;
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-2);
-  background: var(--sl-pres-ground-bg);
+  background: var(--sl-pres-panel-bg);
 }
 
 .sl-pres-vars header {
@@ -3960,7 +3963,6 @@
   background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-modal-btn-mix), transparent);
   padding: var(--sl-space-3) var(--sl-space-4);
   transition:
-    transform var(--sl-time-slow) var(--sl-ease-in-out),
     border-color var(--sl-time-slow) var(--sl-ease-in-out),
     background-color var(--sl-time-slow) var(--sl-ease-in-out);
 }
@@ -3992,7 +3994,6 @@
 .sl-pres-commit.sl-is-on {
   border-color: var(--sl-primary);
   background: var(--sl-pres-inset-bg);
-  transform: translateX(3px);
 }
 
 .sl-pres-commit.sl-is-on::after {
@@ -5100,7 +5101,7 @@
   overflow: hidden;
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-3);
-  background: linear-gradient(180deg, var(--sl-pres-panel-bg), var(--sl-pres-ground-bg));
+  background: var(--sl-pres-panel-bg);
   padding-bottom: var(--sl-space-5);
   transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out), box-shadow var(--sl-time-slow) var(--sl-ease-in-out);
 }

@@ -2654,9 +2654,9 @@ back).
 | `partials/node/list.html` | `setNodeList()` | `head_html`, `intro`, `groups` (`label`, `count`, `items_html`; `label` empty without month heads), `rail` (`id`, `href`, `title`, `date`, `date_iso`, `intro_html`, `is_first`), `rail_name`, `title`, `is_compact`, `is_row`, `is_tiles`, `date_label`, `read_label`, `pager_html`, `more_href`, `more_label`, `empty_alert` |
 | `partials/node/head.html` | `getNodeHead()` | `title`, `is_home` (the title as `h2` under the site name), `count_text`, `count_title`, `view_html`, `filters_label`; `cats_html`, `cats_label`, `cat_name`, `is_cat`; `lets_html`, `lets_label`, `lets_hint`, `let_name`, `is_let`; `sort_name`, `sort_label`, `show_label`, `sorts` (`href`, `label`, `icon_name`, `is_current`), `mine` (`href`, `label`, `icon_name`, `count`, `is_on`), `is_new`, `is_fav`, `new_label`, `fav_label`; `dir_href`, `dir_label`, `dir_title`, `is_asc`; `reset_href`, `reset_label`; `find_mod`, `find_label`, `hint_href`, `search_label`; `rss_href`, `rss_title`, `top_label`, `add_href`, `add_label` |
 | `partials/node/hints.html` | `getNodeHint()` in `core/user.php` | `hints` (`href`, `label`) |
-| `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext`, `is_play` |
-| `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''` |
-| `partials/node/view.html` | `getNodeViewHtml()` | NodeView (`view`) + view labels + material facts + `fields_html`, `assets_html`, `rels_html`, `rels_label`, `poll_html`, `tree_html`, `share_url`, `share_title`, `user_html`, `ext` |
+| `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `head` (the keys of `fragments/pane-cap.html`, in the view `cards` alone) + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext`, `is_play` |
+| `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''`, `head` (icon, linked title, `level` 3) |
+| `partials/node/view.html` | `getNodeViewHtml()` | NodeView (`view`) + view labels + material facts + `head` and `rels_head` (the keys of `fragments/pane-cap.html`), `fields_html`, `assets_html`, `rels_html`, `poll_html`, `tree_html`, `ext` |
 | resource fragment of a role | `getNodeAssetView()` | `items` (resource items + `is_video`, `is_audio`), `role_title`, `poster` (first `poster` href), `token`, `report_label`, `download_label`, `visit_label`, `hits_label` |
 | `fragments/node/tree.html` | `getNodeTreeData()` | `title`, `trail` (`href`, `title`), `items` (`href`, `title`, `is_current`, `kids`, `is_more`), `first`, `is_before`, `is_after`, `prev_href`, `prev_title`, `next_href`, `next_title`, `toc_label`, `prev_label`, `next_label` |
 | `fragments/node/block.html` | `blocks/node.php` | NodeView (`card` of a full material); the items go into the shared `fragments/list.html` |
@@ -2666,10 +2666,15 @@ back).
   `support` it holds `state`, `prio`, `version`, `activity`, `aid`, `aname` (moderators only) plus `state_label`,
   `prio_label`, `is_closed`, `is_author`, `state_title`, `prio_title`, `is_owner`, `action`, `token`, `next`,
   `switch_label`, `card_href`. `sync` gives nothing to public views.
-- The view carries the three speed dials of a comment in `sl-meta-actions`: share (`share_url`, a stored material of a
-  type without `support`), the author menu `user_html` (private message and profile of a registered author) and the
-  moderator menu `moder_html`, then the anchor `#node-<id>`. Poll, rating, favorites and tree are rendered by their own
-  subsystems and handed in as HTML; a preview has none of them and no related cards.
+- The view is a window of the site (`docs/TEMPLATES.md`, "Site Window"): `article.sl-pane.sl-fullview` under the head
+  `head`. `getNodeViewHtml()` builds that head: the icon of the type (`getIconName()`), the title as the `h1` of the
+  page (an `h3` in a preview), the count of the comments as a chip, and in `tools_html` the mark of a fresh material,
+  the star of the favorites and the three speed dials of a comment — share (a stored material of a type without
+  `support`), the author menu (private message and profile of a registered author) and the moderator menu — then the
+  anchor `#node-<id>`. The facts stand in the first row of the body, `sl-meta`. The related cards stand under it as
+  windows, under a head without a frame named by `rels_head`. A card of the view `cards` of a list is a window too:
+  `setNodeList()` passes it `head`, and `fragments/node/card.html` without `head` is the plain card of the compact view. Poll, rating, favorites and tree are rendered by their own subsystems and
+  handed in as HTML; a preview has none of them and no related cards.
 - The special layouts `docs/card.html` (table of contents), `faq/card.html` (question and answer) and
   `media/card.html` (tile) keep their compact form without the material facts.
 - The preview wraps the view template in the shared `partials/preview.html` (`title`, `body_a`).

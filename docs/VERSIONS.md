@@ -2,6 +2,97 @@
 
 ## 2026-11-16
 
+### The bars of a poll rise from zero with their figures
+
+- **The intro of a poll zeroed a bar through its own transition.** `setVoteIntro()` of `plugins/system/slaed.js` wrote
+  `width: 0%` on a bar that carries `transition: width`, and two frames later the real width: the bar, painted whole,
+  sank halfway and came back, and never rose from zero.
+- **The rise is the theme's.** In `aurora` a bar of `.sl-vote-list` stands at zero from the first frame by the paused
+  keyframes `sl-vote-rise` and runs once `slaed.js` marks the poll with `data-sl-vote-intro`, over `--sl-figure-dur`,
+  so a bar and its figure arrive together. The rule stands under `@media (scripting: enabled)`: without scripts the
+  bars stand whole, and with motion off the duration is zero. `setVoteIntro()` resets the figures alone; a later value
+  of a live poll still moves a bar by its transition.
+
+### A neutral chip reads on the head of a window
+
+- **A neutral chip in the head of a window stands on `--sl-bg-muted`**: the rule `.sl-pane-chips .sl-chip-neutral` of
+  `aurora`. The tone of a neutral chip, `--sl-bg-subtle`, stood on the ground of the head, `--sl-surface`, at a
+  contrast of 1.04 by day and 1.06 by night, so the count of the comments and of the messages of a topic had no body.
+
+### The form of a comment shows no label a reader already knows
+
+- **The label of the editor is hidden for the eye**: the window is named by `_COMMENTREPLY` and the editor carries
+  the placeholder, so `setComShow()` of `core/user.php` passes `is_label_hidden` and the label only names the editor.
+- **The row of the name stands for a guest alone.** A member sees no name and the form sends no field `name`.
+
+### The ring of an avatar wears the colour of the group
+
+- **One ring stands round every large avatar**: in a comment, a message of the forum, a private message that is
+  read, the profile, the cabinet and the block of the user. One rule of `theme.css`, under the comment "Avatars",
+  draws it for `.sl-com-ava`, `.sl-profile-avatar` and the avatar of `.sl-block-user-ava`: the line in the colour of
+  the group, written as `--sl-d-ring` and leaning to the colour of the text by `--sl-com-ring-mix` so a dark tone
+  reads on a dark page, and a glow of it by `--sl-gauge-mix`, as every glow of the site. A guest, a removed member
+  and a member without a group keep the neutral ring without a glow.
+- **The arc of the level left the avatar** of the profile, of the cabinet and of the block; the level stays in the
+  meter of the profile, in the knob of the cabinet and as the figure of the block. The values `--sl-d-level`,
+  `--sl-d-user` and `--sl-d-usrlevel` and the token `--sl-ava-border` are gone with their readers, and the block
+  writes `--sl-d-ring`.
+- **One function answers the colour of the ring**: `getRingColor()` of `core/user.php` passes a colour `#rrggbb` and
+  drops any other value before a template writes it into `style`.
+- **The avatar of a private message stands in the same ring**: `partials/privat-view.html` wraps it in `.sl-com-ava`.
+- **The small avatars keep no ring**: the header, the list of the private messages and the rows of the cabinet.
+- **The label of the editor is hidden for the eye in the form of a forum message and of a private message** too, as
+  in the quick reply.
+- **A theme made from `aurora`** takes the token `--sl-com-ring-mix`, the rules under "Avatars", the rules of the
+  block and of `.sl-profile-avatar`, the rule `.sl-pmf-who .sl-com-ava` and the attribute `style` of the six
+  templates.
+
+### An avatar that is not square stays a circle
+
+- **The picture of an avatar is a square by `aspect-ratio: 1`**, cut to a circle by `object-fit: cover`, in one rule
+  for the comment, the forum, the profile, the cabinet, the tile of the settings and the private messages. A `height`
+  of such a picture never applied: `#content img` sets `height: auto` with the weight of an id, so a picture of
+  78 × 100 stood 82 px tall in a ring of 64 and 141 px tall in the profile. The rows of the watch window of the
+  sessions take `object-fit: cover` in both themes.
+
+### A material of Node and a card of its list stand in the window of the site
+
+- **The page of a material is a window**, `article.sl-pane.sl-fullview`, in the standard view and in the views of an
+  event and of a support request. Its head is the head of a forum topic: the icon of the type, the title as the `h1`
+  of the page on one line with the whole of it in the hint, the count of the comments as a chip, then the mark of a
+  fresh material, the star, the share, the author menu, the moderator menu and the anchor of the id.
+  `getNodeViewHtml()` builds the head and passes it as `head`.
+- **The facts stand in the first row of the body** and end in a dashed rule: the date, the category, the views and
+  the author. The chip of the comments left that row for the head and is no link any more; the staff link of a support
+  request to its card stays at the right end of the row.
+- **A card of a list is a window in the view "Карточки"**, on the lists of the types and on the home page:
+  `fragments/node/card.html` with the key `head` prints `article.sl-pane` under the head — the icon of the type, the
+  linked title as an `h2`, the chip of the comments, the mark of a fresh material, the star, the moderator menu and
+  the anchor of the id — and a body round its facts, its text and its foot. Without `head` it is the plain card of
+  the compact view. The tiles, the contents of the documentation and the accordion of the questions do not change.
+- **The related cards stand under a head without a frame** after the window of the material, each a window named by
+  an `h3`; the head is `rels_head`, an `h2`.
+- **A row of facts without a fact is not drawn** in a window.
+- **A preview stands under a head without a frame.** `partials/preview.html` of `aurora` prints the head
+  "Предпросмотр" (an `h2`) and under it the window of the material, or the window of a new topic of the forum named
+  by its title (an `h3`). The frame `.sl-preview` with its own head and the rules `.sl-preview-*` of `aurora` are
+  gone; `getTplPreviewContent()` passes `icon`, `level` and `head`.
+- **The page of a poll is a window** named by `_VOTING`, linked to the list of the polls; the question stays the `h1`
+  inside it. `.sl-post-vote` draws no frame of its own.
+- **The rules inside the window of a material are dashed**: between the rows of its fields and under a poll of its
+  text.
+- **The head of the cockpit of the presentation carries no version**: the chip of the state stands at its right end.
+- **A star or a mark of a fresh material in a head** stands at the gap of the head, 8 px, where the margin of a tip
+  made it 16: the head of a material, of a card and of a forum topic. The preview of a text without a name is a window
+  without a head, and its body takes the upper inset.
+- **The tools of a poll stand in the head of its window** on the page of the poll, as in its block: the live chip or
+  the mark of a closed poll, and the gear of an administrator.
+- **A theme made from `aurora`** takes the three view files and the rules of `.sl-fullview`, or keeps its own view:
+  the keys `rels_label`, `share_url`, `share_title` and `user_html` no longer reach the view, and the rule
+  `.sl-preview h2.sl-title` is gone with its reader. `getNodeMetaVars()` adds `chips` and `mark_html`.
+
+The reference is `docs/TEMPLATES.md`, "Site Window", and `docs/NODE.md`, the table of the templates.
+
 ### A mark of the footer without a link is a square tile
 
 - **The picture of a mark stands on the lower edge of its tile.** A mark without an address is a `span`, which the

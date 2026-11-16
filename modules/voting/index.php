@@ -116,7 +116,8 @@ function view(): void {
             'id' => 'rep'.$conf['name'],
             'content' => getVotingView($id, $conf['name']),
         ]);
-        $cont = $tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $vote]);
+        $cont = $tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $tpl->getHtmlFrag('pane', ['icon' => 'bar-chart', 'title' => _VOTING,
+            'href' => getSeoUrl(['name' => $conf['name']]), 'is_plain' => true, 'content_html' => $vote])]);
         if ($acomm) $cont .= setComShow($id, $acomm, $route);
     } else {
         setError(404);

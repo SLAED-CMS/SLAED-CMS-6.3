@@ -80,19 +80,13 @@ a .sl-letter:hover {
   margin-bottom: var(--sl-space-5);
 }
 
-.sl-fullview {
-  padding-bottom: var(--sl-space-5);
-}
-
 .sl-title {
   font-size: var(--sl-font-h2);
   color: var(--sl-text);
   margin: 0 0 var(--sl-space-4) 0;
 }
 
-/* The name of a material in a preview is an h2 under the name of the form page and keeps the face it has on its own page */
-h1.sl-title,
-.sl-preview h2.sl-title {
+h1.sl-title {
   font-size: var(--sl-font-h1);
   color: var(--sl-text-strong);
 }
@@ -173,18 +167,18 @@ h1.sl-title,
 }
 
 /* The foot of a material is one row: its downloads on the left and the rating on the right share one middle line */
-.sl-fullview > .sl-meta-foot {
+.sl-fullview > .sl-pane-body > .sl-meta-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sl-space-3) var(--sl-space-5);
 }
 
-.sl-fullview > .sl-meta-foot::after {
+.sl-fullview > .sl-pane-body > .sl-meta-foot::after {
   content: none;
 }
 
-.sl-fullview > .sl-meta-foot > .sl-pull-right {
+.sl-fullview > .sl-pane-body > .sl-meta-foot > .sl-pull-right {
   order: 1;
   margin: 0 0 0 auto;
 }
@@ -1698,11 +1692,33 @@ select.sl-field {
   max-width: 100%;
 }
 
-.sl-com-ava .sl-avatar {
-  width: 100%;
-  height: 100%;
+/* Avatars: one ring in the colour of the group, written as --sl-d-ring, with a glow of it, neutral without one; the picture is a square cut to a circle */
+.sl-com-ava,
+.sl-profile-avatar,
+.sl-block-user-ava .sl-live-avatar,
+.sl-block-user-ava > .sl-ava-min {
+  box-sizing: content-box;
+  padding: var(--sl-space-3);
+  border: var(--sl-com-ava-border) solid color-mix(in oklab, var(--sl-d-ring, var(--sl-text-strong)), var(--sl-text-strong) var(--sl-com-ring-mix));
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, var(--sl-d-ring, transparent) var(--sl-gauge-mix), transparent);
+}
+
+.sl-com-ava .sl-avatar,
+.sl-profile-avatar img,
+.sl-block-user-ava .sl-live-avatar > .sl-ava-min,
+.sl-opt-face img,
+.sl-cab-msg-ava img,
+.sl-pmf-item > img,
+.sl-pmf-slot-top img,
+.sl-pmf-who > img {
+  aspect-ratio: 1;
   border-radius: var(--sl-radius-circle);
   object-fit: cover;
+}
+
+.sl-com-ava .sl-avatar {
+  width: 100%;
   display: block;
 }
 
@@ -4501,60 +4517,6 @@ dialog.sl-editor-emoji-panel {
   cursor: pointer;
 }
 
-.sl-preview {
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg);
-  margin-bottom: var(--sl-space-5);
-  overflow: hidden;
-}
-
-.sl-preview-head {
-  padding: var(--sl-space-5) var(--sl-space-6);
-  background: var(--sl-surface);
-  border-bottom: 1px solid var(--sl-border);
-  font-weight: var(--sl-weight-bold);
-  color: var(--sl-text-strong);
-}
-
-.sl-preview-body {
-  display: grid;
-  gap: 0;
-}
-
-.sl-preview-title,
-.sl-preview-section {
-  padding: var(--sl-space-5) var(--sl-space-6);
-  background: var(--sl-bg);
-  border-bottom: 1px solid var(--sl-border-subtle);
-  line-height: var(--sl-line-normal);
-}
-
-.sl-preview-body > :last-child {
-  border-bottom: 0;
-}
-
-.sl-preview-title {
-  font-weight: var(--sl-weight-bold);
-  color: var(--sl-text-strong);
-}
-
-.sl-preview-meta {
-  background-color: var(--sl-surface);
-  color: var(--sl-text-muted);
-}
-
-.sl-preview-meta > div + div {
-  margin-top: var(--sl-space-3);
-}
-
-.sl-preview-admin-title,
-.sl-preview-field-primary,
-.sl-preview-field-secondary,
-.sl-preview-field-meta {
-  min-width: 0;
-}
-
 .sl-vote-list {
   list-style: none;
   margin: var(--sl-space-7) 0;
@@ -4639,12 +4601,19 @@ dialog.sl-editor-emoji-panel {
   gap: var(--sl-space-3);
 }
 
-.sl-block .sl-vote {
+.sl-block .sl-vote,
+.sl-post-vote .sl-vote {
   position: static;
+}
+
+/* The window of a poll page holds the tools of its poll in its head, as a block does */
+.sl-post-vote > .sl-pane {
+  position: relative;
 }
 
 /* The tools of a block stand in its head at the right, on the padding of the block: the gear of its administrator, and the live chip of a poll */
 .sl-block .sl-vote-tools,
+.sl-post-vote .sl-vote-tools,
 .sl-block-tools {
   top: var(--sl-pane-pad-y);
   right: var(--sl-pane-pad-x);
@@ -4698,7 +4667,8 @@ dialog.sl-editor-emoji-panel {
   padding-right: var(--sl-space-11);
 }
 
-.sl-block .sl-vote[data-sl-vote-live] .sl-vote-title {
+.sl-block .sl-vote[data-sl-vote-live] .sl-vote-title,
+.sl-post-vote .sl-vote[data-sl-vote-live] .sl-vote-title {
   padding-right: 0;
 }
 
@@ -4874,6 +4844,23 @@ dialog.sl-editor-emoji-panel {
 
 .sl-vote-list .sl-progress-line {
   margin: var(--sl-space-3) 0 var(--sl-space-5) 0;
+}
+
+/* The bars of a poll stand at zero from the first frame and rise with the run of their figures, once slaed.js marks the poll; a later value moves a bar by its transition */
+@media (scripting: enabled) {
+  .sl-vote-list .sl-progress-line div {
+    animation: sl-vote-rise var(--sl-figure-dur) var(--sl-ease-out) backwards paused;
+  }
+
+  .sl-vote[data-sl-vote-intro] .sl-progress-line div {
+    animation-play-state: running;
+  }
+}
+
+@keyframes sl-vote-rise {
+  from {
+    width: 0;
+  }
 }
 
 .sl-search-line .sl-pull-right img {
@@ -5259,8 +5246,6 @@ dialog.sl-editor-emoji-panel {
 
 /* User block: compact Dense Split account and audience dashboard */
 .sl-user-card {
-  --sl-d-user: var(--sl-primary);
-  --sl-d-usrlevel: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -5278,36 +5263,28 @@ dialog.sl-editor-emoji-panel {
   border-bottom: 1px dashed var(--sl-border);
 }
 
-.sl-block-user-ava .sl-live-avatar {
+.sl-block-user-ava .sl-live-avatar,
+.sl-block-user-ava > .sl-ava-min {
   box-sizing: border-box;
   display: block;
   width: var(--sl-avatar-width);
   height: var(--sl-avatar-height);
   padding: var(--sl-space-2);
-  border-radius: var(--sl-radius-circle);
-  background: conic-gradient(
-    var(--sl-d-user) 0 var(--sl-d-usrlevel),
-    var(--sl-border-muted) var(--sl-d-usrlevel) 100%
-  );
 }
 
 .sl-block-user-ava .sl-ava-min {
   display: block;
-  box-sizing: border-box;
-  width: calc(var(--sl-avatar-width) - var(--sl-space-2) * 2);
-  height: calc(var(--sl-avatar-height) - var(--sl-space-2) * 2);
-  border: var(--sl-ava-border) solid var(--sl-surface);
-  border-radius: var(--sl-radius-circle);
-  background-color: var(--sl-bg);
   background-position: center;
   background-size: cover;
-  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-block-user-ava .sl-live-avatar > .sl-ava-min {
+  width: 100%;
 }
 
 .sl-block-user-ava > .sl-ava-min {
-  width: var(--sl-avatar-width);
-  height: var(--sl-avatar-height);
-  border: var(--sl-ava-border) solid var(--sl-bg-subtle);
+  background-clip: content-box;
+  background-origin: content-box;
 }
 
 .sl-block-user-ava p {
@@ -6340,7 +6317,6 @@ dialog.sl-editor-emoji-panel {
   .sl-profile-card,
   .sl-empty,
   .sl-profile-proof,
-  .sl-preview,
   .sl-msg-card {
     position: relative;
   }
@@ -6362,7 +6338,6 @@ dialog.sl-editor-emoji-panel {
   .sl-profile-card::before,
   .sl-empty::before,
   .sl-profile-proof::before,
-  .sl-preview::before,
   .sl-msg-card::before,
   .sl-pres-stat::before,
   .sl-pres-metric::before,
@@ -6414,7 +6389,6 @@ dialog.sl-editor-emoji-panel {
   .sl-profile-card:hover::before,
   .sl-empty:hover::before,
   .sl-profile-proof:hover::before,
-  .sl-preview:hover::before,
   .sl-msg-card:hover::before,
   .sl-pres-stat:hover::before,
   .sl-pres-metric:hover::before,
@@ -7662,13 +7636,9 @@ button.sl-seg-cell:hover {
 }
 
 .sl-com-ava {
-  border-radius: var(--sl-radius-circle);
-  border: var(--sl-com-ava-border) solid var(--sl-text-strong);
-  padding: var(--sl-space-3);
   margin: 0 auto;
   width: var(--sl-com-ava-width);
   height: var(--sl-com-ava-height);
-  box-sizing: content-box;
   display: block;
 }
 
@@ -7980,10 +7950,14 @@ h1.sl-pane-title {
   float: none;
 }
 
-/* Forum: the window of a topic stands as far from the row of the pager as that row keeps off what follows; the comments and the windows of the changelog keep that step */
+/* Forum: the window of a topic stands as far from the pager row as that row keeps off what follows; the other windows of a page keep that step */
 .sl-pane:has(> .sl-pane-body > div > .sl-forum-post),
 #repcsave > .sl-pane,
-.sl-changelog > .sl-pane {
+.sl-changelog > .sl-pane,
+.sl-fullview,
+.sl-pane.sl-card,
+.sl-post-vote > .sl-pane,
+.sl-preview > .sl-pane {
   margin-bottom: var(--sl-space-7);
 }
 
@@ -7993,7 +7967,9 @@ h1.sl-pane-title {
 }
 
 .sl-pane-body > div:has(> .sl-forum-post) + div,
-#repcrows > div:not(:first-child) > .sl-comment {
+#repcrows > div:not(:first-child) > .sl-comment,
+.sl-fullview .sl-value-row + .sl-value-row,
+.sl-fullview .sl-entry-content > hr {
   border-top: 1px dashed var(--sl-border);
 }
 
@@ -8011,8 +7987,20 @@ h1.sl-pane-title {
 .sl-pane-body > form > .sl-form,
 .sl-pane-body > .sl-alert,
 .sl-pane-body > .sl-section,
+.sl-pane-body > .sl-meta,
+.sl-pane-body > .sl-entry-content,
 .sl-pane-body > #repcstat > .sl-alert {
   margin-bottom: 0;
+}
+
+/* The facts of a material stand under the head of its window and end in the dashed rule of a window; a row without a fact is not drawn */
+.sl-pane-body > .sl-meta {
+  padding-bottom: var(--sl-space-4);
+  border-bottom: 1px dashed var(--sl-border);
+}
+
+.sl-pane-body > .sl-meta:not(:has(li)) {
+  display: none;
 }
 
 .sl-pane-body > .sl-section + form,
@@ -8211,13 +8199,6 @@ h1.sl-pane-title {
 }
 
 /* Polls: voting widget layout */
-.sl-post-vote {
-  padding: var(--sl-space-8) 0;
-  display: flow-root;
-  border-bottom: 1px solid var(--sl-border-subtle);
-  margin-bottom: var(--sl-space-8);
-}
-
 .sl-progress-info {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -9116,9 +9097,7 @@ a.sl-chip-neutral {
   .sl-entry-content,
   .sl-com-cont,
   .sl-fp-meta,
-  .sl-block-content,
-  .sl-preview-body,
-  .sl-preview-section {
+  .sl-block-content {
     min-width: 0;
     overflow-wrap: anywhere;
     word-break: break-word;
@@ -9170,13 +9149,6 @@ a.sl-chip-neutral {
   .sl-grid .sl-card-col-6 {
     flex-basis: 100%;
     max-width: 100%;
-  }
-
-  .sl-preview-head,
-  .sl-preview-title,
-  .sl-preview-section {
-    padding-right: var(--sl-space-5);
-    padding-left: var(--sl-space-5);
   }
 }
 
@@ -10669,6 +10641,16 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: 1;
 }
 
+/* The preview of a text without a name is a window without a head, so its body takes the upper inset the head would give */
+.sl-preview > .sl-pane > .sl-pane-body:first-child {
+  padding-top: var(--sl-pane-pad-x);
+}
+
+/* A star or a mark of a fresh material in a head is spaced by the gap of the head, not by the margin a tip keeps beside a text */
+.sl-pane-cap > .sl-tip {
+  margin-right: 0;
+}
+
 /* The name takes the room the rest of the head leaves and wraps inside it, so the plus keeps its place at the right; it is set as a heading of a block was */
 .sl-pane-title {
   flex: 1 1 8em;
@@ -10727,8 +10709,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   user-select: none;
 }
 
-/* A head that stands without a frame, over the tiles of the cabinet and over the facts of the profile, keeps the height of a row and has no inset */
-:is(.sl-cab-main, .sl-profile-split-main) > .sl-pane-cap {
+/* A head that stands without a frame, over the tiles of the cabinet, the facts of the profile and the related cards of a material, keeps the height of a row and has no inset */
+:is(.sl-cab-main, .sl-profile-split-main, .sl-fullview + section, .sl-preview) > .sl-pane-cap {
   min-height: var(--sl-hub-head-height);
   padding: 0;
 }
@@ -10766,7 +10748,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-opt-face img {
   width: var(--sl-profile-ava-width);
   height: var(--sl-profile-ava-height);
-  border-radius: var(--sl-radius-circle);
   background: var(--sl-bg-muted);
   box-shadow: var(--sl-avatar-shadow);
 }
@@ -10947,35 +10928,24 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-profile-avatar {
-  --sl-d-level: 0%;
-  --sl-d-ring: var(--sl-primary);
   position: relative;
   display: grid;
   place-items: center;
   width: var(--sl-profile-ava-width);
   height: var(--sl-profile-ava-height);
   margin: 0 auto;
-  padding: var(--sl-space-3);
-  border-radius: var(--sl-radius-circle);
-  background: conic-gradient(var(--sl-d-ring) 0 var(--sl-d-level), var(--sl-bg-muted) var(--sl-d-level) 100%);
-  box-shadow: var(--sl-avatar-shadow);
 }
 
 .sl-profile-avatar img {
   display: block;
-  box-sizing: border-box;
   width: 100%;
   height: 100%;
-  border: var(--sl-ava-border) solid var(--sl-bg);
-  border-radius: var(--sl-radius-circle);
-  object-fit: cover;
-  background: var(--sl-bg);
 }
 
 .sl-profile-status {
   position: absolute;
-  right: 5px;
-  bottom: 12px;
+  right: var(--sl-space-2);
+  bottom: var(--sl-space-3);
   width: var(--sl-profile-dot-width);
   height: var(--sl-profile-dot-height);
   padding: var(--sl-profile-dot-border);
@@ -11276,6 +11246,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: 0;
 }
 
+.sl-pane-chips .sl-chip-neutral {
+  background: var(--sl-bg-muted);
+}
+
 /* A hub row is a feed entry with the count, the module and the rating in its slots, a step taller for its two chips */
 .sl-cab-row.sl-profile-hub-row {
   min-height: var(--sl-hub-row-height);
@@ -11443,8 +11417,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: var(--sl-space-7);
 }
 
-/* The head of the deck stands in normal flow over the action tiles, so it carries the room the tiles keep from it */
-.sl-cab-main > .sl-pane-cap {
+/* The head of the deck stands in normal flow over the action tiles, so it carries the room the tiles keep from it; the head over the related cards keeps the same room */
+.sl-cab-main > .sl-pane-cap,
+.sl-fullview + section > .sl-pane-cap,
+.sl-preview > .sl-pane-cap {
   margin-bottom: var(--sl-space-5);
 }
 
@@ -11835,8 +11811,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   width: var(--sl-pmf-ava-width);
   height: var(--sl-pmf-ava-height);
   margin-top: 1px;
-  border-radius: var(--sl-radius-circle);
-  object-fit: cover;
   background: var(--sl-bg-muted);
 }
 
@@ -12015,8 +11989,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-pmf-slot-top img {
   width: var(--sl-pmf-slot-width);
   height: var(--sl-pmf-slot-height);
-  border-radius: var(--sl-radius-circle);
-  object-fit: cover;
   background: var(--sl-bg-muted);
 }
 
@@ -12097,12 +12069,18 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-5);
 }
 
-.sl-pmf-who img {
+.sl-pmf-who > img {
   width: var(--sl-pmf-who-width);
   height: var(--sl-pmf-who-height);
-  border-radius: var(--sl-radius-circle);
-  object-fit: cover;
   background: var(--sl-bg-muted);
+}
+
+.sl-pmf-who .sl-com-ava {
+  flex: none;
+  width: var(--sl-pmf-who-width);
+  height: var(--sl-pmf-who-height);
+  margin: 0;
+  padding: var(--sl-space-2);
 }
 
 .sl-pmf-who b { display: block; }
@@ -12297,7 +12275,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-cab-msg-ava img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .sl-cab-rss-form {

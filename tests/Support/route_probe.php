@@ -368,7 +368,7 @@ function getRouteLists(PDO $pdo): array {
 function getRouteViewRuns(PDO $pdo): array {
     $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
     $one = getRouteReply('', 'GET', 'index.php?name=news&op=view&id=101');
-    $out = ['view' => [$one['code'], str_contains($one['body'], '<h1 class="sl-title">Alpha</h1>'),
+    $out = ['view' => [$one['code'], str_contains($one['body'], '<h1 class="sl-pane-title">Alpha</h1>'),
         str_contains($one['body'], 'go=file&amp;own=node&amp;id=101&amp;key=att-aaaaaaaaaa.png'), str_contains($one['body'], '/news/asset/2'),
         str_contains($one['body'], 'uploads/node/news/')]];
     $out['views'] = getRouteViews($pdo, 101, 1);
@@ -1332,7 +1332,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $out['paged'] = [str_contains($one, 'Beta'), str_contains($one, 'Alpha'), str_contains($two, 'Alpha'), str_contains($two, 'Beta'), str_contains($one, 'page=2')];
     $pdo->exec('INSERT INTO '.$pre.'node_relations (nid, rid, type, sort) VALUES (102, 101, \'related\', 0)');
     $rel = function (string $html): array {
-        $part = preg_match('#class="sl-related-title".*?</section>#s', $html, $hit) ? $hit[0] : '';
+        $part = preg_match('#</article>\s*<section>.*?</section>#s', $html, $hit) ? $hit[0] : '';
         return [$part !== '', str_contains($part, '>Alpha</a>'), str_contains($part, 'sl-card-reads')];
     };
     $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, time, enddate, lang, typ, status) VALUES'
@@ -1999,7 +1999,7 @@ function getRouteModes(PDO $pdo): array {
     foreach (['news', 'docs', 'faq', 'files', 'media'] as $name) {
         $one = $get('index.php?name='.$name);
         $out['list'][$name] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list"|foot"|more")/', $one['body']) === 1,
-            substr_count($one['body'], 'class="sl-post sl-card"')];
+            substr_count($one['body'], 'class="sl-pane sl-post sl-card"')];
     }
     $one = $get('index.php?name=news&op=view&id=101');
     $out['news'] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list"|foot"|more")/', $one['body']) === 1];
@@ -2008,7 +2008,7 @@ function getRouteModes(PDO $pdo): array {
     $out['docsview'] = [str_contains($one, 'sl-views'), str_contains($one, 'sl-author'), str_contains($one, 'sl-date')];
     $out['faq'] = getRouteModeBits($get('index.php?name=faq')['body'], 'sl-node-faq');
     $one = $get('index.php?name=faq&op=view&id=501')['body'];
-    $out['faqview'] = [str_contains($one, '<h1 class="sl-title">How to reset a password?</h1>'), str_contains($one, 'sl-views'), str_contains($one, 'sl-author')];
+    $out['faqview'] = [str_contains($one, '<h1 class="sl-pane-title">How to reset a password?</h1>'), str_contains($one, 'sl-views'), str_contains($one, 'sl-author')];
     $out['files'] = getRouteModeBits($get('index.php?name=files')['body'], 'sl-node-file');
     $out['filesview'] = getRouteModeOrder($get('index.php?name=files&op=view&id=601')['body'], ['sl-entry-content', 'bi-download']);
     $out['media'] = getRouteModeBits($get('index.php?name=media')['body'], 'sl-node-tile');

@@ -315,7 +315,6 @@
   --sl-alert-act-ring: 3px;
   --sl-alert-act-mix: 18%;
   --sl-arrow-width: 8px;
-  --sl-ava-border: 4px;
   /* The disc the avatar stands on: the halo it wears against the page, and the lift under it */
   --sl-avatar-shadow: 0 0 0 4px var(--sl-bg), var(--sl-panel-shadow);
   --sl-bar-shadow: 0 1px 2px 0 var(--sl-scrim-muted);
@@ -365,6 +364,7 @@
   --sl-com-ava-width: 64px;
   --sl-com-ava-height: 64px;
   --sl-com-item-width: 93px;
+  --sl-com-ring-mix: 22%;
   --sl-crumb-bar-height: 2px;
   --sl-demo-height: 76px;
   --sl-node-find-width: 200px;
@@ -483,18 +483,18 @@
   --sl-pres-height: 360px;
   --sl-pres-width: 132px;
   --sl-pres-min-height: 200px;
-  --sl-pres-panel-bg: light-dark(var(--sl-surface), #0b1d2c);
-  --sl-pres-ground-bg: light-dark(var(--sl-bg), #081824);
-  --sl-pres-inset-bg: light-dark(var(--sl-bg-subtle), #10283b);
+  --sl-pres-panel-bg: var(--sl-surface);
+  --sl-pres-ground-bg: var(--sl-bg);
+  --sl-pres-inset-bg: var(--sl-bg-subtle);
   /* The centre of a core: the brand wash laid opaque over the panel, so the wires meeting behind a core never show through */
   --sl-pres-core-bg: color-mix(in srgb, var(--sl-primary) 24%, var(--sl-pres-panel-bg));
-  --sl-pres-border: light-dark(var(--sl-border), #1c4159);
-  --sl-pres-frame-border: light-dark(var(--sl-border-strong), #27546c);
-  --sl-pres-text: light-dark(var(--sl-text), #ecf8ff);
-  --sl-pres-muted-text: light-dark(var(--sl-text-muted), #83a5ba);
-  --sl-pres-link-text: light-dark(var(--sl-primary-strong), #6fc8ff);
-  --sl-pres-good-text: light-dark(color-mix(in srgb, var(--sl-success) 90%, var(--sl-text)), #72e6b0);
-  --sl-pres-warn-text: light-dark(var(--sl-warning-strong), #ffd37d);
+  --sl-pres-border: var(--sl-border);
+  --sl-pres-frame-border: var(--sl-border-strong);
+  --sl-pres-text: var(--sl-text);
+  --sl-pres-muted-text: var(--sl-text-muted);
+  --sl-pres-link-text: var(--sl-primary-strong);
+  --sl-pres-good-text: color-mix(in srgb, var(--sl-success) 90%, var(--sl-text));
+  --sl-pres-warn-text: var(--sl-warning-strong);
   /* The veil over the photos of the presentation: none by day, a dusk by night so a bright picture does not glare on the dark page */
   --sl-pres-photo-bg: light-dark(transparent, rgba(4, 12, 22, 0.32));
   /* The rain of code behind the guard scene: the faint tint by day, the stronger one by night, where the faint one vanishes */
@@ -506,7 +506,7 @@
   --sl-gauge-min-height: 56px;
   --sl-gauge-mix: 50%;
   /* The light that runs round the frame of a block under the hand: the line it burns on, the share of the frame it covers, the colour it starts in and the one of its head; --sl-aurora-dur at 0s turns it off */
-  --sl-aurora-width: var(--sl-space-1);
+  --sl-aurora-width: 1px;
   --sl-aurora-mix: 20%;
   --sl-aurora-border: var(--sl-primary);
   --sl-aurora-ring: var(--sl-accent);

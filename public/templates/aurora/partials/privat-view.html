@@ -21,7 +21,7 @@
   <h2>{{ title }}</h2>
   {% if avatar %}
   <div class="sl-pmf-who">
-    <img src="{{ avatar }}" alt="{{ author }}" class="sl-avatar">
+    <div class="sl-com-ava"{% if ring %} style="--sl-d-ring:{{ ring }}"{% endif %}><img src="{{ avatar }}" alt="{{ author }}" class="sl-avatar"></div>
     <span>
       <b>{% if author_html %}{{{ author_html }}}{% else %}{{ author }}{% endif %}</b>
       {% if note %}

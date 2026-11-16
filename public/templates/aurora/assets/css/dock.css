@@ -212,6 +212,7 @@ button.sl-session-donut:focus-visible {
   width: var(--sl-size-control);
   height: var(--sl-size-control);
   border-radius: var(--sl-radius-circle);
+  object-fit: cover;
   box-shadow: 0 0 0 var(--sl-ring-width) currentColor;
 }
 

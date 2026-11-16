@@ -809,6 +809,7 @@ function privat(): void {
                 ]),
                 'text_row_html' => $tpl->getHtmlFrag('form-field-row', [
                     'label' => _MESSAGE,
+                    'is_label_hidden' => true,
                     'label_id' => $labid = getFieldIds('', 'text')['label'],
                     'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _MESSAGE,
                         'id' => 'privat',

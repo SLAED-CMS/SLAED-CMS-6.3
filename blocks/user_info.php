@@ -53,7 +53,7 @@ if (is_user()) {
         }
         if ($gname === '' && $points) $gname = $rank;
     }
-    $gcolor = ($gcolor && preg_match('/^#[0-9a-f]{6}$/i', $gcolor)) ? $gcolor : '';
+    $gcolor = getRingColor($gcolor);
     $level = ($pnt->active && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
     $data = [
         'is_user' => true,

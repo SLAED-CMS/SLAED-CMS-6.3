@@ -205,7 +205,7 @@ return [
         'capsule', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
-        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut',
+        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'com-ring', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut',
         'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'empty', 'entry', 'f-title', 'fav', 'feedback',
         'field', 'figure', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
@@ -265,7 +265,6 @@ return [
             .' templates/aurora/partials/presentation-hero.html',
         '--sl-d-knob-w' => 'width of the chosen cell of a segmented switch, which its plate takes, plugins/system/slaed.js',
         '--sl-d-knob-x' => 'left of the chosen cell of a segmented switch inside its track, where its plate travels, plugins/system/slaed.js',
-        '--sl-d-level' => 'profile completion percentage, templates/aurora/partials/account-home.html and account-profile.html',
         '--sl-d-pill-x' => 'editor capsule horizontal offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-rank' => 'colour of the lit marks of a group rank, templates/*/fragments/rank.html',
@@ -286,15 +285,14 @@ return [
         '--sl-d-pointer-y' => 'pointer viewport vertical position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',
         '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
-        '--sl-d-ring' => 'profile ring colour, templates/aurora/partials/account-home.html and account-profile.html',
+        '--sl-d-ring' => 'colour of the group on the ring of an avatar, templates/aurora/partials/account-home.html, account-profile.html, block-user-info.html and'
+            .' privat-view.html, fragments/comment.html and forum-post.html',
         '--sl-d-share' => 'share of members a group holds against the largest group, as a fraction, templates/admin/fragments/group-step.html',
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
         '--sl-d-swatch' => 'colour one swatch of a palette shows, and the value the own-colour wheel holds, templates/admin/partials/group-form.html and assets/js/admin-ui.js',
         '--sl-d-toast' => 'time a notice stays, which the ring of the panel notice counts down, plugins/system/slaed.js',
         '--sl-d-turn' =>'place of a node in a staggered row: a solid head or a window head its beam crosses and a part of a ground rising, templates/admin/assets/js/admin-ui.js,'
             .' a rating star that bursts, plugins/system/slaed.js, and a check row of the installer, templates/admin/pages/setup.html',
-        '--sl-d-user' => 'user group colour, templates/aurora/partials/block-user-info.html',
-        '--sl-d-usrlevel' => 'user group progress, templates/aurora/partials/block-user-info.html',
         '--sl-d-x' => 'horizontal position of a travelling card or packet inside its scene, plugins/presentation/presentation.js, and of the pointer'
             .' inside a home tile, a tile of figures or a pressed control of the panel, templates/admin/assets/js/admin-ui.js',
         '--sl-d-y' => 'vertical position of a travelling card inside its scene, plugins/presentation/presentation.js, and of the pointer'

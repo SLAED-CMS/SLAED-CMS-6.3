@@ -434,7 +434,7 @@
   /* The one share of its tone every glow of the panel carries: bars, rings, the lamp, dots, traces and flares; a ring of focus or a tint is not a glow */
   --sl-knob-mix: 50%;
   /* The light that runs round the frame of a block under the hand: the line it burns on, the share of the frame it covers, the colour it starts in and the one of its head; --sl-aurora-dur at 0s turns it off */
-  --sl-aurora-width: var(--sl-space-1);
+  --sl-aurora-width: 1px;
   --sl-aurora-mix: 20%;
   --sl-aurora-border: var(--sl-primary);
   --sl-aurora-ring: var(--sl-accent);

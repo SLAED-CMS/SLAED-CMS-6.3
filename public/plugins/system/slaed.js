@@ -2003,14 +2003,12 @@
         }
     }
 
-    // Voting widgets: cold-start intro — bars and counters rise from zero after the first painted frame
+    // Voting widgets: cold-start intro — the counters run up from zero; the bars rise by the keyframes of the theme, since a width zeroed here rides the transition of the bar
     function setVoteIntro(vote) {
         if (isMotionStill()) return;
         var rows = vote.querySelectorAll('li[data-sl-percent]');
         if (!rows.length) return;
         for (var i = 0; i < rows.length; i++) {
-            var bar = rows[i].querySelector('.sl-progress-line div');
-            if (bar) bar.style.width = '0%';
             rows[i].querySelectorAll('.sl-vote-pct, .sl-vote-num').forEach(function (node) { node.slFigure = 0; });
         }
         requestAnimationFrame(function () {
@@ -2061,9 +2059,11 @@
         }, wait * 1000);
     }
 
-    // Voting widgets: entry point for initial load and htmx swaps
+    // Voting widgets: entry point for initial load and htmx swaps; a swapped root that is the widget itself counts, since the theme holds its bars at zero until the mark
     function setVoteBlocks(root) {
-        var votes = (root || document).querySelectorAll('.sl-vote');
+        var scope = root || document;
+        var votes = Array.prototype.slice.call(scope.querySelectorAll('.sl-vote'));
+        if (scope !== document && scope.matches && scope.matches('.sl-vote')) votes.push(scope);
         for (var i = 0; i < votes.length; i++) {
             if (votes[i].getAttribute('data-sl-vote-intro') !== '1') {
                 votes[i].setAttribute('data-sl-vote-intro', '1');
