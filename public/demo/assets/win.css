@@ -584,6 +584,20 @@ body:has(.wn-root[data-wn-tabs="pills"]) .sl-tabs-link.sl-is-active::after {
   margin-bottom: 0;
 }
 
+/* The text ends inside the wrapper of its last section, where the rule of the theme for the last child of a help text does not reach */
+.wn-help [data-wn-part]:last-child > [data-wn-body] > :last-child {
+  margin-bottom: 0;
+}
+
+/* On a page of the panel the margin under the window falls through its box and is the whole step to the editor; in the grid of a room it stays inside the box, so the window gives it up and the editor adds what the gap of the room lacks */
+.wn-root:not([data-wn-helpwin="none"]) .wn-help [data-wn-all] {
+  margin-bottom: 0;
+}
+
+.wn-root:not([data-wn-helpwin="none"]) [data-wn-help-form] {
+  margin-top: calc(var(--sl-space-5) - var(--sl-space-4));
+}
+
 .wn-help .sl-pane-cap > h2 {
   margin: 0;
 }
