@@ -9,6 +9,7 @@
    - data-fr-isize="xs|sm|md|lg" — the size of the bare icon of a head, a step of --sl-size-icon-*: 16, 18, 24 or 32
    - data-fr-inset="tight|mid|wide" — the inset the eye sees round the icon of a head: 12 of the theme, 16, 20; the row of a
      head stands 4 px over its icon on each side, so the upright token is 4 px under the sideways one: 8 by 12, 12 by 16, 16 by 20
+   - data-fr-foot="tight|even" — the inset under the content of a window and of a block: 8, or 12 of the theme, as at its sides
    - data-fr-shade="none|xs" — the shadow
    The page of the topic:
    - data-fr-wrap="none|posts|all" — the window: none, round the messages alone, round the messages, the pager and the form
@@ -16,6 +17,8 @@
    - data-fr-form="bare|pane" — the quick reply as it is, or in a window of its own (inside the one window it stays bare)
    - data-fr-acts="head|foot" — the buttons of the topic at the top and under the messages, or under the messages alone
    - data-fr-count="5|15" — the messages on the page: a short page and a long one
+   The theme carries the set chosen on this desk, which is the set of the page, and draws the window of the messages,
+   its rule and its step to the pager by itself; the other values stay to compare with.
    The side column stands outside the root, so the axes of the window are mirrored onto <html>, where assets/frm.css
    writes them as values of the tokens --sl-pane-* of the theme.
    This file fills the root from the attributes and puts the desk over it: a button data-fr-set="<axis>:<value>" writes
@@ -30,6 +33,7 @@ const FR_AXES = [
   ['type', 'Размер названия', [['micro', '12'], ['small', '13'], ['h4', '16'], ['h3', '18'], ['h2', '20']]],
   ['isize', 'Размер иконки', [['xs', '16'], ['sm', '18'], ['md', '24'], ['lg', '32']]],
   ['inset', 'Поля', [['tight', '12'], ['mid', '16'], ['wide', '20']]],
+  ['foot', 'Низ окна', [['tight', '8'], ['even', '12']]],
   ['shade', 'Тень', [['none', 'Нет'], ['xs', 'Есть']]],
   ['wrap', 'Окно темы', [['none', 'Нет'], ['posts', 'Сообщения'], ['all', 'Всё вместе']]],
   ['rule', 'Между сообщениями', [['off', 'Ничего'], ['dash', 'Пунктир']]],
@@ -38,9 +42,9 @@ const FR_AXES = [
   ['count', 'Сообщений', [['5', '5'], ['15', '15']]],
 ];
 
-const FR_ROWS = [['frame', 'radius', 'ground'], ['head', 'type', 'isize'], ['inset', 'shade'], ['wrap', 'rule', 'form'], ['acts', 'count']];
+const FR_ROWS = [['frame', 'radius', 'ground'], ['head', 'type', 'isize'], ['inset', 'foot', 'shade'], ['wrap', 'rule', 'form'], ['acts', 'count']];
 
-const FR_MIRROR = ['frame', 'radius', 'ground', 'head', 'type', 'isize', 'inset', 'shade'];
+const FR_MIRROR = ['frame', 'radius', 'ground', 'head', 'type', 'isize', 'inset', 'foot', 'shade'];
 
 const FR_TOPIC = { title: 'Дубли страниц в поиске и канонический адрес', total: 49 };
 
@@ -213,16 +217,16 @@ function getFrForm(named) {
   const label = named ? 'sl-visually-hidden' : 'sl-form-label';
   const rows = FR_FIELDS.map(([name, list], i) => `<div class="sl-form-row"><label class="sl-form-label" for="fr-field-${i}">${name}</label><div class="sl-form-field">` +
     `<select id="fr-field-${i}" class="sl-field sl-field--auto">${list.map((text) => `<option>${text}</option>`).join('')}</select></div></div>`).join('');
-  return '<form action="#" method="post" class="sl-forum-reply-form"><div class="sl-form"><div class="sl-form-row">' +
+  return '<form action="#" method="post"><div class="sl-form"><div class="sl-form-row">' +
     `<span id="fr-text-label" class="${label}">Текст</span>` +
     `<div class="sl-form-field">${getFrEditor()}</div></div>${rows}` +
     `<div class="sl-form-submit"><button type="submit" class="sl-but">${getFrIcon('send')} Отправить</button></div></div></form>`;
 }
 
-/* The head of a window, as fragments/pane-cap.html prints it: the icon, the name, the chips, then the tools */
+/* The head of a window, as fragments/pane-cap.html prints it: the icon, the name, the chips, then the tools as children of the head itself */
 function getFrCap(icon, title, level, chip, tools) {
   return `<div class="sl-pane-cap">${getFrIcon(icon)}<${level} class="sl-pane-title" title="${title}">${title}</${level}>` +
-    (chip ? `<span class="sl-pane-chips"><span class="sl-chip sl-chip-neutral">${chip}</span></span>` : '') + (tools ? `<span class="fr-tools">${tools}</span>` : '') + '</div>';
+    (chip ? `<span class="sl-pane-chips"><span class="sl-chip sl-chip-neutral">${chip}</span></span>` : '') + tools + '</div>';
 }
 
 function getFrPage(set) {
@@ -234,15 +238,15 @@ function getFrPage(set) {
   const top = `<div class="sl-forum-top"><span class="sl-pull-right"><span class="sl-meta-actions">${getFrShare()}</span>${acts}</span>` +
     `<h1 class="sl-heading" title="${FR_TOPIC.title}"><span class="sl-fav">${getFrFav()}</span> ${FR_TOPIC.title}</h1></div>`;
   const foot = `<div class="sl-forum-foot">${getFrPager(count)}<span class="sl-pull-right">${getFrActs()}</span></div>`;
-  const cap = getFrCap('chat-left-text', FR_TOPIC.title, 'h1', getFrIcon('chat') + FR_TOPIC.total, getFrFav() + getFrShare() + acts);
+  const cap = getFrCap('chat-left-text', FR_TOPIC.title, 'h1', getFrIcon('chat') + FR_TOPIC.total, `<span class="sl-fav">${getFrFav()}</span>` + getFrShare() + acts);
   const reply = set.form === 'pane'
-    ? `<section class="sl-pane fr-pane fr-reply">${getFrCap('reply', 'Форма быстрого ответа', 'h3', '', '')}<div class="sl-pane-body">${getFrForm(true)}</div></section>`
+    ? `<section class="sl-pane">${getFrCap('reply', 'Форма быстрого ответа', 'h3', '', '')}<div class="sl-pane-body">${getFrForm(true)}</div></section>`
     : `<h2>Форма быстрого ответа</h2>${getFrForm()}`;
   if (set.wrap === 'all') {
-    return `${info}<section class="sl-pane fr-pane fr-topic">${cap}<div class="sl-pane-body">${posts}<div class="fr-part">${foot}</div>` +
+    return `${info}<section class="sl-pane">${cap}<div class="sl-pane-body">${posts}<div class="fr-part">${foot}</div>` +
       `<div class="fr-part"><h2>Форма быстрого ответа</h2>${getFrForm()}</div></div></section>`;
   }
-  if (set.wrap === 'posts') return `${info}<section class="sl-pane fr-pane fr-topic">${cap}<div class="sl-pane-body">${posts}</div></section>${foot}${reply}`;
+  if (set.wrap === 'posts') return `${info}<section class="sl-pane">${cap}<div class="sl-pane-body">${posts}</div></section>${foot}${reply}`;
   return `${info}${top}<div class="fr-list">${posts}</div>${foot}${reply}`;
 }
 

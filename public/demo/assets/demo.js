@@ -18,10 +18,10 @@ const DEMO_FORUM = [
   {
     file: 'frm-01-topic.html',
     title: 'Окно сайта',
-    note: 'Окно сайта на странице темы форума, с блоками боковой колонки. Пульт меняет рамку, радиус, поверхность, шапку, ' +
-      'размер названия и иконки, поля и тень, а у страницы — окно темы, разделитель сообщений, форму ответа и кнопки. ' +
-      'Исходный набор — как на сайте сейчас.',
-    tags: ['рамка тонкая', 'радиус 8', 'градиент', 'название 18', 'иконка 18', 'поля 12', 'тень'],
+    note: 'Окно сайта решено и стоит в теме. Вариант показывает его на странице темы форума, с блоками боковой колонки. ' +
+      'Пульт оставляет для сравнения остальные значения: рамку, радиус, поверхность, шапку, размер названия и иконки, поля, низ окна и тень, ' +
+      'а у страницы — окно темы, разделитель сообщений, форму ответа и кнопки. Исходный набор — как на сайте сейчас.',
+    tags: ['рамка тонкая', 'радиус 8', 'градиент', 'название 18', 'иконка 18', 'поля 12', 'низ 12', 'тень'],
   },
 ];
 
@@ -135,6 +135,9 @@ const CHROME_TOP = `
     </div>
   </nav>`;
 
+/* The tiles of the footer, as partials/site-footer.html draws a mark of the theme: the mono drawing and the coloured one over it */
+const CHROME_MARKS = [['php', 'PHP'], ['mysql', 'MySQL / MariaDB'], ['htmx', 'htmx'], ['html5', 'HTML5'], ['css', 'CSS3'], ['javascript', 'JavaScript']];
+
 const CHROME_FOOT = `
   <section id="demo-line" aria-label="Хотите опробовать SLAED CMS в действии?">
     <div class="sl-wrp">
@@ -171,10 +174,8 @@ const CHROME_FOOT = `
       <section class="sl-grid" aria-label="Технологии">
         <div class="sl-font sl-f-title">Технологии</div>
         <div class="sl-partners">
-          <a href="#" title="PHP"><img src="${T}/images/tmp/php.png" alt="PHP" width="74" height="74"></a>
-          <a href="#" title="MySQL"><img src="${T}/images/tmp/mysql.png" alt="MySQL" width="74" height="74"></a>
-          <a href="#" title="HTML 5"><img src="${T}/images/tmp/html5.png" alt="HTML 5" width="74" height="74"></a>
-          <a href="#" title="CSS 3"><img src="${T}/images/tmp/css3.png" alt="CSS 3" width="74" height="74"></a>
+          ${CHROME_MARKS.map(([logo, name]) => `<a href="#" title="${name}"><img src="${T}/images/tech/${logo}.svg" alt="${name}" width="74" height="74">` +
+            `<img src="${T}/images/tech/${logo}-color.svg" alt="" width="74" height="74"></a>`).join('')}
         </div>
       </section>
       <section class="sl-grid" aria-label="Контакты">

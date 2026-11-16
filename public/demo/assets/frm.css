@@ -1,6 +1,7 @@
 /* The window of the site on the page of one forum topic (assets/frm.js). The window itself is .sl-pane of the theme:
    an axis of the window writes a value of a token --sl-pane-* on <html>, which a block of the side column reads too.
-   Besides the axes this file holds the desk and what a window of messages needs that a window of form rows does not */
+   The theme draws the window of the messages, its rule and its step to the pager by itself, so besides the axes this
+   file holds the desk and the parts of the one window round the whole page, which the theme does not draw */
 .fr-desk {
   display: grid;
   gap: var(--sl-space-4);
@@ -93,6 +94,15 @@
   --sl-pane-pad-y: var(--sl-space-6);
 }
 
+/* Axis: the inset under the content of a window and of a block, a step of the spacing ladder whatever the inset of the sides is */
+:root[data-fr-foot="tight"] :is(.sl-pane-body, .sl-block-content) {
+  padding-bottom: var(--sl-space-3);
+}
+
+:root[data-fr-foot="even"] :is(.sl-pane-body, .sl-block-content) {
+  padding-bottom: var(--sl-space-5);
+}
+
 :root[data-fr-shade="none"] {
   --sl-pane-shadow: none;
 }
@@ -101,15 +111,15 @@
   --sl-pane-shadow: var(--sl-shadow-xs);
 }
 
-/* Axis: the surface. Both gradients are the one of the panel, from --sl-surface down to --sl-bg */
+/* Axis: the surface. Both gradients are the one of the panel, from --sl-surface down to --sl-bg; a clear head is a clear gradient, as the theme writes it */
 :root[data-fr-ground="flat"] {
   --sl-pane-bg: var(--sl-surface);
-  --sl-pane-cap-bg: none;
+  --sl-pane-cap-bg: linear-gradient(transparent, transparent);
 }
 
 :root[data-fr-ground="grad"] {
   --sl-pane-bg: linear-gradient(var(--sl-surface), var(--sl-bg));
-  --sl-pane-cap-bg: none;
+  --sl-pane-cap-bg: linear-gradient(transparent, transparent);
 }
 
 :root[data-fr-ground="cap"] {
@@ -166,32 +176,6 @@
   font-size: var(--sl-size-icon-lg);
 }
 
-/* The row of the pager stands midway between the two windows: the window keeps off it by what the row keeps under */
-.fr-topic {
-  margin-bottom: var(--sl-space-7);
-}
-
-/* The body of the window of the messages spaces nothing, since a message carries its own inset */
-.fr-topic > .sl-pane-body {
-  gap: 0;
-}
-
-.fr-topic .fr-post:first-child > .sl-forum-post {
-  padding-top: 0;
-}
-
-.fr-topic > .sl-pane-body > .fr-post:last-child > .sl-forum-post {
-  padding-bottom: 0;
-}
-
-/* The tools of a head stand after its chips, on the middle line of the head */
-.fr-tools {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: var(--sl-space-3);
-}
-
 /* Inside the one window the pager and the form are parts of it, each under the dashed rule of the series */
 .fr-part {
   padding-top: var(--sl-space-5);
@@ -206,7 +190,7 @@
   margin-top: 0;
 }
 
-.fr-pane .sl-forum-reply-form > .sl-form {
+.fr-part > form > .sl-form {
   margin-bottom: 0;
 }
 

@@ -1,5 +1,75 @@
 # Versions
 
+## 2026-11-16
+
+### A mark of the footer without a link is a square tile
+
+- **The picture of a mark stands on the lower edge of its tile.** A mark without an address is a `span`, which the
+  rule of a linked picture in `base.css` does not reach: its picture stood on the baseline, the tile was 76 × 81, and
+  the row stretched the linked tiles to the same height. `.sl-partners img` of the theme `aurora` carries
+  `vertical-align: bottom`, and every tile is 76 × 76.
+
+### The frames beside a window of the site read its line and its corner, and a window ends 12 px under its content
+
+- **One rule of the theme `aurora`** writes the line `--sl-pane-border` and the corner `--sl-pane-radius` of `.sl-pane`,
+  of `.sl-block` and of nine frames beside them: `.sl-node-head-win`, `.sl-search-panel`, `.sl-msg-card`,
+  `.sl-profile-card`, `.sl-cab-deck`, `.sl-profile-proof`, `.sl-duo`, `.sl-pmf-mate` and `.sl-oauth-card`. Each keeps
+  its own ground, inset and shade.
+- **The cards come down from radius 12 to 8** — the folding panes of the head of a Node list, the proofs of the
+  profile, the other party of a letter, the card of an OAuth login, the layer of the sessions in the user card, the
+  empty state and the slot "more" of the focus.
+- **The frame has one tone.** The deck of the cabinet, the card of the profile, the panel of the search, the two panes
+  `.sl-duo` and the card of an OAuth login read `--sl-pane-border`, where they read `--sl-border`.
+- **The content of a window and of a block stands 12 px off the frame under it**, as at its sides: the body of a
+  window, `.sl-block-content` and the deck of the focus `.sl-pmf-deck` read `--sl-pane-pad-x`, where the lower inset
+  was `--sl-pane-pad-y`, 8 px. The lower inset of a block moved from `.sl-block` to `.sl-block-content`, so a folded
+  block ends under its head.
+- **The row of chips under a poll** `.sl-vote-links` carries no negative margin under it and stands on the inset of
+  its block.
+- **A theme made from `aurora`** takes the rule and the lower inset, or keeps the frames it had. No token is renamed or
+  removed.
+
+The reference is `docs/TEMPLATES.md`, "Site Window".
+
+### The windows and the cockpit of the presentation wear the set of the site window, and the changelog stands in two windows
+
+- **A window of the presentation is the window of the site** — the frame, the ground, the shade, the inset and the
+  head come from the tokens `--sl-pane-*`. The rules of `.sl-pres .sl-pane` and of its head left `presentation.css`,
+  the capitals of the head with them. The body alone stays a plain box.
+- **The cockpit of the presentation** is `.sl-pane.sl-pres-cockpit` under the head of `fragments/pane-cap.html` by the
+  key `cockpit_cap`: a plain name, the state as a chip, the version at the right. The rule over its strip of figures is
+  dashed, in `--sl-pane-border`.
+- **The changelog** prints two windows with an `h2` each, the filter with its form and the commits with their list. The
+  totals are three chips in the head of the commits. The commits run from frame to frame under a dashed rule.
+- **Breaking for a theme made from `aurora`:** the token `--sl-card-shadow` is gone. So are the classes
+  `sl-changelog-filter`, `sl-changelog-results`, `sl-changelog-results-info`, `sl-changelog-commits` and
+  `sl-pres-cockpit-top`, the keys `cockpit` and `version` of the hero, and the keys `totcount`, `totcom`, `page_text`
+  and `txt_*` of the totals in `partials/changelog-body.html`. Such a theme takes the new partials or prints the keys
+  `filter_cap`, `commits_cap` and `cockpit_cap` in its own.
+
+The reference is `docs/TEMPLATES.md`, "Site Window".
+
+### The forms of the site pages and the comments stand in the window of the site, and a chip counts the comments
+
+- **`partials/form-add.html` of `aurora` takes `title`** — with it the form stands in `section.sl-pane` under the head
+  of `fragments/pane-cap.html`, and `note_html` puts the message of an error and the opening text into the body over
+  the fields. Without `title` the template prints the form alone, as before.
+- **The name of a form page is the `h1` of its window** — the login, the registration, the recovery of a password, the
+  unsubscribing, the contact form, the recommendation, the form of a material and the form of a forum topic. The
+  heading over the form is gone, and the preview of a material or of a topic stands over the window with an `h2`.
+- **The page of the RSS feeds** is one window with a dashed rule between its forms.
+- **The comments are two windows** — the list under the name "Комментарии" with the count as the chip `#repcnum` in
+  its head and the pager under it, and the form in a window of its own with the zone `#repcstat` in its body.
+  `Comment::getTargetCount()` counts what the list shows its viewer, and an added or a removed comment refills the
+  chip out of band.
+- **`fragments/swap-oob.html` takes `is_fill` and `text`**, which fill the element in place of deleting it.
+- **Breaking for a theme made from `aurora`:** the class `sl-forum-reply-form` and the key `is_reply` of
+  `partials/form-add.html` are gone. A theme that kept its own `form-add.html` prints the form without a window and
+  without the name of the page, until it takes `title` and `note_html`. The ids `repcsave`, `repcrows`, `repcstat` and
+  `formcsave` are kept.
+
+The reference is `docs/TEMPLATES.md`, "Site Window".
+
 ## 2026-11-15
 
 ### The switch «Да / Нет» of the panel wears the line of the segmented switch

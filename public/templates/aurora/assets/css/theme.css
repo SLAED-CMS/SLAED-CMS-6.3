@@ -832,7 +832,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   gap: var(--sl-space-3);
   padding: var(--sl-space-8) var(--sl-space-7);
   border: 1px dashed var(--sl-border-strong);
-  border-radius: var(--sl-radius-3);
+  border-radius: var(--sl-pane-radius);
   background: var(--sl-surface);
   text-align: center;
 }
@@ -2726,8 +2726,6 @@ button.sl-but-mini:hover,
 .sl-node-head-win {
   margin-top: var(--sl-space-4);
   padding: var(--sl-space-5);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
   background: var(--sl-surface);
 }
 
@@ -4798,7 +4796,6 @@ dialog.sl-editor-emoji-panel {
 
 .sl-vote-links {
   margin-top: var(--sl-space-5);
-  margin-bottom: calc(var(--sl-space-3) * -1);
   font-size: var(--sl-font-small);
 }
 
@@ -4893,9 +4890,8 @@ dialog.sl-editor-emoji-panel {
   margin: 0 0 var(--sl-space-8);
   padding: var(--sl-space-6) var(--sl-space-6);
   background: var(--sl-surface);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
 }
+
 .sl-search-panel input.sl-field {
   flex: 1 1 240px;
   min-width: var(--sl-search-min-width);
@@ -5181,11 +5177,13 @@ dialog.sl-editor-emoji-panel {
 .sl-block {
   position: relative;
   display: flow-root;
-  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x);
+  padding: var(--sl-pane-pad-y) var(--sl-pane-pad-x) 0;
   margin-bottom: var(--sl-space-8);
 }
 
+/* The lower inset of a block stands under its content, so a folded block ends under its head as a folded window does */
 .sl-block-content {
+  padding-bottom: var(--sl-pane-pad-x);
   line-height: var(--sl-line-normal);
 }
 
@@ -5567,7 +5565,7 @@ dialog.sl-editor-emoji-panel {
   overflow: auto;
   padding: var(--sl-space-5);
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
+  border-radius: var(--sl-pane-radius);
   background: var(--sl-surface);
   box-shadow: var(--sl-panel-shadow);
 }
@@ -5713,6 +5711,11 @@ dialog.sl-editor-emoji-panel {
   position: relative;
   border: 1px solid var(--sl-border-inverse);
   margin: 0 var(--sl-space-3) var(--sl-space-3) 0;
+}
+
+/* A mark without a link is a span, which the rule of a linked picture in base.css does not reach */
+.sl-partners img {
+  vertical-align: bottom;
 }
 
 /* The brand colouring of a theme mark lies over its mono picture and shows on hover and keyboard focus */
@@ -9284,8 +9287,6 @@ a.sl-chip-neutral {
   padding: var(--sl-space-9) var(--sl-space-9) var(--sl-space-8);
   text-align: center;
   background: var(--sl-bg);
-  border: 1px solid var(--sl-pane-border);
-  border-radius: var(--sl-pane-radius);
   box-shadow: var(--sl-pane-shadow);
 }
 
@@ -10584,11 +10585,25 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Pane: the one window of the site, fragments/pane.html and not the dialog of fragments/window.html; the --sl-pane-* tokens hold the frame, which a block wears too */
+/* The frames beside a window wear its line and its corner from the same tokens, so one edit of the API block moves them all */
+.sl-pane,
+.sl-block,
+.sl-node-head-win,
+.sl-search-panel,
+.sl-msg-card,
+.sl-profile-card,
+.sl-cab-deck,
+.sl-profile-proof,
+.sl-duo,
+.sl-pmf-mate,
+.sl-oauth-card {
+  border: 1px solid var(--sl-pane-border);
+  border-radius: var(--sl-pane-radius);
+}
+
 .sl-pane,
 .sl-block {
   min-width: 0;
-  border: 1px solid var(--sl-pane-border);
-  border-radius: var(--sl-pane-radius);
   background: var(--sl-pane-bg);
   box-shadow: var(--sl-pane-shadow);
 }
@@ -10605,7 +10620,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   box-shadow: var(--sl-shadow-raised);
 }
 
-/* The body is the container its rows watch, under a name of its own, and lays the two tracks they inherit; the plate parts the head from it, so it has no upper inset */
+/* The body is the container its rows watch, under a name of its own, and lays the two tracks they inherit; it has no upper inset, and its lower one is that of its sides */
 .sl-pane-body {
   container-type: inline-size;
   container-name: sl-opt-box;
@@ -10615,7 +10630,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
   gap: var(--sl-space-4);
   column-gap: var(--sl-space-6);
-  padding: 0 var(--sl-pane-pad-x) var(--sl-pane-pad-y);
+  padding: 0 var(--sl-pane-pad-x) var(--sl-pane-pad-x);
 }
 
 .sl-opt-w2 {
@@ -10901,12 +10916,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Account profile: dense split card with identity rail, trust strip, fact panels and module hub */
-/* The profile card and the cabinet deck are boxed like the window: the same border and radius, no shadow at rest */
+/* The profile card and the cabinet deck wear the line and the corner of a window and no shadow at rest */
 .sl-profile-card,
 .sl-cab-deck {
   overflow: hidden;
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
 }
 
@@ -11097,8 +11110,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   column-gap: var(--sl-space-5);
   min-width: 0;
   padding: var(--sl-space-5) var(--sl-space-5);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
   background: var(--sl-surface);
 }
 
@@ -11749,8 +11760,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: grid;
   grid-template-columns: 396px minmax(0, 1fr);
   overflow: hidden;
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
 }
 
@@ -11969,7 +11978,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-pmf-deck {
   display: flex;
   gap: var(--sl-space-4);
-  padding: 0 var(--sl-pane-pad-x) var(--sl-pane-pad-y);
+  padding: 0 var(--sl-pane-pad-x) var(--sl-pane-pad-x);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }
@@ -12056,7 +12065,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   justify-items: center;
   gap: var(--sl-space-2);
   border: 1px dashed var(--sl-border-strong);
-  border-radius: var(--sl-radius-3);
+  border-radius: var(--sl-radius-2);
   background: var(--sl-surface);
   color: var(--sl-text-muted);
   font-size: var(--sl-font-small);
@@ -12168,8 +12177,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   align-items: center;
   gap: var(--sl-space-5);
   padding: var(--sl-space-4) var(--sl-space-5);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
   background: var(--sl-surface);
 }
 
@@ -12399,8 +12406,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-oauth-card {
   padding: var(--sl-space-5);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-3);
   background: var(--sl-surface);
 }
 
