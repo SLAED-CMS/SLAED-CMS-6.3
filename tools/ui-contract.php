@@ -225,7 +225,7 @@ return [
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'solid', 'solid-bad', 'solid-good', 'solid-link', 'solid-warn',
         'sort', 'spark', 'spin', 'sublist', 'switch', 'switch-knob', 'switch-on',
         't-icon', 'table', 'tab', 'thumb', 'tile', 'toast',
-        'toolbar', 'toolbar-row', 'tooltip', 'topbar', 'touch', 'tree', 'veil', 'view', 'vote', 'wheel', 'wheel-eye', 'wordmark', 'wordmark-img', 'wrap',
+        'toolbar', 'toolbar-row', 'tooltip', 'topbar', 'touch', 'tree', 'users-chip', 'veil', 'view', 'vote', 'wheel', 'wheel-eye', 'wordmark', 'wordmark-img', 'wrap',
     ],
 
     # Written from outside CSS by a template or a script, read only by CSS. Never API
@@ -286,7 +286,7 @@ return [
         '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',
         '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
         '--sl-d-ring' => 'colour of the group on the ring of an avatar, templates/aurora/partials/account-home.html, account-profile.html, block-user-info.html and'
-            .' privat-view.html, fragments/comment.html and forum-post.html',
+            .' privat-view.html and users.html, fragments/comment.html and forum-post.html',
         '--sl-d-share' => 'share of members a group holds against the largest group, as a fraction, templates/admin/fragments/group-step.html',
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
         '--sl-d-swatch' => 'colour one swatch of a palette shows, and the value the own-colour wheel holds, templates/admin/partials/group-form.html and assets/js/admin-ui.js',
@@ -316,6 +316,7 @@ return [
         'public/templates/aurora/partials/account-profile.html',
         'public/templates/aurora/partials/account-settings.html',
         'public/templates/aurora/partials/block-user-info.html',
+        'public/templates/aurora/partials/users.html',
         'public/templates/aurora/partials/session-summary.html',
         'public/templates/admin/partials/session-summary.html',
         'public/templates/aurora/partials/session-stats.html',

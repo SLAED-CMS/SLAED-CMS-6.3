@@ -20,25 +20,6 @@ function getSearchmodsOpts(string $cmod = '', string $keep = ''): array {
     return $opts;
 }
 
-function getSearchcols(string $mod): array {
-    global $db, $conf;
-    $list = [];
-    $table = PREFIX_DB.'_'.$mod;
-    $result = $db->getSqlQuery(
-        'SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = :name AND table_name = :table ORDER BY ORDINAL_POSITION',
-        ['name' => $conf['db']['name'], 'table' => $table]
-    );
-    while ($row = $db->getSqlRow($result)) {
-        $name = (string)($row[0] ?? $row['COLUMN_NAME'] ?? '');
-        if ($name !== '') $list[] = $name;
-    }
-    return $list;
-}
-
-function getSearchcompat(): array {
-    return array_map(fn(array $row) => $row['mod'], getSearchready(getSearchaudit()));
-}
-
 function getSearchcurr(): array {
     global $conf;
     $mods = array_filter(array_map('trim', explode(',', (string)$conf['search']['mods'])));
@@ -47,120 +28,49 @@ function getSearchcurr(): array {
     return $mods;
 }
 
-function getSearchspec(): array {
-    return [
-        'forum' => ['table' => PREFIX_DB.'_forum', 'fields' => 'title, body', 'type' => _SEARCHSPECIAL, 'edit' => 'forum_add'],
-    ];
-}
-
-function getSearchedit(string $mod): string {
-    return $mod.'_add';
-}
-
+# The modules the tab offers: active, open to every visitor and with a page of their own; one that carries no handler modules/<name>/search.php cannot be searched
 function getSearchaudit(): array {
     global $conf;
     $curr = getSearchcurr();
-    $spec = getSearchspec();
     $list = [];
-    foreach ($conf['modules'] as $mod => $cfg) {
+    foreach (array_keys($conf['modules']) as $mod) {
         $mod = (string)$mod;
         if (in_array($mod, ['search', 'node'], true) || !is_active($mod) || !file_exists(BASE_DIR.'/modules/'.$mod.'/index.php')) continue;
-        $row = [
-            'mod' => $mod,
-            'name' => getModuleName($mod),
-            'enabled' => in_array($mod, $curr, true) ? 1 : 0,
-            'type' => '',
-            'table' => PREFIX_DB.'_'.$mod,
-            'fields' => '',
-            'edit' => '',
-            'reason' => '',
-        ];
-        if (isset($spec[$mod])) {
-            $row['type'] = $spec[$mod]['type'];
-            $row['table'] = $spec[$mod]['table'];
-            $row['fields'] = $spec[$mod]['fields'];
-            $row['edit'] = $spec[$mod]['edit'];
-            $list[] = $row;
-            continue;
-        }
-        $cols = getSearchcols($mod);
-        if (!$cols) {
-            $row['type'] = _SEARCHINVALID;
-            $row['reason'] = _SEARCHNOTABLE;
-            $list[] = $row;
-            continue;
-        }
-        $need = ['id', 'title'];
-        $miss = [];
-        foreach ($need as $col) {
-            if (!in_array($col, $cols, true)) $miss[] = $col;
-        }
-        if ($miss) {
-            $row['type'] = _SEARCHINVALID;
-            $row['reason'] = _SEARCHMISSCOLS.': '.implode(', ', $miss);
-            $list[] = $row;
-            continue;
-        }
-        $find = [];
-        foreach (['title', 'intro', 'body', 'url'] as $col) {
-            if (in_array($col, $cols, true)) $find[] = $col;
-        }
-        if (!$find) {
-            $row['type'] = _SEARCHINVALID;
-            $row['reason'] = _SEARCHNOFIELDS;
-            $list[] = $row;
-            continue;
-        }
-        $row['type'] = _SEARCHSIMPLE;
-        $row['fields'] = implode(', ', $find);
-        $row['edit'] = getSearchedit($mod);
-        $list[] = $row;
+        $able = is_file(BASE_DIR.'/modules/'.$mod.'/search.php');
+        $list[] = ['mod' => $mod, 'name' => getModuleName($mod), 'state' => !$able ? 'bad' : (in_array($mod, $curr, true) ? 'on' : 'off')];
     }
-    usort($list, fn(array $old, array $new) => strcmp($old['mod'], $new['mod']));
+    usort($list, fn(array $old, array $new): int => strcmp($old['mod'], $new['mod']));
     return $list;
 }
 
-function getSearchenabled(array $list): array {
-    return array_values(array_filter($list, fn(array $row) => (int)$row['enabled'] === 1));
-}
-
-function getSearchready(array $list): array {
-    return array_values(array_filter($list, fn(array $row) => (int)$row['enabled'] === 0 && $row['type'] !== _SEARCHINVALID));
-}
-
-function getSearchinvalid(array $list): array {
-    return array_values(array_filter($list, fn(array $row) => (int)$row['enabled'] === 0 && $row['type'] === _SEARCHINVALID));
-}
-
-function getSearchauditTable(array $list, string $view = 'enabled'): string {
+# The table of every source of the search, its rows handed over as data; a row names its state for the filter over it, and a module without a handler has no box
+function getSearchauditTable(array $list): string {
     global $tpl;
-    if (!$list) return $tpl->getHtmlFrag('empty', []);
     $head = [
-        ['content' => _MODUL, 'is_truncate' => true],
+        ['content' => _SOURCE, 'is_truncate' => true],
         ['content' => 'ID', 'is_truncate' => true],
-        ['content' => _TYPE],
-        ['content' => _TABLE, 'is_truncate' => true],
-        ['content' => _SEARCHFIELDS, 'is_truncate' => true],
-        ['content' => _SEARCHEDIT, 'is_truncate' => true],
-        ['content' => _REASON, 'is_truncate' => true],
+        ['content' => _MODUL, 'is_truncate' => true],
+        ['content' => _STATE, 'is_truncate' => true],
+        ['is_col_check' => true, 'nosort' => true,
+            'content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'is_check' => true, 'aria_label' => _CHECKALL, 'input_attr' => 'title="'._CHECKALL.'"'])],
     ];
-    if ($view === 'ready') $head[] = ['content' => _ADD, 'is_col_check' => true, 'nosort' => true];
-    $rows = '';
+    $tones = ['on' => 'success', 'off' => 'neutral', 'bad' => 'warn'];
+    $words = ['on' => _ON, 'off' => _OFF, 'bad' => _SEARCH_NOHANDLER];
+    $rows = [];
     foreach ($list as $row) {
-        $cells = [
-            ['is_truncate' => true, 'title_text' => (string)$row['name'], 'has_content_text' => true, 'content_text' => (string)$row['name']],
-            ['is_truncate' => true, 'title_text' => (string)$row['mod'], 'has_content_text' => true, 'content_text' => (string)$row['mod']],
-            ['has_content_text' => true, 'content_text' => (string)$row['type']],
-            ['is_truncate' => true, 'title_text' => (string)$row['table'], 'has_content_text' => true, 'content_text' => (string)$row['table']],
-            ['is_truncate' => true, 'title_text' => (string)($row['fields'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['fields'] ?: _NO)],
-            ['is_truncate' => true, 'title_text' => (string)($row['edit'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['edit'] ?: _NO)],
-            ['is_truncate' => true, 'title_text' => (string)($row['reason'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['reason'] ?: _NO)],
-        ];
-        if ($view === 'ready') $cells[] = ['is_col_check' => true,
-            'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'aria_label' => (string)$row['mod'], 'value_attr' => (string)$row['mod']])];
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
+        $state = $row['state'];
+        $word = $words[$state];
+        $box = ['name_attr' => $row['box'], 'value_attr' => $row['mod'], 'is_check' => true, 'is_checked' => $state === 'on', 'aria_label' => $row['name']];
+        $rows[] = ['attr' => 'data-sl-row-state="'.$state.'"', 'cells' => [
+            ['is_truncate' => true, 'title_text' => $row['name'], 'prefix_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => getIconName($row['mod'])]),
+                'has_content_text' => true, 'content_text' => $row['name']],
+            ['is_truncate' => true, 'title_text' => $row['mod'], 'has_content_text' => true, 'content_text' => $row['mod']],
+            ['is_truncate' => true, 'title_text' => $row['type'], 'content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $row['tone'], 'label' => $row['type']])],
+            ['is_truncate' => true, 'title_text' => $word, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tones[$state], 'label' => $word])],
+            ['is_col_check' => true, 'content_html' => ($state === 'bad') ? '' : $tpl->getHtmlFrag('checkbox', $box)],
+        ]];
     }
-    return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
+    return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'attr' => 'id="sl-search-src"', 'head' => $head, 'rows' => $rows]);
 }
 
 function getSearchwhere(): array {
@@ -317,29 +227,21 @@ function search(bool $top = false): void {
 
 function config(): void {
     global $afile, $conf, $tpl;
-    $allow = ['forum'];
-    $audit = getSearchaudit();
-    $elist = getSearchenabled($audit);
-    $rlist = getSearchready($audit);
-    $ilist = getSearchinvalid($audit);
+    $hidden = [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]];
+    $srcs = [];
+    foreach (getNodeTypeMap() as $name => $type) {
+        $srcs[] = ['mod' => $name, 'name' => getModuleName($name), 'type' => _NODE, 'tone' => 'info', 'state' => $type->settings['integrations']['search'] ? 'on' : 'off',
+            'box' => 'ntype[]'];
+        $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
+    }
+    foreach (getSearchaudit() as $row) $srcs[] = ['type' => _MODUL, 'tone' => 'accent', 'box' => 'search[]'] + $row;
+    usort($srcs, fn(array $old, array $new): int => ($old['state'] === 'bad') <=> ($new['state'] === 'bad'));
+    $sums = array_count_values(array_column($srcs, 'state'));
+    $picks = [['key' => '', 'label' => _ALL, 'count' => count($srcs), 'is_now' => true]];
+    foreach (['on' => _ON, 'off' => _OFF, 'bad' => _SEARCH_NOHANDLER] as $key => $label) $picks[] = ['key' => $key, 'label' => $label, 'count' => $sums[$key] ?? 0];
     setHead();
     $cont = getSearchnavi('', 2);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
-    $mods = [];
-    $curr = getSearchcurr();
-    foreach (scandir(BASE_DIR.'/modules') as $file) {
-        if (str_contains($file, '.')) continue;
-        if ($allow && !in_array($file, $allow, true)) continue;
-        $mods[] = ['name_attr' => 'search[]', 'value_attr' => $file, 'is_checked' => in_array($file, $curr, true),
-            'label_text' => getModuleName($file)];
-    }
-    $types = [];
-    $hidden = [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]];
-    foreach (getNodeTypeMap() as $name => $type) {
-        $types[] = ['name_attr' => 'ntype[]', 'value_attr' => $name, 'is_checked' => $type->settings['integrations']['search'],
-            'label_text' => getModuleName($name)];
-        $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
-    }
     $cfgrows = [
         [
             'label_html' => _ASEARCH, 'label_id' => $labid = getFieldIds('', 'asearch')['label'],
@@ -348,10 +250,6 @@ function config(): void {
                 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
             ]),
         ],
-        ['label_html' => _SMODULE, 'label_id' => $mid = getFieldIds('', 'search')['label'],
-            'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $mid, 'items' => $mods]), 'is_full' => true],
-        ...($types ? [['label_html' => _NODE, 'label_id' => $tid = getFieldIds('', 'ntype')['label'],
-            'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $tid, 'items' => $types]), 'is_full' => true]] : []),
         [
             'label_for' => 'f-slet', 'label_html' => _SEARCHLETMIN, 'hint_html' => _SEARCHLETINFO, 'hint_id' => $hntid = getFieldIds('f-slet')['hint'],
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -366,39 +264,13 @@ function config(): void {
         ],
         ...getTplPagerFields($conf['search']),
     ];
-    $html = $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=save',
         'hidden' => $hidden,
-        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $cfgrows])]),
+        'content_html' => $tpl->getHtmlFrag('pane', ['icon' => 'sliders', 'title' => _GENPREF, 'content_html' => $tpl->getHtmlPart('div', ['rows' => $cfgrows])])
+            .$tpl->getHtmlFrag('row-filter', ['label' => _STATE, 'table_id' => 'sl-search-src', 'items' => $picks]).getSearchauditTable($srcs),
         'submit_label' => _SAVE,
     ])]);
-    $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHENABLED, 'content_html' => getSearchauditTable($elist, 'enabled')]);
-    $readyform = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=search&op=modadd',
-        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
-        'content_html' => getSearchauditTable($rlist, 'ready'),
-        'actions_html' => $tpl->getHtmlFrag('checkbox', [
-            'is_right' => true,
-            'name_attr' => 'all',
-            'value_attr' => '1',
-            'label_html' => _SEARCHADDALL,
-            'hint_html' => _SEARCHAUTOINFO,
-            'hint_id' => 'f-addall-note',
-            'describedby' => 'f-addall-note',
-        ]),
-        'submit_label' => _SEARCHADDSEL,
-        'icon_name' => 'plus-lg',
-    ]);
-    $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHREADY, 'content_html' => $readyform]);
-    $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHINVALID, 'content_html' => getSearchauditTable($ilist, 'invalid')]);
-    $reform = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=search&op=reindex',
-        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
-        'submit_label' => _SEARCHAUTO,
-        'icon_name' => 'lightning-charge',
-    ]);
-    $html .= $tpl->getHtmlPart('box', ['content_html' => $reform]);
-    $cont .= $html;
     echo $cont;
     setFoot();
 }
@@ -408,7 +280,8 @@ function save(): void {
     $iswarn = !checkAdminPost('search');
     $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
-        $mods = getVar('post', 'search[]', 'var', []);
+        $able = array_column(array_filter(getSearchaudit(), fn(array $row): bool => $row['state'] !== 'bad'), 'mod');
+        $mods = array_values(array_intersect($able, getVar('post', 'search[]', 'var', [])));
         $picks = getVar('post', 'ntype[]', 'var', []);
         $parts = [];
         foreach (getNodeTypeMap() as $name => $type) $parts[$name] = array_replace($type->settings['integrations'], ['search' => in_array($name, $picks, true)]);
@@ -420,42 +293,6 @@ function save(): void {
             ...getPagerPost(),
         ]), 'integrations', $parts, getVar('post', 'ver[]', '', []));
         if ($fail !== '') [$iswarn, $text] = [true, $fail];
-    }
-    setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
-}
-
-function reindex(): void {
-    global $afile, $conf;
-    $iswarn = !checkAdminPost('search');
-    $text = _TOKENMISS;
-    if (!$iswarn) {
-        $curr = array_filter(array_map('trim', explode(',', (string)$conf['search']['mods'])));
-        $have = count($curr);
-        $mods = array_values(array_unique(array_merge($curr, getSearchcompat())));
-        sort($mods);
-        $iswarn = !setConfigFile('search.php', ['mods' => $mods ? implode(',', $mods) : '0'], $conf['search']);
-        $text = $iswarn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : sprintf(_SEARCHAUTODONE, count($mods) - $have);
-    }
-    setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
-}
-
-function modadd(): void {
-    global $afile, $conf;
-    $iswarn = !checkAdminPost('search');
-    $text = _TOKENMISS;
-    if (!$iswarn) {
-        $pick = getVar('post', 'mods', 'raw', []);
-        if (!$pick) $pick = getVar('post', 'mods[]', 'raw', []);
-        if (is_array($pick)) $pick = array_values(array_filter(array_map('filterVar', $pick), 'strlen'));
-        else $pick = ((string)$pick !== '') ? [filterVar((string)$pick)] : [];
-        $all = getVar('post', 'all', 'num', 0);
-        $curr = getSearchcurr();
-        $ready = array_map(fn(array $row) => $row['mod'], getSearchready(getSearchaudit()));
-        $pick = $all ? $ready : array_values(array_intersect($ready, $pick));
-        $mods = array_values(array_unique(array_merge($curr, $pick)));
-        sort($mods);
-        $iswarn = !setConfigFile('search.php', ['mods' => $mods ? implode(',', $mods) : '0'], $conf['search']);
-        $text = $iswarn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : sprintf(_SEARCH_ADDED, count($pick));
     }
     setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
 }
@@ -632,8 +469,6 @@ switch ($op) {
     case 'toplist': search(true); break;
     case 'config': config(); break;
     case 'save': save(); break;
-    case 'reindex': reindex(); break;
-    case 'modadd': modadd(); break;
     case 'edit': edit(); break;
     case 'editsave': editsave(); break;
     case 'delete': delete(); break;

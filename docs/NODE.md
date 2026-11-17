@@ -2359,7 +2359,8 @@ Reader refusals map through `getNodeStatus()` (`NOTFOUND` 404, `DENIED` 403, `IN
 ### List header
 
 `getNodeHead()` in `modules/node/index.php` renders `partials/node/head.html` and hands it to the list as `head_html`.
-`partials/navi.html` and `getModuleNavi()` serve only the three operations of `modules/users/`. Every control is a link or a form the server answers; the script only opens the windows, sticks the bar,
+The page of the members, `modules/users/`, includes the same header with a search, an icon and windows of its own, the three optional
+parts of "Template keys"; `partials/navi.html` and `getModuleNavi()` serve no shipped module. Every control is a link or a form the server answers; the script only opens the windows, sticks the bar,
 opens the lens and swaps the list.
 
 | Place | Control | Drawn when |
@@ -2652,7 +2653,7 @@ back).
 | Template | Called by | Keys |
 |---|---|---|
 | `partials/node/list.html` | `setNodeList()` | `head_html`, `intro`, `groups` (`label`, `count`, `items_html`; `label` empty without month heads), `rail` (`id`, `href`, `title`, `date`, `date_iso`, `intro_html`, `is_first`), `rail_name`, `title`, `is_compact`, `is_row`, `is_tiles`, `date_label`, `read_label`, `pager_html`, `more_href`, `more_label`, `empty_alert` |
-| `partials/node/head.html` | `getNodeHead()` | `title`, `is_home` (the title as `h2` under the site name), `count_text`, `count_title`, `view_html`, `filters_label`; `cats_html`, `cats_label`, `cat_name`, `is_cat`; `lets_html`, `lets_label`, `lets_hint`, `let_name`, `is_let`; `sort_name`, `sort_label`, `show_label`, `sorts` (`href`, `label`, `icon_name`, `is_current`), `mine` (`href`, `label`, `icon_name`, `count`, `is_on`), `is_new`, `is_fav`, `new_label`, `fav_label`; `dir_href`, `dir_label`, `dir_title`, `is_asc`; `reset_href`, `reset_label`; `find_mod`, `find_label`, `hint_href`, `search_label`; `rss_href`, `rss_title`, `top_label`, `add_href`, `add_label` |
+| `partials/node/head.html` | `getNodeHead()` | `title`, `is_home` (the title as `h2` under the site name), `count_text`, `count_title`, `view_html`, `filters_label`; `cats_html`, `cats_label`, `cat_name`, `is_cat`; `lets_html`, `lets_label`, `lets_hint`, `let_name`, `is_let`; `sort_name`, `sort_label`, `show_label`, `sorts` (`href`, `label`, `icon_name`, `is_current`), `mine` (`href`, `label`, `icon_name`, `count`, `is_on`), `is_new`, `is_fav`, `new_label`, `fav_label`; `dir_href`, `dir_label`, `dir_title`, `is_asc`; `reset_href`, `reset_label`; `find_mod`, `find_label`, `hint_href`, `search_label`; `rss_href`, `rss_title`, `top_label`, `add_href`, `add_label`; optional, sent by `modules/users/`: `seek_href`, `seek_value`, `seek_keep` (`name`, `value`) for a search that filters the list by GET, `cats_icon`, `wins` for further pills, each opening a window of the site under the bar: `id`, `name` of the pill, `is_open`, `tone`, `body_html` and the keys of `fragments/pane-cap.html` (`icon`, `title`, `level`, `chips`) |
 | `partials/node/hints.html` | `getNodeHint()` in `core/user.php` | `hints` (`href`, `label`) |
 | `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `head` (the keys of `fragments/pane-cap.html`, in the view `cards` alone) + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext`, `is_play` |
 | `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''`, `head` (icon, linked title, `level` 3) |

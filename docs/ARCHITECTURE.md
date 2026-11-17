@@ -558,6 +558,20 @@ its scheduler jobs in `modules/<name>/scheduler.php` — the defaults of the row
 `run`; `getSchedulerJob()` and `addSchedulerSystemJob()` take them after the jobs of the core, and a job of an inactive
 module answers disabled. `master` declares its two jobs this way.
 
+A module is searched through its own handler, `modules/<name>/search.php`: a closure that takes the state of the
+search — the word `word` and the limit `lim` of `search.slimit` — and returns the rows of its module. A row carries
+`link`, the parameters of its address for `getSeoUrl()`, the escaped `title`, `time`, the `content` its snippet is cut
+from with the parser flags `safe` and `trust`, and the optional `edit`, `cid`, `nick`, `upath`, `user`, `post`,
+`comments` and `reads`. `getSearchHandler()` of `modules/search/index.php` reads the file once per request, and
+`getSearchRows()` runs a handler only for a module `getSearchMods()` admits: active, open to every visitor, named in
+`search.mods` and carrying the file. An answer that is no list and a row without `link` are skipped and named in the
+site log with the module, so a broken handler does not take the page of the search down.
+The handler applies the rules of its module itself — which rows are published, which a visitor may open, in which
+language — and escapes the wildcards of the word for `LIKE`; the search adds no rule and reads no table by the names
+of its columns, because a column says nothing of what a module shows. `forum` and `voting` carry a handler; the Node
+types are read by the Node reader in `getSearchNode()`. The tab «Конфигурации» of the search lists the modules and
+marks one without the file «Нет обработчика».
+
 Modules are still PHP include targets, not isolated service packages. A module
 can use shared globals such as `$conf`, `$db`, `$tpl`, `$prs`, `$user`, and
 `$admin` when it runs inside the normal bootstrap.

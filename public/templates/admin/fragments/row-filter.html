@@ -1,0 +1,6 @@
+<span class="sl-seg sl-row-filter" role="group" aria-label="{{ label }}" data-sl-row-filter="{{ table_id }}" data-sl-knob="row-filter">
+  <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+  {% for item in items %}
+  <button type="button" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" data-sl-row-show="{{ item.key }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}">{{ item.label }} <b>{{ item.count }}</b></button>
+  {% endfor %}
+</span>

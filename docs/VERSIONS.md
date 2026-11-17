@@ -1,5 +1,81 @@
 # Versions
 
+## 2026-11-17
+
+### The page of the members is one list in three looks, and its rules and its statistics open in windows of its head
+
+- **One page.** `modules/users/index.php` prints the head of a Node list, the window of the reader's own place, the
+  list in the chosen look and the pager with «Ещё». The row of buttons of `getModuleNavi()` and the three tables of
+  `content-list` left the module, so no shipped module calls `getModuleNavi()` or prints `partials/navi.html` now;
+  both stay in the core and in the themes for a module of a third party.
+- **Three looks.** The switch of the head (`fragments/mode-switch.html`, the cookie `view-users`, a POST under the
+  token of the module) turns the list into a podium of the first three over the rows of the rest, which is the
+  look a first visit gets, into cards built as a card of the news is, or into the steps of the groups. The podium
+  holds the best by points alone, of the whole list or of a filtered one: a later page and a list in another order
+  stand as rows in the window «Рейтинг». A list of the page is rows of the cabinet in a window, never a table: a
+  table does not stand in a window.
+- **The head filters and orders.** `find` is a part of the name, `grp` a group of the points ladder, `order` one of
+  `points`, `reg`, `visit` and `name` with `dir`; an unknown order or group answers 404. «Ещё» asks the next page
+  with `from`, the first page that stays on the screen, ten pages at most. A filtered or reordered list is
+  `noindex, follow`.
+- **The place of a member** is his position in the order by points and then by id. The plain list counts it from the
+  offset; a filtered or reordered one asks it per row, and the window «Ваше место» asks it for the reader.
+- **The rules and the statistics are windows of the head**, each a window of the site (`sl-pane`) with its icon, its
+  name and its count. `/users/rules` and `/users/stats` answer the list with that window open and name `/users` as
+  the canonical address. A step of the statistics leads to the list of its
+  group, and a rule tells its limit in words, «До 10 в сутки».
+- **The head of a Node list takes three optional parts**, which Node itself does not send: `seek_href` with
+  `seek_value` and `seek_keep` is a search that filters the list by GET, `cats_icon` the icon of the first pill, and
+  `wins` a list of further pills, each opening a window of the site under the bar. `docs/NODE.md`, "Template keys", holds them.
+- **The theme `aurora`** carries `partials/users.html` and `partials/users-win.html`, the classes `sl-users`,
+  `sl-users-cols` with its three widths, `sl-users-who`, `sl-users-opt`, `sl-users-pts`, `sl-users-podium`,
+  `sl-users-place`, `sl-users-card` and `sl-users-face`, and the token `--sl-users-chip-width`. The rows of one
+  window share its tracks through `subgrid`, so the chips of their right side stand in columns.
+- **Twenty-three constants** `_USERS_*` are new in the six locales of the module.
+- **The address of a member** stands in the tip of his row and of his card for a moderator of the module; the column
+  «IP-адрес», which took the place of the registration for him, is gone, and the first column is headed «Место».
+- **A member stands on one step.** The count of a step is the members whose points reached its threshold and not the
+  next one, where the old statistics counted everyone who reached it: the filter by a group, the window of a step
+  and the count beside its name then speak of the same members, and the list of a step takes that count as the count
+  of its rows. A special group counts its own members as before.
+- **Two statements.** The groups come by one query with the count of each and the whole count of the members beside
+  them, the list by the second; a search adds the count of its rows and a signed-in reader his account and his place.
+  The plain page runs as many statements as the old one, and the statistics ten fewer than their old page.
+- **Left on the way.** The list never showed a rating: it read `$conf['rating']['account']`, a key no configuration
+  carries, and that branch is gone. The site of a member is printed as text in the tip of his row, where the old page
+  handed it to the fragment as markup. The table left the page with its sort by a head cell; the pill of the head
+  orders the whole list on the server.
+- **`UsersListTest`** holds the query of the list, the bound search term and the two old addresses, and
+  `RequestWatchTest` counts the write of the module among the token writes of the site. The page `users` of
+  `tools/ui-shots.json` shoots the three looks; its last step puts the first look back, since the look is a cookie.
+
+### A module carries its own search handler, and the sources of the search stand in one table
+
+- **A module is searched by its own rules.** The search module reads `modules/<name>/search.php`, a closure that takes
+  the state of the search and returns the rows of its module, and knows no module by name: `getSearchMap()` and
+  `getSearchForum()` are gone from `modules/search/index.php`. The handler of the forum stands in the forum with its
+  behaviour unchanged. A row a handler returns without its address is skipped and named in the site log.
+  `docs/ARCHITECTURE.md`, "Module Boundary", holds the contract.
+- **The polls are searched.** Their handler finds the rows the module itself lists: a poll bound to a material or a
+  closed one is never found, and the link is the address of the poll by its route.
+- **A module without a handler is not offered.** `getSearchMods()` takes a module of `search.mods` only while it
+  carries a handler, so the select of the search page no longer names a section that finds nothing.
+- **The page «Поиск → Конфигурации»** is the window «Основные» and one table of every source under it: the types of
+  Node and the active modules open to every visitor, each with its module and its state. A box in the row puts the
+  source into the search, and one «Сохранить» writes the settings and the boxes. A module without a handler stands as
+  «Нет обработчика» and carries no box.
+- **A saved form keeps the modules of the table.** `save()` wrote into `search.mods` only what its own check list
+  held, and that list showed the forum alone, so a module added through the table left the search with the next
+  save. It now writes the boxes of the table, kept to the modules that carry a handler.
+- **The audit by the columns of a table is gone** with its three tables, the entries `op=modadd` and `op=reindex` and
+  the button «Автодобавление совместимых модулей». Seventeen constants left the six locales: `_SEARCHENABLED`,
+  `_SEARCHREADY`, `_SEARCHADDALL`, `_SEARCHADDSEL`, `_SEARCH_ADDED`, `_SEARCHEDIT`, `_SMODULE`, `_SEARCHAUTO`,
+  `_SEARCHAUTOINFO`, `_SEARCHAUTODONE`, `_SEARCHINVALID`, `_SEARCHSPECIAL`, `_SEARCHSIMPLE`, `_SEARCHNOTABLE`,
+  `_SEARCHMISSCOLS`, `_SEARCHNOFIELDS` and `_SEARCHFIELDS`. `_SEARCH_NOHANDLER` is new.
+- **The filter of a table** is new in the theme `admin`: `fragments/row-filter.html`, the class `sl-row-filter` and
+  `setRowFilter()` of `admin-ui.js`. `fragments/table.html` of `admin` takes its rows as data. `docs/TEMPLATES.md`
+  holds both contracts.
+
 ## 2026-11-16
 
 ### The bars of a poll rise from zero with their figures

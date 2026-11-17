@@ -397,8 +397,6 @@ final class AdminGuardTest extends TestCase
         foreach (['&reindex=', '&pick=', "getVar('get', 'reindex'", "getVar('get', 'pick'"] as $flag) {
             $this->assertStringNotContainsString($flag, $search, 'The search settings carry a count in the address: '.$flag);
         }
-        $this->assertStringContainsString('sprintf(_SEARCHAUTODONE, ', $this->getBody('modules/search/admin/index.php', 'reindex'), 'The reindex count left the flash');
-        $this->assertStringContainsString('sprintf(_SEARCH_ADDED, ', $this->getBody('modules/search/admin/index.php', 'modadd'), 'The count of added modules left the flash');
         $security = $this->getFile('admin/modules/security.php');
         $this->assertStringNotContainsString('&send=1', $security, 'The ban mail is told by a flag of the address');
         $this->assertStringNotContainsString("getVar('get', 'send'", $security, 'The ban list reads a flag of the address into an alert');

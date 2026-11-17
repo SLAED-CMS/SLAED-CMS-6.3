@@ -1,0 +1,233 @@
+/* The page of the module users as a hybrid of tabs and four looks (assets/usr.js). Every part is markup of the theme, so
+   this file holds only the joints the theme does not draw yet, each one a rule the theme would take over with the part that needs it */
+
+/* Every look: the windows of the page keep the step the windows of a list keep, and the pager stands that step under the last of them */
+.us-root .sl-pane {
+  margin-bottom: var(--sl-space-7);
+}
+
+.us-root .sl-opt-grid > .sl-pane,
+.us-root .sl-node-head > .sl-pane {
+  margin-bottom: 0;
+}
+
+.us-root .sl-opt-grid,
+.us-root .sl-cat-grid {
+  margin-bottom: var(--sl-space-7);
+}
+
+/* Tabs: the last window or table of a room ends on the inset of the tab body, not on its own step as well */
+.us-root .sl-tabs {
+  margin-top: 0;
+}
+
+.us-root .sl-tabs-content > :last-child {
+  margin-bottom: 0;
+}
+
+/* Table: the face and the name, or the rank and the name of the group, stand on one line of a cell */
+.us-who {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  vertical-align: middle;
+}
+
+.us-who .sl-cab-msg-ava {
+  flex: none;
+}
+
+/* Rows of the cabinet: the tip and the rank stand in the right slot on the line of its chips */
+.us-root .sl-profile-hub-total {
+  align-items: center;
+}
+
+.us-root .sl-profile-hub-total .sl-tip {
+  margin: 0;
+}
+
+/* The points of every row take one width, so the tip and the rank before them stand in a column down the window */
+.us-root .sl-cab-row .us-pts {
+  justify-content: flex-end;
+  min-width: 6.4em;
+}
+
+/* The rows of one box share its tracks, so the chips of the right side stand in columns of one width each, their text in the middle; --us-n is the number of those columns */
+.us-cols {
+  display: grid;
+  grid-template-columns: var(--us-lead, 30px) minmax(0, 1fr) repeat(var(--us-n, 3), auto);
+}
+
+/* A row of a member opens with the place and the face */
+.us-cols-who {
+  --us-lead: auto 30px;
+}
+
+.us-cols > .sl-cab-row {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+.us-cols .sl-profile-hub-total {
+  display: contents;
+}
+
+.us-cols .sl-profile-hub-total > .sl-chip {
+  justify-content: center;
+}
+
+.us-cols .sl-profile-hub-total > .sl-rank {
+  justify-self: center;
+}
+
+/* The name of a member is cut to its cell and keeps its marks beside it */
+.us-cols .us-who {
+  display: flex;
+  min-width: 0;
+}
+
+.us-cols .us-who > .sl-chip {
+  flex: none;
+  margin: 0;
+}
+
+/* Steps: the threshold and the count of every group take one width, so the heads of the windows read as one column down the page */
+.us-root .us-step-from,
+.us-root .us-step-num {
+  justify-content: center;
+  margin: 0;
+}
+
+.us-root .us-step-from {
+  min-width: 7.8em;
+}
+
+.us-root .us-step-num {
+  min-width: 4.2em;
+}
+
+/* A row that leads to the rating of its group keeps the tone of a row and lifts its name under the pointer */
+.us-cols > a.sl-cab-row:hover b {
+  color: var(--sl-primary);
+}
+
+/* A mark of a fresh visit in a row or a head keeps its size and no margin of a tip */
+.us-root .sl-fresh {
+  flex: none;
+  margin: 0;
+}
+
+/* A narrow window keeps the place, the face, the name and the points; the second chips of a row leave first */
+@container (max-width: 520px) {
+  .us-root .us-geo,
+  .us-root .sl-profile-hub-total > .sl-rank {
+    display: none;
+  }
+
+  .us-cols {
+    display: block;
+  }
+
+  .us-cols > .sl-cab-row {
+    grid-template-columns: var(--us-lead, 30px) minmax(0, 1fr) auto;
+  }
+
+  .us-cols .sl-profile-hub-total {
+    display: flex;
+  }
+}
+
+/* Podium: three places in a row, the first in the middle and a step higher than the two beside it */
+.us-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: var(--sl-space-5);
+  padding-top: var(--sl-space-5);
+  text-align: center;
+}
+
+.us-place-1 {
+  order: 2;
+  padding-bottom: var(--sl-space-8);
+}
+
+.us-place-2 {
+  order: 1;
+}
+
+.us-place-3 {
+  order: 3;
+}
+
+@container sl-opt-box (max-width: 520px) {
+  .us-podium {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .us-place {
+    order: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Cards: the face stands in the middle over the chip of the group; the meta row and the foot of a news card keep the insets a card of the grid has room for */
+.us-face {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-4);
+}
+
+.us-face .sl-chip {
+  margin: 0;
+}
+
+/* The head of a card is a third of a page wide, so its name gives way and the marks and the place stay on its line */
+.us-root .sl-opt-grid .sl-pane-cap {
+  flex-wrap: nowrap;
+}
+
+.us-root .sl-opt-grid .sl-pane-title {
+  flex-basis: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.us-root .sl-opt-grid .sl-meta {
+  margin-bottom: 0;
+  padding-bottom: var(--sl-space-4);
+}
+
+.us-root .sl-opt-grid .sl-meta > ul > li {
+  margin: 0;
+}
+
+.us-root .sl-opt-grid .sl-meta-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.us-root .sl-opt-grid .sl-meta-foot > .sl-pull-right {
+  order: 1;
+}
+
+.us-root .sl-pane-cap > .sl-but-mini {
+  flex: none;
+}
+
+/* Steps: the rank of a group stands in the head beside its chips */
+.us-root .sl-pane-chips {
+  align-items: center;
+}
+
+/* On a phone a switch of the desk scrolls inside the desk and the page keeps its width */
+.fr-desk:has(+ .us-root) .fr-axis {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.fr-desk:has(+ .us-root) .fr-axis-cap {
+  flex: none;
+}

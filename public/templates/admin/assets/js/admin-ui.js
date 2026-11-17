@@ -3324,6 +3324,22 @@
     }
     document.addEventListener('click', setRailGuard, true);
     document.addEventListener('keydown', setRailGuard, true);
+    // The filter of a table (data-sl-row-filter names it) shows the rows whose data-sl-row-state its pressed cell names; a hidden row still goes with its form
+    function setRowFilter(event) {
+        var cell = event.target.closest ? event.target.closest('[data-sl-row-show]') : null;
+        var rail = cell ? cell.closest('[data-sl-row-filter]') : null;
+        var table = rail ? document.getElementById(rail.getAttribute('data-sl-row-filter')) : null;
+        var key = cell ? cell.getAttribute('data-sl-row-show') : '';
+        if (!table) return;
+        rail.querySelectorAll('[data-sl-row-show]').forEach(function (one) {
+            one.classList.toggle('sl-is-active', one === cell);
+            one.setAttribute('aria-pressed', String(one === cell));
+        });
+        table.querySelectorAll('tbody > tr').forEach(function (row) {
+            row.hidden = key !== '' && row.getAttribute('data-sl-row-state') !== key;
+        });
+    }
+    document.addEventListener('click', setRowFilter);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();

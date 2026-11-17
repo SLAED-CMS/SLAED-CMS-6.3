@@ -7,6 +7,13 @@
   font-display: swap;
 }
 
+/* Fonts: the numero sign alone, drawn by a face of the running text, because a mono face squeezes it into one cell */
+@font-face {
+  font-family: "Numero";
+  src: local("Arial"), local("Tahoma"), local("Verdana"), local("Liberation Sans");
+  unicode-range: U+2116;
+}
+
 /* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
   /* Both modes resolve through light-dark() against the used color-scheme, so the scheme is declared here */
@@ -94,7 +101,7 @@
   /* The face of a quotation: a serif in italic sets the quoted words apart from the running text */
   --sl-face-quote: Georgia, "Times New Roman", serif;
   /* The face of code: the mono font each system already carries, so no file is fetched for it */
-  --sl-face-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --sl-face-mono: "Numero", ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --sl-line-tight: 1.2;
   --sl-line-normal: 1.45;
   --sl-line-loose: 1.6;
@@ -585,6 +592,7 @@
   --sl-topbar-height: 50px;
   /* The height a dialog button takes on a narrow screen, where the pointer is a finger rather than a cursor */
   --sl-touch-height: 40px;
+  --sl-users-chip-width: 96px;
   --sl-veil-height: 18px;
   --sl-view-max-width: 680px;
   --sl-vote-width: 15px;

@@ -150,7 +150,7 @@ function getCfListTable(bad) {
   const rows = sets[cf.pick].map((one) => `<tr${one.kind === 'bad' ? ' class="cf-is-bad"' : ''}><td class="sl-cell-ellipsis" title="${one.name}"><span class="cf-name">${getCfIcon(one.icon)}${one.name}</span></td>${getCfCell(one.key)}` +
     `<td>${getCfChip(CF_KINDS[one.kind][1], CF_KINDS[one.kind][0])}</td>${getCfCell(one.table)}${getCfCell(one.fields || 'Нет')}<td>${state(one)}</td>` +
     `<td class="sl-col-check">${one.kind === 'bad' ? '' : `<input type="checkbox" id="cf-on-${one.key}" aria-label="${one.name}"${one.on ? ' checked' : ''} data-cf-on="${one.key}">`}</td></tr>`);
-  const head = [['Источник', 'sl-cell-ellipsis'], ['ID', 'sl-cell-ellipsis'], ['Вид'], ['Таблица', 'sl-cell-ellipsis'], ['Поля', 'sl-cell-ellipsis'], ['Состояние'], [getCfIcon('search') + '<span class="sl-visually-hidden">В поиске</span>', 'sl-col-check" title="В поиске']];
+  const head = [['Источник', 'sl-cell-ellipsis'], ['ID', 'sl-cell-ellipsis'], ['Модуль'], ['Таблица', 'sl-cell-ellipsis'], ['Поля', 'sl-cell-ellipsis'], ['Состояние'], [getCfIcon('search') + '<span class="sl-visually-hidden">В поиске</span>', 'sl-col-check" title="В поиске']];
   return `<div class="cf-stack"><div class="cf-bar"><span class="sl-seg cf-pick" role="group" aria-label="Состояние">${cells}</span></div>${getCfTable(head, rows)}${open ? '' : getCfBad(true)}</div>`;
 }
 

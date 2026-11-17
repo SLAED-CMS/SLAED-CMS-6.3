@@ -78,6 +78,16 @@
     { "name": "node-view", "url": "/index.php?name=docs&op=view&id=3919" },
     { "name": "sitemap", "url": "/index.php?name=sitemap" },
     {
+      "_": "The look of the list is a cookie the switch writes, so the last step puts the first look back: every width and every run then starts from it",
+      "name": "users",
+      "url": "/index.php?name=users",
+      "steps": [
+        { "do": "click", "sel": ".sl-node-head .sl-seg-cell[value=\"cards\"]", "shot": "cards" },
+        { "do": "click", "sel": ".sl-node-head .sl-seg-cell[value=\"steps\"]", "shot": "steps" },
+        { "do": "click", "sel": ".sl-node-head .sl-seg-cell[value=\"podium\"]", "shot": "podium" }
+      ]
+    },
+    {
       "name": "login",
       "url": "/index.php?name=account",
       "steps": [{ "do": "focus", "sel": ".sl-block-login input[name=\"user_name\"]", "shot": "field-focus" }]

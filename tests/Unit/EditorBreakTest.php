@@ -92,7 +92,7 @@ final class EditorBreakTest extends TestCase
         $need = [
             'modules/forum/index.php' => ["filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true))" => 3,
                 "filterContent(\$rows[0][7], true, \$conf['name'], 0, 'breaks', [], true)" => 1, "'fmt' => getStoreFormat('forum.body')" => 1],
-            'modules/search/index.php' => ["'content' => \$cont, 'safe' => true, 'trust' => true," => 1],
+            'modules/forum/search.php' => ["'content' => \$cont, 'safe' => true, 'trust' => true," => 1],
             'core/user.php' => ['$body = filterSourceText($text, isAdmin(true));' => 1, "filterContent(\$body, true, 'forum', 2, 'breaks', ['forum', \$id], true)" => 1,
                 "filterContent(\$userblock, true, 'profile', 2, '', ['profile', \$uid], true)" => 1, "filterContent(\$sig, true, 'profile', \$hoff, 'breaks'" => 1],
             'modules/account/index.php' => ["filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true))" => 1,

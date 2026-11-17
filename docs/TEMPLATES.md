@@ -351,6 +351,10 @@ What is moved:
 
 - **The rows of a partial** — `partials/forum-teaser.html` of `aurora` takes its rows as an array from
   `setTemplateForum()` of the theme hook and walks them itself.
+- **The rows of a panel table** — `fragments/table.html` of `admin` takes the array `rows` beside `rows_html`. A row is
+  `cells`, the array `fragments/table-cells.html` walks, and `attr`; `fragments/table-row.html` takes `cells` beside
+  `cells_html`. The table of sources of «Поиск → Конфигурации» is its first reader, the other tables of the panel
+  move with their modules.
 - **The options of a select** — `fragments/select.html` of both themes takes the array `options`. An item is
   `value_attr`, `label_text` and the flags `is_selected` and `is_hidden`; an item with `is_group` is a group, its
   `label_text` the label and its own `options` the items inside. `fragments/select-options.html` is the one place of
@@ -1299,6 +1303,14 @@ is in `docs/NODE.md`, "List header", "Views of a list" and "Live list"; the keys
   the list made the page jump back by the difference and flip the bar between its two states.
 - **The hints share a look rather than a component.** `sl-node-hints` and `sl-node-hint` take the pointed and the chosen
   state of `sl-editor-hint-row`; no shared hint list stands in the tree.
+- **The page of the members stands on the same part.** `partials/users.html` of `aurora` is `#sl-node-list` too and
+  includes `partials/node/head.html` with the keys of its `head`: a search that filters the list (`seek_href`), the
+  pill of the groups in the place of the categories, and the rules and the statistics as `wins`: a pill of the bar
+  that opens a window of the site under it, `sl-pane` with the head of `fragments/pane-cap.html`, whose body
+  `partials/users-win.html` draws. A filter keeps `sl-node-head-win`; a window that is a part of the page is a pane. The module hands the members over as rows and the partial walks them
+  in the look the switch chose. The rows of one window stand in `sl-users-cols`, a grid whose rows are subgrids, so
+  every chip of the right side is a column of the window; a row lacking a chip prints an empty cell in its place.
+  «Ещё» replaces `#sl-node-items` whole instead of appending, since a group and the rows under a podium are one box each.
 
 ## Segmented Switch
 
@@ -1345,6 +1357,12 @@ pager — is one component, `sl-seg`, in the `theme.css` of both themes; the fac
   scrolls, keeps the section a press named until the reader scrolls himself, slides the strip to it, and writes the
   height of the rail into `--sl-d-toc`, which the `scroll-margin-top` of a section heading reads. Without the script
   the cells are plain links to the sections.
+- **The filter of a table is the plain `sl-seg` over it.** `fragments/row-filter.html` of `admin` takes `label`,
+  `table_id` and `items` (`key`, `label`, `count`, `is_now`) and prints a cell per state with the count of its rows.
+  A row of the table names its state in `data-sl-row-state`, the rail names the table in `data-sl-row-filter`, and
+  `setRowFilter()` of `assets/js/admin-ui.js` hides the rows of another state; the empty key shows them all. A
+  hidden row still goes with its form. The class `sl-row-filter` gives a cell the inset of a word and the step to the
+  table. The page «Поиск → Конфигурации» is its first reader.
 - **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-border`,
   `--sl-seg-shadow`, `--sl-seg-text`, `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
   of the plain `sl-seg`; a modifier reads semantic tokens straight instead of redeclaring them, because a custom property

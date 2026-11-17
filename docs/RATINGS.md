@@ -336,7 +336,6 @@ goes through the one endpoint.
 | Place | Call | Scope | Look |
 |---|---|---|---|
 | `modules/account/index.php`, profile | `getRatingAsync(1, $uid, 'account', ...)` | `account` | thumbs, detail |
-| `modules/users/index.php`, user list | `getRatingAsync(1, $id, 'account', ...)` in `rating-box` | `account` | thumbs |
 | `core/user.php`, author card of a comment | `getRatingAsync(0, $auid, 'account', ..., $cmid, 1)` | `account` | thumbs, list |
 | `modules/forum/index.php`, first post of a topic | `getRatingAsync(1, $fid, 'forum', ...)` | `forum` | thumbs, detail |
 | `modules/forum/index.php`, author of each post | `getRatingAsync(0, $uid, 'account', ..., $fid, 1)` | `account` | thumbs, list |

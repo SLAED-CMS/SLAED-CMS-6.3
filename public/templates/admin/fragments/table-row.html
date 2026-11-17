@@ -1,3 +1,7 @@
 <tr{% if is_lang_edit or is_ratings_inner or is_group %} class="{% if is_lang_edit %} sl-lang-edit-row{% endif %}{% if is_ratings_inner %} sl-ratings-inner-row{% endif %}{% if is_group %} sl-group-row{% endif %}"{% endif %}{% if is_no_sort %} data-sort-method="none"{% endif %}{% if name %} data-sl-row="{{ name }}"{% endif %}{% if attr %} {{{ attr }}}{% endif %}>
+  {% if cells %}
+  {% include 'fragments/table-cells.html' %}
+  {% else %}
   {{{ cells_html }}}
+  {% endif %}
 </tr>

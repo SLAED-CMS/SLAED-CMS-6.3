@@ -2747,7 +2747,11 @@ button.sl-but-mini:hover,
   box-shadow: var(--sl-shadow-focus);
 }
 
-/* A window opens under the bar, one at a time */
+/* A window opens under the bar, one at a time; a pill of a page that is no filter opens a window of the site in the same place */
+.sl-node-head > .sl-pane {
+  margin-top: var(--sl-space-4);
+}
+
 .sl-node-head-win {
   margin-top: var(--sl-space-4);
   padding: var(--sl-space-5);
@@ -11419,6 +11423,186 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-cab-row .sl-chip {
   margin: 0;
+}
+
+/* Members: the page of the module users, whose three looks are built from the rows of the cabinet, the pieces of a profile and the card of a news */
+/* The window of the own place and the windows of a look keep the step the cards of a list keep */
+.sl-node-list > .sl-pane,
+.sl-users > .sl-pane,
+.sl-users > .sl-opt-grid {
+  margin-bottom: var(--sl-space-7);
+}
+
+/* The rows of one box share its tracks, so the chips of their right side stand in columns of one width each, the text in the middle */
+.sl-users-cols {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) repeat(3, auto);
+  column-gap: var(--sl-space-4);
+}
+
+.sl-users-cols-2 {
+  grid-template-columns: 30px minmax(0, 1fr) repeat(2, auto);
+}
+
+/* A row of a member opens with the place and the face */
+.sl-users-cols-4 {
+  grid-template-columns: auto 30px minmax(0, 1fr) repeat(4, auto);
+}
+
+.sl-users-cols-5 {
+  grid-template-columns: auto 30px minmax(0, 1fr) repeat(5, auto);
+}
+
+.sl-users-cols > .sl-cab-row {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+.sl-users-cols .sl-profile-hub-total {
+  display: contents;
+}
+
+.sl-users-cols .sl-profile-hub-total > .sl-rank {
+  justify-self: center;
+}
+
+/* The name and the marks of a member stand on one line of his row; the name gives way and the marks keep their size */
+.sl-users-who {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+}
+
+.sl-users-who > a {
+  min-width: 0;
+}
+
+.sl-users-who > .sl-chip,
+.sl-users .sl-fresh {
+  flex: none;
+}
+
+.sl-users-who > .sl-chip,
+.sl-users-cols .sl-tip,
+.sl-users-face > .sl-chip,
+.sl-users .sl-fresh {
+  margin: 0;
+}
+
+/* The points of every member and the threshold of every step take one width, so the columns beside them stand alike in every window of the page */
+.sl-users-pts,
+.sl-users .sl-pane-cap[data-sl-toggle-head] > .sl-pane-chips > .sl-chip:last-child {
+  min-width: var(--sl-users-chip-width);
+}
+
+.sl-users-pts,
+.sl-users-cols .sl-profile-hub-total > .sl-chip,
+.sl-users .sl-pane-cap[data-sl-toggle-head] > .sl-pane-chips > .sl-chip:last-child {
+  justify-content: center;
+}
+
+/* A narrow box keeps the name and the last chip of a row; the chips marked as optional and the rank leave first, and the shared tracks go with them */
+@container (width < 520px) {
+  .sl-users-opt,
+  .sl-users-cols .sl-profile-hub-total > .sl-rank {
+    display: none;
+  }
+
+  .sl-users-cols {
+    display: block;
+  }
+
+  .sl-users-cols > .sl-cab-row {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+  }
+
+  .sl-users-cols-4 > .sl-cab-row,
+  .sl-users-cols-5 > .sl-cab-row {
+    grid-template-columns: auto 30px minmax(0, 1fr) auto;
+  }
+
+  .sl-users-cols .sl-profile-hub-total {
+    display: flex;
+  }
+}
+
+/* Podium: three places in a row, the first in the middle and a step higher than the two beside it */
+.sl-users-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: var(--sl-space-5);
+  padding-top: var(--sl-space-5);
+  text-align: center;
+}
+
+.sl-users-place:first-child {
+  order: 2;
+  padding-bottom: var(--sl-space-8);
+}
+
+.sl-users-place:nth-child(2) {
+  order: 1;
+}
+
+.sl-users-place:nth-child(3) {
+  order: 3;
+}
+
+/* The figure of the first place reads in the colour of text: the warning tone on its light chip measures 2.6 to 1, so the trophy alone wears it */
+.sl-users-place .sl-chip-warn > span {
+  color: var(--sl-text-strong);
+}
+
+/* In a narrow window the three places stand one under another in their own order */
+@container (width < 520px) {
+  .sl-users-podium {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-users-podium > .sl-users-place {
+    order: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Card of a member: the head of a third of a page keeps its marks and the place on its line, so the name gives way */
+.sl-users-card > .sl-pane-cap {
+  flex-wrap: nowrap;
+}
+
+.sl-users-card .sl-pane-title {
+  flex-basis: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The meta row and the foot of a news card keep the insets a card of the grid has room for; the face stands in the middle over the chip of the group */
+.sl-users-card .sl-meta {
+  margin-bottom: 0;
+  padding-bottom: var(--sl-space-4);
+}
+
+.sl-users-card .sl-meta > ul > li {
+  margin: 0;
+}
+
+.sl-users-card .sl-meta-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sl-users-card .sl-meta-foot > .sl-pull-right {
+  order: 1;
+}
+
+.sl-users-face {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-4);
 }
 
 /* Cabinet home (Command Deck): identity rail reuses the sl-profile-* pieces, action shelf reuses the files-category icon mechanics (sl-cat-ico + sl-cat-tone-N) */

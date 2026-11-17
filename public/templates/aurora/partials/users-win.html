@@ -1,0 +1,32 @@
+{% if is_tiles %}
+{% for row in rows %}
+{% include 'fragments/category-row.html' with row %}
+{% endfor %}
+{% elseif is_rules %}
+<div class="sl-users-cols sl-users-cols-2">
+  {% for row in rows %}
+  <div class="sl-cab-row">
+    <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
+    <b>{{ row.name }}</b>
+    <span class="sl-profile-hub-total">
+      <span class="sl-chip sl-users-opt" title="{{ limit_label }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>{{ row.limit }}</span>
+      <span class="sl-chip{% if row.is_plus %} sl-chip-success{% endif %}" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ row.points }}</span>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="sl-users-cols">
+  {% for row in rows %}
+  <div class="sl-cab-row">
+    <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
+    <b title="{{ row.intro }}">{% if row.href %}<a href="{{ row.href }}" title="{{ row.name }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.intro %} · {{ row.intro }}{% endif %}</b>
+    <span class="sl-profile-hub-total">
+      {% if row.rank_html %}{{{ row.rank_html }}}{% else %}<span></span>{% endif %}
+      {% if row.is_spec %}<span class="sl-chip sl-chip-accent sl-users-opt"><i class="bi bi-patch-check" aria-hidden="true"></i>{{ spec_label }}</span>{% else %}<span class="sl-chip sl-users-opt" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ row.floor }}</span>{% endif %}
+      <span class="sl-chip" title="{{ count_label }}"><i class="bi bi-people" aria-hidden="true"></i>{{ row.count }}</span>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

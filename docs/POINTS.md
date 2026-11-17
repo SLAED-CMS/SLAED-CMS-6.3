@@ -90,7 +90,7 @@ aggregate.
 - Points do not expire, are not transferred between accounts and are not spent.
 - Deleting an account leaves its journal rows: `_points` has no foreign key to users or administrators.
 - The visibility of points in the interface (`blocks/user_info.php`, profile, user lists, `getUserTip()`,
-  `getUserLevelData()`, the rules page `modules/users` op `rules`) follows `Point::$active`: `points.active = '1'`
+  `getUserLevelData()`, the window of the rules and the window «Ваше место» of `modules/users`) follows `Point::$active`: `points.active = '1'`
   of a configuration that passed its check behind the mark `update.points`, so a closed class shows no points.
 
 ### Limits

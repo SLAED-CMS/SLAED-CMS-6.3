@@ -14,17 +14,26 @@
         <div id="sl-node-hints" class="sl-node-hints" role="listbox" aria-label="{{ find_label }}" hidden></div>
       </form>
       {% endif %}
+      {% if seek_href %}
+      <form class="sl-search-form" role="search" action="{{ seek_href }}" method="get" hx-boost="true">
+        {% for item in seek_keep %}
+        <input type="hidden" name="{{ item.name }}" value="{{ item.value }}">
+        {% endfor %}
+        <input type="text" value="{{ seek_value }}" name="find" maxlength="25" placeholder="{{ find_label }}" aria-label="{{ find_label }}" class="sl-field" id="sl-node-find" autocomplete="off">
+        <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search_label }}" title="{{ search_label }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+      </form>
+      {% endif %}
       {% if rss_href %}
       <a class="sl-but-mini" href="{{ rss_href }}" title="{{ rss_title }}" aria-label="{{ rss_title }}"><i class="bi bi-rss" aria-hidden="true"></i></a>
       {% endif %}
-      {% if find_mod %}
+      {% if find_mod or seek_href %}
       <button type="button" class="sl-but-mini" data-sl-lens="sl-node-find" aria-controls="sl-node-find" aria-expanded="false" title="{{ find_label }}" aria-label="{{ find_label }}"><i class="bi bi-search" aria-hidden="true"></i><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       {% endif %}
       <a class="sl-but-mini" href="#top" title="{{ top_label }}" aria-label="{{ top_label }}"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
     </div>
     <div class="sl-node-head-filters" role="toolbar" aria-label="{{ filters_label }}" hx-boost="true">
       {% if cats_html %}
-      <span class="sl-node-head-pill{% if is_cat %} sl-is-active{% endif %}"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-cats" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-folder2-open" aria-hidden="true"></i>{{ cat_name }}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>
+      <span class="sl-node-head-pill{% if is_cat %} sl-is-active{% endif %}"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-cats" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-{% if cats_icon %}{{ cats_icon }}{% else %}folder2-open{% endif %}" aria-hidden="true"></i>{{ cat_name }}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>
       {% endif %}
       {% if lets_html %}
       <span class="sl-node-head-pill{% if is_let %} sl-is-active{% endif %}"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-lets" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-sort-alpha-down" aria-hidden="true"></i>{{ let_name }}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>
@@ -38,6 +47,9 @@
       {% if arch_href %}
       <span class="sl-node-head-pill{% if is_arch %} sl-is-active{% endif %}"><a class="sl-but" href="{{ arch_href }}" title="{{ arch_label }}"{% if is_arch %} aria-current="true"{% endif %}><i class="bi bi-archive" aria-hidden="true"></i><span>{{ arch_label }}</span></a></span>
       {% endif %}
+      {% for win in wins %}
+      <span class="sl-node-head-pill"><button type="button" class="sl-but" data-sl-toggle-control="{{ win.id }}" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-{{ win.icon }}" aria-hidden="true"></i>{{ win.name }}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>
+      {% endfor %}
       {% if reset_href %}
       <a class="sl-chip sl-chip-info" href="{{ reset_href }}" title="{{ reset_label }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ reset_label }}</a>
       {% endif %}
@@ -73,4 +85,12 @@
     {% endif %}
   </div>
   {% endif %}
+  {% for win in wins %}
+  <section id="{{ win.id }}" class="sl-pane sl-cat-tone-{{ win.tone }}" data-sl-toggle="{{ win.id }}" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="{% if win.is_open %}open{% else %}closed{% endif %}" hx-boost="true"{% if not win.is_open %} hidden{% endif %}>
+    {% include 'fragments/pane-cap.html' with win %}
+    <div class="sl-pane-body">
+      {{{ win.body_html }}}
+    </div>
+  </section>
+  {% endfor %}
 </header>

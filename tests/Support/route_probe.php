@@ -1323,11 +1323,19 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $box = fn(string $val): bool => (bool)preg_match('#name="blockwhere\[\]"\s+value="'.$val.'"#', $edit['body']);
     $out['where'] = [$box('docs'), $box('node'), $bound['code'], (string)$pdo->query('SELECT which FROM '.$pre.'blocks WHERE id = 51')->fetchColumn()];
     $conf = getRouteReply('root', 'GET', 'admin.php?name=search&op=config');
-    $save = getRouteReply('root', 'POST', 'admin.php?name=search&op=save', ['token' => getRouteToken($conf['body'], 'ver[docs]'), 'asearch' => '1', 'search[]' => 'forum',
+    $save = getRouteReply('root', 'POST', 'admin.php?name=search&op=save', ['token' => getRouteToken($conf['body'], 'ver[docs]'), 'asearch' => '1', 'search' => ['forum', 'voting'],
         'ntype[]' => 'news', 'ver[news]' => '1', 'ver[docs]' => '1', 'slet' => '3', 'slimit' => '500', 'rows' => '1', 'span' => '5']);
     $node = require $work.'/config/node.php';
     $out['toggle'] = [(bool)preg_match('#name="ntype\[\]"\s+value="news"#', $conf['body']), $save['code'], $node['node']['types']['docs']['integrations']['search'] ?? null,
         (int)$pdo->query('SELECT version FROM '.$pre.'node_types WHERE name = \'docs\'')->fetchColumn(), str_contains($find('', 'word=intro+of'), 'Doc one')];
+    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, time, enddate, lang, typ, status) VALUES'
+        .' (21, \'\', \'Quorum open\', \'Yes|No\', \'0|0\', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 30 DAY, \'\', 1, 1),'
+        .' (22, \'news\', \'Quorum bound\', \'Yes|No\', \'0|0\', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 30 DAY, \'\', 1, 1),'
+        .' (23, \'\', \'Quorum closed\', \'Yes|No\', \'0|0\', NOW() - INTERVAL 9 DAY, NOW() - INTERVAL 1 DAY, \'\', 1, 0)');
+    $poll = $find('', 'mod=voting&word=Quorum');
+    $out['polls'] = [str_contains($poll, 'Quorum open'), str_contains($poll, 'Quorum bound'), str_contains($poll, 'Quorum closed'),
+        str_contains($find('', ''), 'value="voting"'), str_contains($find('', 'mod=voting&word=%25'), 'Quorum')];
+    $pdo->exec('DELETE FROM '.$pre.'voting WHERE id IN (21, 22, 23)');
     [$one, $two] = [$find('', 'word=intro+of&page=1'), $find('', 'word=intro+of&page=2')];
     $out['paged'] = [str_contains($one, 'Beta'), str_contains($one, 'Alpha'), str_contains($two, 'Alpha'), str_contains($two, 'Beta'), str_contains($one, 'page=2')];
     $pdo->exec('INSERT INTO '.$pre.'node_relations (nid, rid, type, sort) VALUES (102, 101, \'related\', 0)');

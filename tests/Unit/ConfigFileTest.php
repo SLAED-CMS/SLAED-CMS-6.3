@@ -311,8 +311,6 @@ class ConfigFileTest extends TestCase
             ['admin/modules/modules.php', 'status', 'modules'],
             ['admin/modules/modules.php', 'save', 'modules'],
             ['modules/rss/admin/index.php', 'save', 'rss'],
-            ['modules/search/admin/index.php', 'reindex', 'search'],
-            ['modules/search/admin/index.php', 'modadd', 'search'],
         ];
         foreach ($list as [$path, $func, $area]) {
             $body = $this->getBody($path, $func);

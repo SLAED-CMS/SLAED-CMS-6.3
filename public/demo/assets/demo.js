@@ -50,11 +50,26 @@ const DEMO_CFG = [
   },
 ];
 
+/* The page of the module users as one hybrid built from markup the theme already draws (assets/usr.js): the rating under
+   the head of a Node list whose switch turns it into four looks, the rules and the statistics behind two pills of that
+   head; the desk changes the way to them and turns the additions on and off */
+const DEMO_USR = [
+  {
+    file: 'usr-01-top.html',
+    title: 'Топ пользователей',
+    note: 'Страница модуля «Топ пользователей» гибридом на готовых механиках темы. Рейтинг носит шапку списка Node. ' +
+      'Бегунок в этой шапке переключает вид на месте: пьедестал, карточки, ступени. Кнопки «Правила» и «Статистика» в ней же открывают свои окна под шапкой. ' +
+      'Пульт меняет путь к разделам на страницы или вкладки и включает десять дополнений. Набор стенда принят и стоит на сайте. Кнопка «Как было» показывает прежнюю страницу.',
+    tags: ['пьедестал', 'карточки', 'ступени'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'windows', title: 'Окно панели', addr: 'admin.php', items: DEMO_WIN },
   { key: 'config', title: 'Настройки раздела', addr: 'admin.php?name=search&op=config', items: DEMO_CFG },
   { key: 'forum', title: 'Окно сайта', addr: 'index.php?name=forum&op=view', items: DEMO_FORUM },
   { key: 'sitemap', title: 'Карта сайта', addr: 'index.php?name=sitemap', items: DEMO_MAP },
+  { key: 'users', title: 'Топ пользователей', addr: 'index.php?name=users', items: DEMO_USR },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,

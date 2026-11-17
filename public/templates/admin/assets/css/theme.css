@@ -6527,11 +6527,22 @@ button.sl-seg-cell:hover {
   display: none;
 }
 
-.sl-toc .sl-seg-cell {
+/* A cell of the contents rail and of a row filter carries a word, so it keeps its width and takes the inset of a word */
+.sl-toc .sl-seg-cell,
+.sl-row-filter .sl-seg-cell {
   flex: 0 0 auto;
   padding: 0 var(--sl-space-4);
   font-size: var(--sl-font-small);
   white-space: nowrap;
+}
+
+/* Row filter: the states of a table as the segmented switch over it; a cell carries a word and the count of its rows */
+.sl-row-filter {
+  margin-bottom: var(--sl-space-4);
+}
+
+.sl-row-filter .sl-seg-cell {
+  gap: var(--sl-space-2);
 }
 
 /* A section named in the rail stops under it: admin-ui.js writes the height of the rail */

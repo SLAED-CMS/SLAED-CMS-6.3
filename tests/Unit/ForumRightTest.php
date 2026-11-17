@@ -73,14 +73,16 @@ final class ForumRightTest extends TestCase
     public function everyReaderOfTopicsAsksTheOpenCategories(): void
     {
         $paths = [
-            ['core/system.php', 'getForumTopics'], ['modules/search/index.php', 'getSearchForum'], ['core/user.php', 'addFavorite'],
+            ['core/system.php', 'getForumTopics'], ['core/user.php', 'addFavorite'],
             ['core/user.php', 'getFavoriteList'], ['modules/account/index.php', 'profil'],
         ];
         foreach ($paths as [$file, $name]) {
             $this->assertStringContainsString('getForumCats()', $this->getSource($file, $name), $name.'() reads topics past the rights of their category');
         }
         $this->assertStringNotContainsString('cid NOT IN', $this->getSource('core/system.php', 'getForumTopics'));
-        $this->assertStringNotContainsString("f.status != '0' AND (f.title", $this->getSource('modules/search/index.php', 'getSearchForum'));
+        $find = (string)file_get_contents(dirname(__DIR__, 2).'/modules/forum/search.php');
+        $this->assertStringContainsString('getForumCats()', $find, 'The search handler of the forum reads topics past the rights of their category');
+        $this->assertStringNotContainsString("f.status != '0' AND (f.title", $find);
     }
 
     # A quote is taken only from the topic answered or one of its replies, and a pending or future reply only by a moderator

@@ -17,7 +17,6 @@ final class CommentIsolationTest extends TestCase
         'core/system.php',
         'core/user.php',
         'modules/account/index.php',
-        'modules/search/admin/index.php',
     ];
 
     private static array $files = [];

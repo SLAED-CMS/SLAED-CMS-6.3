@@ -14,7 +14,13 @@
       </tr>
     </thead>
     <tbody>
+      {% if rows %}
+      {% for row in rows %}
+      {% include 'fragments/table-row.html' with row %}
+      {% endfor %}
+      {% else %}
       {{{ rows_html }}}
+      {% endif %}
     </tbody>
   </table>
 {% if is_wrapless %}{% else %}

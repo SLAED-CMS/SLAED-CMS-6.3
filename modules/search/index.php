@@ -9,13 +9,13 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-# The searchable sections: the modules of search.mods, then every active Node type whose own configuration switches the search integration on
+# The searchable sections: the modules of search.mods open to every visitor that carry a search handler, then every active Node type with the search integration on
 function getSearchMods(): array {
     global $conf;
     $mods = [];
     foreach (explode(',', is_array($conf['search']) ? (string)($conf['search']['mods'] ?? '') : '') as $mod) {
         $mod = trim($mod);
-        if ($mod === '' || !is_active($mod) || isset($conf['node']['types'][$mod])) continue;
+        if ($mod === '' || !is_active($mod) || isset($conf['node']['types'][$mod]) || getSearchHandler($mod) === null) continue;
         $mods[] = $mod;
     }
     foreach (getNodeTypeMap() as $type) if ($type->active && $type->settings['integrations']['search']) $mods[] = $type->name;
@@ -109,39 +109,13 @@ function getSearchUrl(array $params, string $word, string $anchor = ''): string 
     return getSeoUrl($params + (($word !== '') ? ['word' => urlencode($word)] : [])).$anchor;
 }
 
-function getSearchMap(): array {
-    return [
-        'forum' => ['kind' => 'forum'],
-    ];
-}
-
-function getSearchForum(array $state): array {
-    global $db;
-    $rows = [];
-    $cats = getForumCats();
-    if (!$cats) return $rows;
-    $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $state['word']).'%';
-    $cond = 'f.cid IN ('.implode(', ', $cats).') AND f.status '.(is_moder('forum') ? "!= '0'" : "> '1'").' AND';
-    $pars = ['worda' => $like, 'wordb' => $like, 'lim' => $state['lim']];
-    $result = $db->getSqlQuery(
-        'SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name, r.path, ur.path'
-        .' FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
-        .' LEFT JOIN '.PREFIX_DB.'_routes AS ur ON ur.kind = \'user\' AND ur.oid = u.id AND ur.cur = 1'
-        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1'
-        .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND (f.title LIKE :worda ESCAPE \'!\' OR f.body LIKE :wordb ESCAPE \'!\')'
-        .' ORDER BY f.time DESC LIMIT :lim',
-        $pars
-    );
-    while ([$mid, $pid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick, $path, $upath] = $db->getSqlRow($result)) {
-        $tid = !$pid ? $mid : $pid;
-        $url = getSearchUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'route' => $path], $state['word']);
-        $edit = getSeoUrl(['name' => 'forum', 'op' => 'add', 'id' => $tid, 'cat' => $cid, 'pid' => $pid]);
-        $rows[] = getSearchItem('forum', $url, $edit, [
-            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont, 'safe' => true, 'trust' => true,
-            'nick' => $nick, 'upath' => $upath, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
-        ]);
-    }
-    return $rows;
+# The search handler a module carries in modules/<name>/search.php, read once per request: a closure that takes the state of the search and returns the rows of its module
+function getSearchHandler(string $mod): ?Closure {
+    static $list = [];
+    if (array_key_exists($mod, $list)) return $list[$mod];
+    $file = BASE_DIR.'/modules/'.$mod.'/search.php';
+    $call = is_file($file) ? require $file : null;
+    return $list[$mod] = ($call instanceof Closure) ? $call : null;
 }
 
 # Node rows of a search page through one reader; the word goes in literal, as NodeQuery escapes it for LIKE, and skip counts the rows of fixed modules before them
@@ -178,10 +152,9 @@ function getSearchNode(array $state, array $types, int $skip): array {
     return [array_slice($rows, 0, max(0, $need)), $total];
 }
 
-# The rows of every searched section and their total: the fixed modules read whole within search.slimit each, the Node types after them only up to the requested page
+# The rows of every searched section and their total: the modules by their handlers within search.slimit each, a row without its address skipped and logged, then the Node types
 function getSearchRows(array $state): array {
     $rows = [];
-    $list = getSearchMap();
     $types = [];
     foreach ($state['mods'] as $mod) {
         if ($state['mod'] !== '' && $state['mod'] !== $mod) continue;
@@ -190,11 +163,10 @@ function getSearchRows(array $state): array {
             $types[] = $type;
             continue;
         }
-        $cfg = $list[$mod] ?? null;
-        if (!$cfg) continue;
-        $rows = array_merge($rows, match ($cfg['kind']) {
-            'forum' => getSearchForum($state),
-        });
+        $list = getSearchHandler($mod)($state);
+        $good = array_filter(is_array($list) ? $list : [], fn(mixed $row): bool => is_array($row) && is_array($row['link'] ?? null));
+        if (!is_array($list) || count($good) < count($list)) Logger::addSite('error', 'Search: a handler returned what the search cannot read', ['module' => $mod]);
+        foreach ($good as $row) $rows[] = getSearchItem($mod, getSearchUrl($row['link'], $state['word']), is_string($row['edit'] ?? null) ? $row['edit'] : '', $row);
     }
     [$more, $total] = getSearchNode($state, $types, count($rows));
     return [array_merge($rows, $more), count($rows) + $total];

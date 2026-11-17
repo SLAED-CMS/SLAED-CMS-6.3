@@ -1,0 +1,119 @@
+<div id="sl-node-list" class="sl-node-list" hx-target="this" hx-swap="outerHTML show:none" hx-history-elt hx-history="false" data-sl-swap-reveal>
+  {% include 'partials/node/head.html' with head %}
+  {% for pane in mine %}
+  <section class="sl-pane sl-cat-tone-3">
+    {% include 'fragments/pane-cap.html' with pane %}
+    <div class="sl-pane-body">
+      <div class="sl-profile-meter">
+        <div class="sl-profile-meter-head"><span>{{ pane.note }}</span><b>{{ pane.part }}%</b></div>
+        <div class="sl-profile-meter-track"><span style="width:{{ pane.part }}%"></span></div>
+      </div>
+    </div>
+  </section>
+  {% endfor %}
+  {% if rows %}
+  <div id="sl-node-items" class="sl-users">
+    {% if is_cards %}
+    <div class="sl-opt-grid">
+      {% for row in rows %}
+      <article class="sl-pane sl-opt-w2 sl-users-card">
+        <div class="sl-pane-cap">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          <h2 class="sl-pane-title">{% if row.href %}<a href="{{ row.href }}" title="{{ info_label }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}</h2>
+          {% for mark in row.fresh %}{% include 'fragments/fresh.html' with mark %}{% endfor %}
+          {% if is_moder %}{% for tip in row.tips %}{% include 'fragments/popover.html' with tip %}{% endfor %}{% endif %}
+          {% if row.is_me %}<span class="sl-pane-chips"><span class="sl-chip sl-chip-accent" title="{{ you_label }}"><i class="bi bi-person-check" aria-hidden="true"></i>{{ you_label }}</span></span>{% endif %}
+          <span class="sl-but-mini{% if row.is_lead %} sl-is-active{% endif %}" title="{{ place_label }}">{{ row.place }}</span>
+        </div>
+        <div class="sl-pane-body">
+          <div class="sl-meta">
+            {% if has_points %}
+            <ul class="sl-pull-right">
+              <li><span class="sl-chip sl-users-pts" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ row.points }}</span></li>
+            </ul>
+            {% endif %}
+            <ul>
+              <li><time datetime="{{ row.reg_iso }}" title="{{ reg_label }}" class="sl-chip sl-chip-info"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ row.reg }}</time></li>
+            </ul>
+          </div>
+          <div class="sl-users-face">
+            <div class="sl-com-ava"{% if row.ring %} style="--sl-d-ring:{{ row.ring }}"{% endif %}><img src="{{ row.avatar }}" alt="{{ row.name }}" class="sl-avatar"></div>
+            {% if row.step %}<a href="{{ row.step_href }}" title="{{ group_label }}" class="sl-chip"><i class="bi bi-award" aria-hidden="true"></i>{{ row.step }}</a>{% endif %}
+          </div>
+          <div class="sl-profile-info">
+            <div class="sl-profile-info-row"><i class="bi bi-clock-history" aria-hidden="true"></i><span>{{ visit_label }}</span><b>{{ row.visit }}</b></div>
+            <div class="sl-profile-info-row"><i class="bi bi-geo-alt" aria-hidden="true"></i><span>{{ from_label }}</span><b title="{{ row.origin }}">{% if row.origin %}{{ row.origin }}{% else %}—{% endif %}</b></div>
+          </div>
+          <div class="sl-meta-foot">
+            <span class="sl-pull-right">{{{ row.rank_html }}}</span>
+            {% if row.href %}<a href="{{ row.href }}" title="{{ info_label }}" class="sl-but"><i class="bi bi-arrow-right" aria-hidden="true"></i> {{ profile_label }}</a>{% endif %}
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    {% if is_podium %}
+    <section class="sl-pane sl-cat-tone-4">
+      {% include 'fragments/pane-cap.html' with lead_head %}
+      <div class="sl-pane-body">
+        <div class="sl-users-podium">
+          {% for row in lead %}
+          <div class="sl-users-place">
+            <div class="sl-profile-avatar"{% if row.ring %} style="--sl-d-ring:{{ row.ring }}"{% endif %}><img src="{{ row.avatar }}" alt="{{ row.name }}"></div>
+            <h3 class="sl-font sl-profile-name">{% if row.href %}<a href="{{ row.href }}" title="{{ info_label }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}</h3>
+            {% if row.step %}<div class="sl-profile-rank">{{ row.step }}</div>{% endif %}
+            {{{ row.rank_html }}}
+            <div class="sl-profile-chips">
+              <span class="sl-chip sl-chip-{% if row.is_first %}warn{% else %}neutral{% endif %}" title="{{ place_label }}"><i class="bi bi-trophy-fill" aria-hidden="true"></i><span>{{ row.place }}</span></span>
+              {% if has_points %}<span class="sl-chip" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i><span>{{ row.points }}</span></span>{% endif %}
+              {% if row.is_me %}<span class="sl-chip sl-chip-accent" title="{{ you_label }}"><i class="bi bi-person-check" aria-hidden="true"></i><span>{{ you_label }}</span></span>{% endif %}
+              {% for mark in row.fresh %}{% include 'fragments/fresh.html' with mark %}{% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+    {% for tier in panes %}
+    <section id="{{ tier.id }}" class="sl-pane sl-cat-tone-{{ tier.tone }}">
+      {% include 'fragments/pane-cap.html' with tier %}
+      <div id="{{ tier.id }}-rows" class="sl-collapsible" data-sl-toggle="{{ tier.id }}-rows" data-sl-toggle-default="open">
+        <div class="sl-pane-body">
+          <div class="sl-users-cols sl-users-cols-{% if tier.has_rank %}5{% else %}4{% endif %}">
+            {% for row in tier.rows %}
+            <div class="sl-cab-row sl-profile-entry">
+              <span class="sl-but-mini{% if row.is_lead %} sl-is-active{% endif %}" title="{{ place_label }}">{{ row.place }}</span>
+              <span class="sl-cab-msg-ava"><img src="{{ row.avatar }}" alt="{{ row.name }}"></span>
+              <span class="sl-users-who">
+                {% if row.href %}<a href="{{ row.href }}" title="{{ info_label }}">{{ row.name }}</a>{% else %}<b>{{ row.name }}</b>{% endif %}
+                {% if row.is_me %}<span class="sl-chip sl-chip-accent" title="{{ you_label }}"><i class="bi bi-person-check" aria-hidden="true"></i>{{ you_label }}</span>{% endif %}
+                {% for mark in row.fresh %}{% include 'fragments/fresh.html' with mark %}{% endfor %}
+              </span>
+              <span class="sl-profile-hub-total">
+                {% if row.origin %}<span class="sl-chip sl-users-opt" title="{{ from_label }}"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ row.origin }}</span>{% else %}<span class="sl-users-opt"></span>{% endif %}
+                <time datetime="{{ row.reg_iso }}" title="{{ reg_label }}" class="sl-chip sl-chip-info sl-users-opt"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ row.reg }}</time>
+                {% for tip in row.tips %}{% include 'fragments/popover.html' with tip %}{% endfor %}
+                {% if tier.has_rank %}{% if row.rank_html %}{{{ row.rank_html }}}{% else %}<span></span>{% endif %}{% endif %}
+                {% if has_points %}<span class="sl-chip sl-users-pts" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ row.points }}</span>{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endfor %}
+    {% endif %}
+  </div>
+  <div id="sl-node-foot" class="sl-node-foot" hx-boost="true">
+    {{{ pager_html }}}
+    {% if more_href %}
+    <p class="sl-node-more"><a id="sl-node-more" href="{{ more_href }}" title="{{ more_label }}" class="sl-but" hx-target="#sl-node-items" hx-swap="outerHTML show:none" hx-select="#sl-node-items" hx-select-oob="#sl-node-foot"><i class="bi bi-arrow-down" aria-hidden="true"></i>{{ more_label }}</a></p>
+    {% endif %}
+  </div>
+  {% else %}
+  {% include 'fragments/empty.html' with empty %}
+  {% endif %}
+</div>

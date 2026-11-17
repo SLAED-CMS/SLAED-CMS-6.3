@@ -153,6 +153,23 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([true, 303, null, 2, false], $this->getRun()['toggle']);
     }
 
+    # A module is searched by the handler it carries: the polls find a poll of its own page, never one bound to a material or closed, and take a wildcard as a letter
+    #[Test]
+    public function aModuleIsSearchedByItsOwnHandler(): void
+    {
+        $this->assertSame([true, false, false, true, false], $this->getRun()['polls']);
+    }
+
+    # A handler of a module is foreign code: an answer that is no list and a row without its address are skipped and named in the site log, and the other sections go on
+    #[Test]
+    public function aBrokenHandlerRowIsSkippedAndLogged(): void
+    {
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/modules/search/index.php');
+        $this->assertStringContainsString("is_array(\$row) && is_array(\$row['link'] ?? null)", $code, 'The search takes a row of a handler without its address');
+        $this->assertStringContainsString("if (!is_array(\$list) || count(\$good) < count(\$list)) Logger::addSite('error', ", $code, 'A broken answer is not logged');
+        $this->assertStringContainsString("['module' => \$mod]", $code, 'The log does not name the module whose handler failed');
+    }
+
     # A page of the results reads the Node rows up to its own end and counts the rest: one result a page, the newer material first and a link to the next page
     #[Test]
     public function searchPagesTheRowsOfNodeByTheirCount(): void
