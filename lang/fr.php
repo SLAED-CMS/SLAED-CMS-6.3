@@ -717,6 +717,7 @@ define('_SEARCH','Recherche');
 define('_SEARCHLETMIN','Minimum le nombre de caractères dans une requête de recherche');
 define('_SEC','sec');
 define('_SECCODEINCOR','La vérification d\'un utilisateur réel n\'a pas été passée. Envoyez le formulaire encore une fois et, si le refus se répète, contactez l\'administration du projet.');
+define('_SECTIONS','Sections');
 define('_SECURITY','Sécurité');
 define('_SERVICES','Services');
 define('_SHARE','Partager');

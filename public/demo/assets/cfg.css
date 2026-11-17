@@ -1,0 +1,63 @@
+/* Settings series (cfg-NN): the joints of the sets the theme admin does not draw. The windows, the form rows, the tables,
+   the module cards, the check lists and the switch are the theme's own; the desk wears the sheet of the panel window */
+.cf-root,
+.cf-stack {
+  display: grid;
+  gap: var(--sl-space-4);
+  min-width: 0;
+}
+
+.cf-root .sl-box {
+  margin: 0;
+}
+
+/* Place "side": the settings and the sources in two columns that start on one line */
+.cf-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sl-space-4);
+  align-items: start;
+  min-width: 0;
+}
+
+/* The name of a source with its icon, in a form row and in a table cell; the label of a form row lays its spans as blocks in a line */
+.cf-root .cf-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  min-width: 0;
+}
+
+/* List "table": the filter over the table, and a source that cannot be searched stands quiet in it */
+.cf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-4);
+}
+
+.cf-pick .sl-seg-cell {
+  gap: var(--sl-space-2);
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.cf-is-bad > td {
+  color: var(--sl-text-muted);
+}
+
+/* In a column the table keeps the name, the kind, the fields and the state: the id and the table leave it */
+.cf-split .cf-bar + table :is(th, td):is(:nth-child(2), :nth-child(4)) {
+  display: none;
+}
+
+/* List "tiles": a card that cannot be pressed keeps the arrow */
+.cf-root span.sl-mcard-link {
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .cf-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

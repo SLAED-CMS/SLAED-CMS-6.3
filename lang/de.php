@@ -717,6 +717,7 @@ define('_SEARCH','Suche');
 define('_SEARCHLETMIN','Die minimal zulässige Menge der Symbole in der Suchabfrage');
 define('_SEC','sek');
 define('_SECCODEINCOR','Die Prüfung auf einen echten Benutzer wurde nicht bestanden. Senden Sie das Formular erneut, und wenden Sie sich an die Projektverwaltung, falls sich die Ablehnung wiederholt.');
+define('_SECTIONS','Bereiche');
 define('_SECURITY','Sicherheit');
 define('_SERVICES','Leistungen');
 define('_SHARE','Teilen');

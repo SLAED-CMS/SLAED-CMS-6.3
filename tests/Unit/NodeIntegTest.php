@@ -160,7 +160,7 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([true, false, true, false, true], $this->getRun()['paged']);
     }
 
-    # The sitemap reads the materials of its types as a guest in cursor batches, escapes its addresses, the HTML map shows open categories only, robots.txt names the map
+    # The sitemap reads the materials of its types as a guest in cursor batches, escapes its addresses, its page shows open categories with materials, robots.txt names the map
     #[Test]
     public function theSitemapWalksTheTypesOfItsIntegration(): void
     {
@@ -171,7 +171,8 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([true, true, false, false, true, false], $map['items'], 'A closed, pending or disabled material reached the map');
         $this->assertSame(601, $map['bulk'], 'The cursor lost or repeated materials across batches');
         $this->assertSame(['success', 5], $map['batch'], 'The sitemap did not read about six hundred materials in batches of limits.syncbatch');
-        $this->assertSame([true, false, false], $map['txt'], 'The HTML map misses the open category or lists materials of Node');
+        $this->assertSame([true, false, true], $map['page'], 'The page of the map misses the open category or its material, or lists a closed one');
+        $this->assertSame([601, 5, 601], $map['rows'], 'The page counts other rows than the files hold, or shows more of a category than sitemap.top');
         $this->assertSame([false, true], $map['lang'], 'A multilingual map lists a category of another language or misses one of the site language');
         $this->assertSame([true, true], $map['robots'], 'robots.txt does not name the map once by its absolute address, or lost a line of its own');
     }

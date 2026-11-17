@@ -1,0 +1,85 @@
+/* The page of the sitemap in four looks (assets/map.js). Every look is markup of the theme, so this file holds only the
+   joints the theme does not draw yet, each one a rule the theme would take over with the look that needs it */
+
+/* Every look: the windows of the page keep the step the windows of a list keep */
+.mp-root > .sl-pane {
+  margin-bottom: var(--sl-space-7);
+}
+
+/* Windows and branches: the row of the title is the head of a forum topic drawn for the title of a page, the title on the left and its tools on the right */
+.mp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3) var(--sl-space-7);
+  margin-bottom: var(--sl-space-5);
+}
+
+.mp-head .sl-title {
+  margin: 0;
+}
+
+.mp-tools,
+.mp-jump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.mp-tools .sl-chip,
+.mp-tools .sl-but,
+.mp-jump .sl-chip {
+  margin: 0;
+}
+
+/* Addition: the field of the filter and the chips of the sections each take a row of their own over the windows */
+.mp-find,
+.mp-jump {
+  margin-bottom: var(--sl-space-5);
+}
+
+.mp-find .sl-field {
+  width: 100%;
+}
+
+/* Addition: a window a chip of a section leads to stops under the edge of the screen with a step over it */
+.mp-root > .sl-pane {
+  scroll-margin-top: var(--sl-space-7);
+}
+
+/* Addition: the mark of a fresh page keeps the size of a row, so a row with it is no taller than its neighbours */
+.mp-root .sl-cab-row .sl-fresh {
+  margin: 0;
+}
+
+/* Windows and branches: the count of a category stands at the right edge, under the chips of the head, and the last branch of a window draws no rule over its frame */
+.mp-root .sl-node-faq summary .sl-chip {
+  margin: 0 0 0 auto;
+}
+
+.mp-root .sl-node-faq:last-child {
+  border-bottom: 0;
+}
+
+/* Rail: the rows of a category keep off the next head the step the head keeps off them */
+.mp-rows {
+  margin-bottom: var(--sl-space-7);
+}
+
+.mp-rows:last-child {
+  margin-bottom: 0;
+}
+
+/* Tiles: a chip of a page is cut to its tile, as the name of a row is cut to its row */
+.mp-root .sl-cat-subs .sl-chip {
+  max-width: 100%;
+}
+
+.mp-cut {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

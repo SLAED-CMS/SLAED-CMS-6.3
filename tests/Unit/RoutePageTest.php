@@ -105,13 +105,13 @@ final class RoutePageTest extends TestCase
         $this->assertSame([true, false, false, false, false], $run['data']['checks'], 'only the link of its page, counter and term may pass');
     }
 
-    # The sitemap lists a page with an address of its own, for everyone and indexed, in the XML and in the text map; a hidden, closed or slot page stays out
+    # The sitemap lists a page with an address of its own, for everyone and indexed, in the XML and on the page of the map; a hidden, closed or slot page stays out
     #[Test]
     public function theSitemapListsThePagesWithAnAddress(): void
     {
         $data = $this->getRun()['data'];
         $this->assertSame('success', $data['sitemap']);
         $this->assertSame(['about-us'], $data['locs']);
-        $this->assertSame([true, false, false], $data['txt']);
+        $this->assertSame([true, false, false], $data['page']);
     }
 }

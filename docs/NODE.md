@@ -2908,7 +2908,18 @@ language) and the materials read by `NodeQuery::getNodeSitemap(int $after = 0, i
 `id`, type name, `title`, `cid`, `ctitle`, `published`, `updated`, `path` of every sitemap type after a global id
 cursor, as a guest context of the site language (none on a site with one language), in batches of
 `NodeQuery::getTargetSize()`. A failure removes the files of the run.
-The HTML map lists a type with its open categories and leaves materials to the XML.
+With `sitemap.txt` on, the same walk writes the rows of the page of the module `sitemap`: a row `[sort, title, href,
+date]` goes as one JSON line into the file of its category, `storage/sitemap/<stamp>-<module>-<category>.rows`,
+through a buffer flushed at one megabyte, so the page costs no memory the XML does not. At the end every file is
+sorted, the freshest row first, and `storage/sitemap/sitemap.json` takes `stamp` and `secs`: a section per module,
+type and the pages of the layout, its open categories with `id`, the count of their rows and the first
+`sitemap.top` of them; the files of an older stamp are removed. The module reads the file and draws `partials/sitemap.html`: the window of the title with the summary chips, the filter and the chips
+of the sections, then a folding window per section, a category as a branch `details.sl-node-faq` over rows
+`sl-cab-row`, the rest of a category behind "Ещё N". That control is a plain link to the page of the category which htmx turns
+into `index.php?name=sitemap&op=more&mod=<module>&cat=<id>&from=<n>`: the answer is the next fifty rows of the file
+and the next control, drawn by `fragments/sitemap-rows.html`, and replaces the control. A request without htmx is
+sent to the page of the map, one for a stamp that is gone answers `HX-Refresh`. The filter and the button of all branches are
+`setMapFind()` and `setMapAll()` of `slaed.js` on the hooks `data-sl-map-*`.
 
 ### Blocks
 

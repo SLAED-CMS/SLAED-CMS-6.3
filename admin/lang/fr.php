@@ -886,6 +886,7 @@ define('_MAP_XSL','Utiliser le modèle de conception du XSL pour le fichier de l
 define('_MAP_SCOPE','Contenu');
 define('_MAP_FILE','Fichier de la carte');
 define('_MAP_DATE','Date de modification');
+define('_MAP_TOP','Pages par catégorie dans la carte du site');
 define('_MANUAL','Aide');
 define('_MASSMAIL','Tous les utilisateurs de');
 define('_MATCHANY','Filtrage des mots dans le texte');

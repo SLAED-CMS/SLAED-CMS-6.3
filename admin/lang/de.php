@@ -886,6 +886,7 @@ define('_MAP_XSL','Verwenden Sie Design-Vorlage XSL-Datei für die Karte?');
 define('_MAP_SCOPE','Inhalt');
 define('_MAP_FILE','Datei der Karte');
 define('_MAP_DATE','Änderungsdatum');
+define('_MAP_TOP','Seiten einer Kategorie in der Karte auf der Website');
 define('_MANUAL','Hilfe');
 define('_MASSMAIL','Massen Newsletter an alle Benutzer');
 define('_MATCHANY','Treffer fьr das Wort irgendwo im Text');

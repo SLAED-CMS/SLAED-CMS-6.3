@@ -228,6 +228,12 @@ function config(): void {
         ],
         ['label_html' => _MAP_XSL, 'label_id' => $labid = getFieldIds('', 'xsl')['label'], 'field_html' => $yesno('xsl', $conf['sitemap']['xsl'] ?? 0, $labid)],
         ['label_html' => _MAP_SITE, 'label_id' => $labid = getFieldIds('', 'txt')['label'], 'field_html' => $yesno('txt', $conf['sitemap']['txt'] ?? 0, $labid)],
+        [
+            'label_for' => 'f-top', 'label_html' => _MAP_TOP,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'top', 'input_id' => 'f-top', 'value_attr' => (string)intval($conf['sitemap']['top'] ?? 5), 'is_config' => true,
+            ]),
+        ],
     ];
     $freq = [
         ['label_for' => 'f-fr_h', 'label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
@@ -293,6 +299,7 @@ function configsave(): void {
             'gen_p' => getVar('post', 'gen_p', 'num', 0),
             'xsl' => getVar('post', 'xsl', 'num', 0),
             'txt' => getVar('post', 'txt', 'num', 0),
+            'top' => max(1, getVar('post', 'top', 'num', 5)),
         ];
         $fail = updateNodeTypeParts(setConfigFile('sitemap.php', $cont), 'integrations', $parts, getVar('post', 'ver[]', '', []));
         if ($fail !== '') [$iswarn, $text] = [true, $fail];

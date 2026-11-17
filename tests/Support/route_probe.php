@@ -1361,13 +1361,13 @@ function getRouteInteg(PDO $pdo, string $work): array {
 function getRouteIntegData(): array {
     global $db, $conf;
     $keep = [];
-    foreach ([PUBLIC_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.txt', PUBLIC_DIR.'/robots.txt'] as $file) {
+    foreach (array_merge([PUBLIC_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.json', PUBLIC_DIR.'/robots.txt'], glob(SITEMAP_DIR.'/*.rows') ?: []) as $file) {
         $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
     }
     try {
         $res = addSitemapTask(true);
         $xml = (string)file_get_contents(PUBLIC_DIR.'/sitemap.xml');
-        $txt = (string)file_get_contents(SITEMAP_DIR.'/sitemap.txt');
+        $page = (string)file_get_contents(SITEMAP_DIR.'/sitemap.json');
         preg_match_all('#<loc>([^<]+)</loc>#', $xml, $all);
         $locs = array_map('html_entity_decode', $all[1]);
         $has = fn(string $tail): bool => in_array($GLOBALS['conf']['homeurl'].'/'.$tail, $locs, true);
@@ -1375,8 +1375,16 @@ function getRouteIntegData(): array {
             'raw' => str_contains($xml, '&op='), 'list' => [$has('news'), $has('docs'), $has('off')], 'cats' => [$has('news?cat=1'), $has('news?cat=2')],
             'items' => [$has('news/view/101'), $has('news/view/102'), $has('news/view/103'), $has('news/view/104'), $has('docs/view/201'), $has('off/view/301')],
             'bulk' => count(array_filter($locs, fn($v) => str_contains($v, '/docs/view/'))),
-            'txt' => [(bool)preg_match('#>\s*Open\s*<#', $txt), str_contains($txt, 'Members'),
-                str_contains($txt, 'Alpha')], 'parts' => count(glob(BASE_DIR.'/sitemap-*.xml*') ?: [])];
+            'page' => [str_contains($page, '"title":"Open"'), str_contains($page, 'Members'),
+                str_contains($page, '"Alpha"')], 'parts' => count(glob(BASE_DIR.'/sitemap-*.xml*') ?: [])];
+        $data = json_decode($page, true);
+        $out['rows'] = [0, 0, 0];
+        foreach ($data['secs'] as $sec) {
+            foreach (($sec['name'] === 'docs') ? $sec['cats'] : [] as $cat) {
+                $rows = file(SITEMAP_DIR.'/'.$data['stamp'].'-docs-'.$cat['id'].'.rows');
+                $out['rows'] = [$out['rows'][0] + $cat['count'], max($out['rows'][1], count($cat['rows'])), $out['rows'][2] + count($rows)];
+            }
+        }
         $num = $db->qnum;
         addSitemapTask(true);
         $wide = $db->qnum - $num;
@@ -1396,6 +1404,7 @@ function getRouteIntegData(): array {
         $out['robots'] = [$all[1] === [$conf['homeurl'].'/sitemap.xml'], str_contains((string)file_get_contents(PUBLIC_DIR.'/robots.txt'), 'Disallow: /setup.php')];
         return $out;
     } finally {
+        foreach (glob(SITEMAP_DIR.'/*.rows') ?: [] as $file) if (!isset($keep[$file])) unlink($file);
         foreach ($keep as $file => $old) {
             if ($old === null) {
                 if (is_file($file)) unlink($file);
@@ -4155,7 +4164,8 @@ function getRoutePageData(): array {
     $out = ['tokens' => $tok, 'checks' => [Layout::checkDraftToken(10, $tok['about'], 3), Layout::checkDraftToken(20, $tok['about'], 3),
         Layout::checkDraftToken(10, $tok['about'], 4), Layout::checkDraftToken(10, $tok['expired'], 3), Layout::checkDraftToken(10, 'x.'.str_repeat('a', 64), 3)]];
     $keep = [];
-    foreach (array_merge([PUBLIC_DIR.'/sitemap.xml', PUBLIC_DIR.'/robots.txt'], glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: []) as $file) {
+    $maps = array_merge(glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [], glob(SITEMAP_DIR.'/*.rows') ?: []);
+    foreach (array_merge([PUBLIC_DIR.'/sitemap.xml', PUBLIC_DIR.'/robots.txt', SITEMAP_DIR.'/sitemap.json'], $maps) as $file) {
         $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
     }
     try {
@@ -4165,10 +4175,10 @@ function getRoutePageData(): array {
         $home = $conf['homeurl'].'/';
         $locs = array_map(static fn(string $v): string => str_replace($home, '', html_entity_decode($v)), $all[1]);
         $out['locs'] = array_values(array_intersect($locs, ['about-us', 'about', 'members', 'hidden', 'docs-page', 'gone-page', 'page-10', 'page-14']));
-        $txt = (string)file_get_contents(SITEMAP_DIR.'/sitemap.txt');
-        $out['txt'] = [preg_match('#>\s*About\s*</a>#', $txt) === 1, str_contains($txt, 'Hidden'), str_contains($txt, 'Members')];
+        $page = (string)file_get_contents(SITEMAP_DIR.'/sitemap.json');
+        $out['page'] = [str_contains($page, '"About"'), str_contains($page, 'Hidden'), str_contains($page, 'Members')];
     } finally {
-        foreach (glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [] as $file) if (!isset($keep[$file])) unlink($file);
+        foreach (array_merge(glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [], glob(SITEMAP_DIR.'/*.rows') ?: []) as $file) if (!isset($keep[$file])) unlink($file);
         foreach ($keep as $file => $old) {
             if ($old === null) {
                 if (is_file($file)) unlink($file);

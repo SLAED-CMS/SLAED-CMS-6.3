@@ -717,6 +717,7 @@ define('_SEARCH','Szukaj');
 define('_SEARCHLETMIN','Minimalna dozwolona ilość znaków w wyszukiwanych haseł');
 define('_SEC','sek');
 define('_SECCODEINCOR','Sprawdzenie prawdziwego użytkownika nie powiodło się. Wyślij formularz jeszcze raz, a jeśli odmowa się powtórzy, skontaktuj się z administracją projektu.');
+define('_SECTIONS','Sekcje');
 define('_SECURITY','Bezpieczeństwo');
 define('_SERVICES','Usługi');
 define('_SHARE','Udostępnij');

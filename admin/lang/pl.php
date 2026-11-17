@@ -886,6 +886,7 @@ define('_MAP_XSL','Użyć szablon XSL do pliku mapy?');
 define('_MAP_SCOPE','Zawartość');
 define('_MAP_FILE','Plik mapy');
 define('_MAP_DATE','Data zmiany');
+define('_MAP_TOP','Stron kategorii w mapie na stronie');
 define('_MANUAL','Pomoc');
 define('_MASSMAIL','Wszyscy użytkownicy');
 define('_MATCHANY','Filtrowanie słów w tekście');

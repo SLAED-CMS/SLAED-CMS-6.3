@@ -1,0 +1,6 @@
+{% for row in rows %}
+<div class="sl-cab-row" data-sl-map-row><i class="bi bi-file-earmark-text" aria-hidden="true"></i><a href="{{ row.href }}" title="{{ row.title }}">{{ row.title }}</a>{{{ row.fresh_html }}}</div>
+{% endfor %}
+{% if rest %}
+<div class="sl-cab-row" data-sl-map-rest><i class="bi bi-three-dots" aria-hidden="true"></i><a href="{{ href }}" title="{{ _MORE }}" hx-get="{{ more }}" hx-target="closest [data-sl-map-rest]" hx-swap="outerHTML" hx-push-url="false">{{ _MORE }} {{ rest }}</a></div>
+{% endif %}

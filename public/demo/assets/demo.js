@@ -25,9 +25,36 @@ const DEMO_FORUM = [
   },
 ];
 
+/* The page of the module sitemap in four looks built from markup the theme already draws (assets/map.js); the desk
+   switches the look in place */
+const DEMO_MAP = [
+  {
+    file: 'map-01-sitemap.html',
+    title: 'Карта сайта',
+    note: 'Страница модуля «Карта сайта» в четырёх видах на готовых механиках темы. Пульт переключает вид на месте: окна с раскрываемыми категориями, ' +
+      'рельс разделов, плитки категорий, сворачиваемые окна с нумерованным деревом. Наполнение во всех видах одно. У выбранного вида «Окна и ветки» семь дополнений, каждое со своим выключателем. Набор со всеми дополнениями принят и стоит на сайте, кнопка «Как на сайте» возвращает его.',
+    tags: ['окна и ветки', 'рельс', 'плитки', 'дерево'],
+  },
+];
+
+/* The settings of a section: the page "Поиск → Конфигурации" on the theme admin (assets/cfg.js); the desk picks one of
+   four sets and mixes the three axes they are made of */
+const DEMO_CFG = [
+  {
+    file: 'cfg-01-search.html',
+    title: 'Настройки поиска',
+    note: 'Страница «Поиск → Конфигурации» в четырёх наборах. Пульт выбирает набор и меняет три оси, из которых он собран. ' +
+      'Первая ставит источники поиска на страницу, на отдельную вкладку или рядом с настройками. Вторая меняет форму списка, третья показывает или сворачивает несовместимые модули. ' +
+      'Наполнение во всех наборах одно. Кнопка «Как сейчас» возвращает страницу в нынешнем виде.',
+    tags: ['две вкладки', 'окна', 'два столбца', 'плитки'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'windows', title: 'Окно панели', addr: 'admin.php', items: DEMO_WIN },
+  { key: 'config', title: 'Настройки раздела', addr: 'admin.php?name=search&op=config', items: DEMO_CFG },
   { key: 'forum', title: 'Окно сайта', addr: 'index.php?name=forum&op=view', items: DEMO_FORUM },
+  { key: 'sitemap', title: 'Карта сайта', addr: 'index.php?name=sitemap', items: DEMO_MAP },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,

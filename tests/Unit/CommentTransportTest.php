@@ -124,27 +124,31 @@ final class CommentTransportTest extends TestCase
         $code = $this->getSource('core/user.php', 'getCommentList');
         $this->assertStringContainsString("'id' => 'repcrows'", $code);
         $rows = strpos($code, "'id' => 'repcrows'");
-        $pager = strpos($code, 'getPageNumbers(');
-        $this->assertNotFalse($pager, 'The list no longer renders a numbered pager');
-        $this->assertLessThan($pager, $rows, 'The pager is rendered inside the row container');
+        $foot = strpos($code, 'getCommentFoot(');
+        $this->assertNotFalse($foot, 'The list no longer renders its foot with the numbered pager');
+        $this->assertLessThan($foot, $rows, 'The foot is rendered inside the row container');
+        $this->assertStringContainsString('getPageNumbers(', $this->getSource('core/user.php', 'getCommentFoot'), 'The foot no longer renders a numbered pager');
         $this->assertStringContainsString("'hx_target' => '#repcrows'", $this->getSource('core/user.php', 'setComShow'));
     }
 
-    # The next page is appended by a control that replaces itself, and the same control is an ordinary page link without HTMX
+    # The next page is appended by a control of the foot outside the window, which swaps the foot by id and stays an ordinary page link without HTMX
     #[Test]
-    public function theNextPageIsAppendedByAControlThatReplacesItself(): void
+    public function theNextPageIsAppendedByAControlOfTheFoot(): void
     {
-        $code = $this->getSource('core/user.php', 'getCommentRows');
-        $this->assertStringContainsString("'hx_target' => 'this'", $code);
-        $this->assertStringContainsString("'hx_swap' => 'outerHTML'", $code);
+        $code = $this->getSource('core/user.php', 'getCommentFoot');
+        $this->assertStringContainsString("'hx_target' => '#repcrows'", $code, 'The control no longer appends to the row container');
+        $this->assertStringContainsString("'hx_swap' => 'beforeend'", $code);
+        $this->assertStringContainsString("'link_attr' => 'hx-select-oob=\"#repcfoot\"'", $code, 'The foot of the appended page is not swapped');
+        $this->assertStringContainsString("'id' => 'repcfoot'", $code);
         $this->assertStringContainsString("'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentPage", $code);
         $this->assertStringContainsString("'hx_headers' => \$token", $code);
         $this->assertStringContainsString("getSeoUrl(\$pag + ['com' => \$next])", $code, 'The control is not an ordinary page link without HTMX');
-        $this->assertStringContainsString("if (\$data['page'] >= \$data['pages']) return \$cont", $code, 'The last page still offers to load a page after it');
+        $this->assertStringContainsString("(\$next > \$data['pages']) ? ''", $code, 'The last page still offers to load a page after it');
+        $this->assertStringNotContainsString('op=getCommentPage', $this->getSource('core/user.php', 'getCommentRows'), 'The control of the next page is back inside the window');
         $this->assertStringContainsString("case 'getCommentPage': getCommentPage(); break;", $this->getFile('public/index.php'));
         $route = $this->getSource('core/user.php', 'getCommentPage');
         $this->assertStringContainsString("if (\$data['total'] < 1 || \$data['page'] !== \$page) return;", $route, 'A page past the last is clamped and answered twice');
-        $this->assertStringNotContainsString('getPageNumbers(', $route, 'The appended slice carries a second pager');
+        $this->assertStringContainsString('getCommentRows($data, $token, $pag).getCommentFoot($data, $mod, $id, $token, $pag)', $route, 'The appended page has no foot');
     }
 
     # A link that names one comment lands on the page that shows it, instead of an anchor into a page that does not carry it
@@ -174,7 +178,7 @@ final class CommentTransportTest extends TestCase
     public function theRestOfABranchIsAppendedByItsOwnControl(): void
     {
         $code = $this->getSource('core/user.php', 'getCommentRows');
-        $this->assertSame(2, substr_count($code, "'hx_target' => 'this'"), 'A control does not replace itself with its own answer');
+        $this->assertSame(1, substr_count($code, "'hx_target' => 'this'"), 'The reply control does not replace itself with its own answer');
         $this->assertStringContainsString('op=getCommentBranch', $code);
         $this->assertStringContainsString("getSeoUrl(\$pag + ['all' => \$val['id']])", $code, 'The reply control has no plain link');
         $this->assertStringContainsString("intval(\$val['kids'] ?? 0) > intval(\$val['shown'] ?? 0)", $code, 'The control shows even when the branch is complete');

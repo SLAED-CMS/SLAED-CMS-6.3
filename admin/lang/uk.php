@@ -886,6 +886,7 @@ define('_MAP_XSL','Використовувати шаблон оформлен�
 define('_MAP_SCOPE','Склад');
 define('_MAP_FILE','Файл карти');
 define('_MAP_DATE','Дата зміни');
+define('_MAP_TOP','Сторінок категорії в карті на сайті');
 define('_MANUAL','Довідка');
 define('_MASSMAIL','Усі користувачі');
 define('_MATCHANY','Фільтрація слів у тексті');

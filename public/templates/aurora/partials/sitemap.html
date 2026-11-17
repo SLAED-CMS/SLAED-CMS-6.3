@@ -1,0 +1,41 @@
+<div class="sl-opt-grid" data-sl-map>
+  <section class="sl-pane sl-opt-w6">
+    {% include 'fragments/pane-cap.html' with head %}
+    <div class="sl-pane-body">
+      <input class="sl-field" type="search" maxlength="60" placeholder="{{ _SEARCH }}" aria-label="{{ _SEARCH }}" data-sl-map-find>
+      <nav class="sl-profile-chips" aria-label="{{ _SITEMAP }}">
+        {% for sec in secs %}<a class="sl-chip sl-chip-tone sl-cat-tone-{{ sec.tone }}" href="#{{ sec.id }}" title="{{ sec.title }}"><i class="bi bi-{{ sec.icon }}" aria-hidden="true"></i><span>{{ sec.title }}</span></a>{% endfor %}
+      </nav>
+    </div>
+  </section>
+  {% for sec in secs %}
+  <section id="{{ sec.id }}" class="sl-pane sl-opt-w6 sl-cat-tone-{{ sec.tone }}" data-sl-map-sec>
+    {% include 'fragments/pane-cap.html' with sec %}
+    <div id="{{ sec.id }}-rows" class="sl-collapsible" data-sl-toggle="{{ sec.id }}-rows" data-sl-toggle-default="open">
+      <div class="sl-pane-body">
+        <div>
+          {% for cat in sec.cats %}
+          {% if cat.title %}
+          <details class="sl-node-faq" data-sl-map-cat>
+            <summary>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              <h3 class="sl-title"><a href="{{ cat.href }}" title="{{ cat.title }}">{{ cat.title }}</a></h3>
+              <span class="sl-chip sl-chip-neutral" title="{{ _PAGENAV }}">{{ cat.count }}</span>
+            </summary>
+          {% endif %}
+            <div{% if cat.title %} class="sl-node-faq-body"{% endif %} data-sl-map-rows>
+              {% include 'fragments/sitemap-rows.html' with cat %}
+            </div>
+          {% if cat.title %}
+          </details>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endfor %}
+  <div class="sl-opt-w6" data-sl-map-none hidden>
+    {% include 'fragments/empty.html' with none %}
+  </div>
+</div>

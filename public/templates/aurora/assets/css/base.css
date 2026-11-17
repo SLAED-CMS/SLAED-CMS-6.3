@@ -363,7 +363,6 @@
   --sl-com-ava-border: 2px;
   --sl-com-ava-width: 64px;
   --sl-com-ava-height: 64px;
-  --sl-com-item-width: 93px;
   --sl-com-ring-mix: 22%;
   --sl-crumb-bar-height: 2px;
   --sl-demo-height: 76px;
@@ -571,9 +570,7 @@
   --sl-sort-width: 10px;
   /* A nested list marks its depth by repeating its own bullet, one step to the right per level */
   --sl-sublist-bg: light-dark(#7282a3, #97a8c2);
-  --sl-sublist-two-bg: light-dark(#b9aca6, #cebeb1);
   --sl-sublist-shadow: 15px 0 0 light-dark(#97a8c2, #7282a3);
-  --sl-sublist-two-shadow: 15px 0 0 light-dark(#cebeb1, #b9aca6), 30px 0 0 light-dark(#d9c9bc, #a1958a);
   /* The gap the knob of a switch keeps from its track on every side, and the lift the knob rides on */
   --sl-switch-gap: 2px;
   --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));

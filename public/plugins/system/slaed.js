@@ -3428,6 +3428,61 @@
         if (frame) frame.focus();
     });
 
+    // The button of the sitemap names what a press will do, so it reads the branches as they stand
+    function setMapAll(map) {
+        var but = map.querySelector('[data-sl-map-all]');
+        var open = !!map.querySelector('[data-sl-map-cat]:not([hidden])') && !map.querySelector('[data-sl-map-cat]:not([hidden]):not([open])');
+        but.setAttribute('aria-pressed', String(open));
+        but.querySelector('.bi').className = 'bi bi-arrows-' + (open ? 'collapse' : 'expand');
+        but.lastChild.nodeValue = ' ' + but.getAttribute(open ? 'data-sl-shut' : 'data-sl-open');
+    }
+
+    // The filter of the sitemap keeps a section whose name matches whole, a category whose name matches with all its pages, else the pages that match, their branch open
+    function setMapFind(map, text) {
+        var ask = text.trim().toLowerCase();
+        var seen = 0;
+        map.querySelectorAll('[data-sl-map-sec]').forEach(function (sec) {
+            var whole = ask === '' || sec.querySelector('.sl-pane-title').textContent.toLowerCase().indexOf(ask) >= 0;
+            var kept = 0;
+            sec.querySelectorAll('[data-sl-map-rows]').forEach(function (box) {
+                var cat = box.closest('[data-sl-map-cat]');
+                var all = whole || (cat !== null && cat.querySelector('.sl-title').textContent.toLowerCase().indexOf(ask) >= 0);
+                var rest = box.querySelector('[data-sl-map-rest]');
+                var rows = 0;
+                box.querySelectorAll('[data-sl-map-row]').forEach(function (row) {
+                    row.hidden = !all && row.textContent.toLowerCase().indexOf(ask) < 0;
+                    if (!row.hidden) rows++;
+                });
+                if (rest) rest.hidden = !all;
+                if (cat) {
+                    cat.hidden = !all && rows === 0;
+                    cat.open = ask !== '' && !whole && rows > 0;
+                }
+                if (all || rows > 0) kept++;
+            });
+            sec.hidden = !whole && kept === 0;
+            if (!sec.hidden) seen++;
+        });
+        map.querySelector('[data-sl-map-none]').hidden = seen > 0;
+        setMapAll(map);
+    }
+
+    document.addEventListener('input', function (event) {
+        var map = event.target.matches && event.target.matches('[data-sl-map-find]') ? event.target.closest('[data-sl-map]') : null;
+        if (map) setMapFind(map, event.target.value);
+    });
+    document.addEventListener('toggle', function (event) {
+        var map = event.target.matches && event.target.matches('[data-sl-map-cat]') ? event.target.closest('[data-sl-map]') : null;
+        if (map) setMapAll(map);
+    }, true);
+    document.addEventListener('click', function (event) {
+        var but = event.target.closest ? event.target.closest('[data-sl-map-all]') : null;
+        if (!but) return;
+        var open = but.getAttribute('aria-pressed') !== 'true';
+        but.closest('[data-sl-map]').querySelectorAll('[data-sl-map-cat]:not([hidden])').forEach(function (cat) { cat.open = open; });
+        setMapAll(but.closest('[data-sl-map]'));
+    });
+
     window.addEventListener('resize', refitFloating);
     window.addEventListener('scroll', refitFloating, true);
 

@@ -134,13 +134,13 @@ function getCommentView(array $val, int $numb, string $token): string {
     ]);
 }
 
-# Render the comment rows of one page and the control that appends the next one; it replaces itself, and its href is the plain page URL for a reader without HTMX
-function getCommentRows(array $data, string $mod, int $cid, string $token, array $pag): string {
+# Render the comment rows of one page; a capped branch closes with the control that appends its rest and replaces itself, the next page is the business of the foot
+function getCommentRows(array $data, string $token, array $pag): string {
     global $conf, $tpl;
     $numb = $data['first'];
     $cont = '';
     $open = [];
-    $more = static function (array $val) use ($tpl, $mod, $cid, $token, $pag): string {
+    $more = static function (array $val) use ($tpl, $token, $pag): string {
         return $tpl->getHtmlFrag('link', [
             'href' => getSeoUrl($pag + ['all' => $val['id']]).'#'.$val['id'],
             'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentBranch&id='.$val['id'].'&skip='.$val['shown'],
@@ -164,31 +164,40 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, array
         if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
     }
     if ($open) $cont .= $more($open);
-    if ($data['page'] >= $data['pages']) return $cont;
+    return $cont;
+}
+
+# Render the foot under the comment window, the pager and the control of the next page in the row of a topic foot; an appended page answers it again, swapped by id
+function getCommentFoot(array $data, string $mod, int $cid, string $token, array $pag): string {
+    global $conf, $tpl;
+    if ($data['pages'] < 2) return '';
     $next = $data['page'] + 1;
-    return $cont.$tpl->getHtmlFrag('link', [
+    $more = ($next > $data['pages']) ? '' : $tpl->getHtmlFrag('link', [
         'href' => getSeoUrl($pag + ['com' => $next]).'#comm',
         'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentPage&id='.$cid.'&mod='.$mod.'&com='.$next,
         'hx_headers' => $token,
         'title' => (string)_MORE,
         'label' => (string)_MORE,
         'is_htmx' => true,
-        'hx_target' => 'this',
-        'hx_swap' => 'outerHTML',
+        'hx_target' => '#repcrows',
+        'hx_swap' => 'beforeend',
+        'link_attr' => 'hx-select-oob="#repcfoot"',
         'icon_name' => 'chat-dots',
         'is_button_blue' => true,
     ]);
+    $pager = getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, getPageSpan($conf['comments']), $data['page'], '#comm', 'com');
+    return $tpl->getHtmlFrag('block-content', ['id' => 'repcfoot', 'content' => $tpl->getHtmlFrag('forum-topic-view', ['pager' => $pager, 'button' => $more])]);
 }
 
-# Render the comment list of one target as a window with the pager under it; the rows get a container of their own, as a fragment appends to them, and the chip is refilled by id
+# Render the comment list of one target as a window with its foot under it; the rows get a container of their own, as a fragment appends to them, and the chip is refilled by id
 function getCommentList(int $cid, string $mod, int $page, int $full, ?string $route): string {
-    global $conf, $tpl, $com;
+    global $tpl, $com;
     $mod = filterVar($mod);
     $data = $com->getList($mod, $cid, $page ?: 1, $full);
     $pag = ['name' => $mod, 'op' => 'view', 'id' => $cid, 'route' => $route, 'page' => getVar('get', 'page', 'num')];
     $rows = ($data['total'] < 1)
         ? $tpl->getHtmlFrag('empty', ['is_small' => true, 'is_pane' => true, 'icon_name' => 'chat-left-text', 'title_text' => _NOCOMMENTS])
-        : getCommentRows($data, $mod, $cid, getSiteToken(), $pag);
+        : getCommentRows($data, getSiteToken(), $pag);
     $out = $tpl->getHtmlFrag('pane', [
         'icon' => getIconName('comm'),
         'title' => _COMMENTS,
@@ -197,10 +206,10 @@ function getCommentList(int $cid, string $mod, int $page, int $full, ?string $ro
         'content_html' => $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]),
     ]);
     if ($data['total'] < 1) return $out;
-    return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, getPageSpan($conf['comments']), $data['page'], '#comm', 'com');
+    return $out.getCommentFoot($data, $mod, $cid, getSiteToken(), $pag);
 }
 
-# Answer one further page of comments as fragments; a page beyond the last is refused, not clamped, as the clamp would answer the last page again and duplicate its rows
+# Answer one further page of comments as its rows and its foot; a page beyond the last is refused, not clamped, as the clamp would answer the last page twice
 function getCommentPage(): void {
     global $com, $db;
     $id = getVar('req', 'id', 'num', 0);
@@ -209,7 +218,9 @@ function getCommentPage(): void {
     $data = $com->getList($mod, $id, $page);
     if ($data['total'] < 1 || $data['page'] !== $page) return;
     $path = (new Route($db))->getRouteList(['account' => 'user', 'voting' => 'poll'][$mod] ?? 'node', [$id])[$id] ?? null;
-    echo getCommentRows($data, $mod, $id, getSiteToken(), ['name' => $mod, 'op' => 'view', 'id' => $id, 'route' => $path]);
+    $pag = ['name' => $mod, 'op' => 'view', 'id' => $id, 'route' => $path];
+    $token = getSiteToken();
+    echo getCommentRows($data, $token, $pag).getCommentFoot($data, $mod, $id, $token, $pag);
 }
 
 # Answer the next slice of replies of one comment as fragments; the closing control carries the new offset, so a branch is walked in slices and never loaded whole

@@ -2339,6 +2339,15 @@ button.sl-but-mini:hover,
   padding: 0 0 var(--sl-space-5) var(--sl-space-8);
 }
 
+/* A branch of the sitemap: its count stands at the right edge, under the chips of the head, and the last branch of a window draws no rule over the frame */
+.sl-node-faq summary .sl-chip {
+  margin: 0 0 0 auto;
+}
+
+.sl-pane-body .sl-node-faq:last-child {
+  border-bottom: 0;
+}
+
 .sl-node-file .sl-title > .bi {
   color: var(--sl-primary);
 }
@@ -2843,8 +2852,7 @@ button.sl-but-mini:hover,
 }
 
 .sl-list,
-.sl-sublist,
-.sl-sublist-two {
+.sl-sublist {
   margin: 0;
   padding: 0;
   counter-reset: li;
@@ -2881,17 +2889,9 @@ ol.sl-sublist li::before {
   transition: var(--sl-time-slow) linear;
 }
 
-ol.sl-sublist li:hover::before,
-ol.sl-sublist-two li:hover::before {
+ol.sl-sublist li:hover::before {
   box-shadow: none;
   margin-right: var(--sl-space-2);
-}
-
-ol.sl-sublist-two li::before {
-  background: var(--sl-sublist-two-bg);
-  box-shadow: var(--sl-sublist-two-shadow);
-  margin-right: var(--sl-space-9);
-  transition: var(--sl-time-slow) linear;
 }
 
 /* Debug output: a debug window holds running text, so its body is a block, and one unbreakable token scrolls inside it instead of stretching the page */
@@ -7647,9 +7647,8 @@ button.sl-seg-cell:hover {
   width: var(--sl-com-width);
 }
 
+/* A row under the avatar takes the whole column: a narrower one of its own broke the name of a rank in the middle of the word */
 .sl-com-left li {
-  width: var(--sl-com-item-width);
-  margin: 0 auto;
   text-align: center;
 }
 
@@ -8026,17 +8025,28 @@ h1.sl-pane-title {
   border-top: 0;
 }
 
-/* The pager of the comments stands under their window as the foot of a topic does: no rule, no inset, one step to the form */
-#repcsave > .sl-pager {
-  margin-bottom: var(--sl-space-7);
-  padding: 0;
-  border-top: 0;
-}
-
 /* The buttons of the foot keep to the right, with or without a pager before them */
 .sl-forum-foot .sl-pull-right {
   float: none;
   margin: 0 0 0 auto;
+}
+
+/* The gap of the row spaces its buttons, so a button drops the margin of a run and the last one ends flush with the window above */
+.sl-forum-top .sl-pull-right .sl-but,
+.sl-forum-foot .sl-pull-right .sl-but,
+.sl-pane-cap > .sl-but {
+  margin: 0;
+}
+
+/* A button in a head is as tall as a chip, so its head is no taller than the head beside it; on a phone it keeps the corner and the chips take the row under the name */
+.sl-pane-cap > .sl-but {
+  height: var(--sl-size-chip);
+}
+
+@media (max-width: 560px) {
+  .sl-pane-cap:has(> .sl-but) > .sl-pane-chips {
+    order: 1;
+  }
 }
 
 .sl-forum-list-info {
@@ -8378,6 +8388,17 @@ a.sl-chip-accent {
   color: var(--sl-accent);
 }
 
+/* A chip in the tone of its category, which a sl-cat-tone-N beside it or above it names: the ground and the icon wear the tone, the label stays text, as a tone alone does not read on a light page */
+.sl-chip-tone,
+a.sl-chip-tone {
+  background: color-mix(in srgb, var(--sl-cat-tone) var(--sl-chip-mix), transparent);
+  color: var(--sl-text-strong);
+}
+
+.sl-chip-tone > .bi {
+  color: var(--sl-cat-tone);
+}
+
 .sl-chip-neutral,
 a.sl-chip-neutral {
   background: var(--sl-bg-subtle);
@@ -8482,21 +8503,23 @@ a.sl-chip-neutral {
   color: var(--sl-border-strong);
 }
 
-/* Hover preview overlaid on the current rating: the track up to the pointer fills and brightens, later stars keep their state so the existing rating never disappears */
-.sl-urating a.sl-star:hover .bi {
-  color: var(--sl-primary-strong);
-}
-
-.sl-urating a.sl-star:hover .bi::before {
-  content: "\f586";
-}
-
+/* Hover preview: the stars up to the pointer fill and brighten, the stars after it empty, so the count under the hand is the only one a reader sees */
+.sl-urating a.sl-star:hover .bi,
 .sl-urating a.sl-star:has(~ a.sl-star:hover) .bi {
   color: var(--sl-primary-strong);
 }
 
+.sl-urating a.sl-star:hover .bi::before,
 .sl-urating a.sl-star:has(~ a.sl-star:hover) .bi::before {
   content: "\f586";
+}
+
+.sl-urating a.sl-star:hover ~ a.sl-star .bi {
+  color: var(--sl-border-strong);
+}
+
+.sl-urating a.sl-star:hover ~ a.sl-star .bi::before {
+  content: "\f588";
 }
 
 .sl-min-rate .sl-urating .bi {
@@ -8846,10 +8869,6 @@ a.sl-chip-neutral {
     margin: 0 0 var(--sl-space-6);
     padding-right: 0;
     text-align: left;
-  }
-
-  .sl-com-left li {
-    width: auto;
   }
 
   .sl-com-right,
@@ -9534,8 +9553,9 @@ a.sl-chip-neutral {
   --sl-net-brand: #0866ff;
 }
 
+/* The mark of X is ink on paper and has no colour of its own: the disc turns over with the page, as the glyph on it does */
 [data-sl-net="x"] {
-  --sl-net-brand: #111111;
+  --sl-net-brand: var(--sl-text-strong);
 }
 
 [data-sl-net="pinterest"] {
@@ -11246,7 +11266,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: 0;
 }
 
-.sl-pane-chips .sl-chip-neutral {
+/* A neutral chip on a ground of its own tone takes the next one, or its pill has no edge and its text hangs off the row */
+.sl-pane-chips .sl-chip-neutral,
+.sl-date-head .sl-chip-neutral {
   background: var(--sl-bg-muted);
 }
 
@@ -11758,7 +11780,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: flex;
   align-items: center;
   gap: var(--sl-space-3);
-  margin: 0 0 var(--sl-space-4);
+  margin: 0 0 var(--sl-space-7);
   padding: var(--sl-space-2) var(--sl-space-5);
   border-radius: var(--sl-radius-1);
   background: var(--sl-pmf-day-bg);
@@ -11770,6 +11792,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 /* The count of a run is the neutral chip the shelf heads of the favourites carry, at the right edge of the head */
 .sl-date-head .sl-chip {
   margin: 0 0 0 auto;
+}
+
+/* A head keeps under it the step the cards of its list keep between them, so it stands as far from the run above as from its own: the compact cards step closer */
+.sl-node-compact .sl-date-head {
+  margin-bottom: var(--sl-space-5);
 }
 
 /* The day head of the mailbox rides the scroll: a reader deep in a long mailbox still sees which day the rows under the cursor belong to */

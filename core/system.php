@@ -2897,9 +2897,9 @@ function doCss(): string {
     return implode('', $arr);
 }
 
-# Create the sitemap by streaming XML, a new file every 50000 URLs joined by an index; materials are read in cursor batches as a guest and never held whole
+# Create the sitemap by streaming XML, a new file every 50000 URLs joined by an index, and the data of its page; materials are read in cursor batches as a guest, never held whole
 function addSitemapTask(bool $force = false): array {
-    global $db, $conf, $tpl, $fld;
+    global $db, $conf, $fld;
     $sm = $conf['sitemap'];
     $auto = !$force && !defined('ADMIN_FILE');
     if ($auto && empty($sm['auto'])) return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
@@ -2907,7 +2907,24 @@ function addSitemapTask(bool $force = false): array {
     $stime = (file_exists($sfile) && filesize($sfile) != 0) ? filemtime($sfile) : 0;
     if ($auto && $stime >= time() - intval($sm['auto_t'] ?? 0)) return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
     $date = date('Y-m-d');
-    $info = $htm = $cd = [];
+    $info = $map = $cd = $buf = [];
+    $top = max(1, intval($sm['top'] ?? 5));
+    $stamp = uniqid();
+    $fail = ['status' => 'failed', 'message' => 'Sitemap storage directory is unavailable'];
+    if ($sm['txt'] && !is_dir(SITEMAP_DIR) && !mkdir(SITEMAP_DIR, 0777, true) && !is_dir(SITEMAP_DIR)) return $fail;
+    $dump = static function () use (&$buf, $stamp): void {
+        foreach ($buf as $name => $text) file_put_contents(SITEMAP_DIR.'/'.$stamp.'-'.$name.'.rows', $text, FILE_APPEND);
+        $buf = [];
+    };
+    $note = static function (string $name, string $sort, string $title, string $href, string $date) use (&$buf, $dump): void {
+        static $size = 0;
+        $line = json_encode([$sort, html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $href, $date], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
+        $buf[$name] = ($buf[$name] ?? '').$line;
+        $size += strlen($line);
+        if ($size < 1048576) return;
+        $dump();
+        $size = 0;
+    };
     $mod = array_values(array_filter(array_map('trim', explode(',', (string)($sm['mod'] ?? ''))), static fn(string $one): bool => $one !== '' && $one !== '0'));
     $types = [];
     foreach (getNodeTypeMap() as $type) if ($type->active && $type->settings['integrations']['sitemap']) $types[$type->name] = $type;
@@ -2992,20 +3009,30 @@ function addSitemapTask(bool $force = false): array {
         }
         if ($sm['gen_c']) foreach ($ncats as $key => $cats) foreach (array_keys($cats) as $cid) $put($line(getPublicUrl(['name' => $key, 'cat' => $cid]), $date, 'c'));
         foreach ($info as $key => $val) {
+            $map[$key] = [];
             foreach ($val as $one) {
-                if ($sm['gen_p'] && $one[0]) $put($line(getPublicUrl(['name' => $one[4], 'op' => 'view', 'id' => $one[0], 'route' => $one[5]]),
-                    format_time($one[3], 'Y-m-d'), 'p'));
-                $htm[$key][$one[1]][] = [$one[0], $one[2], $one[5]];
+                if (!$one[0]) continue;
+                $link = ['name' => $key, 'op' => 'view', 'id' => $one[0], 'route' => $one[5]];
+                if ($sm['gen_p']) $put($line(getPublicUrl($link), format_time($one[3], 'Y-m-d'), 'p'));
+                $cid = isset($cd[$one[1]]) ? $one[1] : 0;
+                $map[$key][$cid] = true;
+                if ($sm['txt']) $note($key.'-'.$cid, (string)$one[3], (string)$one[2], getSeoUrl($link), ($key === 'account') ? '' : (string)$one[3]);
             }
         }
-        if ($sm['gen_p'] && $types) {
+        foreach ($ncats as $key => $cats) $map[$key] = array_fill_keys(array_keys($cats), true);
+        if (($sm['gen_p'] || $sm['txt']) && $types) {
             $query = new NodeQuery($db, new NodeContext(0, [], 0, [], false, false, '', $conf['multilingual'] ? (string)$conf['language'] : ''), $fld);
             $after = 0;
             $size = $query->getTargetSize();
             do {
                 $rows = $query->getNodeSitemap($after, $size);
                 foreach ($rows as $row) {
-                    $put($line(getPublicUrl(['name' => $row['name'], 'op' => 'view', 'id' => $row['id'], 'route' => $row['path']]), substr($row['updated'], 0, 10), 'p'));
+                    $link = ['name' => $row['name'], 'op' => 'view', 'id' => $row['id'], 'route' => $row['path']];
+                    $time = (string)$row['published'];
+                    if ($sm['gen_p']) $put($line(getPublicUrl($link), substr($row['updated'], 0, 10), 'p'));
+                    $cid = isset($ncats[$row['name']][$row['cid']]) ? $row['cid'] : 0;
+                    $map[$row['name']][$cid] = true;
+                    if ($sm['txt']) $note($row['name'].'-'.$cid, $time, (string)$row['title'], getSeoUrl($link), $time);
                     $after = $row['id'];
                 }
             } while (count($rows) === $size);
@@ -3017,62 +3044,32 @@ function addSitemapTask(bool $force = false): array {
         }
     } catch (Throwable $err) {
         if ($fh !== null) fclose($fh);
-        foreach ($files as $file) if (is_file($file)) unlink($file);
+        foreach (array_merge($files, glob(SITEMAP_DIR.'/'.$stamp.'-*.rows') ?: []) as $file) if (is_file($file)) unlink($file);
         Logger::addSite('error', 'Sitemap: the generation failed', ['error' => $err->getMessage()]);
         return ['status' => 'failed', 'message' => 'Sitemap generation failed'];
     }
     if ($sm['txt']) {
-        $items = '';
-        foreach ($htm as $key => $val) {
-            $mlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key]), 'title' => getModuleName($key), 'label' => getModuleName($key)]);
-            $citems = '';
-            $plists = '';
-            foreach ($val as $ckey => $list) {
-                $clink = isset($cd[$ckey][2]) ? $tpl->getHtmlFrag('link', [
-                    'href' => getSeoUrl(['name' => $key, 'cat' => $ckey]),
-                    'title' => $cd[$ckey][2],
-                    'label' => $cd[$ckey][2],
-                ]) : '';
-                $vitems = '';
-                foreach ($list as $item) {
-                    if (!$item[0]) continue;
-                    $vlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $item[0], 'route' => $item[2]]), 'title' => $item[1],
-                        'label' => $item[1]]);
-                    $vitems .= $tpl->getHtmlFrag('list-item', ['content_html' => $vlink]);
-                }
-                $vlist = $vitems ? $tpl->getHtmlFrag('list', ['items_html' => $vitems, 'is_sub_two' => true]) : '';
-                if ($clink) {
-                    $citems .= $tpl->getHtmlFrag('list-item', ['content_html' => $clink, 'children_html' => $vlist]);
-                } else {
-                    $plists .= $vlist;
-                }
+        $dump();
+        $secs = [];
+        foreach ($map as $key => $cats) {
+            $list = [];
+            foreach (array_keys($cats) as $cid) {
+                $file = SITEMAP_DIR.'/'.$stamp.'-'.$key.'-'.$cid.'.rows';
+                $rows = is_file($file) ? file($file, FILE_IGNORE_NEW_LINES) : [];
+                rsort($rows);
+                if ($rows) file_put_contents($file, implode("\n", $rows)."\n");
+                $name = isset($ncats[$key][$cid]) ? getConst($ncats[$key][$cid]) : (string)($cd[$cid][2] ?? '');
+                $list[] = ['id' => $cid, 'title' => $name, 'href' => ($name !== '') ? getSeoUrl(['name' => $key, 'cat' => $cid]) : '', 'count' => count($rows),
+                    'rows' => array_map(static fn(string $v): array => json_decode($v, true), array_slice($rows, 0, $top))];
             }
-            $mkids = $citems ? $tpl->getHtmlFrag('list', ['items_html' => $citems, 'is_sub' => true]) : $plists;
-            $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $mlink, 'children_html' => $mkids]);
+            $secs[] = ['name' => $key, 'title' => getModuleName($key), 'href' => getSeoUrl(['name' => $key]), 'cats' => $list];
         }
-        foreach ($ncats as $key => $cats) {
-            $mlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key]), 'title' => getModuleName($key), 'label' => getModuleName($key)]);
-            $citems = '';
-            foreach ($cats as $cid => $ctitle) {
-                $ctitle = getConst($ctitle);
-                $clink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key, 'cat' => $cid]), 'title' => $ctitle, 'label' => $ctitle]);
-                $citems .= $tpl->getHtmlFrag('list-item', ['content_html' => $clink]);
-            }
-            $mkids = $citems ? $tpl->getHtmlFrag('list', ['items_html' => $citems, 'is_sub' => true]) : '';
-            $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $mlink, 'children_html' => $mkids]);
-        }
-        foreach ($paths as $key => $path) {
-            $ptitle = (string)($lout->getPage($key)['title'] ?? '') ?: $path;
-            $plink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'page-'.$key, 'route' => $path]), 'title' => $ptitle, 'label' => $ptitle]);
-            $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $plink]);
-        }
-        $html = $tpl->getHtmlFrag('list', ['items_html' => $items]);
-        $sdir = dirname(SITEMAP_DIR.'/sitemap.txt');
-        if (!is_dir($sdir) && !mkdir($sdir, 0777, true) && !is_dir($sdir)) {
-            foreach ($files as $file) unlink($file);
-            return ['status' => 'failed', 'message' => 'Sitemap storage directory is unavailable'];
-        }
-        file_put_contents(SITEMAP_DIR.'/sitemap.txt', $html);
+        $rows = [];
+        foreach ($paths as $key => $path) $rows[] = ['', (string)($lout->getPage($key)['title'] ?? '') ?: $path, getSeoUrl(['name' => 'page-'.$key, 'route' => $path]), ''];
+        $list = [['id' => 0, 'title' => '', 'href' => '', 'count' => count($rows), 'rows' => $rows]];
+        if ($rows) $secs[] = ['name' => 'page', 'icon' => 'file-text', 'title' => _PAGENAV, 'href' => '', 'cats' => $list];
+        file_put_contents(SITEMAP_DIR.'/sitemap.json', json_encode(['stamp' => $stamp, 'secs' => $secs], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        foreach (glob(SITEMAP_DIR.'/*.rows') ?: [] as $old) if (!str_starts_with(basename($old), $stamp.'-')) unlink($old);
     }
     $keep = [];
     if (count($files) > 1) {

@@ -886,6 +886,7 @@ define('_MAP_XSL','Use the design template for the XSL map file?');
 define('_MAP_SCOPE','Contents');
 define('_MAP_FILE','Map file');
 define('_MAP_DATE','Modification date');
+define('_MAP_TOP','Pages of a category in the map on the website');
 define('_MANUAL','Help');
 define('_MASSMAIL','Massive newsletter to all users');
 define('_MATCHANY','Match anywhere in the text');
