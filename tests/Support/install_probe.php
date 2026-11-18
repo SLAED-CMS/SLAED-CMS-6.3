@@ -343,6 +343,10 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $out['done'] = [checkInstallSaid($done, 'http://127.0.0.1:'.$iguard.'/admin.php'), is_file($isite.'/public/setup.php'),
         str_contains($jar, $glob['user_c'].'-language'."\t".'ru')];
     $out['notice'] = [substr_count($done['body'], 'class="sl-alert sl-alert-'), str_contains($done['body'], 'jokes')];
+    $smap = is_file($isite.'/public/sitemap.xml') ? (string)file_get_contents($isite.'/public/sitemap.xml') : '';
+    $robot = is_file($isite.'/public/robots.txt') ? (string)file_get_contents($isite.'/public/robots.txt') : '';
+    $out['map'] = [str_contains($smap, '<loc>'.$out['guard'].'/news</loc>'), str_contains($robot, 'Sitemap: '.$out['guard'].'/sitemap.xml'),
+        explode(',', (string)($glob['variables'] ?? ''))[0]];
     $rows = $pdo->query('SELECT name, title, ext, active, sort, version FROM '.IPREF.'_node_types ORDER BY sort')->fetchAll(PDO::FETCH_ASSOC);
     $out['types'] = array_map(fn(array $v): array => [$v['name'], $v['title'], $v['ext'], (int)$v['active'], (int)$v['sort'], (int)$v['version']], $rows);
     $node = getInstallConf('node')['node'] ?? [];

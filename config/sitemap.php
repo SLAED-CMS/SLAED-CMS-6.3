@@ -6,7 +6,7 @@
 
 return [
     'sitemap' => [
-        'auto' => '0',
+        'auto' => '1',
         'auto_t' => '86400',
         'dat_c' => '1',
         'dat_h' => '1',

@@ -309,12 +309,13 @@ function getSetupSql(string $file): array {
     return ($list['error'] === '') ? $list['statements'] : [];
 }
 
-# The parts of the run in their order, each its own request: the configuration, the tables of table.sql in groups of seven, every statement of insert.sql and the administrator
+# The parts of the run, each its own request: the configuration, table.sql by seven, each statement of insert.sql, the administrator, the sitemap over the new types
 function getSetupParts(): array {
     $list = [['kind' => 'config']];
     foreach (array_chunk(array_keys(getSetupSql('table.sql')), 7) as $keys) $list[] = ['kind' => 'table', 'keys' => $keys];
     foreach (array_keys(getSetupSql('insert.sql')) as $key) $list[] = ['kind' => 'data', 'keys' => [$key]];
     $list[] = ['kind' => 'admin'];
+    $list[] = ['kind' => 'sitemap'];
     return $list;
 }
 
@@ -349,7 +350,7 @@ function setSetupJson(array $data): never {
     exit;
 }
 
-# Run the next part before the core: the configuration or one group of statements of the schema; the administrator part boots the core and is run by addSetupAdmin()
+# Run the next part before the core: the configuration or one group of statements of the schema; the administrator and the sitemap parts boot the core below
 function setSetupRun(array $state): array {
     $part = getSetupNext($state);
     if ($part < 0) return ['more' => false];
@@ -360,7 +361,7 @@ function setSetupRun(array $state): array {
     return setSetupNext($state, $out);
 }
 
-# Write the configuration part after one more probe, the contacts of the shipped layout giving way to the site's own; the password then leaves the session, config/db.php holds it
+# Write the configuration part after one more probe: the site's own contacts in the layout, the variable analyzer off; the password then leaves the session for config/db.php
 function setSetupConfig(array &$state): array {
     global $conf;
     $base = $state['base'];
@@ -370,8 +371,10 @@ function setSetupConfig(array &$state): array {
     $glob = getSetupSource('global.php');
     $mail = (string)$state['admin']['mail'];
     $sign = str_replace(['SLAED CMS - Support', 'https://slaed.net', 'support@slaed.net'], [$site['name'], $site['url'], $mail], (string)($glob['mtemp'] ?? ''));
+    $dbg = explode(',', (string)($glob['variables'] ?? ''));
+    $dbg[0] = '1';
     $mine = ['language' => $state['lang'], 'homeurl' => $site['url'], 'sitename' => $site['name'], 'webroot' => getSetupRoot(), 'adminmail' => $mail, 'mtemp' => $sign,
-        'slogan' => '', 'schema' => (string)preg_replace('#,\s*"sameAs":\s*\[[^\]]*\]#', '', (string)($glob['schema'] ?? ''))];
+        'slogan' => '', 'schema' => (string)preg_replace('#,\s*"sameAs":\s*\[[^\]]*\]#', '', (string)($glob['schema'] ?? '')), 'variables' => implode(',', $dbg)];
     if (!setSetupFile('global.php', $glob, $mine)) {
         return ['task' => '', 'fail' => _FILE.' config/global.php — '._SETUP_NOWRITE];
     }
@@ -434,7 +437,7 @@ function setSetupTables(array &$state, array $item): array {
     if ($file === 'table.sql') $state['made'] += count($item['keys']);
     $marks = ['points' => '8.0.0', 'ratings' => '8.0.0', 'fields' => '8.0.0', 'node' => 'new', 'check' => ['upcheck' => '1', 'channel' => 'stable', 'keepbak' => '1',
         'upsite' => '1'], 'steps' => [SL_VERSION => date('Y-m-d H:i:s')]];
-    if ($state['part'] !== $state['count'] - 2) return ['task' => $task, 'fail' => ''];
+    if ($state['part'] !== $state['count'] - 3) return ['task' => $task, 'fail' => ''];
     if (!setSetupFile('update.php', $marks)) return ['task' => '', 'fail' => _FILE.' config/update.php — '._SETUP_NOWRITE];
     if (!setSetupCheck($state['site']['url'])) return ['task' => '', 'fail' => _FILE.' storage/update/client/state.json, config/scheduler.php — '._SETUP_NOWRITE];
     return ['task' => $task, 'fail' => ''];
@@ -451,7 +454,7 @@ function setSetupCheck(string $url): bool {
     return setSetupFile('scheduler.php', $sched);
 }
 
-# The last part, run with the core: the first administrator, a site account of the same name when asked, the Node profiles, the paths of the seed and the self-check markers
+# The part with the core before the sitemap: the first administrator, a site account when asked, the Node profiles, the paths of the seed and the self-check markers
 function addSetupAdmin(array &$state, string $hash): array {
     global $db, $conf;
     $adm = $state['admin'];
@@ -642,7 +645,8 @@ set_time_limit(300);
 require_once BASE_DIR.'/core/admin.php';
 if (session_status() === PHP_SESSION_NONE) session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
 $setup = getSetupState();
-if (getSetupVar('post', 'go', 'var') === 'part' && $setup['part'] >= 0 && $setup['part'] === $setup['count'] - 1) {
+# The administrator and the sitemap parts run with the core; a sitemap that fails leaves the site installed, and the nightly job builds it
+if (getSetupVar('post', 'go', 'var') === 'part' && $setup['part'] >= 0 && $setup['part'] >= $setup['count'] - 2) {
     $ahash = (string)($setup['admin']['hash'] ?? '');
     $apart = getSetupNext($setup);
     $setup['admin']['hash'] = '';
@@ -652,7 +656,8 @@ if (getSetupVar('post', 'go', 'var') === 'part' && $setup['part'] >= 0 && $setup
     require_once BASE_DIR.'/core/system.php';
     getLang('admin');
     $setup = getSetupState();
-    $aout = addSetupAdmin($setup, $ahash);
+    $smap =static fn(): array => ['task' => 'sitemap.xml — '.((addSitemapTask(true)['status'] === 'success') ? _OK : _ERROR), 'fail' => ''];
+    $aout = ($apart === $setup['count'] - 1) ? $smap() : addSetupAdmin($setup, $ahash);
     setSetupJson(setSetupNext($setup, $aout));
 }
 define('FUNC_FILE', true);

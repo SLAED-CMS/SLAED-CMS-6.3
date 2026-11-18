@@ -2,6 +2,26 @@
 
 ## 2026-11-18
 
+### A site installed from the archive has its sitemap, no debug panel and panel links that work
+
+- **The installer builds the sitemap.** A new last part of `setup.php`, a request of its own with the core, runs
+  `addSitemapTask(true)`, so the page of the sitemap, `sitemap.xml` and the `Sitemap:` line of `robots.txt` name the
+  new site from the first visit. The administrator part cannot build it, as the Node types it creates are not in the
+  settings its request loaded: a map built there held the forum alone. `config/sitemap.php` ships `auto` on, so the
+  nightly job keeps the map fresh; with it off the job skipped every night, the page stayed empty, `sitemap.xml`
+  answered 404 and `robots.txt` kept the address of the stand the release was built on.
+- **The variable analyzer is off on a new site.** `setSetupConfig()` writes the first flag of `variables` as 1, so a
+  new owner sees no cookies, session and SQL under every page. The shipped `config/global.php` keeps it on for the
+  stand.
+- **The block «Администрация» links what the site has.** Record 2 of `insert.sql` linked `plugins/sxd/index.php`, a
+  Sypex Dumper no release ships, and the panel marked it «Нет файла». It now carries the Markdown links of the stand:
+  the database, updates, security and logs of the panel, the webmaster tools of Google, Yandex and Bing, three checks
+  of the site and the repository on GitHub, with `[admin]`, `[host]` and `[homeurl]` of the site.
+- **The archive says how to install.** `INSTALL.md` and `INSTALL.ru.md` in its root name the requirements, the steps,
+  the document root on `public/` and the database the installer does not create; `README.md` stays out of the archive.
+- `aCleanInstallationCreatesTheShippedTypes` of `NodeProfileTest` holds the new last part: the types exist before it,
+  the map holds the address of the news, `robots.txt` names the probe site and the analyzer is off.
+
 ### Three one-off console tools are gone with everything that named them
 
 - **`tools/titles.php` is removed.** Every site that stored its titles escaped has run `fix`, so nothing is left to

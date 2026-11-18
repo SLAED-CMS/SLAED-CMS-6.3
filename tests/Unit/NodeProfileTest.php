@@ -191,6 +191,7 @@ final class NodeProfileTest extends TestCase
     # The closing stop names the panel, deletes setup.php and the token, and the panel opens in the language of the first stop
     # The first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
     # The administrator part creates the administrator with a site account of the same password and turns every profile into an active type through the one import path
+    # The last part, a request of its own, builds the sitemap over those types with the Sitemap line of robots.txt, and the site starts with the variable analyzer off
     # The sixteen types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
     # Every type, the starter news, the site account and the seed of node.sql and insert.sql carry their first path, the seed in the order of the registry
     #[Test]
@@ -206,8 +207,9 @@ final class NodeProfileTest extends TestCase
         $this->assertGreaterThan(3, $num);
         $this->assertSame(array_merge(array_fill(0, $num - 1, true), [false]), array_column($parts, 1), 'Every part but the last announces another');
         $this->assertSame(100, $parts[$num - 1][0]);
-        $this->assertSame(array_merge(array_fill(0, $num - 2, false), [true, false]), array_column($parts, 2), 'The marks came before both SQL files ran');
-        $this->assertSame([0, 16], [$parts[$num - 2][3], $parts[$num - 1][3]], 'A type was created before the administrator part');
+        $this->assertSame(array_merge(array_fill(0, $num - 3, false), [true, false, false]), array_column($parts, 2), 'The marks came before both SQL files ran');
+        $this->assertSame([0, 16, 16], [$parts[$num - 3][3], $parts[$num - 2][3], $parts[$num - 1][3]], 'A type was created before the administrator part');
+        $this->assertSame([true, true, '1'], $run['map'], 'The sitemap part missed the new types or the Sitemap line of the site, or the analyzer stayed on');
         $this->assertSame([true, false, true], $run['done'], 'The closing stop did not name the panel, delete the installer, or set the language');
         $this->assertSame([['Probe', 'probe@probe.test', 'ru', $home, 'Probe', 1], true], $run['account']);
         $want = [];
