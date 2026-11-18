@@ -2,6 +2,17 @@
 
 ## 2026-11-18
 
+### A code block names its highlight scripts, and slaed.js lights every block of a page
+
+- **No script inside a rendering.** `Parser::getCodeHtml()` put the two scripts of the highlighter and an inline call
+  into the first code block of a request only. The forum parses the first post for the description first, so the
+  scripts went into the cut description and the code of the page stayed grey. `strip_tags()` of a description or a
+  list of comments kept the text of the inline call as well.
+- **The block names its scripts.** Every `<pre>` of `fragments/code-highlight.html` in both themes carries the two
+  versioned addresses in `data-sl-hljs`. `setCodeBlocks()` of `slaed.js` loads them once a page through
+  `getEditorScript()` and highlights every block not yet highlighted, on load and after an htmx swap.
+  `checkCodeBlocksNameTheirScripts` of `ParserFixturesTest` and `codeBlockNamesItsScripts` of `EditorBreakTest` hold it.
+
 ### The titles of Node are plain text in the database, and the search marks a word in the text a reader sees
 
 - **`tools/titles.php` decodes `_nodes`.** Node stores a title as typed, and only 13 titles brought over from 6.2 kept

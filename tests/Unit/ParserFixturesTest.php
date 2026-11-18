@@ -448,6 +448,26 @@ namespace Tests\Unit {
             }
         }
 
+        # Every code block names its scripts, also in a rendering after another: the forum parses the first post for the description first and once left the page grey
+        #[Test]
+        public function checkCodeBlocksNameTheirScripts(): void
+        {
+            $hadconf = array_key_exists('conf', $GLOBALS);
+            $oldconf = $GLOBALS['conf'] ?? null;
+            try {
+                $GLOBALS['conf'] = ['syntax' => '2'];
+                $prs = new \Parser();
+                $one = $prs->filterDoc("Lead\n\n```php\n\$lead = 1;\n```", true, 'forum');
+                $two = $prs->filterDoc("Lead\n\n```php\n\$lead = 1;\n```\n\n```css\n@import url(lead.css);\n```", true, 'forum', 2);
+                $this->assertSame(1, substr_count($one, '<pre data-sl-hljs="'), 'The first rendering lost the names of its scripts');
+                $this->assertSame(2, substr_count($two, '<pre data-sl-hljs="'), 'A block of a later rendering does not name its scripts');
+                foreach ([$one, $two] as $html) $this->assertStringNotContainsString('hljs', strip_tags($html), 'A text cut from the rendering carries the highlighter');
+            } finally {
+                if ($hadconf) $GLOBALS['conf'] = $oldconf;
+                else unset($GLOBALS['conf']);
+            }
+        }
+
         # A fenced and an indented block render through the code block: the block with its head, the language named, the code escaped once in every mode
         #[Test]
         public function checkFencedCodeTakesTheCodeBlock(): void

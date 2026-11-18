@@ -73,15 +73,14 @@ final class EditorBreakTest extends TestCase
         $this->assertSame(2, substr_count($trips['blank']['sign'], '<p>'));
     }
 
-    # A code block highlights once its two scripts ran, also in a pane htmx inserts, where the inline call runs before the scripts load
+    # A code block names its two highlight scripts on its pre in their order, and slaed.js loads them; a rendering carries no script of its own
     #[Test]
-    public function codeHighlightWaitsForItsScripts(): void
+    public function codeBlockNamesItsScripts(): void
     {
         $html = $this->getProbe()['markdown']['trips']['quote']['sign'];
-        $this->assertMatchesRegularExpression('#highlight-line-numbers\.min\.js[^"]*"\s*></script><script>\(function\(s\)#', $html, 'The call does not follow its scripts');
-        foreach (["s.addEventListener('load',run)", 'document.currentScript.previousElementSibling', 'pre code:not([data-highlighted])'] as $part) {
-            $this->assertStringContainsString($part, $html);
-        }
+        $this->assertStringNotContainsString('<script', $html, 'strip_tags keeps the text of a script, and a description or a comment list cut from the rendering shows it');
+        $this->assertMatchesRegularExpression('#<pre data-sl-hljs="[^" ]*/highlight\.min\.js\?v=[0-9a-f]+ [^" ]*/highlight-line-numbers\.min\.js\?v=[0-9a-f]+"><code#', $html,
+            'The block does not name both versioned scripts in order');
     }
 
     # Every writer of a Markdown store keeps the typed text through filterSourceText(), and every reader of one renders safe with trust as Node does

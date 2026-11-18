@@ -2455,10 +2455,19 @@
     }
     window.setCopyText = setCopyText;
 
-    // A code block takes its buttons once the script is there: until then the whole code shows and nothing promises a copy
+    // A code block takes its buttons once the script is there, and a pre naming the highlight scripts in data-sl-hljs is lit once they load, each once a page
     function setCodeBlocks(root) {
         var list = root && root.querySelectorAll ? root.querySelectorAll('[data-sl-code]') : [];
         for (var i = 0; i < list.length; i++) list[i].setAttribute('data-ready', '');
+        var grey = document.querySelector('pre[data-sl-hljs] > code:not([data-highlighted])');
+        if (!grey) return;
+        Promise.all(grey.parentNode.getAttribute('data-sl-hljs').split(' ').map(getEditorScript)).then(function () {
+            if (!window.hljs || !window.hljs.lineNumbersBlock) return;
+            document.querySelectorAll('pre[data-sl-hljs] > code:not([data-highlighted])').forEach(function (code) {
+                window.hljs.highlightElement(code);
+                window.hljs.lineNumbersBlock(code);
+            });
+        });
     }
 
     // The source of a code block without its line numbers: the lines of a numbered table joined, the plain text otherwise

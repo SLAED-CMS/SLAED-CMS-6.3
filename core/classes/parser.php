@@ -12,13 +12,8 @@ class Parser {
     private const CACHETTL = 86400;
     # The shortest source worth storing, counted in bytes because parsing cost scales with bytes: below it one write costs more than the hits it saves before the entry ages out
     private const CACHEMIN = 2048;
-    # The highlight scripts a code block loads, whose versioned addresses a stored rendering carries
+    # The highlight scripts slaed.js loads for a code block, named on its pre by their versioned addresses, which a stored rendering carries
     private const HLJS = ['plugins/highlightjs/highlight.min.js', 'plugins/highlightjs/highlight-line-numbers.min.js'];
-    # The call that highlights the blocks not yet highlighted; in a pane htmx inserts it runs before the two scripts load, so it waits for the second one
-    private const HLJSRUN = '(function(s){var go=function(){document.querySelectorAll(\'pre code:not([data-highlighted])\').forEach(function(c){'
-        .'hljs.highlightElement(c);hljs.lineNumbersBlock(c);});};var run=function(){if(document.readyState===\'loading\')'
-        .'document.addEventListener(\'DOMContentLoaded\',go);else go();};if(window.hljs&&hljs.lineNumbersBlock)run();'
-        .'else s.addEventListener(\'load\',run);})(document.currentScript.previousElementSibling);';
     # The name the head of a code block shows for the language of its fence; a language outside the list shows in capitals
     private const CODENAME = ['bash' => 'Bash', 'cpp' => 'C++', 'csharp' => 'C#', 'css' => 'CSS', 'delphi' => 'Delphi', 'diff' => 'Diff', 'groovy' => 'Groovy',
         'java' => 'Java', 'jscript' => 'JavaScript', 'javascript' => 'JavaScript', 'js' => 'JavaScript', 'typescript' => 'TypeScript', 'php' => 'PHP',
@@ -509,7 +504,6 @@ class Parser {
     # Render one code block by the configured highlighter; the code is literal, and mode 2 escapes it itself
     private function getCodeHtml(string $code, string $lang): string {
         global $conf;
-        static $sname = '';
         $mode = intval($conf['syntax'] ?? 0);
         $from = ['bash', 'cpp', 'csharp', 'css', 'delphi', 'diff', 'groovy', 'java', 'jscript', 'php', 'plain', 'python', 'ruby', 'scala', 'sql', 'vb', 'xml'];
         $to = ['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'];
@@ -527,14 +521,8 @@ class Parser {
             }
             $format = $this->getPartHtml('table', ['is_form' => true, 'rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
         } else {
-            $scripts = '';
-            if ($sname !== 'hljs') {
-                foreach (self::HLJS as $one) $scripts .= $this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl($one), 'attr' => '']);
-                $scripts .= $this->getPartHtml('head-script-inline', ['js' => self::HLJSRUN]);
-                $sname = 'hljs';
-            }
             $hlang = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'][strtolower($cname)] ?? strtolower($cname);
-            $format = $this->getPartHtml('code-highlight', ['scripts_html' => $scripts, 'lang' => $hlang,
+            $format = $this->getPartHtml('code-highlight', ['hljs_src' => implode(' ', array_map(Template::getAssetUrl(...), self::HLJS)), 'lang' => $hlang,
                 'code_html' => htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
         }
         $name = self::CODENAME[strtolower($lang)] ?? strtoupper($lang);
