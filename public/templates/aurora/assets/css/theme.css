@@ -7688,9 +7688,10 @@ button.sl-seg-cell:hover {
   font-size: var(--sl-font-small);
 }
 
+/* The name column keeps its floor so short names line the dates up, and grows past it, since #content breaks a word anywhere */
 .sl-com-top {
   display: grid;
-  grid-template-columns: 130px auto 1fr;
+  grid-template-columns: minmax(130px, max-content) auto 1fr;
   align-items: center;
   gap: var(--sl-space-3);
   margin-bottom: var(--sl-space-3);

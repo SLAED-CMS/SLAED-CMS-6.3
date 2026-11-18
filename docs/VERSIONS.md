@@ -2,6 +2,12 @@
 
 ## 2026-11-18
 
+### A long name of the author of a comment stays whole in the head of the comment
+
+- **The name column grows.** The head `.sl-com-top` of a comment in `aurora` gave the name a column of 130 px, and
+  `#content` breaks a word anywhere, so a longer name broke inside it. The column keeps 130 px as its floor, so short
+  names line the dates up, and grows to the name past it.
+
 ### A code block names its highlight scripts, and slaed.js lights every block of a page
 
 - **No script inside a rendering.** `Parser::getCodeHtml()` put the two scripts of the highlighter and an inline call
