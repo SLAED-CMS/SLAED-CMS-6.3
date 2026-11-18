@@ -3765,10 +3765,16 @@ function getTimedHtml(string $html): string {
     return strtr($html, $maps);
 }
 
-# Wrap one HTML text into the site mail frame; mtemp is plain text since 6.3, so its own lines become <br> here while the inserted text keeps the markup it carries
+# Wrap one HTML text into the plain-text mtemp: a block between blank lines is a paragraph with <br> for its lines, and [text] alone keeps the markup it carries
 function getMailFrame(string $html): string {
-    global $conf;
-    return str_replace('[text]', $html, nl2br($conf['mtemp'], false));
+    global $conf, $tpl;
+    $parts = [];
+    foreach (preg_split('#\R[ \t]*\R\s*#', trim((string)$conf['mtemp'])) ?: [] as $part) {
+        $part = trim($part);
+        if ($part === '') continue;
+        $parts[] = ($part === '[text]') ? ['is_body' => true, 'content_html' => $html] : ['is_body' => false, 'content_html' => str_replace('[text]', $html, nl2br($part, false))];
+    }
+    return trim($tpl->getHtmlPart('mail-frame', ['parts' => $parts]));
 }
 
 # Sign one address for the unsubscribe link of a mailing: the link carries no session, so this key is what proves its holder received a mailing at that address

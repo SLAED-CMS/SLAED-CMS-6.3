@@ -122,7 +122,7 @@ function getTplViewFieldRows(array $data = []): string {
     return $rows;
 }
 
-# Render one full preview block from prepared source texts and dynamic fields; own is the parser file context, such as [forum, 0] of an unsaved post, fmt the format of its store
+# Render one full preview block from source texts and fields; own is the parser file context, fmt the format of its store, mail frames the first text as a letter of the site
 function getTplPreviewContent(array $data = []): string {
     global $tpl, $prs;
     $title = $data['title'] ?? '';
@@ -134,6 +134,7 @@ function getTplPreviewContent(array $data = []): string {
     $fmt = $data['fmt'] ?? '';
     if ($title === '' && $texta === '' && $textb === '' && $field === '') return '';
     $bodya = $texta ? $prs->filterContent($texta, true, $mod, 0, $fmt, $own, true) : '';
+    if ($bodya !== '' && !empty($data['mail'])) $bodya = getMailFrame($bodya);
     $bodyb = $textb ? $prs->filterContent($textb, true, $mod, 0, $fmt, $own, true) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
     return $tpl->getHtmlPart('preview', [

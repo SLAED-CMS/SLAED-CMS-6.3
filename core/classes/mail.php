@@ -872,7 +872,7 @@ class Mail {
         return $out.'--'.$this->bound.'--'.self::CRLF;
     }
 
-    # Derive the plain-text part from the HTML: breaks and block ends become lines, a link keeps its address beside its text and a list item starts with a dash
+    # Derive the plain-text part from the HTML: a paragraph ends in a blank line, a break or another block end in a line, a link keeps its address, a list item takes a dash
     private function getPlainText(string $html): string {
         $text = preg_replace('#<(script|style)\b.*?</\1\s*>#si', '', $html) ?? $html;
         $text = preg_replace('#[ \t\r\n]+#', ' ', $text) ?? $text;
@@ -882,7 +882,8 @@ class Mail {
             return ($name === '' || html_entity_decode($name) === html_entity_decode($href)) ? $href : $name.' ('.$href.')';
         }, $text) ?? $text;
         $text = preg_replace('#<li\b[^>]*>#i', "\n- ", $text) ?? $text;
-        $text = preg_replace('#<br\s*/?>|<hr\b[^>]*>|</(p|div|ul|ol|tr|h[1-6]|blockquote|table)\s*>#i', "\n", $text) ?? $text;
+        $text = preg_replace('#</p\s*>#i', "\n\n", $text) ?? $text;
+        $text = preg_replace('#<br\s*/?>|<hr\b[^>]*>|</(div|ul|ol|tr|h[1-6]|blockquote|table)\s*>#i', "\n", $text) ?? $text;
         $rows = explode("\n", html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, self::CHARSET));
         $text = implode("\n", array_map(static fn(string $row): string => trim(preg_replace('#[ \t]+#', ' ', $row) ?? $row), $rows));
         return str_replace("\n", self::CRLF, trim(preg_replace('#\n{3,}#', "\n\n", $text) ?? $text));

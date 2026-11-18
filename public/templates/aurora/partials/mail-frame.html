@@ -1,0 +1,7 @@
+{% for part in parts %}
+{% if part.is_body %}
+{{{ part.content_html }}}
+{% else %}
+<p>{{{ part.content_html }}}</p>
+{% endif %}
+{% endfor %}

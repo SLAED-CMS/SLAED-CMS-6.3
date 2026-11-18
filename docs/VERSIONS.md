@@ -2,6 +2,23 @@
 
 ## 2026-11-18
 
+### A mailing shows its whole letter before it goes, and the mail frame sets its parts apart as paragraphs
+
+- **The preview is the letter.** The form of «Почта» renders a saved mailing through `getMailFrame()`, as the queue
+  does, so the greeting and the signature of the template stand around the text, and a greeting or a signature typed
+  into the text a second time shows at once. `getTplPreviewContent()` takes the key `mail` for it.
+- **Paragraphs of a panel preview.** A preview of the panel gave its paragraphs the 4 px of the base rule of `p`.
+  `.sl-preview-section` now takes the rhythm of `.sl-markdown`: 16 px after a paragraph, a list or code, none after the
+  last block. The tab «Просмотр» of the editor of the panel shows the same.
+- **The mail frame by paragraphs.** `getMailFrame()` turned every line end of `mtemp` into `<br>`, so the blank lines
+  around `[text]` became two empty lines beside the paragraphs of a mailing, some 60 px before the signature. Each
+  block of `mtemp` between blank lines is now a paragraph with `<br>` for its own lines, and `[text]` alone keeps the
+  markup it carries. The partial `mail-frame.html` of both themes writes the markup, and every letter of the site takes
+  it. The plain-text part ends a paragraph with a blank line.
+- `theMailFrameKeepsItsLinesAndLeavesTheTextAlone` of `MailDrainTest` and `thePlainTextReadsLikeTheMessage` of
+  `MailHeaderTest` hold the frame and the text part. The help of «Почта» says what the preview shows and how the
+  template becomes paragraphs.
+
 ### A site installed from the archive has its sitemap, no debug panel and panel links that work
 
 - **The installer builds the sitemap.** A new last part of `setup.php`, a request of its own with the core, runs

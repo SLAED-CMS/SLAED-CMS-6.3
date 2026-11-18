@@ -306,6 +306,9 @@ final class MailHeaderTest extends TestCase
             .'Site: <a href="https://slaed.loc/">SLAED &laquo;CMS&raquo;</a><br><br><br><br>Bye<style>p{}</style>';
         $text = "Hello!\r\n\r\nLink: https://slaed.loc/?a=1&b=2\r\nSite: SLAED «CMS» (https://slaed.loc/)\r\n\r\nBye";
         $this->assertSame($text, $this->getCall($this->getMail(), 'getPlainText', [$html]));
+        $html = "<p>Hello!</p>\n<p>One</p>\n<p>Two</p>\n<p>Bye,<br>\nSLAED</p>";
+        $text = "Hello!\r\n\r\nOne\r\n\r\nTwo\r\n\r\nBye,\r\nSLAED";
+        $this->assertSame($text, $this->getCall($this->getMail(), 'getPlainText', [$html]), 'Paragraphs of the frame melted together');
     }
 
     # A list keeps its items as dashed lines in the text part, ordered or not, instead of melting into the paragraph around it

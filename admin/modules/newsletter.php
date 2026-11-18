@@ -217,7 +217,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($lock) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLLOCKED]);
     if ($again) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLREOPEN]);
-    if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
+    if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all', 'mail' => true]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

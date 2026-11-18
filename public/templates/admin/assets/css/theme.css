@@ -625,7 +625,11 @@
 .sl-markdown p,
 .sl-markdown ul,
 .sl-markdown ol,
-.sl-markdown pre {
+.sl-markdown pre,
+.sl-preview-section p,
+.sl-preview-section ul,
+.sl-preview-section ol,
+.sl-preview-section pre {
   margin: 0 0 var(--sl-space-6);
 }
 
@@ -6555,7 +6559,9 @@ button.sl-seg-cell:hover {
   padding: 0;
 }
 
-.sl-pane-body > .sl-markdown > :last-child {
+/* The last block of a help text in a window and of a preview ends on the padding of its box */
+.sl-pane-body > .sl-markdown > :last-child,
+.sl-preview-section > :last-child {
   margin-bottom: 0;
 }
 

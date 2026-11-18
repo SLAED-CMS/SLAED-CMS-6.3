@@ -411,7 +411,7 @@ function getProbeMessage(string $mesg): array {
     return $out;
 }
 
-# Report what the site mail frame makes of a plain-text template: its own lines become <br>, the inserted HTML text arrives untouched
+# Report what the site mail frame makes of a plain-text template: its blocks become paragraphs with <br> lines, the inserted HTML text arrives untouched
 # Then queue the real link fragment in the frame and read back the stored body beside the one that was sent
 function getProbeFrame(): array {
     global $db, $conf, $tpl;

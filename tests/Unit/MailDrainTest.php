@@ -37,11 +37,11 @@ final class MailDrainTest extends TestCase
         $this->assertTrue($this->getProbe('mailcamp')['clean']);
     }
 
-    # The plain-text mtemp frame keeps its lines in the text/html body, while the inserted text, a template-indented link among it, is not touched
+    # Each block of the plain-text mtemp frame becomes a paragraph with its lines as breaks, while the inserted text, a template-indented link among it, is not touched
     #[Test]
     public function theMailFrameKeepsItsLinesAndLeavesTheTextAlone(): void
     {
-        $html = "Hello!<br>\r\n<br>\r\n<a\n  href=\"https://slaed.loc/\"\n>\n    link</a><br>line<br>\r\n<br>\r\nBest regards,<br>\nSLAED CMS";
+        $html = "<p>Hello!</p>\n<a\n  href=\"https://slaed.loc/\"\n>\n    link</a><br>line\n<p>Best regards,<br>\nSLAED CMS</p>";
         $this->assertSame($html, $this->getProbe('mailframe')['body']);
     }
 
