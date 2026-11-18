@@ -828,8 +828,7 @@ outputs decode a stored value:
   piece again, so a word never splits an entity (`InputFilterTest`).
 
 A new output of a plain value escapes once and decodes nothing. A page that shows `&amp;` or `&quot;` points to a
-writer that escapes, and the writer is fixed, never the output. Titles that older code stored escaped are decoded once
-by `tools/titles.php` (`docs/UPDATE.md`, "Moving slaed.net to 8.0").
+writer that escapes, and the writer is fixed, never the output.
 
 ## Security Boundary
 

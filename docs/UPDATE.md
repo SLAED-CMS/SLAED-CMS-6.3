@@ -729,22 +729,6 @@ the release, `global.php` has `close = 1`, and the panel file carries the `afile
 8. Delete `config/local.php` and the caches.
 9. Read the journals, then open the site (`close = 0` in the settings).
 
-**The titles stored escaped.** Production stored the titles of the forum, the categories, the blocks, the
-administrators, the groups, the mailings and the mail queue escaped, and the titles Node brought over from 6.2 kept
-their escaping. The code stores and reads them as plain text (`docs/ARCHITECTURE.md`, "Stored Text Boundary"). They
-are decoded once, right after the files that read plain titles are uploaded, as until the decode a page shows the
-entities as text:
-
-1. Copy `tools/titles.php` into `tools/` of the site by hand, since the release archive leaves `tools/` out.
-2. Run `php tools/titles.php report` from the root of the project. It counts the rows each table would change and
-   lists every row escaped more than once before and after, for a check by eye.
-3. Run `php tools/titles.php fix`. It decodes each table in one transaction, takes every layer off and marks the table
-   in `storage/backup/titles.json`. The `fix` of `_categories` drops the stored category maps.
-4. Press «Запустить» on the row `Sitemap` of «Планировщик», or the map keeps the old titles until its night run.
-
-The mark file stays on the site. A second `fix` leaves a marked table alone, because a second decode would spoil a
-title where a person typed an entity. A stand of development runs the same `fix` on its own database.
-
 **The stand** takes the database of the copy, never its `config/`, which stays the development one: the stand is dumped
 first and the dump read back, then dropped and loaded; `storage/cache/` and `config/local.php` are cleared afterwards. A
 type whose version in the development `config/node.php` is ahead of its row is invalid and answers 404, so the row is

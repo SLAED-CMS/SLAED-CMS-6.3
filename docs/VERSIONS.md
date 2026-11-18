@@ -2,6 +2,16 @@
 
 ## 2026-11-18
 
+### Three one-off console tools are gone with everything that named them
+
+- **`tools/titles.php` is removed.** Every site that stored its titles escaped has run `fix`, so nothing is left to
+  decode. Its order leaves `docs/UPDATE.md`, and `docs/ARCHITECTURE.md` no longer names it.
+- **`tools/comment-recount.php` is removed.** The tab «Главная» of the comments section shows the counters that
+  drifted and repairs them with its button. The help of the section and `CommentThreadTest` no longer name the tool.
+- **`tools/comment-baseline.php` is removed.** It compared the markup of the comments before and after their move
+  into the `Comment` class, and that move is done. Its section leaves `docs/TESTS.md`, and `.gitignore` no longer
+  lists `storage/baseline/`.
+
 ### A long name of the author of a comment stays whole in the head of the comment
 
 - **The name column grows.** The head `.sl-com-top` of a comment in `aurora` gave the name a column of 130 px, and

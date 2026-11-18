@@ -168,49 +168,6 @@ php tools/seo-audit.php https://slaed.loc '/index.php?name=presentation'
 
 The default audit discovers one current detail URL for each active content module from its landing page. Additional installation-specific routes may be passed as further arguments. The audit fails on HTTP errors, a missing or duplicate `H1` inside `main`, a heading level that deepens by more than one step, invalid JSON-LD, a missing schema type, an invalid canonical, an Open Graph URL mismatch, or an indexability mismatch. Each route report includes the full `main` heading sequence.
 
-### Comment Markup Baseline
-```bash
-php tools/comment-baseline.php capture
-php tools/comment-baseline.php verify
-```
-
-The comment contract required the rendered comment list to survive the move into the
-`Comment` class unchanged. That claim is only checkable
-against markup captured **before** the refactor, so `capture` must be run first
-and `verify` after every step of it.
-
-The tool picks the most commented target per module from the database, fetches
-the guest view, extracts the `repcsave` region and stores it under
-`storage/baseline/comments/` with a `manifest.json` of sizes and SHA-256 hashes.
-Request-scoped values are normalised first — URL `token=`, the `X-CSRF-TOKEN`
-inside `hx-headers` and the captcha field — otherwise the list never compares
-equal even to itself. On a difference the fresh capture
-is written next to the baseline as `<module>.actual.html` for diffing.
-
-Every module with published comments in the database is meant to be covered. A
-`capture` that reports fewer modules than the database holds has lost one of them —
-re-prepare it and capture once more, or the parity claim silently excludes a module.
-
-Coverage assumes **every module is enabled** in `config/modules.php`. An inactive module is a gap in the test stand, not a reason to
-skip it — the comment engine has to keep working for both regardless of what
-any single site switches on.
-
-After any change to `config/modules.php`, delete `config/local.php` so the
-generated config cache rebuilds — a direct edit to a source config file is not
-re-fingerprinted while the cache remains valid.
-
-An empty comment region and a disabled module produce the same "no rendered
-comment region" line, so check module activity first.
-
-On an installation that already carries content in these modules, no preparation
-is needed — the tool tries up to eight commented targets per module and takes the
-first that renders.
-
-Baselines are data- and host-specific, so `storage/baseline/` is ignored by git —
-capture them locally against the database you are refactoring against. Logged-in
-and moderator views carry session state and belong to the browser path, not to
-this tool.
-
 ## PHPUnit Layout
 `phpunit.xml` defines two suites:
 

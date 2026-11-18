@@ -251,7 +251,7 @@ final class CommentThreadTest extends TestCase
         }
     }
 
-    # The nightly sweep is gone with the drift it existed for: what is left is reachable by hand and from the section a moderator already opens
+    # The nightly sweep is gone with the drift it existed for: what is left is reachable from the section a moderator already opens
     #[Test]
     public function theSweepIsReachableWithoutAnyone(): void
     {
@@ -265,10 +265,6 @@ final class CommentThreadTest extends TestCase
         $fix = $this->getSource('admin/modules/comments.php', 'recount');
         $this->assertStringContainsString("checkAdminPost('comments')", $fix, 'The repair route takes no scoped POST credential');
         $this->assertStringContainsString('$com->updateCountDrift($com->getCountDrift())', $fix);
-        $tool = $this->getFile('tools/comment-recount.php');
-        $this->assertStringContainsString('$com->getCountDrift($only)', $tool);
-        $this->assertStringContainsString('$com->updateCountDrift($drift)', $tool);
-        $this->assertDoesNotMatchRegularExpression('#_faq|_users|_voting#', $tool, 'The tool carries its own copy of the module map');
     }
 
     # The forum keeps the same kind of counter and now repairs it the same way, instead of nudging it with nothing to notice when it slips

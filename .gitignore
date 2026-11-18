@@ -9,7 +9,6 @@
 /storage/sitemap/*
 !/storage/sitemap/sitemap.xsl
 /storage/captcha/*
-/storage/baseline/*
 /storage/migrate/*
 
 # The updater: what a site writes for itself, what only the master holds, the list a release archive brings, and the releases the owner builds
