@@ -240,7 +240,7 @@ function getNodeCatItems(NodeType $type, array $allow): array {
             if (isset($seen[$cid])) continue;
             $seen[$cid] = true;
             $show = in_array($cid, $allow, true);
-            if ($show) $out[] = ['value_attr' => $cid, 'label_text' => html_entity_decode(getConst($one['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 'depth' => $deep];
+            if ($show) $out[] = ['value_attr' => $cid, 'label_text' => getConst($one['title']), 'depth' => $deep];
             $walk(array_filter($map, fn(array $v): bool => $v['parent'] === $cid), $show ? $deep + 1 : $deep);
         }
     };
@@ -651,7 +651,7 @@ function setNodeList(): void {
                 'is_play' => $mode === 'media']);
         }
         $title = getModuleName($type->name);
-        $ctitle = $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+        $ctitle = $cat ? getConst($cats[$cat]['title']) : '';
         $page = $tpl->getHtmlPart(getNodeTplName('partials', 'list', $type), [
             'head_html' => getNodeHead($type, $base, $key, $way, ['count' => $count, 'total' => $tally['total']] + $own, [
                 'cats' => $type->settings['features']['categories'] ? setCategories($type->name, $cat, $tally['cats'], $tally['total']) : '',

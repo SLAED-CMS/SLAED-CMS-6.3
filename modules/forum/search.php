@@ -29,7 +29,7 @@ return static function (array $state): array {
         $rows[] = [
             'link' => ['name' => 'forum', 'op' => 'view', 'id' => $tid, 'route' => $path],
             'edit' => getSeoUrl(['name' => 'forum', 'op' => 'add', 'id' => $tid, 'cat' => $cid, 'pid' => $pid]),
-            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont, 'safe' => true, 'trust' => true,
+            'title' => htmlspecialchars($titl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'time' => $time, 'cid' => $cid, 'content' => $cont, 'safe' => true, 'trust' => true,
             'nick' => $nick, 'upath' => $upath, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
         ];
     }

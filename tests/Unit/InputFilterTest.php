@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Safety net for the input filters in core/security.php, asserted on the shipped functions rather than on a replica that drifted away from them
+# Safety net for the input filters in core/security.php and the search mark of core/system.php, asserted on the shipped functions rather than on a replica
 final class InputFilterTest extends TestCase
 {
     # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
@@ -104,6 +104,21 @@ final class InputFilterTest extends TestCase
         $this->assertSame(25, mb_strlen($cut[0]));
         $this->assertSame(str_repeat('я', 22), $cut[1]);
         $this->assertSame('short', $cut[2]);
+    }
+
+    # A title is stored as typed and escaped on output alone: no entity, no cut tag, a typed entity kept; only the trusted tags of an author without the super capability go
+    #[Test]
+    public function titleKeepsTheTypedText(): void
+    {
+        $this->assertSame(['Q&A "x" <b>', 'x &amp;'], $this->getProbe()['title']);
+    }
+
+    # The search mark matches the text between the tags: a typed "Q&A" finds its escaped text, a tag stays whole, and amp, lt or gt never split an entity
+    #[Test]
+    public function highlightMatchesTextAndNoEntity(): void
+    {
+        $mark = preg_replace('#<span[^>]*\bsl-highlight\b[^>]*>(.*?)</span>#', '[$1]', $this->getProbe()['mark']);
+        $this->assertSame(['[Q&amp;A] <b title="Q&amp;A">and</b> &quot;[quot]&quot;', 'Q&amp;A &lt;b&gt; x'], $mark);
     }
 
     # The detector of GET and COOKIE bounds an SQL keyword by letters, as \b misses the digit in /*!50000UNION*/: a file name with a keyword inside is no attack

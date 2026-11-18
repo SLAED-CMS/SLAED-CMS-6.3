@@ -78,7 +78,7 @@ function favorites(): void {
     $rows = [];
     foreach ($list as [$id, $fid, $mod, $uname, $time]) {
         $who = $uname ? user_info($uname, null) : '';
-        $title = getDecodedText((string)($names[$mod][intval($fid)] ?? ''));
+        $title = (string)($names[$mod][intval($fid)] ?? '');
         $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id,
             'drop' => getTplPostAction(['op' => 'delete', 'id[]' => $id] + $keep, 'trash', _ONDELETE), 'cells' => [
             ['is_col_id' => true, 'content_html' => ($flt['search'] === 1) ? filterTextHighlight((string)$id, $chng) : (string)$id],

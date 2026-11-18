@@ -604,7 +604,7 @@ function view(): void {
         }
     } else {
         http_response_code(403);
-        setHead(['title' => sprintf(_MODULEUSERS, getLoginUrl())]);
+        setHead(['title' => _ACCESSDENIED]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 15]);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_MODULEUSERS, getLoginUrl()), 'meta' => $meta]);
         setFoot();

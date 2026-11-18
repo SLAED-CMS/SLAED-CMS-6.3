@@ -99,7 +99,7 @@ final class NodeView {
         $hoff = ($mode === 'view') ? 1 : 2;
         $intro = $this->getTextHtml($node->intro, $type->name, $node->id, $hoff);
         $user = ($node->uid > 0) ? (string)$node->uname : '';
-        $cat = ($node->cid > 0 && $node->ctitle !== null) ? html_entity_decode(getConst($node->ctitle), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+        $cat = ($node->cid > 0 && $node->ctitle !== null) ? getConst($node->ctitle) : '';
         return [
             'id' => $node->id,
             'type' => $type->name,

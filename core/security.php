@@ -770,7 +770,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'let' => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
         'word' => fn($v) => is_string($v) ? filterWord(urldecode(trim($v))) : $v,
         'name' => fn($v) => is_string($v) ? filterCutText(filterText(trim($v)), 25) : $v,
-        'title' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
+        'title' => fn($v) => is_string($v) ? filterSourceText($v, isAdmin(true)) : $v,
         'text' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
         'url' => fn($v) => is_string($v) ? filterWebUrl(trim($v)) : $v,
         'var' => fn($v) => is_string($v) ? filterVar($v) : $v,

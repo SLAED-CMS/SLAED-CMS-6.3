@@ -2,6 +2,58 @@
 
 ## 2026-11-18
 
+### The titles of Node are plain text in the database, and the search marks a word in the text a reader sees
+
+- **`tools/titles.php` decodes `_nodes`.** Node stores a title as typed, and only 13 titles brought over from 6.2 kept
+  their escaping. `fix` decodes them with the other tables, and a site runs `php tools/titles.php fix` right after the
+  files of this change.
+- **No shared decode is left.** The banner of `aurora`, the favorites of the panel and the rows of the sitemap pass a
+  stored title as it is, since every table they read holds plain text. A poll still stores its title escaped, so the
+  sitemap decodes it in the branch of polls alone. The sitemap shows the new titles after the next run of its job.
+- **The search mark matches the text.** `filterTextHighlight()` decodes each piece of text between the tags before it
+  looks for a word, then escapes the piece again around the marks. A typed «Q&A» marks `Q&A`, and `amp`, `quot`, `lt`
+  or `gt` no longer split an entity in the results of the search, the heading of a forum topic or the favorites.
+  `InputFilterTest` holds it.
+
+### Titles of categories, blocks, groups, administrators and mailings are stored as typed and escaped once on output
+
+- **The `title` type of `getVar()` keeps the typed text.** It reads through `filterSourceText()`: the censor and the
+  filter of the trusted tags, no escaping and no entities for `$` and `\`. The writers of categories, blocks,
+  administrators, groups and mailings cut the title to their column by characters, so a cut no longer drops a typed `&`,
+  and saving an edit no longer adds a layer of escaping.
+- **Every output escapes once.** The plain trail of categories in the banner of `aurora` passes the title as text, the
+  tip of a block in the panel list shows its name as text, the refusal to delete a system block and the refusal of a
+  module closed to a group escape the name they carry, and the settings of a file field reach their inline script with
+  `JSON_HEX_TAG`. The list and the material of Node, the form of a material and the RSS feed no longer decode a category
+  title.
+- **The avatar settings read their own filter.** The folder is the name of one folder of letters, digits, `_` and `-`,
+  and a name with other signs keeps the folder saved before. The formats keep letters, digits and commas, and an empty
+  list becomes `gif,jpg,jpeg,png`.
+- **`tools/titles.php` decodes six more tables.** `_categories`, `_blocks`, `_admins`, `_groups`, `_newsletter` and
+  `_mail` join `_forum`, and the `fix` of `_categories` drops the stored category maps. A site runs
+  `php tools/titles.php fix` right after the files of this change.
+
+### The forum stores the title of a topic as it was typed and escapes it once on output
+
+- **The forum keeps the typed title.** `add()` and `send()` of `modules/forum/index.php` read the title through
+  `filterSourceText()`, as the private messages do: the censor and the filter of the trusted tags, no escaping, cut to
+  the 100 characters of `_forum.title`. Saving an edit no longer adds a layer of escaping, and a reply stores the title
+  of its topic as it is.
+- **Every output of the forum escapes once.** A topic of status 1 in the list of a category reaches a reader who is no
+  moderator as text beside its mark, where it was decoded back into markup. The forum home escapes the name of a closed
+  section and its cut last topic, the topic escapes its heading before the word of a search is marked, and the search
+  handler of the forum returns the escaped `title` its contract asks for. The blocks `forum` and `center_forum` and the
+  forum teaser of `aurora` decode nothing.
+- **The head of a page keeps a title as typed.** A title is plain text and carries no HTML, so `filterSeoText()` cuts
+  tags only from the description, the one value `setHead()` hands it as HTML. A title, a category, an author, the name
+  and the slogan of the site reach `<title>`, the meta tags and JSON-LD as text: a topic named «Помогите с
+  <title>...</title>» keeps its words in the tab. The page of the cabinet closed to a guest is titled
+  `_ACCESSDENIED` instead of the sentence with its link.
+- **`tools/titles.php` decodes the stored titles once.** `report` counts the rows of each table a decode changes and
+  lists the rows escaped more than once before and after. `fix` takes every layer off in one transaction and marks the
+  table in `storage/backup/titles.json`, so a second run leaves it alone. It covers `_forum`, stays out of the release
+  archive, and a site runs `fix` right after the files of this change.
+
 ### The polls and the last forum topics of the home page stand as rows in columns, as the rating of the members does
 
 - **One box of rows.** The grid of the windows of `/users` is the shared `sl-cols` of the theme `aurora`: `sl-users-cols`

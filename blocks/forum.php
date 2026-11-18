@@ -15,7 +15,6 @@ $bicon = 'chat-dots';
 $rows = '';
 $result = getForumTopics('id, title, time, lname, lpost, ltime, status', '97, 98', 3);
 while ([$id, $title, $time, $lname, $lpost, $ltime, $status, $path] = $db->getSqlRow($result)) {
-    $title = getDecodedText($title);
     $rows .= $tpl->getHtmlFrag('table-row', [
         'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
         'cells' => [

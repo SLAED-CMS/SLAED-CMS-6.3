@@ -778,6 +778,59 @@ The schema is `storage/update/sql/table.sql`; its column domains, the time
 rule, the collation and the keys are in `docs/NODE.md`, "Schema conventions",
 held by `tests/SchemaConventionTest.php`.
 
+## Stored Text Boundary
+
+A table keeps the text a person typed, and the output escapes it once: `{{ var }}` in a template, `htmlspecialchars()`
+in PHP that builds markup itself. No writer escapes for the database, and no output decodes a stored value to make up
+for a writer that did. A title is plain text and carries no HTML, neither in the database nor in the head of a page.
+HTML lives only in a text inside `[usehtml]`, which the parser renders (`docs/PARSER.md`).
+
+The type of `getVar()` (`core/security.php`) decides what the code receives:
+
+| Type | The value | Escaped |
+|---|---|---|
+| `num` | the digits as an integer, `0` without one | — |
+| `let` | the first character | no |
+| `word` | decoded from the address, letters, digits, spaces and `% & / \| . : ; _ + - =` | no |
+| `name` | tags cut, the censor, 25 characters without a split entity (`filterText()`, `filterCutText()`) | yes |
+| `title` | `filterSourceText()`: the censor, line ends as `\n`, no escaping | no |
+| `text` | `filterHtml()`: escaped in the format of the editor of the site, `$` and `\` as entities | yes |
+| `url` | `filterWebUrl()`: `http` or `https` with the scheme and the host lowercased, any other scheme empty | yes |
+| `var` | a slug of `a-z`, `A-Z`, `0-9`, `_` and `-`, else empty (`filterVar()`) | — |
+| `bool` | `true` or `false` | — |
+| `time` | `Y-m-d H:i` with `:00` added, else the current time | — |
+| `date` | `Y-m-d`, else empty | — |
+| `raw` | as sent | no |
+| none | trimmed | no |
+
+An empty result returns the default. A key `a[]` returns the array, every item filtered by the type and the empty ones
+dropped, and `a[k]` reads one item. `name`, `title`, `text` and `url` drop `[usehtml]`, `[usephp]` and `[block=id]`
+unless the writer is a super administrator (`filterTrustedTags()`).
+
+Plain text is stored by every text the parser renders as Markdown (`filterSourceText()`, `docs/EDITORS.md`), the
+titles of categories, blocks, administrators, groups and mailings (the type `title`, cut to the column by characters
+with `mb_substr()`), the subject of a letter in the queue `_mail`, a block the panel or the builder writes through
+`setBlockRow()`, the topic of the forum (`filterSourceText()` in `add()` and `send()` of `modules/forum/index.php`),
+the title of a Node material (`raw`) and of a private message (`filterSourceText()` in `Privat::addMessage()`).
+
+The types `name`, `text` and `url` still store escaped values. `name` holds the name of a member, and the author of a
+comment is escaped the same way by `filterText()`. `text` holds the fields of a profile, the title of a poll and the
+title of a job of the scheduler. `getAgent()` escapes the browser of a visitor through `filterText()` too. So a few
+outputs decode a stored value:
+
+- `getSearchLine()` of `modules/search/index.php` for the attribute `title` of a hit, as a search handler returns its
+  `title` escaped;
+- the branch of polls in `addSitemapTask()`;
+- `getRssBody()` and `getRssView()` for the address of a feed;
+- `logins()` of `admin/modules/logs.php` and of `modules/account/index.php` for the browser of a login;
+- `filterSeoText()` and `filterSlug()`, which take any text;
+- `filterTextHighlight()`, which decodes each piece of text between the tags, marks the word in it and escapes the
+  piece again, so a word never splits an entity (`InputFilterTest`).
+
+A new output of a plain value escapes once and decodes nothing. A page that shows `&amp;` or `&quot;` points to a
+writer that escapes, and the writer is fixed, never the output. Titles that older code stored escaped are decoded once
+by `tools/titles.php` (`docs/UPDATE.md`, "Moving slaed.net to 8.0").
+
 ## Security Boundary
 
 Security bootstrap lives in:
@@ -790,7 +843,7 @@ Confirmed responsibilities:
 - initializes admin/security aliases
 - starts the PHP session when needed
 - runs request blocker and request value checks
-- provides `getVar()`
+- provides `getVar()`, whose types are under "Stored Text Boundary"
 - provides CSRF helpers such as `getSiteToken()`, `checkSiteToken()` and `checkSitePost()`, the POST and body token of a write of the site in the scope of its module
 - provides admin/user access helpers
 

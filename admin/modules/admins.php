@@ -329,7 +329,7 @@ function save(): void {
     $aid = getVar('post', 'aid', 'num', 0);
     $warn = !checkAdminPost('admins');
     $name = getVar('post', 'aname', 'name', '');
-    $title = filterCutText(getVar('post', 'title', 'title', ''), 50);
+    $title = mb_substr(getVar('post', 'title', 'title', ''), 0, 50, 'utf-8');
     $url = filterCutText(getVar('post', 'url', 'url', ''), 255);
     $email = getVar('post', 'email', 'email', '');
     $pwd = getVar('post', 'pwd', 'raw', '');

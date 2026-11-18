@@ -561,7 +561,7 @@ function addsave(): void {
     $warn = !checkAdminPost('categories');
     $modul = getVar('post', 'modul', 'var');
     if (!in_array($modul, getCategoryModules(), true)) $warn = true;
-    $title = filterCutText(getVar('post', 'title', 'title'), 100);
+    $title = mb_substr(getVar('post', 'title', 'title'), 0, 100, 'utf-8');
     $description = getVar('post', 'description', 'text');
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
@@ -610,7 +610,7 @@ function save(): void {
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
     if (!in_array($modul, getCategoryModules(), true)) $warn = true;
-    $title = filterCutText(getVar('post', 'title', 'title'), 100);
+    $title = mb_substr(getVar('post', 'title', 'title'), 0, 100, 'utf-8');
     $description = getVar('post', 'description', 'text');
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');

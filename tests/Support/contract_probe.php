@@ -1295,6 +1295,9 @@ if ($mode === 'statscookie') {
         filterWebUrl('HTTPS://Feeds.Example.COM/News/RSS.xml?Id=A'), filterWebUrl('Example.COM/Path')];
     $_POST['cut'] = [str_repeat('я', 20).'&abcd', str_repeat('я', 22).'&b'];
     $out['cut'] = [getVar('post', 'cut[0]', 'name'), getVar('post', 'cut[1]', 'name'), filterCutText('short', 25)];
+    $_POST['ttl'] = ["  Q&A \"x\" <b>\r\n", '[usephp]x[/usephp] &amp;'];
+    $out['title'] = [getVar('post', 'ttl[0]', 'title'), getVar('post', 'ttl[1]', 'title')];
+    $out['mark'] = [filterTextHighlight('Q&amp;A <b title="Q&amp;A">and</b> &quot;quot&quot;', 'Q&A quot'), filterTextHighlight('Q&amp;A &lt;b&gt; x', 'amp lt gt')];
     $_SERVER['HTTP_USER_AGENT'] = str_repeat('Mozilla/5.0 & Probe ', 20);
     putenv('HTTP_USER_AGENT='.$_SERVER['HTTP_USER_AGENT']);
     $out['agent'] = [mb_strlen(getAgent()), mb_strlen(filterCutText(getAgent(), 255)), md5(getAgent()) === md5(filterText($_SERVER['HTTP_USER_AGENT']))];

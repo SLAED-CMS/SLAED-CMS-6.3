@@ -1029,18 +1029,19 @@ function config(): void {
 }
 
 function save(): void {
-    global $afile;
+    global $afile, $conf;
     $iswarn = !checkAdminPost('account');
     $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
+        $types = implode(',', array_filter(explode(',', preg_replace('/[^a-z0-9,]/', '', strtolower(getVar('post', 'atypefile', 'raw', ''))) ?? '')));
         $bytes = static function (mixed $val, int $back): int {
             $num = (int)round(min((float)str_replace(',', '.', is_string($val) ? $val : '0'), 1e9) * 1048576);
             return ($num > 0) ? $num : $back;
         };
         $cont = [
-            'adirectory' => getVar('post', 'adirectory', 'title'),
-            'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title', 'gif,jpg,jpeg,png'), $protect)),
+            'adirectory' => getVar('post', 'adirectory', 'var', $conf['users']['adirectory'] ?? ''),
+            'atypefile' => ($types !== '') ? $types : 'gif,jpg,jpeg,png',
             'amaxsize' => $bytes(getVar('post', 'amaxsize', 'raw', ''), 5242880),
             'aquota' => $bytes(getVar('post', 'aquota', 'raw', ''), 536870912),
             'awidth' => getVar('post', 'awidth', 'num', 256),

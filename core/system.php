@@ -1528,10 +1528,10 @@ function getSeoRoute(array $seo = []): array {
     ];
 }
 
-# Normalize SEO text for title, meta, Open Graph, and structured-data values
-function filterSeoText(string $text): string {
-    $text = preg_replace('#<[^>]+>#u', ' ', $text) ?? $text;
-    $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+# One line of the head; a title is plain text and keeps a typed tag as words, so markup is cut only from a text marked $html
+function filterSeoText(string $text, bool $html = false): string {
+    if ($html) $text = strip_tags(preg_replace('#<[^>]+>#u', ' ', $text) ?? $text);
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
 }
 
@@ -1819,7 +1819,7 @@ function setHead(array $seo = []): void {
         $slogan = filterSeoText((string)($conf['slogan'] ?? ''));
         $headline = filterSeoText((string)($seo['title'] ?? $site));
         $ctitle = filterSeoText((string)($seo['ctitle'] ?? ''));
-        $desc = array_key_exists('desc', $seo) ? filterSeoText((string)$seo['desc']) : ($home ? $slogan : '');
+        $desc = array_key_exists('desc', $seo) ? filterSeoText((string)$seo['desc'], true) : ($home ? $slogan : '');
         $author = filterSeoText((string)($seo['author'] ?? ''));
         $time = trim((string)($seo['time'] ?? ''));
         $mtime = trim((string)($seo['mtime'] ?? ''));
@@ -2272,7 +2272,7 @@ function getLoginUrl(): string {
     return getSeoUrl(['name' => 'account'] + (($back !== '') ? ['back' => rawurlencode($back)] : []));
 }
 
-# Highlights text terms inside HTML content
+# Highlight the terms in the text between the tags of HTML: a run is matched decoded, so an entity is never split and a typed "Q&A" finds its text
 function filterTextHighlight(string $sourse, string $word): string {
     global $tpl;
     $word = filterWord(urldecode($word));
@@ -2280,15 +2280,15 @@ function filterTextHighlight(string $sourse, string $word): string {
     $parts = array_values(array_unique(array_filter(array_map('trim', explode(' ', preg_replace('/\s+/', ' ', trim($word)))))));
     if (!$parts) return $sourse;
     usort($parts, static fn(string $a, string $b): int => strlen($b) - strlen($a));
-    preg_match_all('#<[^>]*>#', $sourse, $tags);
-    $from = $tags[0];
-    $to   = array_map(static fn(int $k): string => "\x00TAG{$k}\x00", array_keys($from));
-    $sourse = str_replace($from, $to, $sourse);
     $pattern = '/('.implode('|', array_map(static fn(string $p): string => preg_quote($p, '/'), $parts)).')/iu';
-    $sourse = preg_replace_callback($pattern, static function(array $m) use ($tpl): string {
-        return $tpl->getHtmlFrag('span', ['is_highlight' => true, 'text' => $m[0]]);
-    }, $sourse);
-    return str_replace($to, $from, $sourse);
+    $runs = preg_split('#(<[^>]*>)#', $sourse, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$sourse];
+    foreach ($runs as $i => $run) {
+        $bits = ($i % 2 || $run === '') ? false : preg_split($pattern, html_entity_decode($run, ENT_QUOTES | ENT_HTML5, 'UTF-8'), -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!$bits || count($bits) < 2) continue;
+        foreach ($bits as $k => $bit) $bits[$k] = ($k % 2) ? $tpl->getHtmlFrag('span', ['is_highlight' => true, 'text' => $bit]) : htmlspecialchars($bit, ENT_QUOTES, 'UTF-8');
+        $runs[$i] = implode('', $bits);
+    }
+    return implode('', $runs);
 }
 
 # Write or append exactly the given data; a short write fails and an incomplete append is rolled back, so no partial record counts as success
@@ -2918,7 +2918,7 @@ function addSitemapTask(bool $force = false): array {
     };
     $note = static function (string $name, string $sort, string $title, string $href, string $date) use (&$buf, $dump): void {
         static $size = 0;
-        $line = json_encode([$sort, html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $href, $date], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
+        $line = json_encode([$sort, $title, $href, $date], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
         $buf[$name] = ($buf[$name] ?? '').$line;
         $size += strlen($line);
         if ($size < 1048576) return;
@@ -2946,7 +2946,7 @@ function addSitemapTask(bool $force = false): array {
             $result = $db->getSqlQuery('SELECT v.id, v.title, v.time, r.path FROM '.PREFIX_DB.'_voting AS v'
                 .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1'
                 ." WHERE v.modul = '' AND v.time <= NOW() AND (v.enddate >= NOW() AND v.status = '0' OR v.status = '1')");
-            while ([$id, $title, $time, $path] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i], $path];
+            while ([$id, $title, $time, $path] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', getDecodedText($title), $time, $mod[$i], $path];
         } elseif (is_active($mod[$i], '0')) {
             $info[$mod[$i]][] = ['', '', '', '', $mod[$i], null];
         }

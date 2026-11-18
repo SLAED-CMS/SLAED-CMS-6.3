@@ -1207,7 +1207,7 @@ function getFileManagerField(array $opt): string {
     ]);
     $js = '(function(){var go=function(){var box=document.getElementById('.json_encode($eid.'-box').');';
     $js .= 'if(box&&window.SlaedFileManager){window.SlaedFileManager.addField('.json_encode($eid).',box,'
-        .json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).');}};';
+        .json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG).');}};';
     $js .= 'if(window.SlaedEditors){window.SlaedEditors.ready(go);}else{go();}})();';
     return $box.$win.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
 }
@@ -1509,7 +1509,7 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
     $crumbs = [];
     if ($home) $crumbs[] = $rich
         ? $tpl->getHtmlFrag('category-crumb', ['is_sep' => false, 'href' => getSeoUrl(['name' => $name]), 'name' => $home, 'tone' => 0, 'is_current' => false])
-        : $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $name]), 'title' => $home, 'label_html' => $home]);
+        : $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $name]), 'title' => $home, 'label' => $home]);
     foreach ($chain as $key) {
         $iscur = $key === $id;
         $crumbs[] = $rich
@@ -1518,7 +1518,7 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
                 'href' => $iscur ? '' : getSeoUrl(['name' => $mod, 'cat' => $key]),
                 'name' => $mass[$key][0], 'tone' => $mass[$key][2] % 6, 'is_current' => $iscur,
             ])
-            : $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $key]), 'title' => $mass[$key][0], 'label_html' => $mass[$key][0]]);
+            : $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $key]), 'title' => $mass[$key][0], 'label' => $mass[$key][0]]);
     }
     return $rich ? implode('', $crumbs) : implode(' '.$symbol.' ', $crumbs);
 }

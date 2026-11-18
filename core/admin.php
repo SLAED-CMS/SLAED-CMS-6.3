@@ -466,7 +466,7 @@ function getAdminBlockList(): string {
         $isfly = in_array('infly', $marks, true);
         $isfix = $isfly && in_array('flyfix', $marks, true);
         $exp = $gone ? _EXPIRED : (($exp > 0) ? getDuration($exp) : _UNLIMITED);
-        $tips = [['label' => _NAME, 'value' => $title, 'is_last' => false]];
+        $tips = [['label' => _NAME, 'has_value_text' => true, 'value_text' => $title, 'is_last' => false]];
         if ($lang !== '') $tips[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];
         $tips[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
         if ($bkey == '') {
@@ -643,7 +643,7 @@ function getBlockSpec(): array {
         'refresh' => [1800, 3600, 18000, 36000, 86400], 'view' => [0, 1, 2, 3], 'action' => ['d', 'r']];
 }
 
-# The one writer of a row of _blocks for both screens: $bid 0 adds, $set null deletes; a system block keeps its key and kind and is never deleted; the answer is the id or a refusal
+# The one writer of _blocks for both screens: $bid 0 adds, $set null deletes; a system block keeps its key and kind and is never deleted; the answer is the id or a refusal in HTML
 function setBlockRow(int $bid, ?array $set, int $place = 0): int|string {
     global $db;
     $spec = getBlockSpec();
@@ -652,7 +652,7 @@ function setBlockRow(int $bid, ?array $set, int $place = 0): int|string {
     if ($bid && !$old) return _NONE_FOUND;
     $row = $old ? array_intersect_key($old, array_flip($keys)) : array_fill_keys($keys, '');
     $sys = $row['bkey'] !== '';
-    if ($set === null && $sys) return sprintf(_BLOCKS_SYSKEEP, getConst((string)$row['title']));
+    if ($set === null && $sys) return sprintf(_BLOCKS_SYSKEEP, htmlspecialchars(getConst((string)$row['title']), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     $own = !$db->checkSqlActive();
     if ($set === null) {
         $done = (!$own || $db->setSqlBegin()) && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]) !== false;
@@ -664,13 +664,13 @@ function setBlockRow(int $bid, ?array $set, int $place = 0): int|string {
     $set = array_filter($set, static fn(mixed $v): bool => $v !== null);
     if ($sys) $set = array_diff_key($set, ['bfile' => true, 'url' => true, 'param' => true, 'feed' => true]);
     $new = array_replace($row, $bid ? [] : ['status' => 0, 'refresh' => 3600, 'time' => 0, 'view' => 0, 'action' => 'd', 'param' => '']);
-    if (isset($set['title'])) $new['title'] = filterCutText(trim((string)$set['title']), $spec['title']);
+    if (isset($set['title'])) $new['title'] = mb_substr(trim((string)$set['title']), 0, $spec['title'], 'utf-8');
     if (isset($set['bfile'])) $new['bfile'] = preg_match($spec['file'], (string)$set['bfile']) ? (string)$set['bfile'] : '';
     if (isset($set['url'])) $new['url'] = filterCutText(trim((string)$set['url']), $spec['url']);
     if (!$sys && $new['bfile'] !== '') $new['url'] = '';
     if (!$sys && $new['url'] !== '') $new['bfile'] = '';
     $kind = $sys ? 'sys' : (($new['bfile'] !== '') ? 'file' : (($new['url'] !== '') ? 'rss' : 'html'));
-    if ($kind === 'file' && $new['title'] === '') $new['title'] = filterCutText(str_replace('_', ' ', substr($new['bfile'], 0, -4)), $spec['title']);
+    if ($kind === 'file' && $new['title'] === '') $new['title'] = mb_substr(str_replace('_', ' ', substr($new['bfile'], 0, -4)), 0, $spec['title'], 'utf-8');
     if (in_array($kind, ['html', 'sys'], true) && isset($set['content'])) {
         $new['content'] = filterSourceText((string)$set['content'], isAdmin(true));
         if (($room = checkEditorTextRoom($new['content'], 'blocks.content')) !== '') return $room;

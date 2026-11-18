@@ -21,7 +21,6 @@ $pop = $conf['forum']['pop'] ?? 25;
 $rows = [];
 $result = getForumTopics('id, uid, name, title, time, comments, counter, luid, lname, lpost, ltime, status', '97, 98', 15);
 while ([$id, $uid, $uname, $title, $time, $comments, $counter, $luid, $lname, $lpost, $ltime, $status, $path, $upath, $lpath] = $db->getSqlRow($result)) {
-    $title = getDecodedText($title);
     $tflag = getForumTopicState((int)$status, $time, $ltime, (int)$comments, (int)$pop, $ulast, $ismod);
     $rows[] = [
         'href' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]).'#'.$lpost, 'title' => $title,

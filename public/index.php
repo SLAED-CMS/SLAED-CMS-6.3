@@ -196,7 +196,7 @@ if (empty($go)) {
                     $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
                     $gname = $grp['name'] ?? '';
                 }
-                if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
+                if ($gname) $info .= _ADDITIONALYGRP.': '.htmlspecialchars($gname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $deny($info);
             } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
                 getLang($name);

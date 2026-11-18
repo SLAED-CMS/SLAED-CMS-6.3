@@ -23,7 +23,7 @@ function setTemplateForum(): string {
         $items[] = [
             'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
             'href' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]).'#'.$lpost,
-            'title' => getDecodedText($title),
+            'title' => $title,
             'poster' => $luid ? user_info($lname, $lpath) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
             'when' => format_time($time, _TIMESTRING),
         ];
@@ -64,7 +64,7 @@ function getThemeHeadVars(): array {
     $sep = $conf[$conf['name']]['defis'] ?? $conf['defis'];
     $cname = ($band && $fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
     if ($cname !== '' && $ctitle !== '') {
-        $cname .= ' '.htmlspecialchars(urldecode($sep), ENT_QUOTES, 'UTF-8').' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
+        $cname .= ' '.htmlspecialchars(urldecode($sep), ENT_QUOTES, 'UTF-8').' '.htmlspecialchars($ctitle, ENT_QUOTES, 'UTF-8');
     }
     $head = '';
     if ($mname !== '' || $cname !== '') {

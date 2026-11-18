@@ -291,7 +291,7 @@ function save(): void {
     global $db, $afile, $stop, $mailer;
     $stop = [];
     $nid = getVar('post', 'nid', 'num', 0);
-    $title = filterCutText(getVar('post', 'title', 'title'), 50);
+    $title = mb_substr(getVar('post', 'title', 'title'), 0, 50, 'utf-8');
     $body = filterSourceText(getVar('post', 'body', 'raw', ''), isAdmin(true));
     $pick = getVar('post', 'audit', 'var', '');
     $days = max(1, getVar('post', 'days', 'num', 365));

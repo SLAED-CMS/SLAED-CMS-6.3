@@ -244,7 +244,7 @@ function save(): void {
     $stop = [];
     $warn = !checkAdminPost('groups');
     if (!$warn) {
-        $grname = filterCutText(getVar('post', 'grname', 'title'), 255);
+        $grname = mb_substr(getVar('post', 'grname', 'title'), 0, 255, 'utf-8');
         $intro = getVar('post', 'description', 'text');
         $points = getVar('post', 'points', 'num');
         $grextra = getVar('post', 'grextra', 'num') ? 1 : 0;

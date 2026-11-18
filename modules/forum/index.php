@@ -26,7 +26,8 @@ function getForumSectionRow(array $val, string $mod, string $ulast): string {
     $open = (bool)$val[5];
     $canmod = is_moder($conf['name']);
     $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
-    $tlink = ($open || $canmod) ? $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[2] ?: $val[1], 'label' => $val[1]]) : $val[1];
+    $tlink = ($open || $canmod) ? $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[2] ?: $val[1], 'label' => $val[1]])
+        : htmlspecialchars($val[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $state = !$open ? _FCLOSED : (($val[21] > $ulast) ? _ISNEWPOST : _NONEWPOST);
     $icon = getCategoryIcon((string)$val[3]) ?: getCategoryIcon(getIconName($mod));
     $data = _NO_INFO;
@@ -34,7 +35,9 @@ function getForumSectionRow(array $val, string $mod, string $ulast): string {
     if ($val[9]) {
         $data = _DATE.': '.format_time($val[21], _TIMESTRING);
         $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'route' => $val[22]]);
-        $topic_link = $open ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $val[17], 'label' => cutstr($val[17], 14)]) : cutstr($val[17], 14);
+        $tcut = cutstr($val[17], 14);
+        $topic_link = $open ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $val[17], 'label' => $tcut])
+            : htmlspecialchars($tcut, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $topic = _TOPIC.': '.$topic_link;
         $post = _POSTER.': '.(($val[18]) ? user_info($val[19], $val[23]) : $val[19]);
         $lid = ($val[20]) ? $val[20] : $val[9];
@@ -315,13 +318,13 @@ function forum(): void {
                             $lpath
                         ] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'route' => $tpath]);
-                            $title = getDecodedText($title);
                             $state = getForumTopicState((int)$status, $time, $ltime, (int)$comments, $pop, $ulast, $canmod);
                             $view = $state !== '' ? 1 : 0;
                             $canlink = !($status == 1 && !$canmod);
                             $slabel = $slabels[$state] ?? '';
                             $badge = $state ? $tpl->getHtmlFrag('inline-badge', ['title_text' => $slabel, 'label' => '', $state => true]) : '';
-                            $tlink = $canlink ? $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label_html' => $badge, 'label' => $title]) : $badge.' '.$title;
+                            $tlink = $canlink ? $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label_html' => $badge, 'label' => $title])
+                                : $badge.' '.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                             $lpost = $canlink
                                 ? forumIcon(getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'route' => $tpath, 'last' => 1]).'#'.$lid,
                                     _LASTMESSAGE, 'is_forum_jump')
@@ -757,7 +760,7 @@ function view(): void {
             }
             $cont = $tpl->getHtmlFrag('pane', [
                 'icon' => 'chat-left-text',
-                'title_html' => filterTextHighlight($rows[0][5], $word),
+                'title_html' => filterTextHighlight(htmlspecialchars($rows[0][5], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $word),
                 'hint' => $rows[0][5],
                 'level' => 1,
                 'chips' => [['tone' => 'neutral', 'icon' => 'chat', 'label' => $numfor, 'title' => _MESSAGES]],
@@ -915,7 +918,7 @@ function add(): void {
             $form = true;
         }
         $subold = $subject;
-        $subject = getVar('post', 'subject', 'title');
+        $subject = filterSourceText(getVar('post', 'subject', 'raw', ''), isAdmin(true));
         $subject = $subject ?: $subold;
         $txtold = $hometext;
         $hometext = filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true));
@@ -936,7 +939,7 @@ function add(): void {
         } else {
             $form = true;
         }
-        $subject = getVar('post', 'subject', 'title');
+        $subject = filterSourceText(getVar('post', 'subject', 'raw', ''), isAdmin(true));
         $subject = $ftitle ?: $subject;
         $hometext = filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true));
         if ($qid && $ftext) $hometext = preg_replace('/^/m', '> ', $ftext)."\n\n";
@@ -1092,7 +1095,7 @@ function send(): void {
         $ismod = is_acess($authm);
         $id = $fid;
         $postname = filterCutText(filterText(getVar('post', 'postname', 'text')), 25);
-        $subject = filterCutText(getVar('post', 'subject', 'text'), 100);
+        $subject = mb_substr(filterSourceText(getVar('post', 'subject', 'raw', ''), isAdmin(true)), 0, 100, 'utf-8');
         $hometext = filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true));
         $size = 0;
         foreach (preg_split('/\s+/u', $hometext, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {

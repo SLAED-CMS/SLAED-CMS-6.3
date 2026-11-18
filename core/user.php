@@ -1628,7 +1628,7 @@ function getRssChannel(): string {
     } catch (NodeException $err) {
         Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
     }
-    $title = implode(' — ', array_filter([$conf['sitename'], $feeds[$name], $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '']));
+    $title = implode(' — ', array_filter([$conf['sitename'], $feeds[$name], $cat ? getConst($cats[$cat]['title']) : '']));
     $last = $nodes ? max(array_map(fn(Node $v): int => strtotime((string)$v->pubdate) ?: 0, $nodes)) : 0;
     $mtime = $nodes ? max($last, ...array_map(fn(Node $v): int => strtotime($v->updated) ?: 0, $nodes)) : 0;
     $sum = [$title, $conf['slogan'], $conf['version'], _LOCALE, $num];
