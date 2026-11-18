@@ -5509,7 +5509,7 @@ function analyze_name(mixed $name): string {
     return $name;
 }
 
-# Log files report: walk one directory below BASE_DIR and record every readable file under its key ./<path relative to BASE_DIR>, whatever the working directory is
+# Log files report: record every readable file below BASE_DIR under ./<relative path>; only a real folder is walked, as is_dir() follows a junction and is_link() misses it
 function create_dump(string $dir, array &$log, array $skip = []): void {
     if (is_dir($dir)) {
         if ($dh = opendir($dir)) {
@@ -5527,10 +5527,10 @@ function create_dump(string $dir, array &$log, array $skip = []): void {
                     }
                 }
                 if ($ignore) continue;
-                if (filetype($location) == 'dir') {
+                if (((lstat($location)['mode'] ?? 0) & 0170000) === 0040000) {
                     create_dump($location.'/', $log, $skip);
-                } else {
-                    if (is_readable($location)) $log['./'.$relative] = md5_file($location);
+                } elseif (is_file($location) && is_readable($location)) {
+                    $log['./'.$relative] = md5_file($location);
                 }
             }
             closedir($dh);

@@ -626,7 +626,7 @@ function getProbeCommentThread(): array {
     $out['page'] = [
         'total' => $page['total'],
         'roots' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'voting\' AND cid = :cid AND pid = 0'
-            .' AND status = 1 AND deleted IS NULL', ['cid' => $tid]))['num']),
+            .' AND deleted IS NULL', ['cid' => $tid]))['num']),
         'rows' => count($page['rows']),
         'order' => array_slice(array_column($page['rows'], 'id'), 0, 4),
         'depths' => array_slice(array_column($page['rows'], 'depth'), 0, 4),
