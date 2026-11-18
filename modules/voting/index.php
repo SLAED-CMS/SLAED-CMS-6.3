@@ -18,77 +18,44 @@ function voting(): void {
     $lim = getPageRows($conf['voting']);
     $offset = (int)(($num - 1) * $lim);
     setHead(['title' => _VOTING, 'kind' => 'collection']);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]);
     $result = $db->getSqlQuery('SELECT v.id, v.title, v.answer, v.time, v.enddate, v.comments, v.acomm, v.typ, r.path FROM '.PREFIX_DB.'_voting AS v'
         .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1 WHERE '.$onum.' ORDER BY v.id DESC LIMIT '.$offset.', '.$lim);
-    if ($db->getSqlRowCount($result) > 0) {
-        $rows = '';
-        $ismoder = is_moder($conf['name']);
-        while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ, $path] = $db->getSqlRow($result)) {
-            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'route' => $path]);
-            $comm = ($acomm && $comm) ? $comm : _NO;
-            $vote = array_sum(explode('|', $answer));
-            $type = ($typ == '1') ? _VOPEN : _VCLOSE;
-            $report = getTplTitleTip([
-                ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],
-                ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING)],
-                ['label' => _TYPE, 'value' => $type],
-            ]);
-            $row = [
-                'id' => (string)$id,
-                'id_link' => [
-                    'href' => '#'.$id,
-                    'title' => (string)$id,
-                    'label' => (string)$id,
-                    'is_num_anchor' => true,
-                ],
-                'title_href' => $thref,
-                'title_attr' => htmlspecialchars($stitle, ENT_QUOTES),
-                'title_text' => cutstr($stitle, 60),
-                'title_link' => [
-                    'href' => $thref,
-                    'title' => htmlspecialchars($stitle, ENT_QUOTES),
-                    'label' => cutstr($stitle, 60),
-                ],
-                'title_new' => getTplNewGraphic($date),
-                'comm' => $comm,
-                'vote' => $vote,
-                'report' => $report,
-                'is_closed' => (strtotime($enddate) <= time()),
-                'act_label' => _VOTING_ACT,
-                'end_label' => _VOTING_END,
-            ];
-            if ($ismoder) {
-                $edit = HOME_PATH.$afile.'.php?name=voting&op=add&id='.$id;
-                $del = HOME_PATH.$afile.'.php?name=voting&op=delete&id[]='.$id.'&refer=1';
-                $row += getTplEditMenu($edit, $del, $stitle, 'voting');
-            }
-            $rows .= $tpl->getHtmlPart('voting-home', $row);
+    $rows = [];
+    $ismoder = is_moder($conf['name']);
+    while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ, $path] = $db->getSqlRow($result)) {
+        $tips = [['label' => _CHNGSTORY, 'value_text' => format_time($date, _TIMESTRING), 'has_value_text' => true],
+            ['label' => _ENDDATE, 'value_text' => format_time($enddate, _TIMESTRING), 'has_value_text' => true],
+            ['label' => _TYPE, 'value_text' => ($typ == '1') ? _VOPEN : _VCLOSE, 'has_value_text' => true]];
+        $row = [
+            'id' => $id, 'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'route' => $path]), 'title' => $stitle,
+            'fresh_html' => getTplNewGraphic($date), 'is_closed' => strtotime($enddate) <= time(), 'comm' => ($acomm && $comm) ? $comm : _NO,
+            'vote' => array_sum(explode('|', $answer)), 'tips' => [['items' => $tips]],
+        ];
+        if ($ismoder) {
+            $edit = HOME_PATH.$afile.'.php?name=voting&op=add&id='.$id;
+            $del = HOME_PATH.$afile.'.php?name=voting&op=delete&id[]='.$id.'&refer=1';
+            $row += getTplEditMenu($edit, $del, $stitle, 'voting');
         }
-        $cont .= $tpl->getHtmlFrag('table', [
-            'is_list'  => true,
-            'sortable' => true,
-            'rows_html' => $rows,
-            'headers' => [
-                ['text' => _TITLE],
-                ['text' => _COMMENTS, 'is_forum_stat' => true],
-                ['text' => _VOTING_VOTES, 'is_forum_stat' => true],
-                ['text' => _ID, 'is_num' => true],
-            ],
-        ]);
-        $cont .= getTplPager([
-            'limit'     => $lim,
-            'maxpg'     => getPageSpan($conf['voting']),
-            'table'     => '_voting',
-            'field'     => 'id',
-            'mod'       => $conf['name'],
-            'where'     => $onum,
-            'url_extra' => [],
-            'prefix'    => 'new/',
+        $rows[] = $row;
+    }
+    if ($rows) {
+        $cont = $tpl->getHtmlPart('voting-home', [
+            'head' => ['icon' => 'bar-chart', 'title' => _VOTING, 'level' => 1],
+            'rows' => $rows, 'act_label' => _VOTING_ACT, 'end_label' => _VOTING_END, 'comm_label' => _COMMENTS, 'votes_label' => _VOTING_VOTES,
+            'pager_html' => getTplPager([
+                'limit'     => $lim,
+                'maxpg'     => getPageSpan($conf['voting']),
+                'table'     => '_voting',
+                'field'     => 'id',
+                'mod'       => $conf['name'],
+                'where'     => $onum,
+                'url_extra' => [],
+                'prefix'    => 'new/',
+            ]),
         ]);
     } else {
         if ((int)$num > 1) setError(404);
-        $cont .= $tpl->getHtmlFrag('empty', []);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]).$tpl->getHtmlFrag('empty', []);
     }
     echo $cont;
     setFoot();

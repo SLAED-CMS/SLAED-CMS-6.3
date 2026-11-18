@@ -1153,7 +1153,7 @@
         return node.querySelector(':scope > .sl-float-panel');
     }
 
-    // Open a float: the script writes the two measured coordinates and the theme owns the rule that reads them; data-sl-float-up opens it upwards where it fits
+    // Open a float under the middle of its host, from its edge by data-sl-float-align end or start, upwards by data-sl-float-up where it fits; the theme reads the coordinates
     function placeFloat(node) {
         var panel = getFloatPanel(node);
         if (!panel) return;
@@ -1180,7 +1180,7 @@
             var height = rect.height;
             var anchor = node.closest('[data-sl-float-align]');
             var align = anchor ? anchor.getAttribute('data-sl-float-align') : '';
-            var left = (align === 'end') ? host.right - width : host.left + (host.width / 2) - (width / 2);
+            var left = (align === 'end') ? host.right - width : ((align === 'start') ? host.left : host.left + (host.width / 2) - (width / 2));
             var top = host.bottom + floatGap;
             var center = host.left + (host.width / 2);
             var high = !!node.closest('[data-sl-float-up]');

@@ -30,6 +30,7 @@ final class Route {
             'passmail', 'activate', 'savepass', 'setavatar', 'oauth_init', 'oauth', 'oauth_finish', 'oauth_unlink', 'unsub'],
         'forum' => ['view', 'move', 'add', 'send', 'delete'],
         'recommend' => ['send'],
+        'sitemap' => ['more'],
         'users' => ['rules', 'stats'],
         'voting' => ['view'],
     ];

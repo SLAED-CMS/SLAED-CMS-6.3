@@ -1,0 +1,14 @@
+<div class="sl-cols sl-cols-4">
+  {% for row in rows %}
+  <div class="sl-cab-row{% if row.is_hidden %} sl-hidden{% endif %}">
+    {% if row.mark_html %}{{{ row.mark_html }}}{% else %}<span></span>{% endif %}
+    <span class="sl-cols-name"><a href="{{ row.href }}" title="{{ row.title }}">{{ row.title }}</a></span>
+    <span class="sl-profile-hub-total">
+      <span class="sl-chip sl-chip-info sl-cols-opt" title="{{ author_label }}">{{{ row.author_html }}}</span>
+      <span class="sl-chip" title="{{ replies_label }}"><i class="bi bi-chat-text" aria-hidden="true"></i>{{ row.replies }}</span>
+      <span class="sl-chip sl-cols-opt" title="{{ views_label }}"><i class="bi bi-eye" aria-hidden="true"></i>{{ row.views }}</span>
+      <span class="sl-chip sl-chip-info" title="{{ last_label }}"><i class="bi bi-reply" aria-hidden="true"></i>{{{ row.last_html }}}</span>
+    </span>
+  </div>
+  {% endfor %}
+</div>

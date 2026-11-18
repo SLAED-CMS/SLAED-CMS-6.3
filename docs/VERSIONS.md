@@ -1,5 +1,36 @@
 # Versions
 
+## 2026-11-18
+
+### The polls and the last forum topics of the home page stand as rows in columns, as the rating of the members does
+
+- **One box of rows.** The grid of the windows of `/users` is the shared `sl-cols` of the theme `aurora`: `sl-users-cols`
+  became `sl-cols` with the widths `sl-cols-2`, `sl-cols-4`, `sl-cols-lead-4` and `sl-cols-lead-5`, `sl-users-who`
+  became `sl-cols-name` and `sl-users-opt` became `sl-cols-opt`. The box is the container its rows watch, so a block
+  narrows its rows as a window does. `docs/TEMPLATES.md`, "Site Window", holds it.
+- **A dashed rule parts the rows** of every box in columns, the rule of the rows of a block, where the cabinet keeps its
+  solid one.
+- **The rows of the members leave `sl-profile-entry`.** Its rule for the feed of a profile laid tracks of its own under
+  768 px and broke the columns of «Рейтинг» between 521 and 768 px into two lines a row; `sl-cols-name` gives the name
+  its look now, and on a phone the face keeps a track of 30 px.
+- **The list of the polls is one window.** `/voting` prints its polls as rows of a window named «Опросы», the `h1` of
+  the page, and the pager under it; the table, its head and the sorting by a column are gone. The rows come as data to
+  `partials/voting-home.html`, and the tip of the dates of a poll is the data of `fragments/popover.html`.
+- **The block «Последние сообщения на всех форумах»** prints its topics as rows in columns: the mark of the state, the
+  topic, the author, the replies, the views and the last poster as chips. Its table left, and with it the branches
+  `is_forum_user` and `is_forum_stat` of `fragments/table.html` and `table-row.html` and the rules `.sl-fl-col-user`
+  and `.sl-vote-mark` that nothing else read.
+- **Three constants say their word in full**, since they title a chip now and no column: `_REPLIES` «Ответы», `_VIEWS`
+  «Просмотры» and `_LASTPOSTER` «Последний ответ» in the six locales.
+- **A window over a pager** keeps the step of the windows of a page before the rule of the pager.
+- **A tip opens from the start of its host** under `data-sl-float-align="start"`, as it did from the end under `end`:
+  the mark of a poll in a row opens its words into the window instead of over its left edge. The rule
+  `.sl-vote-live .sl-float-panel` that opened it leftwards without the script is gone, so a page without JS opens it
+  the same way instead of off the screen.
+- **`Route::OPS` names `more` of the sitemap**, the operation its switch answers since 2026-11-17.
+- **The column of a number of the forum left the theme**: the branch `is_forum_num` of `fragments/table.html` and the
+  rule `.sl-fl-col-num`, which nothing read.
+
 ## 2026-11-17
 
 ### The page of the members is one list in three looks, and its rules and its statistics open in windows of its head

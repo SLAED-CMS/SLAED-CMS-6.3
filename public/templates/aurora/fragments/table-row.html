@@ -1,7 +1,7 @@
 <tr class="sl-table-row{% if is_hidden %} sl-hidden{% endif %}"{% if id %} id="{{ id }}"{% endif %}>
   {% if cells %}
   {% for cell in cells %}
-  <td class="{% if cell.class %}{{ cell.class }}{% else %}sl-table-cell{% if cell.is_col_check %} sl-col-check{% endif %}{% if cell.is_num %} sl-table-col-num{% endif %}{% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}{% if cell.is_forum_user %} sl-fl-col-user{% endif %}{% if cell.is_truncate %} sl-cell-ellipsis{% endif %}{% endif %}"{% if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}{% if cell.stat %} data-sort="{% if cell.stat.is_fail %}1{% elseif cell.stat.is_wait %}2{% elseif cell.stat.is_on %}4{% else %}3{% endif %}"{% endif %}>
+  <td class="{% if cell.class %}{{ cell.class }}{% else %}sl-table-cell{% if cell.is_col_check %} sl-col-check{% endif %}{% if cell.is_num %} sl-table-col-num{% endif %}{% if cell.is_truncate %} sl-cell-ellipsis{% endif %}{% endif %}"{% if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}{% if cell.stat %} data-sort="{% if cell.stat.is_fail %}1{% elseif cell.stat.is_wait %}2{% elseif cell.stat.is_on %}4{% else %}3{% endif %}"{% endif %}>
     {% if cell.stat %}
     <span class="{% if cell.stat.is_fail %}sl-status-fail{% elseif cell.stat.is_wait %}sl-status-wait{% elseif cell.stat.is_on %}sl-status-active{% else %}sl-status-inactive{% endif %}" role="img" title="{{ cell.stat.text }}" aria-label="{{ cell.stat.text }}"></span>
     {% elseif cell.href %}
@@ -19,10 +19,6 @@
     </a>
     {% elseif cell.img_src %}
     <img src="{{ cell.img_src }}" alt="{{ cell.img_alt }}" title="{{ cell.img_title }}"{% if cell.img_class or cell.is_avatar %} class="{% if cell.img_class %}{{ cell.img_class }}{% endif %}{% if cell.is_avatar %}{% if cell.img_class %} {% endif %}sl-avatar{% endif %}"{% endif %}>
-    {% elseif cell.is_forum_user %}
-    <span class="sl-chip sl-chip-info">{% if cell.content_html %}{{{ cell.content_html }}}{% else %}{{ cell.text }}{% endif %}</span>
-    {% elseif cell.is_forum_stat %}
-    <span class="sl-chip sl-chip-neutral">{% if cell.content_html %}{{{ cell.content_html }}}{% else %}{{ cell.text }}{% endif %}</span>
     {% else %}
     {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}
     {% if cell.content_html %}

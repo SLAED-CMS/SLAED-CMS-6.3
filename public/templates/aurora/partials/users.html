@@ -81,19 +81,19 @@
       {% include 'fragments/pane-cap.html' with tier %}
       <div id="{{ tier.id }}-rows" class="sl-collapsible" data-sl-toggle="{{ tier.id }}-rows" data-sl-toggle-default="open">
         <div class="sl-pane-body">
-          <div class="sl-users-cols sl-users-cols-{% if tier.has_rank %}5{% else %}4{% endif %}">
+          <div class="sl-cols sl-cols-lead-{% if tier.has_rank %}5{% else %}4{% endif %}">
             {% for row in tier.rows %}
-            <div class="sl-cab-row sl-profile-entry">
+            <div class="sl-cab-row">
               <span class="sl-but-mini{% if row.is_lead %} sl-is-active{% endif %}" title="{{ place_label }}">{{ row.place }}</span>
               <span class="sl-cab-msg-ava"><img src="{{ row.avatar }}" alt="{{ row.name }}"></span>
-              <span class="sl-users-who">
+              <span class="sl-cols-name">
                 {% if row.href %}<a href="{{ row.href }}" title="{{ info_label }}">{{ row.name }}</a>{% else %}<b>{{ row.name }}</b>{% endif %}
                 {% if row.is_me %}<span class="sl-chip sl-chip-accent" title="{{ you_label }}"><i class="bi bi-person-check" aria-hidden="true"></i>{{ you_label }}</span>{% endif %}
                 {% for mark in row.fresh %}{% include 'fragments/fresh.html' with mark %}{% endfor %}
               </span>
               <span class="sl-profile-hub-total">
-                {% if row.origin %}<span class="sl-chip sl-users-opt" title="{{ from_label }}"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ row.origin }}</span>{% else %}<span class="sl-users-opt"></span>{% endif %}
-                <time datetime="{{ row.reg_iso }}" title="{{ reg_label }}" class="sl-chip sl-chip-info sl-users-opt"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ row.reg }}</time>
+                {% if row.origin %}<span class="sl-chip sl-cols-opt" title="{{ from_label }}"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ row.origin }}</span>{% else %}<span class="sl-cols-opt"></span>{% endif %}
+                <time datetime="{{ row.reg_iso }}" title="{{ reg_label }}" class="sl-chip sl-chip-info sl-cols-opt"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ row.reg }}</time>
                 {% for tip in row.tips %}{% include 'fragments/popover.html' with tip %}{% endfor %}
                 {% if tier.has_rank %}{% if row.rank_html %}{{{ row.rank_html }}}{% else %}<span></span>{% endif %}{% endif %}
                 {% if has_points %}<span class="sl-chip sl-users-pts" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ row.points }}</span>{% endif %}

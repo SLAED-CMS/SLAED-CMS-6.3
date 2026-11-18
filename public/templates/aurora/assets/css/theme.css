@@ -4649,19 +4649,7 @@ dialog.sl-editor-emoji-panel {
   animation: none;
 }
 
-.sl-vote-live .sl-float-panel {
-  left: auto;
-  right: 0;
-}
-
-/* Inline list marker before the info tip */
-.sl-vote-mark {
-  margin: 0 var(--sl-space-2) 0 0;
-  vertical-align: middle;
-}
-
-/* List cells: inline-middle sits ~1.5px under the optical text axis — lift the icon pair onto it */
-.sl-table-cell .sl-vote-mark,
+/* List cells: inline-middle sits ~1.5px under the optical text axis — lift the tip onto it */
 .sl-table-cell > .sl-tip {
   position: relative;
   top: -1.5px;
@@ -7750,22 +7738,6 @@ td.sl-fl-col-icon {
   white-space: nowrap;
 }
 
-.sl-fl-col-user {
-  white-space: nowrap;
-}
-
-.sl-fl-col-user .bi {
-  font-size: var(--sl-size-icon-xs);
-}
-
-th.sl-fl-col-num,
-td.sl-fl-col-num {
-  text-align: center;
-  width: var(--sl-col-num-width);
-  padding-right: 0;
-  padding-left: 0;
-}
-
 th.sl-fl-col-stat,
 td.sl-fl-col-stat {
   text-align: center;
@@ -7960,7 +7932,8 @@ h1.sl-pane-title {
 .sl-fullview,
 .sl-pane.sl-card,
 .sl-post-vote > .sl-pane,
-.sl-preview > .sl-pane {
+.sl-preview > .sl-pane,
+.sl-pane:has(+ .sl-pager) {
   margin-bottom: var(--sl-space-7);
 }
 
@@ -11409,6 +11382,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 /* The title of a cabinet row is the title of a feed entry: the same height of row, the same body type, no weight */
 .sl-profile-entry a,
+.sl-cols-name > a,
 .sl-cab-row b {
   overflow: hidden;
   color: var(--sl-text-strong);
@@ -11417,12 +11391,106 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   white-space: nowrap;
 }
 
-.sl-profile-entry a:hover {
+.sl-profile-entry a:hover,
+.sl-cols-name > a:hover {
   color: var(--sl-primary);
 }
 
 .sl-cab-row .sl-chip {
   margin: 0;
+}
+
+/* Rows in columns: the rows of one box share its tracks, so their chips stand in columns; the box is the container its rows watch, in a window and in a block alike */
+.sl-cols {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) repeat(3, auto);
+  column-gap: var(--sl-space-4);
+  container-type: inline-size;
+}
+
+.sl-cols-2 {
+  grid-template-columns: 30px minmax(0, 1fr) repeat(2, auto);
+}
+
+.sl-cols-4 {
+  grid-template-columns: 30px minmax(0, 1fr) repeat(4, auto);
+}
+
+/* A row that opens with a place takes a track for it before the icon */
+.sl-cols-lead-4 {
+  grid-template-columns: auto 30px minmax(0, 1fr) repeat(4, auto);
+}
+
+.sl-cols-lead-5 {
+  grid-template-columns: auto 30px minmax(0, 1fr) repeat(5, auto);
+}
+
+/* A row in columns is parted from the next by the dashed rule of the rows of a block; the last one keeps none */
+.sl-cols > .sl-cab-row {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  border-bottom-style: dashed;
+  border-bottom-color: var(--sl-border);
+}
+
+/* The mark that opens a row stands in the middle of its track, as the icon of a cabinet row does */
+.sl-cols > .sl-cab-row > :first-child {
+  justify-self: center;
+}
+
+.sl-cols .sl-profile-hub-total {
+  display: contents;
+}
+
+.sl-cols .sl-profile-hub-total > .sl-chip {
+  justify-content: center;
+}
+
+.sl-cols .sl-profile-hub-total > .sl-rank {
+  justify-self: center;
+}
+
+/* The name of a row and its marks stand on one line; the name gives way and the marks keep their size */
+.sl-cols-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+}
+
+.sl-cols-name > a {
+  min-width: 0;
+}
+
+.sl-cols-name > .sl-chip,
+.sl-cols-name > .sl-tip {
+  flex: none;
+}
+
+.sl-cols-name > .sl-chip,
+.sl-cols .sl-tip {
+  margin: 0;
+}
+
+/* A narrow box keeps the name and the last chip of a row; the chips marked as optional and the rank leave first, and every row lays its own tracks */
+@container (width < 520px) {
+  .sl-cols-opt,
+  .sl-cols .sl-profile-hub-total > .sl-rank {
+    display: none;
+  }
+
+  .sl-cols > .sl-cab-row {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+  }
+
+  .sl-cols-lead-4 > .sl-cab-row,
+  .sl-cols-lead-5 > .sl-cab-row {
+    grid-template-columns: auto 30px minmax(0, 1fr) auto;
+  }
+
+  .sl-cols .sl-profile-hub-total {
+    display: flex;
+  }
 }
 
 /* Members: the page of the module users, whose three looks are built from the rows of the cabinet, the pieces of a profile and the card of a news */
@@ -11433,58 +11501,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-bottom: var(--sl-space-7);
 }
 
-/* The rows of one box share its tracks, so the chips of their right side stand in columns of one width each, the text in the middle */
-.sl-users-cols {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) repeat(3, auto);
-  column-gap: var(--sl-space-4);
-}
-
-.sl-users-cols-2 {
-  grid-template-columns: 30px minmax(0, 1fr) repeat(2, auto);
-}
-
-/* A row of a member opens with the place and the face */
-.sl-users-cols-4 {
-  grid-template-columns: auto 30px minmax(0, 1fr) repeat(4, auto);
-}
-
-.sl-users-cols-5 {
-  grid-template-columns: auto 30px minmax(0, 1fr) repeat(5, auto);
-}
-
-.sl-users-cols > .sl-cab-row {
-  grid-column: 1 / -1;
-  grid-template-columns: subgrid;
-}
-
-.sl-users-cols .sl-profile-hub-total {
-  display: contents;
-}
-
-.sl-users-cols .sl-profile-hub-total > .sl-rank {
-  justify-self: center;
-}
-
-/* The name and the marks of a member stand on one line of his row; the name gives way and the marks keep their size */
-.sl-users-who {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  min-width: 0;
-}
-
-.sl-users-who > a {
-  min-width: 0;
-}
-
-.sl-users-who > .sl-chip,
 .sl-users .sl-fresh {
   flex: none;
 }
 
-.sl-users-who > .sl-chip,
-.sl-users-cols .sl-tip,
 .sl-users-face > .sl-chip,
 .sl-users .sl-fresh {
   margin: 0;
@@ -11497,34 +11517,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-users-pts,
-.sl-users-cols .sl-profile-hub-total > .sl-chip,
 .sl-users .sl-pane-cap[data-sl-toggle-head] > .sl-pane-chips > .sl-chip:last-child {
   justify-content: center;
-}
-
-/* A narrow box keeps the name and the last chip of a row; the chips marked as optional and the rank leave first, and the shared tracks go with them */
-@container (width < 520px) {
-  .sl-users-opt,
-  .sl-users-cols .sl-profile-hub-total > .sl-rank {
-    display: none;
-  }
-
-  .sl-users-cols {
-    display: block;
-  }
-
-  .sl-users-cols > .sl-cab-row {
-    grid-template-columns: 30px minmax(0, 1fr) auto;
-  }
-
-  .sl-users-cols-4 > .sl-cab-row,
-  .sl-users-cols-5 > .sl-cab-row {
-    grid-template-columns: auto 30px minmax(0, 1fr) auto;
-  }
-
-  .sl-users-cols .sl-profile-hub-total {
-    display: flex;
-  }
 }
 
 /* Podium: three places in a row, the first in the middle and a step higher than the two beside it */
