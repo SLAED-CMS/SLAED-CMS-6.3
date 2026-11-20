@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The points unit of the 8.0 data update in update.php, whose contract is docs/NODE.md (Points unit)
+# The points unit of the 8.0 data update in update.php
 #[Group('release')]
 final class UpdatePointsTest extends TestCase
 {

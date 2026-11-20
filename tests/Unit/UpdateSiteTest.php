@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The 8.0 update of update.php carries a real 6.2 site over (docs/NODE.md, The 8.0 update)
+# The 8.0 update of update.php carries a real 6.2 site over
 #[Group('release')]
 final class UpdateSiteTest extends TestCase
 {

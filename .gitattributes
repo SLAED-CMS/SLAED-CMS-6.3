@@ -65,7 +65,6 @@
 /.gitignore export-ignore
 /.gitattributes export-ignore
 /README.md export-ignore
-/UPGRADING.md export-ignore
 /SECURITY.md export-ignore
 /CONTRIBUTING.md export-ignore
 /CODE_OF_CONDUCT.md export-ignore

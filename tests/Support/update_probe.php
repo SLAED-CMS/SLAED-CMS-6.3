@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the units of the 8.0 data update in update.php, whose contracts are docs/NODE.md (The 8.0 update) and docs/RATINGS.md
+# CLI probe for the units of the 8.0 data update in update.php
 # The second argument names the unit, points when it is left out; every unit shares the schema, the lifted update code and the scratch site
 # The update cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the source by name
 # BASE_DIR and CONFIG_DIR point into scratch, so the manifest, the snapshot, the mark and every configuration file the unit writes stay away from the site

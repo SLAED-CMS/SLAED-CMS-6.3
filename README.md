@@ -28,7 +28,7 @@ The repository entrypoints and active runtime files currently include:
 
 ```bash
 # 1. Clone or download the repository
-git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
+git clone https://github.com/SLAED-CMS/SLAED.git
 
 # 2. Create an empty database
 
@@ -69,13 +69,12 @@ http://localhost/setup.php
    content types, names the address of the panel and deletes itself.
 
 The installer creates the tables from `storage/update/sql/table.sql` and `storage/update/sql/insert.sql`. Both carry
-the placeholders `{prefix}`, `{engine}`, `{charset}` and `{collate}`, so neither can be imported by hand. A site of
-an older release is not updated by this release, see [UPGRADING.md](UPGRADING.md).
+the placeholders `{prefix}`, `{engine}`, `{charset}` and `{collate}`, so neither can be imported by hand.
 
 ### Document Root and Web Server
 
 The browser may reach the folder `public/` and nothing else. It holds the entries (`index.php`, `admin.php`,
-`setup.php`, `update.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/` and
+`setup.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/` and
 `plugins/`. Everything else stays outside: the code in `core/`, `modules/`, `admin/`, the settings in `config/`, the
 logs and database backups in `storage/`, and every uploaded file in `uploads/`. The files of the public folders of
 `uploads/` (avatars, `all/`, `layout/` and `presentation/`) are still served at `/uploads/...` by `index.php`; the files of a
@@ -193,7 +192,7 @@ Bundled themes currently present in the repository:
 
 ### Routing and Entry Flow
 
-Every page has one readable address without an id — `/files`, `/files/adaptivnyi-shablon-pure`, `/forum/modul-poiska`, `/users/eduard` — kept in the registry `_routes`; `index.php` resolves the path into the `go`, `name`, `op`, and optional `file` parameters it routes by, and every other form of a page, the query addresses of 6.2 included, answers one 301 to its address. Standard module requests resolve to `modules/<name>/<file>.php`, while special direct flows include RSS, OpenSearch, XSL, generated CSS, generated JavaScript, and numeric helper endpoints.
+Every page has one readable address without an id — `/files`, `/files/adaptivnyi-shablon-pure`, `/forum/modul-poiska`, `/users/eduard` — kept in the registry `_routes`; `index.php` resolves the path into the `go`, `name`, `op`, and optional `file` parameters it routes by, and every other form of a page answers one 301 to its address. Standard module requests resolve to `modules/<name>/<file>.php`, while special direct flows include RSS, OpenSearch, XSL, generated CSS, generated JavaScript, and numeric helper endpoints.
 
 The path is cut before the database connects, at the top of `core/security.php`: a path of `index.php` of up to five words of `[A-Za-z0-9_-]` goes on to the resolution of `index.php`, any other one, an old `*.html` address included, gets the 404 page; a path after another script (`/admin.php/x`) answers 301 to that script with the same query. `docs/ARCHITECTURE.md`, "Address Boundary", describes the registry, the parsing, the building and the redirect. A request under `uploads/` that the light path does not serve answers 410.
 
@@ -236,8 +235,7 @@ slaed-cms/
 │   ├── .htaccess          # Rewrite rules of the document root
 │   ├── admin.php          # Admin entry point, runs admin/index.php
 │   ├── index.php          # Frontend entry point, the light path of uploads included
-│   ├── setup.php          # Installation entry point
-│   └── update.php         # Data update of a 6.2 site
+│   └── setup.php          # Installation entry point
 ├── storage/               # Runtime-generated cache, logs, counters, GeoIP, sitemap, backups
 ├── tests/                 # PHPUnit and validation tests
 ├── tools/                 # Audit, gate and capture scripts run from the project root
@@ -270,15 +268,9 @@ Contributions are welcome. Start here:
 
 ---
 
-## Upgrading
-
-For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md](UPGRADING.md).
-
----
-
 ## Updates and Release Keys
 
-From 8.0 a site updates itself from the panel, page "Обновления": it learns of a new release once a day from
+A site updates itself from the panel, page "Обновления": it learns of a new release once a day from
 `slaed.net`, downloads it, verifies its signature and installs it in steps at the click of its administrator, with a
 rollback of files, settings and database on any failure. A site accepts a release only under the signature of the
 SLAED primary key, whatever server or page the archive came from. How releases are built, signed and served is
@@ -313,7 +305,6 @@ release ships.
 | [docs/UPDATE.md](docs/UPDATE.md) | Updates from the panel: releasing, signing, the master, installation, privacy |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution and coding rules |
 | [SECURITY.md](SECURITY.md) | Security policy |
-| [UPGRADING.md](UPGRADING.md) | Upgrade notes |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
 
 ---

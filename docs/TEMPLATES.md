@@ -1868,7 +1868,7 @@ Forward, if the attribute is there it must be right: every `for` resolves to a l
 
 ### What the audit of the panel left
 
-The repeated audit of 2026-11-01 (`docs/VERSIONS.md`) left these, each with its reason:
+The repeated audit of 2026-11-01 left these, each with its reason:
 
 - **The strip of the archive**, `target-size`: "The Engine Of The Parts" above; the equal means were checked on the live page.
 - **`landmark-unique` on the builder:** axe compares the `main` of the panel with the `main` of the site inside the frame.

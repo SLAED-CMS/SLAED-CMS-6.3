@@ -12,7 +12,7 @@ The parser uses a caching mechanism and internally employs a stateless "stash" t
 
 Markdown is read by **CommonMark 0.31.2** with the extensions of **GFM 0.29-gfm**: tables, task list items, strikethrough, extended autolinks and the filter of disallowed raw HTML. The engine is the parser's own, written after the reference implementations: `getBlockTree()` reads the block structure one line at a time as commonmark.js does, `getInlineTree()` reads the inline content with the delimiter and bracket stacks of the specification, and the tree is rendered through the fragments of the theme. The examples of both specifications are fixtures (`tests/Fixtures/spec/`), and `ParserFixturesTest::filterDocMeetsTheSpec()` runs them in both modes as the spec runner of cmark-gfm does: the CommonMark examples with the tag filter and the extended autolinks off (`Parser::$gfmoff`, a switch of the test alone), the GFM ones with them on. `tests/Fixtures/spec/failing.json` lists the examples that fail and is empty; a listed example that passes fails the test, so the list can only shrink.
 
-The engine is the parser's own rather than a library (`league/commonmark` was weighed and declined): the parser keeps no runtime dependency, and the fragments of the theme, the stash and the cache stay as they are. Measured on the stand on 2026-10-26, the 28344 renderable texts of the migrated production database render in 8 to 10 s, the time of the regex parser it replaced, the slowest text in 43 ms, without one warning. Parentheses in a link destination are bounded at 32 levels, as cmark bounds them and the specification allows.
+The engine is the parser's own rather than a library (`league/commonmark` was weighed and declined): the parser keeps no runtime dependency, and the fragments of the theme, the stash and the cache stay as they are. Measured on the stand on 2026-10-26, the 28344 renderable texts of the production database render in 8 to 10 s, the time of the regex parser it replaced, the slowest text in 43 ms, without one warning. Parentheses in a link destination are bounded at 32 levels, as cmark bounds them and the specification allows.
 
 The comparison removes only the markup of the theme: heading ids, the classes of the theme (`sl-*`, `bi`; a class of the author's raw HTML stays), the code figure with its head (its language label stands for `language-*`), the last line break inside a code block, blanks before `<br>`, the broken-image fallback, the cell alignment style, and the disk check of a local image (`Parser::$fileoff`); the expected side loses the final line ending `filterDoc()` trims, and its `./` link is one from the site root. Code is measured in the highlighter mode the release ships, `syntax = 2`; modes 0 and 1 keep what PHP's `highlight_string()` does to a tab. A safe rendering is not measured on raw HTML, which it escapes, nor on a link of a scheme other than `http`, `https` and `mailto`, which it refuses.
 
@@ -123,57 +123,6 @@ regions every pair becomes a literal, so a failed match hides markup instead of 
 the source through the same rules, so an escaped bracket names no attachment. Feed relies on this rule: it prefixes
 every punctuation character of received text with a backslash, so a feed body renders as plain text (docs/NODE.md,
 Feed).
-
-## Texts of the BB era
-
-The texts of SLAED 6.2 and of the 8.0 development builds were stored as BB. `getMigrateMarkdown()` in
-`public/update.php` turns each text the parser renders into Markdown once, in the text unit of the update; titles and
-the fields above keep what they hold. The target is the standard above, not the look of the old rendering.
-
-| BB | Markdown | Rule |
-|---|---|---|
-| `*01`–`*18` | emoji | the table below |
-| `[b]`, `[i]`, `[s]` | `**…**`, `*…*`, `~~…~~` | white space moves outside the markers; one pair per paragraph |
-| `[url]X`, `[url=X]Y` | `<X>`, `[Y](X)` | `<X>` only for an absolute X with a scheme, a relative one takes `[X](X)`; space, `<` and `>` of X percent-encoded, in `(X)` also `(`, `)` and `\`; an empty label takes X; `www.` gains `https://`; an empty or unsafe X leaves the label as text |
-| `[mail]X`, `[mail=X]Y` | `<X>`, `[Y](mailto:X)` | an invalid address stays text |
-| `[img]`, `[img alt=A]`, `[img=…]`, `[img=… alt=A]` | `![A](src)` | the alignment is dropped |
-| `[hr]` | `***` on its own line, blank lines around | `---` under a text line would be a setext heading |
-| `[li]` | the character `• ` | |
-| `[code]`, `[code=lang]`, `[php]` | a fence, with `lang` or `php` | inline it becomes a code span; the fence outgrows any backtick run inside |
-| `[quote]` | `> ` lines | a nested quote becomes `> >` |
-| `[u]`, `[color=…]`, `[size=…]`, `[family=…]`, `[justify]`, `[left]`, `[center]`, `[right]` | the text alone | no Markdown equivalent, the formatting goes |
-| ed2k links | the text alone | |
-
-| Code | Emoji | Code | Emoji | Code | Emoji |
-|---|---|---|---|---|---|
-| `*01` | 😕 | `*07` | 😎 | `*13` | 😉 |
-| `*02` | 😛 | `*08` | 🤓 | `*14` | 😌 |
-| `*03` | 😏 | `*09` | 🙄 | `*15` | 😠 |
-| `*04` | 🙂 | `*10` | 😮 | `*16` | 😢 |
-| `*05` | 😃 | `*11` | 🙁 | `*17` | 😳 |
-| `*06` | 😄 | `*12` | 😳 | `*18` | 😱 |
-
-The SLAED tags stay as they are, `[attach=…]` with its `align=`, which the theme renders through
-`sl-attach-left/right/center`. The rules of the conversion:
-
-- **Tokens** follow the grammar of "SLAED tags", and the converter also reads the forms the old parser rendered:
-  `[code=]` is `[code]`, and white space around the value of `[url=…]`, `[mail=…]`, `[color=…]` and `[family=…]` and
-  around `alt=` of `[img]` is dropped. Only balanced pairs convert; an unpaired or crossed tag is text.
-- **Text runs** of a text written as BB are escaped by the rules of CommonMark: a backslash before the ASCII
-  punctuation that would open markup, before a marker at the start of a line and before an entity, so the result renders
-  the text the author typed. The entities of the old storage are decoded first, and a `<` they decode to is escaped
-  too, so `&lt;font&gt;` never turns into markup. A text written as Markdown keeps its runs, its fences and its code
-  spans, and only its BB tags convert; which texts are which the update decides by their origin.
-- **Code keeps its characters:** a fence or a code span holds the stored breaks and entities decoded, since CommonMark
-  reads no entity inside code. `[usehtml]` and `[usephp]` are copied as written; their renderer keeps decoding them.
-- **The content** of `[hide]`, `[tab=…]` and `[quote]` converts like any text; that of `[usehtml]` and `[usephp]` does
-  not.
-- **A stored `<br>`** becomes a hard break, a backslash before the line end, or a bare line end where the line before or
-  after it is empty; in a text written as BB a run of empty lines shrinks to one.
-- **Local addresses:** `getMigrateLocal()` puts `./` before a bare relative address of an image or a link, which the
-  parser reads from the site root; `getMigrateHtml()` writes the raw HTML of a 6.2 text as Markdown, and a trusted text
-  keeps its `table`, `div`, `iframe`, `object`, `form`, `script` and `style` as markup inside `[usehtml]`.
-- **A text converts once:** a second pass would escape the escapes. `tests/Unit/UpdateTextTest.php` holds the rules.
 
 ## Authoring Guidelines
 

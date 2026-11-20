@@ -24,40 +24,35 @@ remaining modules alike.
   public contract does not depend on ids, URLs, tables or APIs of the replaced modules.
 - Themes own all HTML and visual variants; PHP passes facts, data, URLs and semantic flags.
 
-### Replaced modules
+### Type profiles
 
-`modules/node/profiles/` holds sixteen type profiles in the `slaed.node` export format: nine stand for removed
-modules, `docs`, `album`, `portfolio`, `board`, `reviews`, `events` and `jobs` for none. A clean installation
-creates sixteen active types from them; an updated site gets none and creates types in the admin panel, from a
-profile or from scratch. The 8.0 update imports no content of the removed modules
-(see [The 8.0 update](#the-80-update)); the separate script `update.php` carries it, see
-[Migration of the removed modules](#migration-of-the-removed-modules).
+`modules/node/profiles/` holds sixteen type profiles in the `slaed.node` export format. A clean installation
+creates sixteen active types from them; more types are created in the admin panel, from a profile or from scratch.
 Settings of each profile are in [Shipped profiles](#shipped-profiles).
 
-| Profile | Replaces | Extension | `view.mode` | Special behaviour |
-|---|---|---|---|---|
-| `news` | news | - | `article` | pinning, relations, polls |
-| `pages` | pages | - | `article` | the plain material |
-| `faq` | faq | - | `faq` | question-and-answer display |
-| `help` | help | `support` | `support` | private request, replies, closing |
-| `jokes` | jokes | - | `default` | short material, simple form |
-| `content` | content | `sync` | `article` | material loaded and refreshed from a feed |
-| `links` | links | - | `default` | external addresses and visit statistics |
-| `files` | files | - | `files` | several resources, downloads, reports |
-| `media` | media | - | `media` | sources, player, metadata |
-| `docs` | - | - | `docs` | hierarchical documentation (`parent` relations) |
-| `album` | - | - | `default` | photo albums: a cover and a gallery of up to 100 images, tiles |
-| `portfolio` | - | - | `article` | projects of the site owner: client, year, address, services; no public form |
-| `board` | - | - | `default` | classified ads of users: price, city, phone, e-mail, moderated, an author's ad leaves after 30 days |
-| `reviews` | - | - | `default` | short reviews with a required score of 1 to 5, guests may post, moderated |
-| `events` | - | `event` | `event` | listing of events: start, end and place, upcoming first, archive, moderated |
-| `jobs` | - | - | `default` | vacancies: salary, city, employment, e-mail, address, moderated, an author's vacancy leaves after 30 days |
+| Profile | Extension | `view.mode` | Special behaviour |
+|---|---|---|---|
+| `news` | - | `article` | pinning, relations, polls |
+| `pages` | - | `article` | the plain material |
+| `faq` | - | `faq` | question-and-answer display |
+| `help` | `support` | `support` | private request, replies, closing |
+| `jokes` | - | `default` | short material, simple form |
+| `content` | `sync` | `article` | material loaded and refreshed from a feed |
+| `links` | - | `default` | external addresses and visit statistics |
+| `files` | - | `files` | several resources, downloads, reports |
+| `media` | - | `media` | sources, player, metadata |
+| `docs` | - | `docs` | hierarchical documentation (`parent` relations) |
+| `album` | - | `default` | photo albums: a cover and a gallery of up to 100 images, tiles |
+| `portfolio` | - | `article` | projects of the site owner: client, year, address, services; no public form |
+| `board` | - | `default` | classified ads of users: price, city, phone, e-mail, moderated, an author's ad leaves after 30 days |
+| `reviews` | - | `default` | short reviews with a required score of 1 to 5, guests may post, moderated |
+| `events` | `event` | `event` | listing of events: start, end and place, upcoming first, archive, moderated |
+| `jobs` | - | `default` | vacancies: salary, city, employment, e-mail, address, moderated, an author's vacancy leaves after 30 days |
 
 ### What Node does not cover
 
 Accounts, private messages and the forum stay separate subsystems. Node has no own categories or
-comments, runs no PHP, SQL or class named in type settings, offers no logic builder or public headless API,
-and reads no table of the removed modules at runtime; only the one-off `update.php` does.
+comments, runs no PHP, SQL or class named in type settings and offers no logic builder or public headless API.
 
 ### Responsibilities
 
@@ -295,7 +290,7 @@ configuration inside the locked Closure mode of `setConfigFile()` and never writ
 | `_nodes` | every material: main category, author, texts, fields, state, counters |
 | `_node_categories` | extra categories of a material |
 | `_node_event` | start, end and place of an `event` material |
-| `_node_legacy` | old address of a migrated material: removed module and old id |
+| `_node_legacy` | old address of a material: module name and old id |
 | `_node_relations` | directed relations between materials |
 | `_node_assets` | structured resources of a material |
 | `_node_publish` | pending reward of a scheduled publication |
@@ -303,8 +298,7 @@ configuration inside the locked Closure mode of `setConfigFile()` and never writ
 | `_node_sync` | source and schedule of a `sync` material |
 
 All Node tables are InnoDB; `ascii_bin` below stands for `CHARACTER SET ascii COLLATE ascii_bin`.
-`storage/update/sql/table.sql` is the only DDL; `storage/update/sql/table_update6_3.sql` brings a 6.2 site to
-the same schema with `CREATE TABLE IF NOT EXISTS`. Both order the Node tables by dependency, not
+`storage/update/sql/table.sql` is the only DDL. It orders the Node tables by dependency, not
 alphabetically: `_node_types`, `_nodes`, then the other `_node_*` tables; `FOREIGN_KEY_CHECKS` stays on.
 There is no `modules/node/sql/`. The rating tables are described in [RATINGS.md](RATINGS.md), the points
 journal `_points` in [POINTS.md](POINTS.md).
@@ -317,8 +311,7 @@ tables use `0` for "none".
 These hold for every table of `table.sql`, not only the Node tables. `tests/SchemaConventionTest.php` reads
 `table.sql` and fails when a column or a key leaves them; a later table takes them as it is added. `SchemaTimeTest`
 and `SchemaNullTest` (`tests/Unit/`, driven by `tests/Support/route_probe.php`) hold the time forms and the empty
-values over real requests. The 6.2 path of `table_update6_3.sql` reaches the same state (see
-[The schema file](#the-schema-file)).
+values over real requests.
 
 **Domains.** One spelling per kind of column:
 
@@ -350,7 +343,6 @@ poll), `_rating_actors.last` and `_session.time`. A `VARCHAR` never holds a time
 `DATE`. SQL compares a timer with `UNIX_TIMESTAMP()` or a bound `time()`, a moment with `NOW()` or a bound
 `DATETIME`; PHP reads a moment through `strtotime()`. `format_time()` answers `''` for a moment never recorded, so no
 reader guards NULL.
-The update does not shift the times of 6.2 rows: the offset each was written with is unknown.
 
 **Connection.** `Database::__construct(string $server, string $user, string $pass, string $dbname, string $collate)`
 runs once after connecting:
@@ -365,12 +357,11 @@ runs once after connecting:
 Every path connects this way — the site and the panel through `core/security.php` from `$conf['db']`, `setup.php`,
 `update.php`, the scripts of `tools/` and the probes that load the code — so `NOW()` and `date()` write the same
 moment everywhere; a probe that only loads a fixture opens `PDO` itself. A `GROUP BY` names every selected column
-that no aggregate wraps: MariaDB knows no functional dependency. `table_update6_3.sql` sets its own mode for its
-session and restores it; `Backup` puts its session into an export state of its own (`NO_AUTO_VALUE_ON_ZERO`, zone
-`+00:00`) and hands back the saved mode, zone and collation.
+that no aggregate wraps: MariaDB knows no functional dependency. `Backup` puts its session into an export
+state of its own (`NO_AUTO_VALUE_ON_ZERO`, zone `+00:00`) and hands back the saved mode, zone and collation.
 
-**Collation.** `{collate}` of `config/db.php` is the only source: `setup.php` writes `utf8mb4_unicode_520_ci`,
-`update.php` gives a 6.2 configuration the same and keeps the one of an 8.0 configuration; `table.sql` and
+**Collation.** `{collate}` of `config/db.php` is the only source: `setup.php` writes `utf8mb4_unicode_520_ci`;
+`table.sql` and
 `insert.sql` carry it as `{collate}`, and `setUpdateSql()`, `tools/node-profile.php` and the probes read it. No
 column spells a `utf8mb4` collation but `_maildead.email`, `utf8mb4_bin`, the case-sensitive list of dead addresses.
 
@@ -379,7 +370,7 @@ installs MariaDB 10.11 and offers 10.5 … 11.8 and MySQL 8.0 / 8.4). `utf8mb4_0
 MariaDB 10.11, `utf8mb4_uca1400_ai_ci` of MariaDB is unknown to MySQL. Against `utf8mb4_unicode_ci` it tells apart
 the characters outside the basic plane (😀 and 😃, 𠀋 and 𠀀) and compares Cyrillic, case and accents alike
 (ё = е, Е = е, é = e, ß = ss). Newer MariaDB carries `utf8mb4_0900_ai_ci` as an alias. Once every version hosts
-offer knows it, the move is one value in `setup.php` and one conversion step of `setconv()` in the update, which is
+offer knows it, the move is one value in `setup.php` and one conversion step of an update, which is
 why the collation is read from one place only.
 
 **Writes fit their columns.** A value from outside is cut where it is stored, so no write fails with 1406:
@@ -405,10 +396,9 @@ NULL too.
 `utf8mb4` fits); only `_node_assets.src`, a `VARCHAR(2048)`, is keyed by a prefix. No plain key is the left part of
 another key of its table. Every key serves a query that runs: the lists of the forum, the comments, the blocks and
 the categories read through composite keys that end in their sort column, and `_node_support` sorts `prio DESC`
-through descending key parts, which MySQL 8 and MariaDB 10.8+ build (below 10.8 they are built ascending, and
-`setidx()` rebuilds the two keys of `_node_support` on every run of the update). A polymorphic link — `modul` with an
-id in `_comment.cid`, `_favorites.fid`, `_rating.mid` — and `_users.grp`, where 0 is "no group", carry no foreign
-key.
+through descending key parts, which MySQL 8 and MariaDB 10.8+ build (below 10.8 they are built ascending). A polymorphic
+link — `modul` with an id in `_comment.cid`, `_favorites.fid`, `_rating.mid` — and `_users.grp`, where 0 is
+"no group", carry no foreign key.
 Every foreign key spells `ON UPDATE RESTRICT` and its `ON DELETE` explicitly; no code changes `_nodes.id`, and
 `RESTRICT` guards it against a hand edit.
 
@@ -741,7 +731,7 @@ Constraints: `{prefix}_fk_node_event_node` (`nid` → `_nodes.id`, `ON UPDATE RE
 
 | Column | Type | Meaning |
 |---|---|---|
-| `modul` | `VARCHAR(50) ascii_bin NOT NULL` | name of the removed module the material came from |
+| `modul` | `VARCHAR(50) ascii_bin NOT NULL` | name of the module the material came from |
 | `oid` | `INT UNSIGNED NOT NULL` | id the material had in that module |
 | `nid` | `INT UNSIGNED NOT NULL` | the migrated material |
 
@@ -752,9 +742,8 @@ Keys: `PRIMARY (modul, oid)`, `node (nid)`. Foreign key `{prefix}_fk_node_legacy
   published; a submission it had not approved had no public page and gets none. No Node operation writes here, and a
   physically deleted material takes its old address with it, so that address answers 404.
 - `NodeQuery::getNodeLegacy()` reads it, and only on the way to a 404: see [Response codes](#response-codes).
-- A material with a row here earns no Point award `publish`, neither at once nor from a publication job: its removed
-  module rewarded the publication and the 8.0 update carried that balance. `NodeService` asks the table only on the way
-  to that award.
+- A material with a row here earns no Point award `publish`, neither at once nor from a publication job: its old
+  module already rewarded the publication. `NodeService` asks the table only on the way to that award.
 
 ### `_node_publish`
 
@@ -1229,7 +1218,7 @@ public function getNodeTally(NodeType $type): array
 - `checkNodeCategory()`: the category is readable in the type by the list rule (a public list outside it is 404).
   `getNodePostCats()`: categories the form offers (`pview` and `ppost` both grant and the category is shared or of
   the context language; all for a moderator).
-- `getNodeLegacy()`: the row of `_node_legacy` for a removed module name and its old id as `['type', 'nid']`, or
+- `getNodeLegacy()`: the row of `_node_legacy` for an old module name and its old id as `['type', 'nid']`, or
   with `id` 0 the type its materials went to (`nid` 0); `null` for a name outside the grammar, a missing row or a
   type the context does not receive.
 - `getNodeReadSet()`: the key of the readable set the header counts of a type are shared by, `c` and the sorted ids of
@@ -1633,7 +1622,7 @@ whose message is the path of the first error (`price.options.scale`). Nothing is
 - A definition has exactly `title`, `intro`, `type`, `default`, `options`, `req`, `multi`, `active`, `sort` with
   native types. `title` (1…255 characters) and `intro` (up to 1000) are plain text without markup, control
   characters, `<`, `>` or edge spaces, or a language constant: a leading `_` always means a constant, and an unknown
-  one is an error. In the administration and the first stage of `update.php` the constant must be defined in the site dictionary
+  one is an error. In the administration and in `update.php` the constant must be defined in the site dictionary
   `lang/<language>.php` the request loaded, so a saved set also passes on the site, where `defined()` decides.
 - Only `select` supports `multi`. `req` with `active = false` is refused. Inactive fields leave form and view but
   keep their stored values.
@@ -2115,7 +2104,7 @@ and calls `updateNodeType()` with the version the form carries.
 `uploads` and `rating`, so a type made from it takes the site's `uploads.all` and the default rating rule. A clean
 installation (`addNodeProfiles()` in `core/admin.php`, opened by the mark `node => new` of `config/update.php`)
 imports and activates all sixteen, seeds the rubrics of `node.sql` and adds four starter
-materials to `news`; the 8.0 update creates no type.
+materials to `news`.
 
 All sixteen profiles share `workflow` = `access user`, no groups, both notices on, except `help` (both notices off)
 and `reviews` (`access all`: a guest may post). `workflow.lifetime` is 30 days in `board` and `jobs` and 0 in the
@@ -3430,7 +3419,7 @@ marked `release` below belong to the group `composer test:fast` leaves out and `
 | `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
 | `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the sixteen profiles; panel and public walk |
-| `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | 6.2 -> 8.0 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
+| `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | data update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
 | `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup`; Config and Mails `release` | settings carry-over, newsletter, registry, both preflights |
 | `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields`, `release` | data update units |
 | `PointTest`, `RatingTest` | 20, 18 | `point_probe.php`, `rating_probe.php` | the classes |
@@ -3466,7 +3455,7 @@ stand's database, `config/`, `storage/` and `uploads/` are never written.
 - `install_probe.php <scratch> [keep | fail | update <dump> <config-dir-or-revision> <prefix> [<snapshot>]]`
   serves a copy of the tracked tree (without `docs`, `tests`, `tools`) with two `php -S` instances, so the
   directory check of type activation reaches a free server. `keep` stays up until `stop`; `fail` plants a user
-  file in `uploads/jokes`; `update` loads a 6.2 dump and runs `update.php` over HTTP. The installation walks
+  file in `uploads/jokes`; `update` loads an old dump and runs `update.php` over HTTP. The installation walks
   `setup.php` as a browser does: the token from the hidden field of the first page, every POST with `token`, `stop`
   and `go`, the parts with `go=part` until `more` is false.
   `SLAED_PROBE_DB=host|user|password` points it at another server.
@@ -3522,603 +3511,3 @@ table over 1000 rows is fully scanned, a list page reads more than `2 x page end
 `3 x timed and pinned rows + 50`), a category page or count misses `_nodes.cat` or `_node_categories.cat`, or the
 largest page (`media` at `limit = 100`) costs other statements than a page of one. Results with Xdebug loaded are
 not acceptance results.
-
-## The 8.0 update
-
-`update.php` in the root brings a 6.2 site to 8.0 and then carries the content of the removed modules into Node
-(see the next section); the same run brings a site of an early 6.3 build forward (see
-[A site of an early 6.3 build](#a-site-of-an-early-63-build)). It is an internal tool of the maintainer: the release
-does not ship it, `setup.php` installs a new site only, and the public `UPGRADING.md` says that a 6.2 site is not
-updated by the release. This section is the maintainer view of its first stage and of
-`storage/update/sql/table_update6_3.sql`.
-
-The first stage is the only entry of the data update. There is no CLI script, no conversion at runtime and no
-detection of a 6.2 format by the running system: a subsystem whose mark is missing stays closed for writing and
-says so, it never reads the old format. The conversion version string is `8.0.0`.
-
-### Two stages in one file
-
-A 6.2 site cannot boot the core: its `config/config_*.php` and `db.php` assign variables instead of returning
-arrays, so `getConfig()` finds no database. `update.php` therefore decides before the core:
-
-- **First stage**, while the marks `points`, `ratings` and `fields` of `config/update.php` are not all set, and for
-  every request with `op=update`, which a repeat uses. It runs under `SETUP_FILE`, without a key and without a login,
-  at the risk of the maintainer. `setUpdatePage()` shows what the run does on the login card of the admin theme
-  (`pages/login.html` with the fragments `alert`, `table`, `table-row`, `table-cells`, `inline-badge`,
-  `post-button`); a POST `op=update` runs `setUpdateRun()` and shows its report, and a POST `op=update` with
-  `dry=1` runs only the checks up to the preflight and the counts of the archive and text units, which write nothing.
-  The texts are English literals.
-- **Second stage**, once the three marks stand: the core boots and `isAdmin(true)` guards the migration of the
-  removed modules.
-
-The connection comes from `config/db.php` in either shape (area `db` of 8.0, `$confdb` of 6.2), so the first stage
-has no form. Both shapes connect and are written in the collation of the release, `utf8mb4_unicode_520_ci`, whatever
-`collate` they name, so the schema file converts an 8.0 site of another collation too; a 6.2 source is written without
-the `mode`, `sync` and `type` of 6.2, which nothing reads; `setUpdateSql()` fills `{collate}` with the same value. The panel file keeps the
-name of the site: the `afile` of `config/config_security.php` while a 6.2 site still has it, otherwise the one of
-`security.php`; a name outside `[a-zA-Z0-9_-]` or one of `index`, `setup`, `update` falls back to `admin`.
-
-### Boundary of the first stage
-
-The first stage does not include `core/system.php`. It loads only self-contained code: `core/admin.php` (the SQL
-splitter `getSqlbatch()` and `getSqlinfo()`, which honour the `DELIMITER` directive), `core/classes/filemanager.php`,
-`core/classes/logger.php`, `core/classes/pdo.php` (`Database`, which throws a `RuntimeException` on a refused
-connection under `SETUP_FILE`), `core/classes/template.php`, `lang/en.php`, inside the fields unit
-`core/classes/field.php`, inside the settings step `core/classes/update.php` (only `Update::getConfigMerge()` and
-`Update::isSiteFile()`, which call nothing of the core) and inside the archive unit `core/classes/upload.php`,
-`core/classes/comment.php` and `core/classes/node/status.php` for the supported types and the two status enums. A class the update needs must not depend on functions of `core/system.php`. The first stage
-defines the path constants itself, `CONFIG_DIR`, `BACKUP_DIR`, `CACHE_DIR`, `LOGS_DIR` and `UPLOADS_DIR`, which the
-attachment units of the forum and the private messages read. The update
-runs on a closed site with one writer, so the runtime configuration protocol of the running system is not used.
-No function of `update.php` carries a name the core, `core/admin.php` or a module declares, because the second stage
-boots the core in the same file.
-
-```php
-function setUpdateFile(string $fp, array $arr, array $act = [], bool $raw = false): bool
-```
-
-- Writes `config/<fp>` under `FileManager::getPathLock(CONFIG_DIR)`, the same lock the runtime rebuilds
-  `config/local.php` under, and deletes `config/local.php` on every call, so a rebuild from half-updated files
-  never publishes `close = 0`. `CACHE_DIR` is defined by the first stage for that lock.
-- Answers whether the whole file was written; it never touches a file or a `config/` that PHP cannot write, and it
-  never changes file permissions. Every caller turns `false` into a failed report row.
-- Scalars are stored as strings; `$raw = true` keeps native `bool`, `int` and `null`, which the Field definitions
-  need. A file published with `$raw` equals byte for byte what the runtime `setConfigFile()` writes.
-- `getUpdateSource(string $file): array` includes a source in an isolated scope without output and answers the
-  array an 8.0 file returns or the first array a 6.2 file assigns. `getUpdateCred(): array` reads the gitignored
-  `config/db.php` in both shapes.
-
-A unit answers its report rows as data, `[['text' => …, 'done' => bool]]`, built by `getUpdateRow()`;
-`checkUpdateFail()` finds a failed row, and every stop of the run is decided by it.
-
-### Checks before the first write
-
-In this order, each a failed row that changes nothing:
-
-| Check | Row |
-|---|---|
-| `config/db.php`, `global.php`, `security.php` writable by PHP (for a missing one: `config/`) | `config/<name> is not writable by PHP` |
-| `storage/backup/config/marker.json` is absent (no unfinished runtime configuration operation) | an unfinished configuration operation waits |
-| `config/db.php` names a database and a prefix matching `[A-Za-z0-9_]{1,32}` | no database or no valid prefix |
-| the connection | the reason of the server |
-| `checkUpdateBase()` | see below |
-| `checkUpdateEmails()` | per account table (`_admins`, `_users`, `_users_temp`), every address held by more than one row, compared in the collation of the unique key the schema file builds, with its accounts; the site is not closed |
-
-### Preflight
-
-```php
-function checkUpdateBase(Database $db, string $prefix): string
-```
-
-Answers the refusal text or `''`, after connecting and before any file is written.
-
-- Server version: MariaDB 10.5.2+ (`RENAME COLUMN`, `RENAME INDEX` of the schema file, enforced `CHECK`) or
-  MySQL 8.0.16+.
-- `<prefix>_users` and `<prefix>_admins` must exist; every existing table of the transaction list (`users`,
-  `admins`, `comment`, `forum`, `favorites`, `user_oauth`, `points`, `rating_targets`, `rating_actors`,
-  `rating_votes`, `categories`, `voting`, `newsletter`, `privat`) must be InnoDB, else the refusal lists one
-  `ALTER TABLE … ENGINE=InnoDB;` per table. Nothing is converted automatically. A table that does not exist yet is
-  skipped.
-
-A table that takes part in a Point, Rating, Field, Node, private message or newsletter transaction belongs in that list.
-The preflight of a new installation (a free prefix, the same server versions) is `getSetupProbe()` of `setup.php`.
-
-### Run order
-
-`setUpdateRun()` runs these steps. "Stop before the schema" means: every step up to the negative balances still
-runs and reports, then neither the schema file nor any data unit runs.
-
-1. The checks above; a refusal returns at once.
-2. Close the site (`global.php`, `close = 1`). The shipped `global.php` carries `close = 0` and lands before a
-   8.0 panel exists, so the run closes the site itself. It stays closed after the update until the maintainer
-   opens it in the settings.
-3. `setUpdateConfig()` carries the 6.2 settings (see "6.2 configuration" below). An 8.0 site (no `config_*.php` and
-   no `storage/backup/update/config/`) runs `setUpdateMerge()` instead: the global keys `rewrite`, `sep`, `tsep`,
-   `title`, `ctitle`, `clickable`, `dbsync`, `version`, `cache_*` and every `css_*` and `script_*` but `css_f` and
-   `script_f`, the users keys `anonym`, `network`, `network_c`, `point`, `points`, the newsletter keys `active`,
-   `count`, the poll key `bar` and the comments key `alink` leave, then every option of the shipped `config/` the
-   operator keeps in `storage/backup/release/config/` that the site lacks is added through `Update::getConfigMerge()`,
-   a type section staying the site's; without that folder the step is a failed row.
-4. The panel file: the rename source is the shipped `admin.php` when it exists, otherwise the panel file of the site
-   (a repeat after the rename); the rename replaces a 6.2 loader under the name of the site, and a panel file of
-   the site under another name is removed. Then `security.php` (`afile`) and `db.php` in the 8.0 format. The
-   language and the address of 6.2 stay; nothing is taken from the request host.
-5. `setUpdateModules($db, $prefix, $first)` reconciles `config/modules.php`.
-6. `deleteUpdateTypes($keep)` removes every type of the shipped `config/node.php` that has no row in
-   `<prefix>_node_types` (all of them on the first run, because the table does not exist yet).
-7. `config/uploads.php` loses the rules `news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files`,
-   `media` unless `config/node.php` has a type of that name.
-8. `config/scheduler.php`: adds `maildrain` (priority `8`), `nodepublish` (`6`), `nodesync` (`7`) when missing;
-   removes `commentsync`; on the first run switches `newsletter` on with `*/5 * * * *`; fills missing `dbbackup`
-   settings; moves `maildrain` to the lowest free priority when another job holds its priority. Written only
-   when something changed.
-9. On the first run with no failed row so far: the mark `modules`.
-10. `config/newsletter.php` gains missing keys (`abort`, `bouncemax`, `breakwin`, `canary`, `canarymin`), and
-    `config/node.php` gains `limits.edit` (`600`) when its `limits` lack it.
-11. `setUpdateMails(..., false)` snapshots the pending newsletter recipients while the column `mails` exists.
-12. A negative balance in `_users.points` (`user_points` on 6.2) becomes 0, since the schema makes the column
-    unsigned; the row counts the accounts.
-13. Any failed row so far: stop before the schema.
-14. `setUpdateSql($db, 'table_update6_3.sql', $prefix)`. An empty answer or a failed row stops here: no data unit
-    runs, no data mark is written.
-15. Data units, each independent of the result of the previous one: `setUpdatePoints()`,
-    `setUpdateRatings()`, `setUpdateFields()`, then `setUpdateAttach()` over the forum posts and the private
-    messages: a direct address of a file `uploads/forum/` or `uploads/account/` holds becomes an `[attach]` of the
-    same name, because both folders are closed; an address the folder does not hold, and an image inside a link to
-    another site, stay as written and answer 410. `setUpdateLangs()` follows, then `setUpdateArchive()` for a site
-    whose Node texts kept the addresses of an early migration: in `_nodes` and in the comments of a type, an address
-    of `uploads/archive/<module>/`, of the old folder of a module of that type or of the folder of the type becomes an
-    `[attach]` (inside `[usehtml]` the file address of the material) when the file is there; in the forum, private and
-    admin messages, newsletters, blocks, signatures and polls an archive address becomes the file address of the
-    published material or comment that carries the name. Its manifest keeps the counts of the first pass, a cursor per
-    table and the state; a stopped run continues after the cursor, a check that still finds a text to change starts
-    the cursors over, and a verified unit is skipped. Last `setUpdateTexts()`: every stored text the parser renders
-    (Node texts, comments, forum posts, private and admin messages, newsletters, own blocks, signatures, blocks without
-    a feed, textarea fields, the contact text) turns from BB into Markdown once. A text of the BB era is escaped, one
-    rendered trusted takes `getMigrateHtml()`, and a text Markdown by origin (Node; on an 8.0 site the help replies and
-    the forum posts, comments and private messages from 2026-07-13 on) converts its tags alone. Each batch of 200 rows
-    is named in the manifest with the hashes of its new texts before its transaction, so a stopped run neither
-    converts a committed batch again nor loses one that rolled back; a text too long for its column stays BB and the
-    report names it. A column no parser call renders is never touched: the RSS blocks (their body is fetched again),
-    `global.mtemp` (plain text framed by `getMailFrame()`), the mail journal `_mail.body` (HTML) and the poll answers
-    `_voting.body` (a list printed as text).
-16. `config/rss.php`: `temp` removed, missing `bytes` (`2097152`), `redirects` (`3`), `timeout` (`10`) added.
-    Without these keys Feed refuses with code `config` before any request.
-17. RSS blocks: `UPDATE _blocks SET content = '', time = 0 WHERE url != ''` drops the cached HTML; the next
-    display fetches the feed and stores Markdown. A repeat empties the bodies again, which is harmless.
-18. `_blocks` rows with `status = 1` and `bfile` `news`, `pages`, `faq`, `files`, `jokes`, `jokes_random`,
-    `links`, `center`, `center_media`, `center_plus` (`.php`) get `status = 0`; the report names the files.
-19. `setUpdateMails(..., true)` queues the kept recipients, each address once per campaign however often the run
-    repeats.
-20. Avatar check: a failed row while any `_users.avatar LIKE 'default/%'` remains (the schema file maps them).
-21. `_nodes` counter: `AUTO_INCREMENT` is raised to the highest id of the nine old tables that still exist + 1,
-    only when the current value is lower. The key column comes from `information_schema.COLUMNS` by
-    `auto_increment` (6.2 uses `sid`, `pid`, `fid`, `lid`); the current value comes from `SHOW CREATE TABLE`,
-    because MySQL 8 caches `information_schema.TABLES`. An old `name=<type>&op=view&id=N` answers 404 instead of a
-    different material; there is no map of old ids.
-22. Any failed row so far ends the run here. `setUpdateTables()` drops the tables of the modules gone for good
-    (`auto_links`, `clients`, `clients_down`, `money`, `order`, `partners`, `products`, `whois`), with no archive, and
-    every source table of Node whose rows all are materials: a published row by its `_node_legacy` row (for `help`
-    every request, `pid = 0`, whose replies became comments with it), a pending row, which the migration gives no
-    address, by a material of its type with the same title and creation time; an empty table goes at once. A table
-    with a row matched by neither stays, and the report names it with up to ten ids. On a 6.2 site the tables with
-    rows stay until the second stage carries them; a site whose content is already in Node loses them here.
-23. Clean finish (no failed row in the whole report): every file under `storage/backup/update/*/` except
-    `manifest.json` is deleted, including the moved configuration sources and the newsletter snapshot, because
-    they hold guest addresses, balances and field values.
-
-A rollback restores code, schema, configuration and data together; restoring only some files is none, and a
-restore after the site was reopened loses what was written in between.
-
-### Marks in `config/update.php`
-
-The file holds the area `update`; it is gitignored and travels with the site. Marks are read without SQL.
-
-| Key | Value | Written by | Read by |
-|---|---|---|---|
-| `points` | `8.0.0` | `setUpdatePoints()`; `setup.php` | `core/system.php` builds `Point` with the rules only when set; `admin/modules/groups.php` warns `_POINTS_NOMARK` |
-| `ratings` | `8.0.0` | `setUpdateRatings()`; `setup.php` | `Rating` construction in `core/system.php`, `getRatingAsync()` in `core/helpers.php`, `admin/modules/ratings.php` (`_RATINGS_NOMARK`, no form) |
-| `fields` | `8.0.0` | `setUpdateFields()`; `setup.php` | `getFieldRules()` (empty set without it), `getFieldsPost()` (keeps the stored text, logs), `admin/modules/fields.php` (`_FIELDS_NOMARK`) |
-| `modules` | `8.0.0` | step 9 of the run | the run only: set means "not the first run" |
-| `node` | `new` | `setup.php` only | `addNodeProfiles()` in `core/admin.php`: imports the shipped profiles for the first administrator, then removes the key |
-
-`setup.php` writes `points`, `ratings`, `fields` and `node` together, after the last statement of `insert.sql`, so a
-failed schema statement leaves no mark. Each data unit merges its key into the marks it reads at its start, so no
-earlier mark is lost. The update never writes `node`, so `addNodeProfiles()` creates no type on an updated site.
-
-### Units, manifests and snapshots
-
-Every resumable unit keeps `storage/backup/update/<unit>/manifest.json` and its snapshots beside it, written by
-`setUpdateBackup()` through a temporary file and `rename()`. Directories get mode `0750`; `storage/backup/` lies
-outside the document root.
-
-| Unit | Snapshots | Manifest beyond `version`, `state`, `source`, `target` |
-|---|---|---|
-| `points` | `balances.json` (uid -> `_users.points`) | `cursor` 0, `count` |
-| `ratings` | `targets.json`, `terms.json`, `rules.json` | `cursor` per `targets`/`terms`, `moment` (server time of the preflight), `count` with `targets`, `terms`, `voting`, `foreign`, `orphan`, `dropped` |
-| `fields` | `definitions.json`, `account.json`, `forum.json` | `cursor` and `count` per area |
-| `newsletter` | `recipients.json` | `count` (`campaigns`, `recipients`), `sent`; states `prepared` -> `verified` |
-| `config` | the moved `config_<name>.php` sources | none |
-
-`source` holds the SHA-256 of every snapshot, `target` the SHA-256 of what the unit published (configuration files
-and, for ratings and fields, the stored rows read back).
-
-### Resume and repeat
-
-- No manifest: the unit prepares, but refuses when target data exists (`_points` rows; rows in any rating table). The
-  current state is never taken for the source state, so a repeat never snapshots a balance twice. A set mark without a
-  manifest is a unit that ran on the site before, its manifest left behind on another machine (a site moved or brought
-  forward from its dump): the unit answers done and writes nothing.
-- `prepared` or `applying`: every snapshot is checked against its `source` hash, the state becomes `applying`,
-  and application continues from the cursor. The cursor is saved after the `COMMIT` of each batch of 500, so a
-  break leaves it at most one batch behind, and a row is compared by value: equal to its target is skipped,
-  equal to its source is written, anything else stops the unit.
-- `verified`: the unit only (re)writes its mark. It does not look at snapshots, which is why the snapshots can be
-  deleted at the clean finish.
-- DDL is not transactional: a rerun meets whatever stage the schema reached, so the schema file is re-runnable.
-
-A repeat after a clean finish skips every unit by mark and manifest, reconciles the registry only with the tree,
-re-runs the schema file idempotently and never lowers the `_nodes` counter.
-
-### Points unit
-
-`setUpdatePoints(Database $db, string $prefix): array` snapshots `uid -> points` of `_users` inside a
-transaction, moves `users.point` of the site configuration into `points.active` of `config/points.php` and drops
-`point` and `points` from `config/users.php`. It requires the points scope to carry 15 actions and an `active` of
-`'0'` or `'1'`. `_users` is not modified: `_users.points` is the starting balance, rating rewards of 6.2 included, no
-journal row is invented and the positional `users.points` string of 6.2 is not carried; the reward rules start from
-the release.
-
-### Ratings unit
-
-`setUpdateRatings(Database $db, string $prefix): array` handles the remaining targets `account` (`_users`
-`votes`/`tvotes`) and `forum` (`_forum` `ratings`/`score`, topics `pid = 0`).
-
-- Preflight, nothing written on failure (first 50 entries and the total reported): an aggregate outside
-  `votes <= total <= 5 × votes`; a kept `_rating` row without an actor or with a time that is not a positive
-  integer up to the server time; an invalid rule; a missing rule for `account` or `forum`.
-- Rules: `period|active|detail` of 6.2 becomes the four keys with `guests = '1'`; `period` must be a multiple of
-  86400, `0` stays "no wait". Only `account`, `forum` and `node.<name>` are kept.
-- Aggregates go to `rating_targets` (`base` = total, `created` = `moment`); the latest `_rating.time` per actor
-  (`u:<uid>` or `g:<normalized address>`) and target goes to `rating_actors.last`. No vote row is created.
-- The unit never modifies `_rating`; poll rows, other events and rows of missing targets are counted and left.
-  The schema file before it has already removed the later rows of one address, target and module (see below).
-- `config/ratings.php` is published only after targets, terms, owner aggregates, an empty `rating_votes` and the
-  poll row count match the manifest. The rating model is described in `docs/RATINGS.md`.
-
-### Fields unit
-
-`setUpdateFields(Database $db, string $prefix): array` converts `account` (`_users.field`) and `forum`
-(`_forum.field`).
-
-```php
-function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): array
-function getUpdateValue(array $rules, array $slots, int $size, string $text, Field $fld, string $plan = ''): array
-```
-
-- `getUpdateRules()` splits the definitions by `||`, each position by `|` into `caption|content|type|duty`, and
-  trims every slot and option caption. An empty position is skipped; type `1`-`5` maps to `text`, `textarea`,
-  `select`, `datetime`, `date`; another slot count or type of an active position is refused. Keys are `fieldN` by
-  original position with gaps kept, options `optionN` in original order, both with `sort = N × 10`; a repeated
-  option caption is refused. Content `0` means no default; `req` only for exactly `1`. The set passes
-  `Field::filterFieldList()`. A position with caption `0` and a known type stays in the slot map as switched off,
-  with the inactive definition it becomes (`title` = its key, no default, not required) once a row needs it.
-- `getUpdateValue()` splits a value row by `|` and tries two layouts: full (value i -> position i) and short
-  (values -> active positions only). A layout that fits the definitions as they are wins; only when none does,
-  a layout that fits once they grow: a select caption no option carries, or data at a switched off position.
-  It answers `['json' => …, 'plan' => layout, 'grow' => field => [captions]]` when exactly one distinct result
-  passes `Field::checkFieldValues()`, otherwise `['why' => …]` without stored data in the text. Empty is absence;
-  `0` is a value of `text`/`textarea` and the placeholder of an empty choice in `select` (without such an option),
-  `date`, `datetime` and in a switched off position. Data beyond every position is refused. Values are not decoded:
-  6.2 stored `htmlspecialchars` text, which is carried byte for byte.
-- A row the unit cannot map without guessing stops it before any write, named by table, row id and reason, for
-  example `sport_users 261 (value 10 holds data and has no definition)`; the row is corrected in the database and
-  the run repeated, finished units skipped and the fields unit started over.
-- The unit grants the needs of every row in id order: a caption becomes one disabled option (`active = false`,
-  next `optionN`) of its field, a switched off position its inactive field; then each growing row runs its layout
-  (`$plan`) again against the grown set. The form offers no disabled option and hides an inactive field, the page
-  shows a stored disabled option, and a stored value of an inactive field survives the form (`getFieldsPost()`).
-  The manifest keeps the counts in `grown`, and the report names them, at most 50 rows plus the total.
-- Definitions that are already named (arrays) with empty value columns are a valid no-op: the unit seals an
-  empty manifest and sets the mark. Named definitions while positional rows exist and no manifest does stop the
-  unit with the instruction to put the 6.2 `config/fields.php` back.
-- The preflight read transaction is committed before the checks: an open one holds a metadata lock.
-- Batches of 500 rows under `SELECT … FOR UPDATE`. After all batches every non-empty value of the column is
-  compared with the snapshot; only then is `config/fields.php` published with `$raw = true`.
-
-The columns `_users.field` and `_forum.field` are `MEDIUMTEXT NOT NULL` for the 1 MiB JSON limit of
-Field, declared so in `table.sql` and in the final alignment of the schema file.
-
-### Module registry
-
-```php
-function setUpdateModules(Database $db, string $prefix, bool $first = true): array
-function deleteUpdateTypes(array $keep): array|false
-```
-
-- `setUpdateModules()` builds the default records of the modules screen (`admin/modules`: `active 1`, `type 0`;
-  `modules`: `active 0`, `type 1`; `icon` `puzzle`) and the clean-installation record of `node`. Existing records
-  of `config/modules.php` win; records of modules missing from the tree are dropped and named.
-- First run only: when the 6.2 table `<prefix>_modules` exists, its `active`, `view`, `inmenu`,
-  `mod_group`, `blocks`, `blocks_c` override the records, and the numeric module ids in `_admins.modules` are
-  rewritten as module names. A failed read of `information_schema`, `_modules`, `_admins` or a failed
-  `UPDATE _admins` is a failed row and `config/modules.php` is not written.
-- Repeat (mark `modules` set): the table is not read, the switches the owner set in between stay, the report says
-  so.
-- `deleteUpdateTypes()` removes each type of `config/node.php` not in `$keep` from `node.types`, `fields.node`,
-  `uploads` and `ratings` `node.<name>`, as the panel does when it deletes a type, and publishes the four files
-  with `node.php` last, so a repeat after a failure still finds the types. It answers the removed names or
-  `false`. The run passes the names of `<prefix>_node_types`; `deleteSetupTypes()` of `setup.php` does the same for
-  a new installation and takes every type.
-
-### 6.2 configuration
-
-`setUpdateConfig(): array` reads every `config/config_<name>.php` and lays the site values over the shipped
-`config/<name>.php` (`stat` -> `statistic`, `seo` -> over `global`; `fields` is taken as the site wrote it).
-
-- Unshipped keys stay for the data units (`users.point`, `users.points`, positional `fields` and `ratings`); the
-  settings form drops the rest on its next save.
-- `global`: `close = '1'`; language names become codes (also `lang.lang`); `module` keeps only modules of the
-  tree and `amod` is dropped; `version`, `css_f`, `script_f` come from the release; a missing theme or logo falls back.
-  The address switches `rewrite`, `sep`, `tsep`, `title` and `ctitle` are dropped, from `global` and from `seo` alike,
-  and so is `clickable`, with `alink` of `comments`: the parser links a bare address itself.
-  A key that names a configuration area (`forum`, `newsletter` and `search` of 6.2) is dropped: `getConfig()` merges
-  the files in name order, so `global.php` would replace the whole `$conf['forum']` of `forum.php` with its string.
-- `uploads`: a 12-field rule loses field 8 (`adminlist`) and gains `guestfiles` = `userfiles` as field 12.
-- `security.blocker_ip`: `ip|octets|hash|time|reason` becomes `CIDR|hash|time|reason`; other entries are dropped.
-- Not carried: the nine removed modules, `templ`, `header`, `chmod`, `core`, `rewrite`, `rules`, `db`, a file
-  without an array or without a shipped counterpart.
-- Each target is read back before its sources move to `storage/backup/update/config/`. The move is required:
-  `getConfig()` includes every `config/*.php`, and `config_global.php` would overwrite `$conf`, `config_header.php`
-  print HTML. A moved source is not applied twice; on a failed write or move the sources stay and the row fails.
-
-### Newsletter
-
-`setUpdateMails(Database $db, string $prefix, string $from, bool $move): array`: before the schema, while
-`<prefix>_newsletter.mails` exists and no manifest does, the valid unique addresses per campaign go to
-`recipients.json`. After it, each address is queued in `_mail` (`kind = 'newsletter'`, `ref` = campaign) unless
-that `ref` and `email` pair exists, and the campaign gets `status = 5`, `audit = 'list'`, `expect` = `total` =
-valid addresses, one transaction per campaign. Without emulated prepares a named placeholder may appear only once
-per statement, and `SHOW … LIKE ?` fails, hence `information_schema`.
-
-### The schema file
-
-`storage/update/sql/table_update6_3.sql` runs through `setUpdateSql()`, which splits it with `getSqlbatch()`,
-substitutes `{prefix}`, `{engine}`, `{charset}`, `{collate}` and answers a row per table statement and per failed
-one; a `DELETE` names its removed rows. It runs outside any data transaction; a failed statement leaves the earlier
-ones applied, so every statement must be safe to run again on a 6.2 schema, on a partly migrated one and on a
-finished one. The file creates none of the tables of the nine removed modules nor of the modules gone for good
-(`clients`, `clients_down`, `products`, `money`, `order`, `partners`, `whois`, `auto_links`), and alters only the
-column names of the nine ("Batch X"); the first stage drops them after the data units (step 22 of the run order). It
-drops `_referer.lid`, which tied a referer to a link of `auto_links`.
-
-It runs without `NO_ZERO_DATE` and `NO_ZERO_IN_DATE` for its session, which MySQL 8 sets by default and which refuse
-every `ALTER` of a 6.2 table whose datetime defaults to a zero date, and restores the mode of the session at its end.
-Before a statement makes a column `NOT NULL` or narrower, a NULL takes the default of its column and a longer value is
-cut where the row is transient (`_session.modul`). The final alignment covers the two 6.2 schemas the tests carry:
-`tests/Fixtures/update62` and the earlier `update62early` (signed integers, addresses of 15 characters, other defaults).
-It stops with a message while `_privat.time`, `_comment.time`, `_forum.time`, `_newsletter.time` or `_voting.time` holds
-`NULL` or `_comment.reqkey` is still hex text; a missing `_forum.ltime` takes the topic time and a missing
-`_voting.enddate` the poll start, which is when the site read such a poll as closed. Text times take their forms: the
-refresh stamps `_blocks.time` and `_rating.time` become numbers (a text that is no number becomes `0`), the unix
-expiry of `_blocks.expire` becomes the `DATETIME` the connection shows for it, `0` becoming
-`NULL`, `_users_temp.time` is dropped, and `_users.lastvis` loses its zero date and the sentinel
-`1970-01-01 00:00:01` to `NULL` for "never".
-
-Its one `DELETE` removes, before the unique key `mid_modul_ip`, every `_rating` row that has an earlier row of the
-same `mid`, `modul` and `ip`: 6.2 kept one row per account, so two accounts of one address could both have voted.
-`setUpdateSql()` names the removed rows of a `DELETE` in its report row.
-
-Helper procedures are dropped and created at the top inside `DELIMITER $$` and dropped again in the cleanup
-section; `movenet` is created and dropped around the OAuth block and `setconv` around the collation block. The block
-of the keys of the release follows the collation and comes last before the cleanup: it drops every key that leaves
-and sets every new or reshaped one through `setidx()`, the unique addresses in the collation `checkUpdateEmails()`
-compared them in.
-
-| Procedure | Effect |
-|---|---|
-| `rencol(tab, old, new)` | `RENAME COLUMN` when `old` exists and `new` does not |
-| `addcol(tab, col, def)` | `ADD COLUMN` when missing |
-| `poscol(tab, col, def, after)` | `MODIFY … AFTER` when an existing column is not right after `after` |
-| `modcol(tab, col, def)` | `MODIFY` only when the stored definition differs from `def` (integer display widths and implicit `NULL` normalized) |
-| `setcoll(tab, col, def, coll)` | `MODIFY` when the collation differs |
-| `delcol(tab, col)` | `DROP COLUMN` when present |
-| `runifcol(tab, col, sql)` | runs `sql` only while `col` exists (backfills that must read a column before a rename consumes it) |
-| `runiftype(tab, col, type, sql)` | runs `sql` only while `col` has the data type `type` (the passage of a value to a new type, so a second run finds the target and skips it) |
-| `renidx`, `delidx`, `addidx(tab, idx, exp, unique)` | index rename, drop, add when absent |
-| `setidx(tab, idx, exp, unique)` | builds a key or rebuilds it while its parts, prefixes, directions or uniqueness differ from `exp`, so a second run changes nothing |
-| `stopcol(tab, col, type, msg)`, `stopnull(tab, col, msg)` | `SIGNAL SQLSTATE '45000'` with `msg` when the column has that type or holds `NULL` rows |
-| `finalize_user_names(tab)` | renames duplicate user names to `<name>_<id>` (cut to 25) in the collation of the column, signals on a conflict |
-| `mkuseruniq(tab)`, `mksessuniq(tab)` | turn `name` into a `UNIQUE KEY` when no duplicates remain; dedupe `_session` and make `uname` unique |
-| `fixgrppk(tab)` | restores the primary key of `_groups` |
-| `movenet(users, links)` | archives `_users.network` as provider `ulogin` rows of `_user_oauth` and drops the column |
-| `setconv(tab, coll)` | sets the table default to `coll` and `MODIFY`s, keeping type, `NULL` and default, every text column of another utf8 collation that is not `_bin`; `CONVERT TO` would also turn the `ascii_bin` and `utf8mb4_bin` columns, and MariaDB lets it win over a `MODIFY` of the same statement. Every table of the release is named, the old module tables are not |
-
-Rules, enforced by `tests/SchemaUpdateValidationTest.php` for the file:
-
-- Every `{prefix}_<table>` it names must be a table of `storage/update/sql/table.sql` (named `CONSTRAINT`s aside; the
-  6.2 table `modules` is the only exception). A table it drops with `DROP TABLE IF EXISTS` must not be in `table.sql`.
-- A column declaration is a `MODIFY` line of an `ALTER TABLE`, or the definition passed to `addcol()` or
-  `modcol()`; what a `runiftype()` step declares is a passage, not a declaration. Every declaration must equal the definition `table.sql` gives the column (whitespace, case and
-  `BOOLEAN` = `TINYINT(1)` normalized).
-- A column is not declared twice with different definitions: the last one would silently win. A type change is
-  therefore one declaration of the final type. Data that only the old type accepts is fixed before the
-  `MODIFY`, data that only the final type accepts is written after it. Example: `_admins.editor` of 6.2 is a
-  `TINYINT`; `NULL -> 0` runs before the widening, `'plain'` for `''`, `0`, `1` after it.
-- Most type alignment of existing columns lives in the section "Final type alignment to
-  storage/update/sql/table.sql"; a rename a `MODIFY` depends on comes before that `MODIFY`.
-- A statement that would fail on a repeat is not an unconditional `ALTER` (the `_users` alignment leaves out
-  `network`, which the OAuth block drops). A plain `MODIFY` to the final definition re-runs to the same result.
-- Tables 6.2 lacks are `CREATE TABLE IF NOT EXISTS` with the definitions of `table.sql` verbatim, ordered by their
-  foreign keys, so the file runs with foreign key checks on.
-
-The header names MariaDB 10.5.2+ and MySQL 8.0.16+, as do `table.sql` and `insert.sql`. `rank` is a reserved
-word of MySQL 8.0.2+: unqualified `_users.rank` and `_groups.rank` are written in backticks in every query.
-
-A `runiftype()` passage that turns a text time into a timer casts the text to `DATETIME` before `UNIX_TIMESTAMP()`:
-on a text argument `UNIX_TIMESTAMP()` answers a decimal, which a `BIGINT` refuses.
-
-### A site of an early 6.3 build
-
-A site that ran a development build of early October 2026 (`slaed.net` is one) is no 6.2 site: its content is in
-Node already, its marks `points`, `ratings`, `fields` and `modules` are set and `steps` is missing. What it lacks is
-the rest of the release: its schema is the one of that time (no `_routes`, no `_login_log`, other columns, keys and
-collations, eight time columns in the other form), its configuration lacks the options added since and keeps retired
-ones, its files lie in the folders of the old modules and in `uploads/archive/<module>/`, its Node texts and comments
-point there, and the source tables of the old modules stay beside their materials. The first stage brings it forward
-without carrying the source tables again, so ids, addresses and every row written in Node since stay:
-
-- **Checks.** `checkUpdateEmails()` stops the run while two accounts share an address, which the schema of early
-  October allowed; which account keeps it is the operator's choice, and the others are deleted before the run with
-  their `_user_oauth` rows (the table has no foreign key to `_users`).
-- **Settings.** Step 3 of the run order merges from the `config/` of the release, which the operator puts into
-  `storage/backup/release/config/` before the run; `css_f` and `script_f` keep the values of the site.
-- **Data units.** Points, ratings and fields answer done by their marks, since their manifests stayed on the machine
-  that ran them ([Resume and repeat](#resume-and-repeat)); the forum and the private messages lose the direct addresses
-  of their closed folders, the archive unit rewrites the addresses of `uploads/archive/<module>/` and of the old
-  folders, and the text unit converts the BB of the texts by their origin.
-- **Schema.** The schema file converts the tables into the collation of the release, which the run also writes into
-  `db.php`, and brings the eight time columns (`_mail.ntime`, `_mail.locked`, `_node_publish.due`,
-  `_rating_targets.created`, `_rating_votes.created`, `_rating_votes.annulled`, `_user_oauth.linked`,
-  `_user_oauth.lastlog`) to their forms with every moment kept.
-- **Tables.** `setUpdateTables()` (step 22) drops the tables of the modules gone for good and every source table whose
-  rows are materials. This belongs to the first stage: the second stage blocks a module whose type of the same name
-  holds materials (`getMigratePlan()`), but `pages` goes to `docs` and would pass, run its stash and type steps and
-  fail on the `_node_legacy` rows it already has. With no source table left the second stage carries nothing; it is
-  still run once, because it fills `_routes`, which the first stage leaves empty, and points the foreign addresses at
-  their materials.
-
-The run moves no file. After it, before the site opens, the operator lays the folders out as follows; nothing is
-deleted, a name two sources share is laid once when it is the same file and reported when it is another one (the
-guard `index.html` of `pages/` stays out), and the old files are reviewed later:
-
-| From | To |
-| --- | --- |
-| `uploads/<module>/` and `uploads/archive/<module>/` of `news`, `faq`, `help`, `links`, `files`, `content` | `uploads/node/<module>/` |
-| `uploads/pages/`, `uploads/docs/` and `uploads/archive/pages/` | `uploads/node/docs/` |
-
-The folders of the modules that stay or are gone (`account/`, `all/`, `avatars/`, `clients/`, `forum/`, `screens/`,
-`shop/`, `voting/`) keep their paths; the guard `index.html` of `archive/` and the `presentation/` of the site are not
-laid, since the release ships its own `uploads/presentation/`. How `slaed.net` itself is moved is
-`docs/UPDATE.md`, "Moving slaed.net to 8.0".
-
-### Tests
-
-| Test | Driver | Covers |
-|---|---|---|
-| `tests/SchemaUpdateValidationTest.php` | static | tables and column declarations of the schema file against `table.sql` |
-| `tests/SchemaConventionTest.php` | static | the domains, the time forms, NULL, the collation and the keys of `table.sql` ([Schema conventions](#schema-conventions)) |
-| `tests/Unit/UpdateSiteTest.php` | `tests/Support/install_probe.php` mode `update` over HTTP | the whole first stage on a real 6.2 schema |
-| `UpdateSetupTest` | `tests/Support/update_probe.php … setup` | the update preflight, registry, `deleteUpdateTypes()`; the installer preflight `getSetupProbe()` and the order of `checkSetupRun()` in `setup.php` |
-| `UpdatePointsTest`, `UpdateRatingsTest`, `UpdateFieldsTest`, `UpdateConfigTest`, `UpdateMailsTest` | `update_probe.php` with unit `points` (default), `ratings`, `fields`, `config`, `mails` | one unit each: resume from cursors, stops, marks |
-| `UpdateArchiveTest` | `update_probe.php … archive` | the archive unit (dry run, rewrite, repeat, resume), the settings step of an 8.0 site and the drop of the tables by `setUpdateTables()` |
-| `UpdateTextTest` | functions lifted alone; `update_probe.php … texts` | `getMigrateMarkdown()` and `getMigrateHtml()` on BB, Markdown and 6.2 HTML; the text unit `setUpdateTexts()` (dry run, write, repeat, a batch stopped before and after its commit) |
-
-`update_probe.php` lifts the functions out of `update.php` and `setup.php` by name (both act on load), with a
-scratch site and a disposable schema. A failing probe is a test failure, not a skip.
-
-`tests/Fixtures/update62` is the 6.2 site of `UpdateSiteTest`:
-
-- `site.sql`: the `CREATE TABLE` statements of all 33 tables of a real 6.2 dump (prefix `old`, counters dropped),
-  the tables of `jokes` and `media` that dump lacked in the shape of the 6.2 installer, and a small invented seed of
-  what the update has to meet: boolean and `NULL` `editor` with numeric rights, `_modules`, balances, old sections up
-  to id 300, a `news` category, blocks of removed modules, a cached RSS block, two poll votes of one address,
-  newsletter campaigns, a legacy `_whois` row, a rated joke and a film with its own columns and three links.
-- `config/`: six 6.2 sources in variable form without secrets (`global` with language `russian`, `security`
-  with `afile`, `ratings`, `users`, `voting`, `news`).
-
-`tests/Fixtures/update62early/site.sql` is an earlier 6.2 schema of the same 33 tables (signed integers, addresses
-of 15 characters, nullable columns, zero dates as defaults), the same seed loaded in the relaxed mode of 6.2, and a
-negative balance, an account without an address, a comment without an author and an online row with a long module
-name; it uses the configuration of `update62`.
-
-`UpdateSiteTest` loads each into a disposable MariaDB database, serves a copy of the release and drives
-`update.php` over HTTP: the page of the first stage offers the run without a login and writes nothing, the
-preflight refuses a MyISAM table without touching a file, an unreadable `_modules` gives a failed row before the
-mark (`config/modules.php` untouched), a broken schema file may fail on that statement only (the mark `modules`, no
-manifest, the later poll vote of one address removed), then three runs, each without a failed statement, with all
-four marks, all manifests `verified` and `_nodes` continuing at 301. After them the schema equals a clean
-installation in `information_schema` (columns, indexes, foreign keys, checks, engine, collation). It also checks two
-guest votes in one poll, the kept panel name `myadm` now holding the shipped loader, language and address of 6.2,
-the switched-off blocks, type creation in the panel, the `_nodes` counter after a deleted material, the tables left
-after each run of the first stage (the source tables with rows) and after the second stage (none), the second stage
-carrying the news, the file, the joke and the film of the seed into Node with the extra fields, resources and ratings
-of the last two, and empty PHP and SQL logs. A change to the first stage or
-the schema file is done only when this test passes.
-
-## Migration of the removed modules
-
-`update.php` in the root carries the content of `news`, `pages`, `faq`, `help`, `links`, `files`, `content`, `jokes`
-and `media` into Node on a site that ran the 8.0 update. Only the main administrator opens it; the page shows the plan
-per module and a POST with the token scope `update` runs every step that is not done yet. The table of a module is
-dropped once its data step is done, and the page then shows the module from its manifest. It reads the module tables
-in the 8.0 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net` carry; for a clean
-6.2 site, whose tables still say `sid`, `catid`, `hometext` and `bodytext`, the first stage renames the columns of the
-nine tables in `table_update6_3.sql` ("Batch X"), and a table already in the 8.0 shape stays as it is. A table the
-first stage dropped, empty or with every row in Node already, is not in the plan. `UpdateSiteTest` runs this second
-stage on its 6.2 fixture and reads the materials it made.
-
-| Module | Type | Notes |
-|---|---|---|
-| `news`, `faq`, `links`, `files` | same name, from its profile | `fix` → `pinned`, `vote` → `poll`, `assoc` → extra categories; the file or address of `files` and `links` becomes the resource of the `download` or `link` role |
-| `pages` | `docs` | the type gains the features its data needs, such as comments and rating |
-| `help` | `help` (`support`) | every request becomes a published material, each reply a comment of its author; open or closed goes to the queue row, which follows the last reply |
-| `content` | `content` without extension | static pages; a feed address is noted, not carried |
-| `jokes` | `jokes`, from its profile | `rating` and `ratetot` are the rating balance and its votes |
-| `media` | `media`, from its profile | the own columns land in the twelve extra fields (`roles` → `cast`, `author` → `creator`, `duration` → `runtime`, `lang` → `language`, `note` → `notes`, `size` → `filesize`, `released` → `release`, the rest by name; a year of 0 is none); every `http(s)` address of the comma list `links` becomes a link resource of the `download` role, up to its maximum of ten, its kind by the extension; ed2k and every other scheme is noted, not carried |
-
-The run changes the database and nothing else: it moves, copies and renames no file. The operator runs it with the
-upload folders of the modules where 6.2 left them, and after it, before the site opens, moves each with its contents
-into the empty folder of its type:
-
-| From | To |
-| --- | --- |
-| `uploads/<module>/` of `news`, `faq`, `help`, `links`, `files`, `content`, `jokes`, `media` | `uploads/node/<module>/` |
-| `uploads/pages/` | `uploads/node/docs/` |
-
-A new type refuses a folder that already holds a file, so a folder moved before the run stops it at the types step;
-the run finds a file in `uploads/<module>/` or, moved already for a type that exists, in the folder of the type.
-`uploads/account/` keeps the files of the private messages alone: a signature, an own block or a comment on a profile
-of a 6.2 site that carries an `[attach]` of a file there needs it copied into `uploads/profile/`, and a mail text of
-the panel into `uploads/all/`; those of `slaed.net` carry none.
-
-Steps, in this order; the manifest `storage/backup/update/node/manifest.json` records each, so a stopped run
-continues where it stopped:
-
-1. Stash: categories, comments and favorites of a module move to the key `~<module>`, so the name check of a new
-   type passes.
-2. Types: a missing type is created from its shipped profile and takes over the upload rule the module left
-   (see [Identity rules](#identity-rules)); an existing one only gains the features the data needs.
-3. Counter: `_nodes` continues above the highest old id of every module, so no old address names a new material.
-4. Data, one transaction per module: materials with dates, views, states, rating balances, resources and the
-   `_node_legacy` row, then comments and favorites rebound to the new ids (rows of a gone material take the key
-   `old<module>`, which `op=remains` cleans up), the terms of `_rating`, the comment counters and `node-<type>`
-   rights instead of the module name. Texts are converted from the trusted HTML the old modules rendered into
-   Markdown (`getMigrateHtml()`): the HTML and the BB the text held become Markdown and its text is escaped as BB era
-   text (`getMigrateMarkdown()`); blocks the conversion does not know become `[usehtml]` blocks, and a bare relative
-   address of an image or a link gains `./`, the local form the safe parser accepts. A local resource path Node
-   refuses gets a safe spelling, and a note names the file the operator renames to it.
-5. Drop (`deleteMigrateTables()`): the table of every module whose data step is done, once the database agrees with
-   the map of ids in the manifest: every row of the table (for `help` every request) is a key of the map and every
-   material of the map is in `_nodes` under the type. A manifest of another database left in the tree therefore never
-   drops a table whose rows this database did not carry; the table stays with one note of the module.
-6. Foreign addresses, on every run (`setMigrateForeign()`): a direct address any text keeps into the 6.2 folder of
-   a type it does not belong to becomes the `go=file&own=node` address of the first published material of that type
-   whose text or published comment carries the name, and an address of `uploads/forum/` in a text that is no forum
-   post the `go=file&own=forum` address of the first published post that carries it. A name nothing carries keeps
-   its address and answers 410; `[code]`, `[php]`, fenced code and code spans keep their examples.
-7. Addresses, on every run (`setMigrateRoutes()`): `addRouteBacklog()` gives every type, category, material, topic,
-   account and poll without a path its first one; a second run gives none.
-8. Activation of every type the run created or switched off.
-
-The data step turns a direct address of a file of `uploads/<module>/` in a material, a comment or a help reply into
-an `[attach]` of the type with the name unchanged (`getMigrateAttach()`), whatever the form of the name, when the file
-exists and its extension is one the type allows; the attach route grants it because the text carries it. An `[img]`
-becomes the full-size form with its alignment (`none` without one) and its alternative text as the title, a link
-around the thumb of a file the thumbnail form of that file, a link around another image the full-size form of the
-image alone, and `[url]` an attachment titled by its label. Inside a `[usehtml]` block of a material the raw HTML
-stays and a `src` or `href` becomes the file address of that material
-(`index.php?go=file&own=node&id=<id>&key=<name>`, with `&thumb=1` for a thumb), which
-`NodeService::getNodeFile()` grants as well. An image inside a link to anything else stays, with text or a hard
-break beside it in the label too, because an attachment is a link of its own, and so does every address inside
-`[code]`, `[php]` and `[usephp]`. Every other address stays as written.

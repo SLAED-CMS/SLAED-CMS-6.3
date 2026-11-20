@@ -37,10 +37,10 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before contribu
 ### Fork and Clone
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/SLAED-CMS-6.3.git
-cd SLAED-CMS-6.3
+git clone https://github.com/YOUR-USERNAME/SLAED.git
+cd SLAED
 
-git remote add upstream https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
+git remote add upstream https://github.com/SLAED-CMS/SLAED.git
 ```
 
 ---

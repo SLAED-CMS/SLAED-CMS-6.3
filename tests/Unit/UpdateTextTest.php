@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The text unit of update.php turns stored BB into Markdown once, by docs/PARSER.md, "Texts of the BB era", and getMigrateHtml() writes Markdown for a 6.2 text
+# The text unit of update.php turns stored BB into Markdown once, and getMigrateHtml() writes Markdown for a 6.2 text
 #[Group('release')]
 final class UpdateTextTest extends TestCase
 {

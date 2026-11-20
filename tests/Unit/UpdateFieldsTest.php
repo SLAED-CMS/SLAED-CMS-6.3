@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The fields unit of the 8.0 data update in update.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
+# The fields unit of the 8.0 data update in update.php, the one-off conversion of Field
 #[Group('release')]
 final class UpdateFieldsTest extends TestCase
 {

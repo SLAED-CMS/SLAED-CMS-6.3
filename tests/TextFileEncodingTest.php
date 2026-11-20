@@ -12,7 +12,6 @@ class TextFileEncodingTest extends TestCase
         'README.md',
         'CONTRIBUTING.md',
         'SECURITY.md',
-        'UPGRADING.md',
         'CODE_OF_CONDUCT.md',
     ];
     private const SCAN_DIRS = [

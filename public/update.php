@@ -382,7 +382,7 @@ function getMigrateHtml(string $text, bool $trust, array &$seen = []): string {
     return trim($text);
 }
 
-# Convert stored BB into Markdown by docs/PARSER.md, "Texts of the BB era": a BB era text escapes its text runs, a Markdown one keeps them; $seen counts the forms met
+# Convert stored BB into Markdown: a BB era text escapes its text runs, a Markdown one keeps them; $seen counts the forms met
 function getMigrateMarkdown(string $text, bool $esc, array &$seen = []): string {
     $orig = $text;
     $text = str_replace(["\r\n", "\r", "\x01", "\x02", "\x05"], ["\n", "\n", '', '', ''], $text);

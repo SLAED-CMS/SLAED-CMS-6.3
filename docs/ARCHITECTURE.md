@@ -181,9 +181,7 @@ Files:
 - `templates/admin/pages/setup.html`: the page of every stop
 
 Role:
-- `setup.php` installs a new site and nothing else. It updates no existing site;
-  a 6.2 site is brought over by `update.php`, an internal tool of the maintainer
-  that the release does not ship (`docs/NODE.md`, "The 8.0 update").
+- `setup.php` installs a new site and nothing else. It updates no existing site.
 - When the run is over, the closing stop deletes `setup.php`. This is the only
   place it deletes itself. A file the server would not let go, or one that stays on
   an installed site, leaves the `_DELSETUP` warning on the closing stop and turns the
@@ -452,8 +450,7 @@ entity on purpose.
   first path, in a fixed order so a collision always resolves alike: types; per type its categories before its
   materials; forum sections before topics; users; polls; inside each group the oldest `id` first. A material is due
   when it was ever public — Published, Disabled or Deleted with `published <= NOW()` — in a type that is not private.
-  The second stage of `update.php` runs it on every run (`setMigrateRoutes()`), `setup.php` for its seed; a second
-  call adds nothing.
+  `setup.php` runs it for its seed; a second call adds nothing.
 
 ### Parsing
 
@@ -462,8 +459,7 @@ Two stages, because the registry needs the database and the cut runs before it.
 1. **The cut**, the first block of `core/security.php`, for `index.php` only: a path after the base, with
    `/index.php/` in front read as nothing, of up to five segments of `[A-Za-z0-9_-]` is kept lowercased in
    `$urlroute['seg']`. Any other path — a `.`, an encoded byte, an empty segment, more segments — answers 404 before
-   the database. A path that names only the script is the start page. No 6.2 path form is parsed: 6.2 printed query
-   addresses, and its `.html` scheme answers 404.
+   the database. A path that names only the script is the start page.
 2. **The resolution**, in `public/index.php` after the check of a closed site and before the first `getVar()`, by one
    grammar, first match wins: a type or module alone is its home; with a reserved operation that operation, with
    digits after it also the `id` (`/files/asset/2`); any other path is asked of the registry by its whole length — a
@@ -508,10 +504,10 @@ call it right after their read, every other page reaches it as the first step of
 nothing else and counts no view.
 
 - The target is the address of the page — its route keys and its current `route` through `getSeoUrl()`, or the `url`
-  of a 6.2 address — with every other pair of the raw query kept in its order and spelling, `num` renamed to `page`
-  (the activation code of `account` keeps its `num`) and `page=1` dropped; absolute, on the scheme and host of
+  of a query address of a former module — with every other pair of the raw query kept in its order and spelling,
+  `num` renamed to `page` (the activation code of `account` keeps its `num`) and `page=1` dropped; absolute, on the scheme and host of
   `forcessl` / `forcehost` or of the request.
-- Reasons: a former path, upper case, a trailing slash, `/index.php/`, a query address of 6.2 or 8.0
+- Reasons: a former path, upper case, a trailing slash, `/index.php/`, a query address
   (`index.php?name=files&op=view&id=5061`, `?uname=`, `?num=`), the wrong scheme or host. Any mix is one 301.
 - Never moved: a method other than `GET` / `HEAD` (a `HEAD` gets the same status and `Location`), an htmx request, an
   answer of 400 and above — the current path of a closed entity never leaks through the 301 of a former one — an
@@ -519,7 +515,7 @@ nothing else and counts no view.
   not read back.
 - The early `forcessl` / `forcehost` block of `core/security.php` serves the endpoints, the panel and the scripts
   only; a page leaves the host to `setSeoMove()`, so the wrong host and an old address are one hop.
-- The query addresses of the removed 6.2 modules go through `_node_legacy`: `getNodeLegacyUrl()` answers the current
+- The query addresses of former modules go through `_node_legacy`: `getNodeLegacyUrl()` answers the current
   registry path, and its callers — the not-found branch of `setNodeView()`, an unknown operation of a type and the
   unknown name of `public/index.php` — pass it to `setSeoMove()` as `url`.
 - `getSeoRoute()` serializes the same address as the canonical one; page 2 and on carry their own `?page=N`.
@@ -530,8 +526,8 @@ nothing else and counts no view.
 
 The server sends every path that is neither a file nor a folder to `index.php`: `public/.htaccess`, and
 `try_files` of `nginx.conf.example`. The tests are `RouteRegistryTest`, `RouteWriterTest`, `RouteParseTest`,
-`RouteBuildTest` and `RouteMoveTest` over `tests/Support/registry_probe.php` and `route_probe.php`; the 6.2 rehearsal
-of `UpdateSiteTest` holds the registry a migration fills.
+`RouteBuildTest` and `RouteMoveTest` over `tests/Support/registry_probe.php` and `route_probe.php`; `UpdateSiteTest`
+holds the registry a migration fills.
 
 ## Module Boundary
 
@@ -1345,7 +1341,7 @@ Runtime-generated files are stored under:
 - `storage/layout/`, the draft, the history and the own sections of the site builder (`LAYOUT_DIR`, see "Layout Boundary")
 
 `storage/update/sql/` is source, not runtime data: the schema `table.sql`, the
-seed `insert.sql` and the 6.2 update `table_update6_3.sql`. `storage/` lies outside
+seed `insert.sql`. `storage/` lies outside
 the document root `public/`, so the web never reaches it.
 
 Uploads are stored under:
@@ -1566,8 +1562,7 @@ its id; a name that matches no account is a row with `uid` 0, seen in the
 panel and in no profile. `getFailedLoginCountHours()` of `core/monitor.php`
 counts the refused rows of the panel through `getLoginLog()`; the daily system
 job `cachegc` deletes rows older than 90 days, a thousand per statement. The
-install schema creates the table and the 6.2 update creates it with
-`CREATE TABLE IF NOT EXISTS`, nothing carried over.
+install schema creates the table.
 
 **Reading.** A user reads their own logins in the profile,
 `index.php?name=account&op=logins`, with the pager. The panel reads them all on
@@ -1577,11 +1572,10 @@ panel or site, result, way and period. Every journal of `Logger` opens on
 `Logger::getEntries()`: newest first across every file of the channel, so
 `file` reads `file.log` and `error_file.log` together; the level is a
 threshold ("≥ warning"), `from` and `to` are whole days, and any other key
-matches the field of the line. A line that is not JSON of the channel — an old
-block of a site updated from 6.2 — is skipped, and a rotated archive is not
-read. `admin.log` shows time, level, who, module, action, object, result and
-address and opens on its actions; its filter of events shows the logins or
-both. The common operations (add, save, delete, status, order) are shown in
+matches the field of the line. A line that is not JSON of the channel is
+skipped, and a rotated archive is not read. `admin.log` shows time, level,
+who, module, action, object, result and address and opens on its actions; its
+filter of events shows the logins or both. The common operations (add, save, delete, status, order) are shown in
 words, any other as its name. The other journals show time, level, message and
 address; `filescan_tree.log` keeps the raw view.
 
@@ -1956,7 +1950,6 @@ Use these documents as the primary sources for their topics:
 | Plugin architecture notes | `docs/PLUGINS.md` |
 | Performance | `docs/PERFORMANCE.md` |
 | Tests and quality gates | `docs/TESTS.md` |
-| Upgrades | `UPGRADING.md` |
 | Updates from the panel, releases and keys | `docs/UPDATE.md` |
 | Security policy | `SECURITY.md` |
 

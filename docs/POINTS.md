@@ -81,7 +81,7 @@ An ordinary action never accepts `points`; its amount comes from the configurati
 `_users.points` (`INT UNSIGNED NOT NULL DEFAULT 0`, indexed) is the balance every reader uses: profiles, lists,
 point groups (`_groups.points` thresholds for groups with `extra != 1`), module access checks. Ordinary reads never
 touch `_points`. A non-zero event moves the balance and writes its journal row in one unit under a lock of the
-account row, so the starting balance (see the 8.0 carry-over) plus the sum of the journal always equals the
+account row, so the starting balance plus the sum of the journal always equals the
 aggregate.
 
 - The journal stores the amount really applied. A debit never takes the balance below zero; the row carries the
@@ -156,7 +156,7 @@ CREATE TABLE `{prefix}_points` (
   `adjust`; only a compensation row may carry 0).
 - Append-only: no `updated`, `status`, IP or JSON column, no garbage collection. Constraint names carry
   `{prefix}_` so two prefixes can share one database.
-- Created by `storage/update/sql/table.sql` on install and `storage/update/sql/table_update6_3.sql` on update.
+- Created by `storage/update/sql/table.sql` on install.
 
 ## Configuration
 
@@ -225,7 +225,7 @@ $pnt = new Point($db, ($conf['update']['points'] ?? '') === '8.0.0' ? ($conf['po
 Without the data-update mark `update.points = '8.0.0'` in `config/update.php` the class gets an empty scope. An
 exactly empty scope is a subsystem closed on purpose: switched off, no log line. A non-empty invalid scope switches
 the class off and writes one error to the site log when the object is built. A clean installation writes the mark
-directly; an updated site gets it from the 8.0 points unit. `tools/node-profile.php` builds its own instance from
+directly. `tools/node-profile.php` builds its own instance from
 `$conf['points']` without the mark check.
 
 ## Public API
@@ -444,30 +444,6 @@ Tab `_NULLPOINTS` (op `pointreset`), submitted to `resave()` with `points = 1`, 
 - The reset is global and irreversible; it is verified on a disposable schema, never on a live site.
 
 `_users.points` is never written directly by any of these screens.
-
-## 8.0 carry-over
-
-The points unit of the 8.0 data update is `setUpdatePoints()` in `update.php`; it runs after
-`storage/update/sql/table_update6_3.sql` succeeded. It concerns only balances and the switch:
-
-- Balances are kept as they are, including earlier rating rewards; nothing is zeroed or recalculated, and no
-  historic `adjust` rows are invented. The journal starts with new events. A new account starts at 0.
-- Before the first new event the unit writes a snapshot `uid => _users.points`, read in one transaction, to
-  `storage/backup/update/points/balances.json`, and a manifest `manifest.json` with its SHA-256, the account count
-  and a state (`prepared`, `applying`, `verified`). The snapshot plus the journal restore any account; the journal
-  alone cannot restore unknown history.
-- A repeat never takes the snapshot again: it resumes from the manifest, and a `verified` unit is skipped. Journal
-  rows without a manifest stop the unit, because a current balance is never taken for a starting one; an existing
-  `update.points` mark without a manifest is a unit that ran on the site before and answers done without writing. A
-  snapshot that does not match its manifest stops it too.
-- The legacy switch `users.point` becomes `points.active` (`'1'`/`'0'`); `config/points.php` is written only when
-  the value differs, and `config/users.php` only when it still carries `point` or `points`, which are removed. The
-  shipped `points.php` is otherwise not rewritten. A points scope without fourteen actions or with a bad `active`
-  stops the unit.
-- Last, the unit writes `update.points = '8.0.0'` into `config/update.php`, which opens the class (see
-  Configuration). If that write fails the subsystem stays closed.
-
-The operator procedure of the update is described in `docs/NODE.md`, "The 8.0 update".
 
 ## Tests
 

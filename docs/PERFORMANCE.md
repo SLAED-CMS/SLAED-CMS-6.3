@@ -442,7 +442,7 @@ WOFF2/WOFF, images and archives are already compressed and stay out.
 ### Measurement
 
 Start page, a list and a material view on the stand (nginx, HTTPS, Brotli, the
-migrated production database), Chromium of Playwright, 1366×900, guest, median
+production database), Chromium of Playwright, 1366×900, guest, median
 of three runs, 2026-10-07. Cold is a fresh browser context; warm is the same
 context after `about:blank`, a normal navigation, not a reload. Bytes are the
 encoded transfer of every request, headers included.

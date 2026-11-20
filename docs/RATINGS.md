@@ -101,7 +101,7 @@ are no foreign keys to the polymorphic targets. The timer `last` is Unix seconds
 | `_rating_votes` | `id` BIGINT UNSIGNED AUTO_INCREMENT, `scope`, `mid`, `actor`, `uid` INT UNSIGNED (0 for a guest), `value` TINYINT UNSIGNED, `request` CHAR(32), `created` DATETIME, `annulled` DATETIME (NULL while the vote stands), `aid` INT UNSIGNED (default 0), `reason` VARCHAR(255) (default `''`) | PRIMARY (`id`); UNIQUE `request` (`scope`, `mid`, `actor`, `request`); KEY `target` (`scope`, `mid`, `id`); KEY `scope` (`scope`, `id`); CHECK `value` BETWEEN 1 AND 5 |
 
 A target gets its `_rating_targets` row at its first vote, with a zero balance. A target whose owner row carries a
-non-zero aggregate but has no such row was never carried over by the 8.0 update: it takes no vote (`storage`,
+non-zero aggregate but has no such row takes no vote (`storage`,
 logged). A voter has no `_rating_actors` row until the first accepted vote. `KEY target` serves the journal of one
 target, `KEY scope` the journal of one scope by cursor.
 
@@ -344,56 +344,6 @@ goes through the one endpoint.
 
 The Node list also sorts by `rating`. The fragments are `templates/aurora/fragments/rating-bar.html`,
 `rating-like.html` and `rating-box.html`; the wrapper is the `div` partial with `is_rate`.
-
-## 8.0 carry-over
-
-The ratings unit is `setUpdateRatings()` in `update.php`, run after the points unit and before the fields
-unit. It carries the accumulated aggregates of the fixed scopes as starting balances and the real last
-participations as terms. It invents no vote and no point event; `_rating_votes` stays empty. Node targets start
-with a zero balance, as the update imports no content of the removed modules.
-
-**Targets.** Every row of `_users` and every topic of `_forum` (`pid = 0`), zero
-aggregates included, becomes one `_rating_targets` row: `base` = the old sum (`tvotes`, `score`), `votes` = the old
-count (`votes`, `ratings`), `created` = the database clock at the moment of the update. After the carry-over a new
-vote lands on top of this balance, and its annulment takes exactly that vote back: with 37 over 10 kept, a vote of
-5 gives 42 over 11 and its annulment returns 37 over 10. The balance cannot be annulled vote by vote, since the old
-single values are unknown.
-
-**Terms.** From the rows of `_rating` for the kept targets, the latest time per target and actor goes into
-`_rating_actors.last`: `u:<uid>` for a positive `uid`, otherwise `g:<address>` normalized with
-`inet_ntop(inet_pton())` (the same result as `getIpNorm()`; `core/security.php` cannot be loaded by the
-first stage of `update.php`). Accounts and guests are never merged by address. A voter without a surviving row has no term, so the
-first allowed vote is accepted under the current rules; the schema file of the update keeps only the earliest row of
-one address and target, so a later account of that address is such a voter.
-
-**Rules.** A rule stored as the 6.2 string `period|active|detail` becomes the four-key form with `guests = '1'`; a
-rule already in the four-key form, including an explicit `guests = '0'` and a `node.<name>` rule, is kept. Keys
-outside the grammar (the removed modules) are dropped and counted.
-
-**Preflight.** Nothing is written until everything passes; every problem is listed by table and id:
-
-- an aggregate outside `count = 0 ⇒ sum = 0` and `count <= sum <= 5 * count`;
-- a kept `_rating` row whose time is not 1..14 digits or lies after the database clock, or whose guest address
-  does not normalize;
-- a rule that is neither form, a period that is not a whole number of days, a missing fixed rule.
-
-Nothing is auto-corrected. Rows of polls (`voting`), of other events (`foreign`) and of missing targets of the three
-scopes (`orphan`) are counted and left in `_rating`. The existence of the voting account is not checked.
-
-**Manifest.** `storage/backup/update/ratings/` holds `targets.json` (`[scope, mid, base, votes]`), `terms.json`
-(`[scope, mid, actor, last]`), `rules.json` (source and converted rules) and `manifest.json` with `version`,
-`state` (`prepared`, `applying`, `verified`), a cursor per kind, `moment`, the source hashes, the counters and, once
-verified, the target hashes. Writes go in transactions of 500 rows; a row already stored must equal its snapshot,
-otherwise the unit stops. Before the rules are published the unit re-reads both tables and compares their hashes
-with the snapshots, re-reads the owner aggregates against `targets.json`, and checks that `_rating_votes` is empty
-and the number of poll rows is unchanged. Only then does it write `config/ratings.php`, set the state `verified` and
-write `update.ratings = '8.0.0'`.
-
-**Repeats.** A unit that finds rows in the new tables, or a mark, without a manifest stops before writing: a
-current aggregate is never taken for a starting one. A `prepared` or `applying` manifest continues by its cursor
-over its snapshot; a `verified` one only writes the mark again. The update deletes the snapshots after a run
-without errors and keeps the manifests. A 6.2 settings source is carried into `config/ratings.php` by the
-configuration step of the update before this unit reads it.
 
 ## Tests
 
