@@ -392,9 +392,9 @@ class Mail {
         $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => $phase, 'code' => $code, 'note' => $note, 'uphase' => $phase, 'ucode' => $code, 'unote' => $note]);
     }
 
-    # Ask whether the domain of an address accepts mail, caching the verdict; a failure of the check itself accepts, as a dead resolver says nothing about the domain
+    # Ask whether the domain of an address accepts mail, caching only a verdict the resolver gave; a failed lookup accepts and stores nothing
     private function checkMailDomain(string $mail): bool {
-        if (empty($this->conf['verify']) || !function_exists('checkdnsrr')) return true;
+        if (empty($this->conf['verify']) || !function_exists('dns_get_record')) return true;
         $cut = strrpos($mail, '@');
         if ($cut === false) return true;
         $host = mb_strtolower(trim(substr($mail, $cut + 1)), self::CHARSET);
@@ -406,9 +406,23 @@ class Mail {
             $live = trim(Cache::getBody($file)) !== '0';
             return $this->dns[$host] = $live;
         }
-        $live = checkdnsrr($host, 'MX') || checkdnsrr($host, 'A');
+        $rows = $this->getDnsRecords($host, DNS_MX);
+        if ($rows === []) $rows = $this->getDnsRecords($host, DNS_A);
+        if ($rows === null) return $this->dns[$host] = true;
+        $live = $rows !== [];
         if ($file !== '') Cache::setBody($file, $live ? '1' : '0');
         return $this->dns[$host] = $live;
+    }
+
+    # Return the records of one type, null when the lookup failed; seam, and dns_get_record() because checkdnsrr() answers a failure as it answers a name without records
+    protected function getDnsRecords(string $host, int $type): ?array {
+        set_error_handler(static fn(): bool => true);
+        try {
+            $rows = dns_get_record($host, $type);
+        } finally {
+            restore_error_handler();
+        }
+        return is_array($rows) ? $rows : null;
     }
 
     # Locate the cache entry one domain verdict is stored in, or report that this installation has no cache to store it in

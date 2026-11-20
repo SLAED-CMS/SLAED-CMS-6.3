@@ -197,6 +197,32 @@ final class MailCampaignTest extends TestCase
         $this->assertTrue($this->getCall($mailer, 'checkMailDomain', ['user@почта.рф']), 'A domain the resolver cannot be asked about was refused');
     }
 
+    # A lookup that fails says nothing about the domain, so it sends; only a resolver that answered without an MX or an A record refuses
+    #[Test]
+    public function aFailedLookupNeverMarksTheDomainDead(): void
+    {
+        $mailer = new class (new MailCampDatabase(), ['sitename' => 'SLAED CMS', 'mail' => ['verify' => '1'], 'newsletter' => []]) extends \Mail {
+            public array $asked = [];
+            public array $answer = [];
+
+            protected function getDnsRecords(string $host, int $type): ?array
+            {
+                $this->asked[] = $host.':'.$type;
+                return $this->answer[$host][$type] ?? null;
+            }
+        };
+        $mailer->answer = [
+            'gone.test' => [DNS_MX => [], DNS_A => []],
+            'plain.test' => [DNS_MX => [], DNS_A => [['ip' => '192.0.2.1']]],
+            'mx.test' => [DNS_MX => [['target' => 'mx.mx.test']]],
+        ];
+        $this->assertTrue($this->getCall($mailer, 'checkMailDomain', ['user@down.test']), 'A lookup that failed refused the address');
+        $this->assertFalse($this->getCall($mailer, 'checkMailDomain', ['user@gone.test']), 'A domain without MX and A records was accepted');
+        $this->assertTrue($this->getCall($mailer, 'checkMailDomain', ['user@plain.test']), 'A domain with an A record and no MX was refused');
+        $this->assertTrue($this->getCall($mailer, 'checkMailDomain', ['user@mx.test']), 'A domain with an MX record was refused');
+        $this->assertSame(['down.test:'.DNS_MX, 'gone.test:'.DNS_MX, 'gone.test:'.DNS_A, 'plain.test:'.DNS_MX, 'plain.test:'.DNS_A, 'mx.test:'.DNS_MX], $mailer->asked, 'The A record was asked although the MX lookup failed or answered');
+    }
+
     # Only a permanent verdict about a recipient is counted, and it is counted as a running total rather than as a flag
     #[Test]
     public function aRecipientVerdictIsCountedAgainstTheAddressAlone(): void
