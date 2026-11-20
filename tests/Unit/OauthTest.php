@@ -49,7 +49,7 @@ final class OauthTest extends TestCase
 
     private static function makeKey(): mixed
     {
-        $cfgs = glob('C:/OSPanel/modules/PHP-*/Apache/conf/openssl.cnf') ?: [];
+        $cfgs = glob(dirname(PHP_BINARY, 3).'/PHP-*/Apache/conf/openssl.cnf') ?: [];
         $opts = ['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA];
         set_error_handler(static fn (): bool => true);
         $res = false;
