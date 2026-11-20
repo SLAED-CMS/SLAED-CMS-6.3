@@ -91,7 +91,8 @@ user put it. These are internal state and are never authored in a template.
 ### The gallery family
 
 The gallery is the one window whose inside has a layout of its own, so it owns a namespaced family, as
-`data-sl-fm-*` does. It is authored in `partials/window-gallery.html` only.
+`data-sl-fm-*` does. `getWindowShot()` in `core/helpers.php` builds it from the one window frame with the fragments
+`window-body-shot.html` and `window-foot-shot.html`.
 
 | Attribute | Meaning |
 |---|---|
@@ -107,7 +108,7 @@ The gallery is the one window whose inside has a layout of its own, so it owns a
 | `data-sl-shot-group` | on a page, not in the window: the container whose image links the `view` window walks |
 
 `data-sl-shot` defaults to `view` when PHP names no owner, which is how a page of the site gets its own image
-viewer from the same fragment without a flag of its own. The `view` window opens on `a.sl-attach` or
+viewer from the same function without a flag of its own. The `view` window opens on `a.sl-attach` or
 `a[data-sl-shot-open]` pointing at a picture; the arrows and the arrow keys walk the image links of the nearest
 `data-sl-shot-group` around it, and a link outside any group shows alone, its arrows hidden.
 
@@ -139,7 +140,7 @@ uses `sl-is-full`, `sl-is-shut` and `sl-is-locked`. `sl-is-locked` sits on `<htm
 **Element ids.** Hyphenated `sl-*`, like the classes: `#sl-confirm`, `#sl-share-sheet`, `#sl-share-qr`,
 `#sl-icon-window`.
 
-**JavaScript functions.** `.rules/global.md` applies: camelCase, verb + noun, 6-24 characters. Short
+**JavaScript functions.** A name is camelCase, verb + noun, 6-24 characters. Short
 verb-plus-adjective names such as `setOpen`, `setShut` or `setFull` do not satisfy the rule.
 
 **Template files.** `window-<purpose>.html`. The folder follows the API split in `docs/TEMPLATES.md`: a window PHP
@@ -192,8 +193,9 @@ once per answer, and it is `data-sl-window`. The File Manager left the editor fo
 rule of one upload place; it is `data-sl-window` inside the editor, where the text under it has to stay reachable, and
 modal beside a form field, where nothing else is worked on at once.
 
-`core/admin.php` and `plugins/editors/toastui/driver.php` render `window-gallery` with their own data;
-`partials/site-footer.html` includes it with none, which produces the site image viewer.
+`getWindowShot()` is called with the owner `files` by `getAdminFileShell()` of `core/admin.php` and with `editor` by
+`getEditorFileKit()` of `core/helpers.php`; `getWindowSet()` adds the `view` window to every page of the site, which
+produces the site image viewer.
 
 ## The file manager as a form field
 

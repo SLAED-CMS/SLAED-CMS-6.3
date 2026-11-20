@@ -313,7 +313,7 @@ The current `Template` runtime supports:
 - layout inheritance
 - blocks
 - components:
-  - `{% component 'window-gallery' %}` (a bare name auto-resolves to `partials/<name>.html`)
+  - `{% component 'file-manager' %}` (a bare name auto-resolves to `partials/<name>.html`)
   - `{% slot header %}`
 - free site blocks:
   - `{% freeblock 15 %}` renders the site block with the given numeric id through `getBlocks()`
@@ -1151,7 +1151,7 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
 - **A script moves by whole pixels.** A position a script writes every frame goes to `transform` on the moving element
   and is rounded to a whole device pixel, measured from where the layout puts the element: the gate of the guard
   (`setGuard()`, `--sl-d-gate-top`, `--sl-d-gate-y`) stands on the first whole pixel of its scene and moves led by its
-  shield. Its parts then move as one, where the layout snapped each on its own (owner, 2026-11-02).
+  shield. Its parts then move as one, where the layout snapped each on its own.
 - **No layout inside a frame.** A frame loop reads no `getBoundingClientRect()`, `offsetWidth` or computed style: sizes
   come from a `ResizeObserver` and are kept until the next change (`setPulse()`, `setGuard()`).
 - **A loop sleeps off screen.** A `requestAnimationFrame` loop runs only while an `IntersectionObserver` sees its part
@@ -1173,13 +1173,11 @@ them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
   `--sl-d-pointer-x`, `--sl-d-pointer-y` of the pointer light, `--sl-d-gate-y`. A rule that reads such a value from its
   parent says `inherit`.
 - **What stays by decision.** `sl-cockpit-alarm` on `box-shadow` and `sl-cockpit-throb` on `filter` run only in the state
-  danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it; the lamp of the presentation cockpit glows by the `drop-shadow` of the panel lamp, rastered again under its turning comet, about 12 points of GPU on the top of the presentation (owner, 2026-11-04);
+  danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it; the lamp of the presentation cockpit glows by the `drop-shadow` of the panel lamp, rastered again under its turning comet, about 12 points of GPU on the top of the presentation;
   the live dot of aurora (the user block, the profile, a forum section with new messages) pulses by a ring on `transform`
-  and `opacity` under an opaque dot, its edge up to 37 of 255 from `sl-live-pulse` in the first tenth of the cycle
-  (owner, 2026-11-09);
-  the windows and the cockpit of the presentation keep the shade of the site window: measured with the gradient they
-  carried then, on the screen of the cockpit GPU +0.9 and renderer +0.65 points over nine rounds, over eleven screens
-  renderer +0.9 and GPU +1.2 on average (owner, 2026-11-16);
+  and `opacity` under an opaque dot, its edge up to 37 of 255 from `sl-live-pulse` in the first tenth of the cycle;
+  the windows and the cockpit of the presentation keep the shade of the site window, about one point of renderer and
+  GPU;
   the moving acts of Phoenix draw on the canvas, not through `ImageData`. The quiet ground of Phoenix asks for a frame
   every frame while the screensaver is on, so the home then restyles about 120 times a second whatever the CSS does.
 
@@ -1777,9 +1775,7 @@ tokens admin's `base.css` carries beyond aurora's twenty — `bar-width`,
 `edit-height`, `preview-height`, `search-width`, `sep-height`, `split-height`,
 `thumb-height`, `thumb-width` — belong to that browser and not to the window.
 
-The markup moved the same way and for the same reason:
-`partials/editor-toastui-files.html` became `partials/file-manager.html`, still
-byte-identical between the themes.
+The markup is `partials/file-manager.html`, byte-identical between the themes.
 
 ## Theme Gates
 
@@ -1889,8 +1885,6 @@ The repeated audit of 2026-11-01 left these, each with its reason:
 A full-page pixel baseline cannot be stable on a stand whose own content moves. Measured: a `--check` against a committed set went red hours after capture on a tree whose frontend was byte-identical — `100% size changed` at `sm`, `md` and `lg` on the front page and the forum list, and 1.6% to 3.9% even at `xl`. The page height follows the content, and a mask cannot save a box whose height is what moves.
 
 So the reference is captured per change, minutes before the comparison, into a temp directory: that is what `ui:before` and `ui:after` do, and the two captures are close enough in time that drift stays under each state's measured noise floor. `/tools/ui-baseline/` is gitignored — the path still works for a local set, it simply never enters history again.
-
-For the record, in case a stand with frozen content ever makes a committed set worth it: 168 images weigh about 80 MB, a PNG does not delta-compress, so each re-captured image is a fresh blob forever. Re-encoding is not a lever — Chromium already writes these about 9% smaller than a maximum-compression GD re-encode. Narrowing the manifest is not a lever either: every viewport and both modes have each caught a regression no other gate could see. `--capture --only=<page>` is the lever, writing one page's images and merging its entries into `noise-floor.json`.
 
 ## Migration Source Of Truth
 For active repository template guidance and current runtime status, use this document (`docs/TEMPLATES.md`).

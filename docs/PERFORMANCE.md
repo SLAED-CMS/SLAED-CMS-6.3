@@ -240,95 +240,18 @@ notification that the same job reads from the bounce mailbox over POP3, is
 counted in `{prefix}_maildead`.
 Failures are recorded through `Logger::addSite()`.
 
-The measurements below predate that split. They are kept because the *ratio*
-they establish is the durable fact and because they are what the queue was built
-against; the absolute numbers describe a request path that no longer exists.
-Measured on 2026-07-27:
+A mailing guards the reputation of the domain by measurement, not by guessing from the age of an account. An
+audience of at least `canarymin` recipients first gets a sample of `canary` addresses, one per recipient domain before
+any second, so the first results measure the list and not one provider. Once the last `breakwin` results of a mailing
+exist, it stops when the refusals of recipients among them reach `abort` percent. An address leaves bulk audiences at
+once on a refusal that names the mailbox itself, otherwise after `bouncemax` refusals, counted in `{prefix}_maildead`;
+transactional mail to it is still tried.
 
-- adding a comment took **26.7 s**, of which `addAdminMail()` was **26.6 s** and
-  rendering **0.02 s**;
-- that total was produced by **one** recipient, not many: `_admins` holds 3 rows
-  and exactly one carries `smail = '1'` (`super = 1`, empty `modules`). An
-  earlier reading of "13 recipients, ~2.05 s per call, 51 admins" does not hold —
-  there are not 51 admins on this installation;
-- so the figure is roughly **26 s for a single `mail()` call**, which is what a
-  blocking connect to an unconfigured SMTP host looks like on this development
-  host. It is a timeout artefact, not a per-message production cost.
-
-Implication:
-
-- the split is the durable fact — a synchronous transport dominates the request
-  and rendering is free, which is why delivery moved to the scheduler. The
-  absolute number is environment-specific and must be re-measured on a host with
-  a working transport before it is quoted;
-- any before/after comparison for mail work has to state which transport was
-  configured, or it compares two different timeouts;
-- the request cost of adding a comment is now one `INSERT` into the queue,
-  whatever the transport is doing.
-
-Newsletter throughput, same date:
-
-- `{prefix}_newsletter.mails` is a comma-separated `MEDIUMTEXT`;
-  `updateNewsletter()` (`core/system.php:3751`) slices `newsletter.count = 4`
-  addresses per run and rewrites the remainder;
-- the `newsletter` job is scheduled `1 * * * *` but ships `active = '0'`;
-- 164 subscribers carry `users.newslet = 1`, so a full mailing at that rate would
-  run about 41 hours;
-- history: 62 mailings, largest delivered to 12775 recipients, no row currently
-  mid-flight.
-
-User base age, same date — this decides what a mass mailing actually costs:
-
-- 11 845 accounts, registrations spanning 2005-04-30 to 2024-10-15;
-- last visit within 1 year: 9; 1-3 years: 45; 3-5 years: 57;
-  **older than 5 years: 11 734**; never: 0;
-- one syntactically invalid address.
-
-Implication:
-
-- the "mass mail" audience in `admin/modules/newsletter.php:84-85` counts the
-  whole user table, so it would send 11 734 messages to addresses dormant for
-  over five years;
-- a list that old hard-bounces at tens of percent, while providers throttle above
-  roughly 5%. Sending it is a domain-reputation event, not a throughput problem;
-- the numbers above describe **this** installation. Dormancy is not a reliable
-  proxy for a dead address in general — a shop customer or a newsletter reader
-  can be perfectly reachable without ever logging in — so the protection belongs
-  in measurement, not in a usage heuristic: a canary batch before the full send,
-  a hard-failure-rate circuit breaker during it, and suppression driven by
-  recorded outcomes. None of the three needs inbound mail or an assumption about
-  the project.
-
-Address verification cost, same date:
-
-- 11 845 addresses resolve to only **864 distinct domains**, so per-domain checks
-  scale with the domain count rather than the list size;
-- **330 of those domains (38%) no longer resolve at all** — neither MX nor A —
-  and **902 addresses, 7.6% of the list**, sit behind them;
-- resolving all 864 sequentially and uncached took **152 s**, which is why
-  verdicts are cached per domain rather than recomputed per mailing.
-
-Implication:
-
-- a domain-level check removes 7.6% of this list before any SMTP connection, on
-  its own crossing the ~5% band where providers start throttling;
-- it removes dead providers, not dead mailboxes — a resolving domain says nothing
-  about whether the address exists;
-- a resolver failure must never be read as a dead domain, so verification fails
-  open and the message is sent.
-
-Comment storage, same date:
-
-- `{prefix}_comment`: 7353 rows — files 4821, voting 1084, news 1083, faq 141,
-  pages 116, links 104, shop 2, media 0; 7348 published, 3 pending;
-- `_comment`, `_users`, `_voting` and `_newsletter` are all InnoDB.
-
-The index gaps that reading found are closed. `{prefix}_comment` in
-`storage/update/sql/table.sql` now carries `ip_time(ip, time, id)` for the flood check
-and four composite indexes that back the list orderings —
-`modul_cid_status_deleted`, `modul_cid_deleted`, `status_deleted_time` and
-`modul_cid_pid_time` — plus a `UNIQUE(reqkey)` for double-submit. Re-measure
-before quoting a filesort here.
+With `verify` on, the domain of an address is asked once for an MX or an A record and the verdict is cached for
+`dnsttl` seconds, a week by default, so the cost follows the number of domains and not of addresses. Only an answer of the
+resolver is a verdict: `dns_get_record()` gives an empty list for a name without records and `false` for a lookup that
+failed. A failed lookup, an address without a valid host and a PHP without `dns_get_record()` accept, the message is
+sent and nothing is cached.
 
 ### PHP Environment
 
@@ -637,59 +560,3 @@ What a moving page costs while nobody touches it, and what a moving pointer or a
 - **Phoenix.** `--phoenix` hashes every layer of one round on the same stopped clock, sampled every 0.5 s; a whole run
   can stand one step off at every fourth moment, the original against itself too, so a difference on those moments
   alone is run again.
-
-The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the pairs:
-
-| Change | Page, state | Renderer % | GPU % | Style ms/s | Layout ms/s | Frames/s |
-|---|---|---|---|---|---|---|
-| The rig on the tree before the work | home idle / pointer | 57 / 119 | 94 / 76 | 96 / 848 | — | 120 / 33 |
-| The rig on the tree before the work | presentation top / quiet / pointer | 84 / 56 / 119 | 71 / 11 / 48 | 84 / 72 / 836 | — | 120 / 120 / 25 |
-| The pointer light on non-inherited coordinates | home, pointer | 119 → 83 | 78 → 112 | 841 → 167 | — | 33 → 120 |
-| The pointer light on non-inherited coordinates | presentation, pointer | 119 → 93 | 50 → 78 | 837 → 123 | — | 25 → 120 |
-| Phoenix draws only after a step, still acts once | home, scene, average of a round | 90 → 80 | 115 → 107 | — | — | 77 → 86 |
-| The presentation off screen | top / quiet / pipeline | 63 → 46 / 83 → 14 / 64 → 42 | 53 → 51 / 22 → 2 / 49 → 38 | 74 → 28 / 105 → 8 / 78 → 35 | 31 → 15 / 44 → 1 / 33 → 5 | 120 |
-| The LED and the ring on transform and opacity | home idle, warn / ok | 67 → 58 / 59 → 63 | 117 → 71 / 97 → 88 | 109 → 97 / 90 → 87 | 5 → 6 / 4 → 5 | 96 → 107 / 85 → 118 |
-| The gate of the guard on transform | presentation, guard | 85 → 60 | 70 → 62 | 256 → 42 | 33 → 21 | 118 → 120 |
-| The gate of the guard on transform | presentation, scroll | 63 → 62 | 51 → 54 | 96 → 64 | 20 → 20 | 103 → 105 |
-| The fork of the cache node rises over node 05 (READ, +1 STORE, SKIP), the made-up tally gone | presentation, pipeline | 52 → 60 | 36 → 40 | 45 → 53 | 5 → 6 | 120 |
-| The globe serves the gate: it moves only onto the lane of a throw, the ingress queue under it (drifting each frame it was 88 → 110 / 93 → 125) | presentation, guard (5 rounds) | 85 → 94 | 94 → 104 | 102 → 109 | 38 → 39 | 120 |
-| The rain of code and the waves of the globe on transform | presentation, guard / system (5 rounds) / top | 85 → 75 / 51 → 51 / 60 → 61 | 100 → 81 / 130 → 129 / 62 → 72 | 83 → 84 / 38 → 38 / 43 → 40 | 39 → 33 / 2 → 2 / 21 → 19 | 116 → 120 / 84 → 84 / 120 |
-| The lost `sl-pres-spin` back: six rings turn again | presentation, system / guard / top | 42 → 54 / 99 → 104 / 77 → 76 | 114 → 127 / 119 → 123 / 83 → 84 | 29 → 40 / 82 → 91 / 45 → 46 | 1 → 1 / 39 → 39 / 23 → 22 | 111 → 109 / 119 → 118 / 120 |
-| The cockpit of the presentation moves as the panel: the scan down, the aurora under the hand, the arcs filling from zero | presentation, top / pointer | 58 → 58 / 67 → 68 | 47 → 45 / 52 → 53 | 32 → 31 / 65 → 70 | 16 → 16 / 13 → 14 | 120 |
-| The halo of the presentation lamp as the panel draws it, a `drop-shadow` of the lamp under its turning comet (a still disc of light instead read as a second ring) | presentation, top | 54 → 55 | 41 → 53 | 27 → 28 | 14 → 14 | 120 |
-| The aurora a turning cone cut to the frame, its layer made only under the hand (left on every block at rest it cost 66 → 79 renderer on the top); on the presentation every framed block takes it, and every figure counts up from zero | panel, idle / pointer | 59 → 57 / 83 → 83 | 68 → 69 / 83 → 86 | 75 → 80 / 160 → 166 | 5 → 5 / 14 → 15 | 120 |
-| The same, with the halo of the lamp | presentation, top / pointer | 62 → 62 / 71 → 77 | 49 → 59 / 54 → 72 | 33 → 33 / 72 → 83 | 17 → 16 / 15 → 16 | 120 |
-| The aurora on the framed blocks of the panel, drawn by the `--sl-aurora-*` tokens (the pair holds the uncommitted panel CSS of another session too) | panel, idle / pointer | 68 → 63 / 87 → 91 | 81 → 79 / 87 → 98 | 95 → 91 / 165 → 203 | 5 → 5 / 14 → 17 | 120 / 120 → 116 |
-| The presentation pauses by scene and block, not by section; the dashes of the block scene on a layer of their own; the pulse strip sleeps once its line reached its aim (2026-11-07, 5 rounds) | presentation, system / development / guard / top | 50 → 48 / 51 → 35 / 82 → 78 / 65 → 63 | 119 → 61 / 17 → 16 / 55 → 53 / 62 → 61 | 29 → 29 / 37 → 34 / 69 → 61 / 29 → 28 | 2 → 2 / 17 → 11 / 26 → 22 / 14 → 14 | 120 |
-| The live dot of aurora (forum sections, user block, profile) pulses by a ring on `transform` and `opacity` instead of `sl-live-pulse` on `box-shadow`; the crops `forum-dot`, `avatar-dot`, `profile-dot` stay within 37 of 255, past the tolerance only at the edge of the halo in the first moments, taken by the owner (2026-11-09, 5 rounds) | forum, idle, 16 dots | 122 → 73 | 96 → 45 | 600 → 86 | 1 → 2 | 116 → 120 |
-| The cockpits wear the window of the panel, their head without the beam of a window (2026-11-15; markup and CSS as a pair, the files of the commit and of the tree swapped between the rounds) | panel, idle: home / statistic / monitor | 53 → 53 / 57 → 58 / 43 → 43 | 60 → 57 / 61 → 62 / 60 → 60 | 80 → 83 / 59 → 60 / 51 → 55 | 4 → 4 / 20 → 20 / 5 → 5 | 120 |
-
-The head of a cockpit with the beam of a window cost renderer 61 → 64 % on the home and 65 → 67 % on the statistic (six rounds), so
-it takes none. Taken off by `content: none` alone the beam cost more than it did drawn: the animation stays declared on a
-pseudo-element that has no box, and style on the monitor went 46 → 69 ms/s (three rounds) until `animation: none` stood
-beside it.
-
-The style time the forum rings still cost is not their own: the marquee of the head (`step` on `width`) and the two live icons
-of the side blocks (`sl-live-pulse` on `box-shadow`) are refused by the compositor on the same page, and while one
-refused animation runs every composited one restyles too (`--trace=forum-idle`).
-
-The layer of the block wires costs 14 layers more (the nodes above them follow onto layers) and about 9 MB of
-compositor resources, while the raster scratch of Skia falls from about 170 to 130 MB and the tile memory stays near
-95 MB (a memory dump of `memory-infra` on the system screen, two loads each); heap, nodes and listeners stand still over
-a minute on both sides.
-
-More frames drawn raise the GPU share, so a GPU figure that grows beside a frame rate that grows is no loss. The frame
-rate of the guard, 118 → 120, lies within the noise of a pair. Forms measured and not taken, as they change the
-picture: the dots, the packet, the dashes and the bars of the presentation on `transform` (47–94 of 255, no saving
-past the gate on the guard screen), the scan of the cockpit on `transform` (with the screensaver
-off, both it and the live icon moved: renderer 69 → 15 %, style 114 → 5 ms/s; the line between two rows of pixels, up
-to 36 of 255), and the scan lines of the presentation on `transform` (top: renderer 59 → 38 %, layout 16 → 1 ms/s; up
-to 68 of 255), and the wires of the map of the presentation on a layer of their own (system: GPU 65 → 44 % past the
-block scene; the core above them then rasters on its half pixel apart, the logo and its ring up to 90 of 255, 158
-with a layer of its own). Measured and not taken, as it saved nothing: the end of the page read by the rail spy of
-`slaed.js` only near the last section (the forced layouts of a scroll gone, frames and layout unchanged, since the
-layout it forced was the one of that frame). Under the wheel the compositor draws about 100 frames a second while
-Chromium itself lets the main thread draw about 46, so `pres-scroll` reads near 60 frames whatever the page does; its
-cost is the raster of the tiles the scroll uncovers. On the top of the presentation the lamp of the cockpit, its comet
-and fourteen bars under the `drop-shadow`, holds two fifths of the main thread spent on layers (215 → 132 ms/s) and
-four fifths of the GPU spent on the render passes (205 → 44 ms/s, a trace with them still), an effect kept by decision.

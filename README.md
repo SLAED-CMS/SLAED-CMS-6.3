@@ -154,7 +154,7 @@ composer quality
 - **Backend:** PHP 8.4+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
 - **Template Runtime:** `core/classes/template.php`
-- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: ckeditor, codemirror, plain, tinymce, toastui); additional plugins: altcha, highlightjs, htmx, tablesort, system
+- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `public/plugins/editors/` (bundled drivers: ckeditor, codemirror, plain, tinymce, toastui); additional plugins: altcha, highlightjs, htmx, tablesort, system
 - **Content Parsing:** `Parser` class in `core/classes/parser.php`
 - **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
 - **Languages:** 6 bundled locale files in `lang/`
@@ -299,7 +299,6 @@ release ships.
 | [docs/TESTS.md](docs/TESTS.md) | Testing and validation commands |
 | [docs/PRINCIPLES.md](docs/PRINCIPLES.md) | Engineering principles |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance architecture and optimization priorities |
-| [docs/PLUGINS.md](docs/PLUGINS.md) | Plugin architecture design note |
 | [docs/EDITORS.md](docs/EDITORS.md) | Pluggable Editor and Plugin system architecture |
 | [docs/PARSER.md](docs/PARSER.md) | Content parsing and Markdown/BBCode architecture |
 | [docs/UPDATE.md](docs/UPDATE.md) | Updates from the panel: releasing, signing, the master, installation, privacy |

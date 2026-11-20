@@ -56,10 +56,10 @@ Role:
   parser, visual classes, session or the layer of the user - and `ApiRouter::setApiReply()` writes the JSON reply of
   `ApiRouter::getResponse()`; in this mode `core/security.php` keeps no path, reads no account cookie, scans no input
   (`ApiInput` is the filter of the API) and answers a ban, a lost database or an uncaught error in JSON without
-  detail (`.rules/api.md`)
+  detail
 - the router of the API: a path `v<n>/<service>/<action>` names a core service of `core/classes/api/services/` or
   the `api.php` of an active module; only the service the path names is read, so no list is kept. The guards run
-  in the order of `.rules/api.md` - route, maintenance and switches, CORS, the bucket of the address (`ApiLimit`,
+  in this order - route, maintenance and switches, CORS, the bucket of the address (`ApiLimit`,
   IPv6 by its /64, the address only as a keyed hash in the file cache), auth, size, typed input (`ApiInput`) -
   each refusal an `ApiError` of the closed code list; the `common.php` of a module loads after the last guard, and a
   fault of a handler is logged under the request id and answers 500 `internal`. `config/api.php` holds the switches
@@ -219,8 +219,7 @@ State and CSRF:
   hash
 - the first form puts a random token into that session. Every form carries it in
   the hidden field `token`, and `checkSetupToken()` guards every POST and every
-  part of the run; the token of another browser is refused like none. This is the one exception to `getSiteToken()`,
-  recorded in `.rules/global.md`
+  part of the run; the token of another browser is refused like none. This is the one exception to `getSiteToken()`
 - every form posts `token`, `stop` and `go` (`back`, `probe`, `next`, `part`);
   `reach` in the session is the furthest stop the browser may post from, and a run
   under way forces every request to the run stop
@@ -735,19 +734,17 @@ Detailed parser contracts live in:
 
 The editor system is managed by:
 - `core/classes/editor.php`
-- `plugins/editors/*/manifest.json`
-- `plugins/editors/*/driver.php`
+- `public/plugins/editors/*/manifest.json`
+- `public/plugins/editors/*/driver.php`
 
 Editor plugins use the strongest plugin-like contract currently present in the
 repository: manifest metadata, typed drivers, validation, and runtime discovery.
 
-Other plugin directories under `plugins/` are not all governed by the same
-contract. Treat `docs/PLUGINS.md` as a design note unless the code implements the
-specific plugin behavior being discussed.
+The other directories under `public/plugins/` follow no shared plugin contract:
+they are libraries and scripts the core, the panel or a module link by path. There is no registry of
+plugins.
 
-Detailed editor and plugin notes live in:
-- `docs/EDITORS.md`
-- `docs/PLUGINS.md`
+Detailed editor notes live in `docs/EDITORS.md`.
 
 ## Database Boundary
 
@@ -1947,7 +1944,6 @@ Use these documents as the primary sources for their topics:
 | Window canon, the dialog | `docs/WINDOW.md` |
 | Parser behavior | `docs/PARSER.md` |
 | Editor system | `docs/EDITORS.md` |
-| Plugin architecture notes | `docs/PLUGINS.md` |
 | Performance | `docs/PERFORMANCE.md` |
 | Tests and quality gates | `docs/TESTS.md` |
 | Updates from the panel, releases and keys | `docs/UPDATE.md` |

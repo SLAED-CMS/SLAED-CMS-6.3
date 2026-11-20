@@ -5,9 +5,6 @@ its administrator; `slaed.net` serves the releases, keeps a minimal statistic an
 This document is for whoever releases SLAED or works on the updater. The administrator of a site reads the help of the
 panel instead: `admin/info/update/ru.md` for the page "Обновления", `modules/master/admin/info/ru.md` for the master.
 
-The rules that bind the code are in `.rules/api.md` (the API, the one external host) and `.rules/architecture.md`
-(the gate of the entries); where this document and a rule differ, the rule wins and this document is corrected.
-
 ## Table of Contents
 
 - [The Parts](#the-parts)
@@ -120,8 +117,8 @@ this list, so a release that carries a database step is a later one.
   manifest again (`sign.php --refresh`): a site that saw a fresher manifest refuses an older `time`.
 - **Settings of the owner's machine** live in `tools/.env` (gitignored): `SLAED_KEY=<path of the primary key file>`,
   `SLAED_SFTP=user@slaed.net:22`, `SLAED_SFTP_PATH=<the folder storage/update/master of slaed.net>`. The machine needs
-  PHP CLI with `sodium`, `git`, `gh` and `sftp`; how OSPanel switches `sodium` on is in `.rules/global.md`,
-  "Toolchain". Publishing goes by SFTP only (the system OpenSSH `sftp`, a login by SSH key), never by FTP.
+  PHP CLI with `sodium`, `git`, `gh` and `sftp`. Publishing goes by SFTP only (the system OpenSSH `sftp`, a login by
+  SSH key), never by FTP.
 - **The GitHub release** lives in the repository `Update::PAGE` names, the one the banner of every site links to, so
   `publish` refuses while `origin` points elsewhere and passes that repository to every `gh` call; the address of
   `origin` is never printed. It carries the two signed archives, byte for byte those of the master, and notes that name
@@ -215,7 +212,7 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   line) are site files: put only when absent, never checked by the integrity check, never in the list of changed
   files, never deleted by "missing from the new list". Only a PHP step of a version deletes a settings file.
   `public/sitemap.xml` is not in git at all.
-- **What the archive leaves out** (owner, 2026-10-18: a release carries only what a site runs). `export-ignore` in
+- **What the archive leaves out** (a release carries only what a site runs). `export-ignore` in
   `.gitattributes` keeps in the repository and on the stand, out of every archive: the modules of slaed.net `master` and
   `changelog` with the templates `changelog*.html` only the changelog renders in `aurora`, `public/update.php`
   (the owner's internal tool) and `storage/update/sql/table_update6_3.sql`; `tests/`, `tools/`, `docs/`; the stands
@@ -227,7 +224,7 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   copy), `.htaccess` and `nginx.conf.example`. `uploads/presentation/` of the module `presentation` and the GeoIP bases
   of `storage/geoip/` ship; a delta carries a GeoIP base only when it changed. A path left out later is deleted from the
   sites by the next update, since the new list no longer names it.
-- **No word of a module the archive lacks** (owner, 2026-10-18). `release.php build` cuts from `config/modules.php` of
+- **No word of a module the archive lacks.** `release.php build` cuts from `config/modules.php` of
   the archive the row of every module whose folder the tag holds and the archive does not (`setArchiveModules()`;
   the result must return the same array without those keys, or the build stops); the stand keeps its rows. The names
   of such a module live in its own language files, read by `getModuleLabel()`; its jobs in its `scheduler.php`. The
@@ -291,7 +288,7 @@ force for this site `{id, body, sig}`; every `body` is the signed bytes in base6
   a first cohort of its own, not the same sites every time.
 - **`master/file?v=8.0.1&kind=full|delta`** serves the archive from `storage/update/master/8.0.1/` through
   `getFileStream()` in the cache mode `private`: resume, HEAD, ETag. A paused or unaccepted release answers 404. The
-  action only reads (a `public` action of `.rules/api.md`): downloads are not counted; an installation shows in the
+  action only reads (a `public` action of the API): downloads are not counted; an installation shows in the
   version of the next check.
 - `v` is strictly `X.Y.Z` and `kind` only `full` or `delta`, checked by `ApiInput` before the handler, so a version
   never becomes a path outside `storage/update/master/`. Both actions are limited per address by `checkApiFlood`
@@ -329,7 +326,7 @@ previous one) and the successful ones (sites that report this version); a site t
 only as success. At 5 failures or more with a share above the threshold, the release is paused with the mark
 "автопауза", the owner gets a mail at `adminmail` of slaed.net with the version, the figures and the most frequent
 steps, and `admin.log` gets an entry. The job never lifts a pause; only the owner does. Both jobs are declared in
-`modules/master/scheduler.php` alone (owner, 2026-10-18): the core collects the `scheduler.php` of the modules
+`modules/master/scheduler.php` alone: the core collects the `scheduler.php` of the modules
 (`getSchedulerModuleJobs()`), runs a job while its module is active and answers "Отключено" while it is not
 (`addSchedulerModuleJob()`), and names no job of the master itself. Saving "Настройки" writes the two rows into the
 scheduler of slaed.net; the shipped `config/scheduler.php` holds neither.
@@ -553,7 +550,7 @@ the top level, so the new core that the executor loads on step 6 keeps its globa
 the static 503 of `public/error.html` with `Retry-After`, without the core. `$conf['close']` is not used: it needs the
 core, and an administrator in `admin.php` over a mixed core would end in a fatal error or in mixed code. Without
 `apply.lock` the same gate, `checkSiteGate()`, closes the site while the code is newer than its steps. Both calls stay
-first in every entry of every version (`.rules/architecture.md`).
+first in every entry of every version.
 
 **Contract version 1** (`Update::APPLY` = 1, `Backup::FORMAT` = 1), frozen in 8.0.0. The executor comes from the new
 package, while the old version stays in two places: on step 4 the executor calls `Backup` of the old core, and a failure
@@ -662,14 +659,7 @@ symlink and throws in the middle of a walk on a backslash. Files get 0644, folde
   is off, so the master never sees it. The previous full archive is `storage/release/<previous>/` when its hash matches
   the signed manifest, otherwise the one of the GitHub release (`gh release download`). The first release with an
   updater has no previous one and ends after the clean run.
-- The rehearsal goes past the master on purpose. The path through a real master was proven once by the general rehearsal
-  of 2026-10-17: a clone under fresh keys with `Update::HOST` on a second OSPanel project `master.loc`, the site copy on
-  `rehearse.loc`, each with its own domain on nginx and php-cgi with OPcache and the HTTPS of the stand, releases 8.0.0
-  -> 8.0.1 -> 8.0.2 with a key change, a pause, the rescuer of 8.0.0 under the executor of 8.0.1, a failure on step 6, a
-  foreign prefix in the same database, the manual path, forgeries, a broken download, missing rights, the fallbacks
-  without `sodium` and without `zip`, a delta and a full archive, a personal note and the return after the next
-  installation. What it did not cover: running out of space on a real disk; the same rollback path was proven by a
-  failed move in the middle of a batch.
+- The rehearsal goes past the master on purpose, so it runs on any machine without a second host.
 
 ## Statistics and Privacy
 
@@ -719,7 +709,7 @@ on the host.
   people who download an archive by hand: "Загрузить архив" holds it against the signed manifest, and the manual path by
   FTP is the site owner's responsibility. Two-factor login on both is mandatory.
 - The external requests of a client go to `slaed.net` only, HTTPS only, without redirects, the answer limited in size
-  (`.rules/api.md`, `ApiHttp`). GitHub is for people: the release page and the manual download for "Загрузить архив".
+  (`ApiHttp`). GitHub is for people: the release page and the manual download for "Загрузить архив".
 - Panel actions pass `checkAdminPost()`; installation, rollback, pause and channel moves are written into `admin.log`.
 - A release with test factory keys is impossible: `release.php publish` refuses it.
 

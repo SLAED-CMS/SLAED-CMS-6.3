@@ -32,7 +32,7 @@ plugins/editors/
 
 What the editors share lives beside the core script in `public/plugins/system/`: `editor.js` (the runtime of the shell),
 `filemanager.js` (the file window), `emoji.js` with its word lists in `emoji/<locale>.js` (the emoji panel). Other
-general JS plugins live directly under `plugins/` (e.g. `plugins/htmx/`, `plugins/highlightjs/`).
+general JS plugins live directly under `public/plugins/` (e.g. `public/plugins/htmx/`, `public/plugins/highlightjs/`).
 
 ## The Manifest File (`manifest.json`)
 
@@ -316,7 +316,7 @@ is `sandbox="allow-same-origin"`, so no script of a text runs and the runtime ma
 
 ### Strings
 
-Every word of the shell is a constant in the six locales under `.rules/constants.md`; `Editor::getKitData()` hands them
+Every word of the shell is a constant in the six locales; `Editor::getKitData()` hands them
 to the kit, the runtime reads them from there.
 
 ## Accessible Name
@@ -355,9 +355,9 @@ echo Editor::getCode([
 ]);
 ```
 
-## The File Manager Left The Plugin
+## The File Manager
 
-The file window is no longer an editor ability. It is built by
+The file window is not an editor ability. It is built by
 `getFileManagerWindow(array $opt): string` in `core/helpers.php` from the rule of
 one upload place — `docs/ARCHITECTURE.md`, *Upload Place Boundary* — and drawn from
 `partials/file-manager.html`, which is the theme's markup in both themes. The

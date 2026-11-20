@@ -32,6 +32,6 @@ These principles summarize the stable project direction already reflected in the
 - The CMS must work as soon as its files are copied to a server
 - No runtime Composer dependency, package manager step, SDK or framework
 - `composer.json require` stays limited to the PHP version itself; tooling lives in `require-dev` and never ships
-- Front-end dependencies are vendored under `plugins/`, never loaded from a CDN
+- Front-end dependencies are vendored under `public/plugins/`, never loaded from a CDN
 - Implement protocols against their specification rather than pulling in a library
 - Bundled PHP extensions may be used, but a missing one degrades a feature with a clear message instead of breaking the site
